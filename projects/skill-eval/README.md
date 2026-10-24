@@ -1,4 +1,4 @@
-# Skill Eval Center
+# LumaSkill · Skill Eval
 
 自托管的通用 Skill 评测工作台。上传本地 Skill，维护可复用的评测集，由独立 Worker 使用 Codex 执行真实评测。
 

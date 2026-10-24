@@ -1,4 +1,6 @@
-# lume-skill
+# LumaSkill
+
+<img src="assets/brand/lumaskill-wordmark.svg" width="320" alt="LumaSkill">
 
 Skill 管理、评测与运营相关项目合集。各项目在独立子目录中维护，并分别说明许可和使用方法。
 
