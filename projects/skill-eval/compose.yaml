@@ -1,0 +1,102 @@
+name: open-skill-eval
+services:
+  init:
+    image: open-skill-eval-center:0.1.0-local
+    build:
+      context: .
+      target: center
+    user: "0:0"
+    command: ["python3", "deploy/bootstrap.py"]
+    restart: "no"
+    network_mode: none
+    volumes:
+      - database-secret:/secrets/database
+      - builtin-secret:/secrets/builtin
+      - center-data:/data/center
+      - worker-state:/data/worker
+      - model-home:/data/model
+  db:
+    image: postgres:17.10-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: skill_eval
+      POSTGRES_DB: skill_eval
+      POSTGRES_PASSWORD_FILE: /run/database/password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - database-secret:/run/database:ro
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skill_eval -d skill_eval"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    image: open-skill-eval-center:0.1.0-local
+    build:
+      context: .
+      target: center
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${OSE_BIND_ADDRESS:-127.0.0.1}:${OSE_PORT:-8765}:8765"
+    environment:
+      OSE_PUBLIC_URL: ${OSE_PUBLIC_URL:-http://127.0.0.1:8765}
+      OSE_SETUP_TOKEN: ${OSE_SETUP_TOKEN:-}
+      OSE_BUILTIN_SECRET_FILE: /run/builtin/seed
+    volumes:
+      - center-data:/data
+      - database-secret:/run/database:ro
+      - builtin-secret:/run/builtin:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health',timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+  worker:
+    image: open-skill-eval-worker:0.1.0-local
+    build:
+      context: .
+      target: worker
+    init: true
+    restart: unless-stopped
+    environment:
+      OSE_CENTER_URL: http://api:8765
+      OSE_BUILTIN_SECRET_FILE: /run/builtin/seed
+    volumes:
+      - worker-state:/worker-state
+      - model-home:/model-home
+      - builtin-secret:/run/builtin:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    stop_grace_period: 20s
+    security_opt:
+      - no-new-privileges:true
+  backup:
+    profiles: [maintenance]
+    image: open-skill-eval-center:0.1.0-local
+    user: "0:0"
+    network_mode: none
+    entrypoint: ["python3", "deploy/volume_backup.py"]
+    volumes:
+      - center-data:/volumes/center
+      - database-secret:/volumes/database
+      - builtin-secret:/volumes/builtin
+      - worker-state:/volumes/worker
+      - model-home:/volumes/model
+      - ${OSE_BACKUP_DIR:-./backups}:/backup
+volumes:
+  postgres-data:
+  center-data:
+  database-secret:
+  builtin-secret:
+  worker-state:
+  model-home:

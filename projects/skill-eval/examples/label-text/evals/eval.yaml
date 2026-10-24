@@ -1,0 +1,25 @@
+schema_version: v1alpha1
+environment:
+  type: none
+skills:
+  - source: local_path
+    path: .
+engine:
+  name: codex
+  version: 0.162.1
+cases:
+  files:
+    - evals/cases/label-basic.yaml
+    - evals/cases/label-empty.yaml
+    - evals/cases/label-chinese.yaml
+  defaults:
+    timeout_seconds: 180
+    max_turns: 4
+  parallelism: 1
+  retry_policy:
+    max_retries: 0
+benchmark:
+  enabled: false
+report:
+  formats: [json, html]
+  artifacts: [transcript]

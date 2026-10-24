@@ -1,0 +1,40 @@
+# 案例标识与文件名一致。
+id: mixed-case
+# 案例覆盖的行为。
+title: "保留英文大小写及内部空格"
+description: "验证混合大小写、数字以及 v2 前的两个空格保持不变。"
+input:
+  # 单轮用户请求；不向被测会话提供预期答案。
+  prompt: "请使用 label-text 标记以下一行文本：\nAbC xyz XYZ iPhone OpenAI  v2"
+# 唯一裁判：确定性文本和工具调用断言。
+judge:
+  # 使用规则判断，不调用模型裁判。
+  type: rule_based
+  success:
+    # Go 正则全文逐字匹配，禁止额外说明或格式包装。
+    - output_matches:
+        all:
+          - "\\A\\QLABEL: AbC xyz XYZ iPhone OpenAI  v2\\E\\z"
+    - exit_code: 0
+  # 禁止常见的命令、文件读取及联网工具调用。
+  failure:
+    - tool_called:
+        name: "exec_command"
+    - tool_called:
+        name: "functions.exec_command"
+    - tool_called:
+        name: "shell"
+    - tool_called:
+        name: "shell_command"
+    - tool_called:
+        name: "read_file"
+    - tool_called:
+        name: "read_mcp_resource"
+    - tool_called:
+        name: "web"
+    - tool_called:
+        name: "web.run"
+    - tool_called:
+        name: "browser"
+    - tool_called:
+        name: "functions.exec"

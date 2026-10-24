@@ -1,0 +1,23 @@
+# 评测配置格式版本。
+schema_version: v1alpha1
+environment:
+  # 纯文本案例无需执行环境。
+  type: none
+skills:
+  - source: local_path
+    path: .
+engine:
+  # 固定使用指定版本的 Codex。
+  name: codex
+  version: "0.162.1"
+cases:
+  # 显式列出全部五个候选案例，路径相对于 Skill 根目录。
+  files:
+    - evals/cases/empty-text.yaml
+    - evals/cases/chinese-text.yaml
+    - evals/cases/mixed-case.yaml
+    - evals/cases/punctuation.yaml
+    - evals/cases/instruction-text.yaml
+report:
+  # 未来运行时的报告格式；本次不生成评测报告。
+  formats: [json]

@@ -1,0 +1,34 @@
+{
+  "scenario": "three-judges",
+  "versions": {
+    "skill_up": "0.14.0",
+    "codex": "0.162.1"
+  },
+  "exit_code": 0,
+  "case_results": [
+    {
+      "case_id": "label-basic",
+      "status": "PASS",
+      "judge_duration_ms": null
+    },
+    {
+      "case_id": "label-empty",
+      "status": "PASS",
+      "judge_duration_ms": null
+    },
+    {
+      "case_id": "label-chinese",
+      "status": "PASS",
+      "judge_duration_ms": 7672
+    }
+  ],
+  "observed_configuration": {
+    "version": "0.162.1"
+  },
+  "actual_model": null,
+  "artifacts": {
+    "result.json": "f4d691fc71a780fb46ffa99a9fdb980bc8caeb71dcd60bd8c7279f593ad25f84",
+    "report.html": "b86d346eebc40d06cc5d2a3290d4aba509259af6aadc458903c87102a81fa240",
+    "events.jsonl": "c3b33b9f2555dbd5c3f1c68629203f79551cd15c35c0c7485553bc876436c658"
+  }
+}

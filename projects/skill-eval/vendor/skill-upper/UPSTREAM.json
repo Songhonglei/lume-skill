@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/alibaba/skill-up",
+  "commit": "53f6daecf4ac79e4e53ea53f3fe17dac3114debb",
+  "files": {
+    "SKILL.md": "5d0c34f4f58cfdce5a52aaf7690f7de46e35534ce023f15d0e663d53693bdf37",
+    "references/eval-yaml.md": "fd0dae96cad6e74fb9a6976cad43e291ff2e9cadfadda56963b634c278d059a2",
+    "references/case-yaml.md": "2edc8f5dee429cf7337586b120492dff1a6ac70580626844c01b4d741044585f",
+    "references/judge-types.md": "c70783a42d9498090c24abfe97d04186ace57f27d7d61506f57f1b95dcea1a5e",
+    "assets/eval.yaml.tmpl": "0c94c33f4d25a629a270ffe10af5434a645f8990d3a905fd42238516faceba39",
+    "assets/case.yaml.tmpl": "5f7d3d0945f5bd986fc7f77b1721ea9be324ebe5fc9187cdb7c8dd1d78e641f0",
+    "references/install.md": "097a654376949c39ca807acef5cf98ed2949a3ed6b2f753875d3265f3c3b9fff",
+    "references/observations.md": "6d0c59559b3840c068994df730f093280678a6e25a9a2a3c43b5a01ca5620f89",
+    "references/migrate-anthropic.md": "13832439ff65ed900dfe3f9b78f3b6a9220f1ee75349de04aa0f959ee8da9fa6",
+    "references/cli.md": "a11211e030158bd2f477600e6035e6d6a6f0bf0235e92f636ce4898a2de169bf"
+  }
+}

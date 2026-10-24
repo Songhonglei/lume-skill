@@ -1,0 +1,43 @@
+name: Skill Eval candidate images
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag, for example 0.1.0-rc.1 (container acceptance required before release)'
+        required: true
+defaults:
+  run:
+    working-directory: projects/skill-eval
+permissions:
+  contents: read
+  packages: write
+jobs:
+  images:
+    environment: release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Validate version and derive repository
+        env:
+          IMAGE_TAG: ${{ inputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          tag=os.environ['IMAGE_TAG']
+          if not re.fullmatch(r'0\.1\.0(?:-[a-z0-9.-]+)?',tag):
+              raise SystemExit('Tag must match the source version 0.1.0')
+          with open(os.environ['GITHUB_ENV'],'a') as file:
+              file.write('IMAGE_REPO=ghcr.io/'+os.environ['GITHUB_REPOSITORY'].lower()+'/skill-eval\n')
+          PY
+      - name: Log in to GitHub registry
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Build and push both architectures
+        env:
+          IMAGE_TAG: ${{ inputs.tag }}
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 --target center --tag "$IMAGE_REPO-center:$IMAGE_TAG" --push .
+          docker buildx build --platform linux/amd64,linux/arm64 --target worker --tag "$IMAGE_REPO-worker:$IMAGE_TAG" --push .

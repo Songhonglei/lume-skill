@@ -1,0 +1,44 @@
+{
+  "scenario": "generated-bad",
+  "versions": {
+    "skill_up": "skill-up version 0.14.0",
+    "codex": "codex-cli 0.162.1"
+  },
+  "exit_code": 1,
+  "execution_state": "SUCCEEDED",
+  "verdict": "FAILED",
+  "expected": 5,
+  "passed": 0,
+  "failed": 5,
+  "observed_configuration": {
+    "version": "0.162.1"
+  },
+  "actual_model": null,
+  "cases": [
+    {
+      "case_id": "empty-text",
+      "verdict": "FAILED"
+    },
+    {
+      "case_id": "chinese-text",
+      "verdict": "FAILED"
+    },
+    {
+      "case_id": "mixed-case",
+      "verdict": "FAILED"
+    },
+    {
+      "case_id": "punctuation",
+      "verdict": "FAILED"
+    },
+    {
+      "case_id": "instruction-text",
+      "verdict": "FAILED"
+    }
+  ],
+  "artifacts": {
+    "events.jsonl": "2bb5a8951bf36a2cd9f61f2d494f52ff44030ab0f0e5ac65178aa750043f9afe",
+    "iteration-1/result.json": "fd1b0fa891bde71b1df2e3e133ee0b22032bac6c4b8501c3c0d631e6bbad9e17",
+    "iteration-1/report.html": "28277eeee87c2a1951b9590b1d2afe1ad1fb82f87c76b8f081cf10bdd0f56fed"
+  }
+}

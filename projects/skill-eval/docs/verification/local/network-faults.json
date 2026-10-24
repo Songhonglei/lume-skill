@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "platform": "macOS arm64",
+  "method": "Real Codex evaluation through a loopback HTTP proxy; Worker API TCP connection closed during faults",
+  "skill_up": "0.14.0",
+  "codex": "0.162.1",
+  "records": [
+    {
+      "scenario": "short_disconnect",
+      "disconnect_seconds": 20,
+      "task_id": "48dd73e8-ce95-4d56-ab50-7fd99624aeb6",
+      "state_during_drop_end": "RUNNING",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "attempts": 1,
+      "model_run_starts": 1,
+      "artifact_kinds": [
+        "report"
+      ],
+      "passed": 4
+    },
+    {
+      "scenario": "lease_expiry",
+      "disconnect_seconds": 70,
+      "task_id": "3c7a23c3-3d3e-497c-82db-b1daa98a13fb",
+      "state_during_drop_end": "INTERRUPTED",
+      "state": "INTERRUPTED",
+      "verdict": "INCOMPLETE",
+      "attempts": 1,
+      "model_run_starts": 1,
+      "artifact_kinds": [
+        "late"
+      ],
+      "manual_retry_then_queued_cancel": "PASS",
+      "late_receipt_cannot_overwrite_retry": "PASS"
+    }
+  ],
+  "candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}

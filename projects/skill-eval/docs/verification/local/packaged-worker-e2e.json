@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "platform": "macOS arm64",
+  "installed_python": "Python 3.13.2",
+  "source": "Extracted final Worker ZIP, isolated venv, installed dependencies and pinned binary, reused persisted Worker enrollment and selected login profile",
+  "archive_sha256": "4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994556899cb91be",
+  "task_id": "19158a47-7969-4ca3-a342-466fcd6057fe",
+  "state": "SUCCEEDED",
+  "verdict": "PASSED",
+  "expected": 3,
+  "passed": 3,
+  "attempts": 1,
+  "judges": [
+    "rule_based",
+    "script",
+    "agent_judge"
+  ],
+  "report_sha256": "6717c2b952519e1f1950691c7653e482d3036c9dd80a4e753ee09fa22e484fae",
+  "created_at": "2026-10-24T11:59:27.484892+08:00",
+  "finished_at": "2026-10-24T12:00:27.889089+08:00",
+  "candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}
