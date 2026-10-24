@@ -80,7 +80,7 @@ python3 deploy/install_worker.py --directory "$HOME/.local/share/skill-eval/app-
 ```bash
 createdb skill_eval_test
 export OSE_TEST_DATABASE_URL=postgresql://localhost/skill_eval_test
-uv run --locked pytest -q
+uv run --locked python3 -m pytest -q
 uv run --locked ruff check backend worker tests deploy
 npm --prefix frontend run build
 ```

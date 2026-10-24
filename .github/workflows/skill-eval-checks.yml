@@ -39,7 +39,7 @@ jobs:
       - run: uv sync --locked --group dev
       - run: python3 deploy/install_tools.py
       - run: uv run --locked ruff check backend worker tests deploy
-      - run: uv run --locked pytest -q
+      - run: uv run --locked python3 -m pytest -q
         env:
           OSE_TEST_DATABASE_URL: postgresql://runner:ephemeral-ci-only@127.0.0.1:5432/skill_eval_test
       - run: npm --prefix frontend ci --ignore-scripts
