@@ -2,6 +2,8 @@
 
 更新时间：2026-10-24（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。
 
+目录已按用户最新要求简化为合集根目录下的 `skill-eval/`，不再使用中间 projects 层；工作流、下载后的进入目录及接手指令已同步。本次布局调整不新增模型验收。复核见 [UGLIC-layout.md](verification/local/audit/UGLIC-layout.md)。
+
 ## 1. 接手先看这里
 
 项目已经完成可运行的源码、本机真实模型主链路、新版品牌资产及 GitHub CI，源码已合入 main。下一步优先在其他电脑补齐 Docker 的真实模型验收，再决定正式版本与镜像发布。不要重新从需求设计或重写页面开始。
@@ -9,7 +11,7 @@
 | 事项 | 当前结论 |
 | --- | --- |
 | 唯一权威仓库 | [Songhonglei/lume-skill](https://github.com/Songhonglei/lume-skill)，多项目合集 |
-| 应用目录 | `projects/skill-eval/`，后续命令未特别说明都在此目录运行 |
+| 应用目录 | `skill-eval/`，后续命令未特别说明都在此目录运行 |
 | 本文代码基线 | `a3fc19f354f560fc21d33498515ea2462583350d`；之后本文档更新不代表新增模型验收 |
 | 产品源码 | [PR #1](https://github.com/Songhonglei/lume-skill/pull/1) 已合并，main 提交 `97a29f3` |
 | LumaSkill 品牌 | [PR #2](https://github.com/Songhonglei/lume-skill/pull/2) 已合并，main 提交 `a3fc19f` |
@@ -134,6 +136,8 @@ Mac 已真实评测旧 ZIP: 4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994
 
 这些是历史产物身份。重新从 main 打包后请记录新包哈希，不要求新包与旧包哈希相同。
 
+`verification/local/checks.json` 中 project_subdirectory 保留当时布局快照；当前路径以本文的 `skill-eval/` 为准，不能照抄历史路径部署。
+
 证据优先级：新环境的原始收据与脱敏摘要 → 对应 commit/CI → 当前状态索引 → 历史方案。`checks.json`、`worker-packages.json` 等保留当时的检查点，不改写成后来实测。当前状态以本文、[实现进度](IMPLEMENTATION-STATUS.md)、[验收矩阵](verification/local/acceptance.md) 及新增证据为准。
 
 ## 5. 当前最重要的阻断与后续顺序
@@ -156,7 +160,7 @@ Mac 已真实评测旧 ZIP: 4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994
 
 ### P2：后续整理
 
-合集 README 仅保留必要入口，用户允许晚些丰富。其他 skill 管理/运营项目今后放其他子目录；不要将当前评测应用铺到合集根目录。不要在这次接手中无授权扩展一期范围。
+合集 README 仅保留必要入口，用户允许晚些丰富。其他 skill 管理/运营项目今后放其他子目录；当前应用目录直接位于合集根目录，应用文件保留在 `skill-eval/` 内。不要在这次接手中无授权扩展一期范围。
 
 ## 6. 新电脑最短接手步骤
 
@@ -166,7 +170,7 @@ Mac 已真实评测旧 ZIP: 4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994
 
 ```bash
 git clone https://github.com/Songhonglei/lume-skill.git
-cd lume-skill/projects/skill-eval
+cd lume-skill/skill-eval
 git rev-parse --show-toplevel
 git rev-parse HEAD
 docker version
@@ -290,7 +294,7 @@ Compose 服务为 init、db、api、worker，以及仅显式启用的 maintenanc
 | 导入 notes 显示异常 | 转换 notes 是结构化对象，不是纯文本 | 保留结构并正确展示；不通过丢字段来简化 UI |
 | 直接支持 input.turns 会破坏沙箱约束 | 上游 resume 路径固定携带绕过参数 | 当前字段级拒绝，升级前独立验证上游行为 |
 | 系统工具与项目版本不同 | 全局 skill-up 0.10.0，项目需 0.14.0 | 私有工具安装并验证精确版本，不覆盖全局 |
-| 从平铺仓库迁入合集后路径变化 | workflow 必须在根目录，但构建/lock 位于子目录 | 同步 working-directory、npm cache 路径、Docker context、镜像命名；不要迁回根目录 |
+| 从平铺仓库迁入合集后路径变化 | workflow 必须在根目录，但构建/lock 位于子目录 | 同步 working-directory、npm cache 路径、Docker context、镜像命名；应用文件保留在根目录下的 skill-eval/ 内 |
 | 检查器大量文件不存在提示 | 多为文档描述的运行产物；但也发现真实缺失引用 | 补齐同提交的 4 份 references；保留运行产物等误报依据，不制造假文件 |
 | 状态文档落后于合并/CI | 原始收据与当前状态没有分层 | 原始收据不重写，新检查点与当前索引单独更新；源码合并、平台通过、正式发布分开表述 |
 
@@ -318,7 +322,7 @@ Docker Hub 网络问题曾使用同版本官方 ECR 镜像本地标记、Podman 
 
 ## 11. 接手第一小时清单
 
-1. clone 合集，确认 `projects/skill-eval/` 与当前 SHA；阅读本文、README、OPERATIONS、验收矩阵。
+1. clone 合集，确认 `skill-eval/` 与当前 SHA；阅读本文、README、OPERATIONS、验收矩阵。
 2. 查明本机 OS/架构、Docker/Compose 版本、端口占用及是否有现存数据；只使用自己的新验收实例。
 3. 按第 6 节构建/引导，检查固定工具与沙箱；失败先记日志，不先改权限或模型。
 4. 登录后完成一次合成三类案例，再确认生成与复用路径；记任务、attempt、报告与冻结版本。
@@ -327,7 +331,7 @@ Docker Hub 网络问题曾使用同版本官方 ECR 镜像本地标记、Podman 
 ## 12. 可直接交给下一位 Agent 的指令
 
 ```text
-请接手 Songhonglei/lume-skill 的 projects/skill-eval 项目。先读 docs/AGENT-HANDOFF.md、README.md、docs/OPERATIONS.md 和 docs/verification/local/acceptance.md，再检查当前 main 与本机环境。
+请接手 Songhonglei/lume-skill 的 skill-eval 项目。先读 docs/AGENT-HANDOFF.md、README.md、docs/OPERATIONS.md 和 docs/verification/local/acceptance.md，再检查当前 main 与本机环境。
 
 项目已完成四页、自托管中心、独立 Worker、固定 skill-up 0.14.0/Codex 0.162.1、本机真实评测和 LumaSkill 蓝白标识；PR #1/#2 已合并，代码基线 a3fc19f 的 CI 已通过。请在当前源码上继续，不重做产品方案、不扩大一期范围、不覆盖系统工具或个人数据。
 

@@ -10,7 +10,7 @@
 
 ### 源码部署候选
 
-在合集仓库中先进入 `projects/skill-eval/`。前提：Docker Engine + Compose v2，或 macOS Docker Desktop；能访问镜像、PyPI、npm 和 GitHub。
+在合集仓库中先进入 `skill-eval/`。前提：Docker Engine + Compose v2，或 macOS Docker Desktop；能访问镜像、PyPI、npm 和 GitHub。
 
 ```bash
 docker compose up -d --build
@@ -98,6 +98,6 @@ npm --prefix frontend run build
 - [验收标准](docs/ACCEPTANCE-CRITERIA.md) · [本机验收证据](docs/verification/local/README.md)
 - [来源清单](docs/SOURCE-INVENTORY.md) · [第三方许可](THIRD-PARTY-NOTICES.md)
 
-原创代码采用 [MIT](LICENSE)，第三方许可见 notices。项目位于 [lume-skill](https://github.com/Songhonglei/lume-skill) 的 `projects/skill-eval/`；合集源码的候选 PR 与正式发布分别记录。未完成的平台验收不因源码公开而变成通过，当前不发布正式版本或预构建镜像。
+原创代码采用 [MIT](LICENSE)，第三方许可见 notices。项目位于 [lume-skill](https://github.com/Songhonglei/lume-skill) 的 `skill-eval/`；合集源码的候选 PR 与正式发布分别记录。未完成的平台验收不因源码公开而变成通过，当前不发布正式版本或预构建镜像。
 
 不包含录制采集、回放、远程同步、企业平台、多引擎、多裁判、跨 Skill 共享和角色体系。

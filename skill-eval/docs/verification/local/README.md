@@ -40,7 +40,7 @@
 | 容器全新环境、重启与恢复 | Podman Linux arm64 通过；全新项目/卷恢复后会话、Worker、任务与报告摘要一致。不能替代 Docker Desktop/Linux x86_64 验收 |
 | GitHub CI 与多架构镜像发布 | CI 40080630091 已通过，源码 PR #1/#2 已合 main；多架构镜像发布仍 NOT_RUN |
 | 公开发布后的最短重装 | NOT_RUN；没有已发布版本 |
-| 本项目公开许可证和目标仓库 | 已明确：MIT；Songhonglei/lume-skill 的 projects/skill-eval。候选源码接入和正式发布分开记录 |
+| 本项目公开许可证和目标仓库 | 已明确：MIT；Songhonglei/lume-skill 的 skill-eval。候选源码接入和正式发布分开记录 |
 
 因此本机开发候选可以审阅和试用，**尚未达到正式版本/镜像发布放行条件**。最后一轮独立页面复核因原浏览器会话结束未执行，沿用已有完整主流程实测；最新源码的类型检查、构建和 API 检查已通过，未把这些检查替代为新的浏览器实测。
 

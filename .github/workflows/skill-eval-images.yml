@@ -7,7 +7,7 @@ on:
         required: true
 defaults:
   run:
-    working-directory: projects/skill-eval
+    working-directory: skill-eval
 permissions:
   contents: read
   packages: write
