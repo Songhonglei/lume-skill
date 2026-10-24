@@ -28,6 +28,10 @@ function Login({ setup, remote, onSuccess }: { setup?: boolean; remote?: boolean
   </form>
 }
 
+function Brand() {
+  return <span className="brand-lockup"><img className="brand-mark" src="/brand/lumaskill-mark.svg" width="36" height="36" alt="" /><strong>Luma<span>Skill</span></strong></span>
+}
+
 export default function App() {
   const [phase, setPhase] = useState('loading')
   const [remote, setRemote] = useState(false)
@@ -71,10 +75,10 @@ export default function App() {
   const workers = useData<Worker[]>(phase === 'ready' ? '/api/workers' : null, [], revision, phase === 'ready' ? 10000 : 0)
   const common: Common = { skills: skills.data, settings: settings.data, workers: workers.data, selection, navigate, refresh, revision, notify, setDirty }
   const online = workers.data.filter(worker => worker.online && !worker.revoked).length
-  if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><span className="brand-mark">S</span><strong>Skill 评测中心</strong></div><div className="auth-card">
+  if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
     {phase === 'loading' ? <p>{initialError || '正在连接工作台…'}</p> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
   </div><p className="auth-foot">本地资源 · Codex 执行 · 可维护的评测案例</p></div>
-  return <div className="app-shell"><header className="topbar"><div className="brand-mark">S</div><strong>Skill 评测中心</strong><span className="topbar-note">本地工作台</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" onClick={async () => {
+  return <div className="app-shell"><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" onClick={async () => {
       if (dirty && !window.confirm('草稿有未保存的修改，确定退出吗？')) return
       try { await api('/api/session', { method: 'DELETE' }); setDirty(false); setPhase('login') } catch (error) { notify(message(error), true) }
     }}>退出</button></div></header>
