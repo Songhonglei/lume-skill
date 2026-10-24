@@ -8,6 +8,7 @@ import re
 import zipfile
 
 from .packages import inspect_package
+from .privacy import TargetPrivacy, redact as redact  # Public compatibility import for callers.
 
 
 def unpack(raw):
@@ -50,16 +51,8 @@ def bump_version(raw, version):
     return text.encode()
 
 
-LITERAL_SECRET = re.compile(
-    r"(?i)(\b(?:api[_-]?key|token|secret|password)[\"']?\s*[:=]\s*[\"'])([^\"'\r\n]{20,})([\"'])"
-)
-
-
-def redact(text):
-    return LITERAL_SECRET.sub(lambda m: m[1] + "*" * len(m[2]) + m[3], text)
-
-
 def changes(before, after):
+    privacy = TargetPrivacy({**{"before/" + p: raw for p, raw in before.items()}, **after})
     result = []
     total = 0
     for path in sorted(set(before) | set(after)):
@@ -73,8 +66,8 @@ def changes(before, after):
             "kind": "added" if old is None else "removed" if new is None else "modified",
         }
         try:
-            a = redact((old or b"").decode("utf-8-sig")).splitlines(keepends=True)
-            b = redact((new or b"").decode("utf-8-sig")).splitlines(keepends=True)
+            a = privacy.redact((old or b"").decode("utf-8-sig")).splitlines(keepends=True)
+            b = privacy.redact((new or b"").decode("utf-8-sig")).splitlines(keepends=True)
             entry["diff"] = "".join(
                 difflib.unified_diff(a, b, fromfile="original/" + path, tofile="candidate/" + path)
             )

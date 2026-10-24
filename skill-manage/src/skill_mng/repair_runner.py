@@ -8,6 +8,7 @@ from .config import write_secret_json
 from .repair_packages import bump_version, pack, redact, unpack
 from .repairs import review_manifest
 from .runner import run_audit
+from .privacy import TargetPrivacy, redact_value
 
 
 class NeedsAttention(ValueError):
@@ -19,6 +20,7 @@ class CandidateFiles:
         self.files = dict(files)
         self.manifest = manifest
         self.allowed = set(manifest["authorization"]["editPaths"])
+        self.privacy = TargetPrivacy(files)
 
     def tool(self, name, args):
         if not isinstance(args, dict) or not isinstance(args.get("path"), str):
@@ -31,7 +33,7 @@ class CandidateFiles:
             if len(raw) > 262144:
                 return {"error": "file_too_large"}
             try:
-                text = redact(raw.decode("utf-8-sig"))
+                text = self.privacy.redact(raw.decode("utf-8-sig"))
             except UnicodeDecodeError:
                 return {"error": "not_utf8"}
             offset, limit = args.get("offset"), args.get("limit")
@@ -55,6 +57,8 @@ class CandidateFiles:
             raise NeedsAttention("tool_not_allowed")
         if path not in self.allowed:
             raise NeedsAttention("write_outside_authorization")
+        if self.privacy.locations:
+            raise NeedsAttention("target_credentials_require_review")
         raw = self.files.get(path)
         digest = hashlib.sha256(raw).hexdigest() if raw is not None else ""
         if args.get("expected_digest") != digest:
@@ -69,6 +73,8 @@ class CandidateFiles:
             if not isinstance(content, str) or len(content.encode()) > 262144:
                 raise NeedsAttention("candidate_file_too_large")
             proposed[path] = content.encode()
+        if TargetPrivacy(proposed).locations:
+            raise NeedsAttention("target_credentials_require_review")
         package, _ = unpack(pack(proposed))
         if (
             package.metadata.get("name") != self.manifest["skillSlug"]
@@ -89,6 +95,8 @@ class CandidateFiles:
 
 def edit_candidate(manifest, files, client, round_number, feedback, trace_path=None):
     candidate = CandidateFiles(files, manifest)
+    if candidate.privacy.locations:
+        raise NeedsAttention("target_credentials_require_review")
     trace = []
     supplied = []
     supplied_size = 0
@@ -162,7 +170,7 @@ def edit_candidate(manifest, files, client, round_number, feedback, trace_path=N
                     trace.append(
                         {
                             "tool": function["name"],
-                            "path": args.get("path"),
+                            "path": redact_value(args.get("path")),
                             "error": result.get("error"),
                             "saved": result.get("saved", False),
                         }
@@ -230,6 +238,9 @@ def run_repair(manifest, original, client, workdir):
         result.update(schemaVersion=1, state=state, reason=redact(reason)[:1000])
         write_secret_json(workdir / "result.json", result)
         return result
+
+    if TargetPrivacy(files).locations:
+        return finish("needs_attention", "target_credentials_require_review")
 
     while True:
         status = client.request(base + f"/repair-state?generation={generation}")

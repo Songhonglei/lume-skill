@@ -8,9 +8,10 @@ from .auditing import validate_result
 from .auth import new_id, now
 from .db import transaction
 from .models import public_model_config
-from .packages import VERSION, inspect_package, safe_path
+from .packages import VERSION, safe_path
 from .registry import may_write, record_event, register_in_transaction, storage_lock
 from .repair_packages import bump_version, changes, unpack
+from .privacy import TargetPrivacy
 from .tasks import Conflict, RULE_VERSION, valid_attempt
 
 
@@ -251,6 +252,8 @@ def accept_candidate(root, worker_id, attempt_id, generation, round_number, raw)
         ):
             raise Conflict("候选名称或声明版本与授权不一致")
         _, before = unpack((root / "objects" / (manifest["artifactDigest"] + ".zip")).read_bytes())
+        TargetPrivacy(before).require_model_safe()
+        TargetPrivacy(after).require_model_safe()
         diff = changes(before, after)
         if any(c["path"] not in manifest["authorization"]["allowedPaths"] for c in diff):
             raise PermissionError("候选修改超出授权文件范围")
@@ -324,7 +327,9 @@ def save_review(root, worker_id, attempt_id, generation, round_number, result):
             raise ValueError("候选尚未保存")
         receipt = {**dict(row), "diff": json.loads(row["diff_json"])}
         expected = review_manifest(manifest, receipt, attempt_id, generation)
+        _, files = unpack((root / "objects" / (row["artifact_digest"] + ".zip")).read_bytes())
         checked = validate_result(result, expected)
+        TargetPrivacy(files).validate_report(checked)
         canonical = json.dumps(checked, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(canonical.encode()).hexdigest()
         if row["review_json"]:
@@ -369,7 +374,9 @@ def _gate(db, root, repair, manifest):
         for f in result["findings"]
     ):
         raise Conflict("所选规则仍有未修复问题")
-    package = inspect_package((root / "objects" / (row["artifact_digest"] + ".zip")).read_bytes())
+    package, files = unpack((root / "objects" / (row["artifact_digest"] + ".zip")).read_bytes())
+    if TargetPrivacy(files).locations:
+        raise Conflict("target_credentials_require_review")
     if (
         package.artifact_digest != row["artifact_digest"]
         or package.content_digest != row["content_digest"]
@@ -493,6 +500,8 @@ def submit_repair_result(root, worker_id, attempt_id, generation, result):
         code = result.get("reason", "")
         if not isinstance(code, str) or len(code) > 1000:
             raise ValueError("结果说明无效")
+        _, source_files = unpack((root / "objects" / (manifest["artifactDigest"] + ".zip")).read_bytes())
+        code = TargetPrivacy(source_files).redact(code)
         if state == "ready":
             try:
                 _gate(db, root, repair, manifest)

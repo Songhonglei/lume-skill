@@ -9,6 +9,7 @@ from pathlib import Path
 from .auth import now
 from .db import transaction
 from .registry import record_event
+from .privacy import TargetPrivacy, redact
 from .tasks import Conflict, valid_attempt
 
 SKILL_ROOT = Path(__file__).parent / "resources/skills/skill-deep-audit"
@@ -26,11 +27,23 @@ def engine():
     return module
 
 
-def freeze_audit(manifest, findings, checked, completed, *, scope_satisfied=False, scope_reason=""):
+def freeze_audit(
+    manifest, findings, checked, completed, *, scope_satisfied=False, scope_reason="", privacy=None
+):
+    if manifest.get("repairScope") and (
+        type(scope_satisfied) is not bool or not isinstance(scope_reason, str) or len(scope_reason) > 1000
+    ):
+        raise ValueError("授权范围复核格式无效")
+    mask = privacy.redact if privacy else redact
+    safe_findings = []
+    for row in findings:
+        safe = {**row, **{key: mask(row[key]) for key in ("message", "suggestion", "verification")}}
+        safe["id"] = engine().finding(safe["ruleId"], safe["message"], safe["file"], safe.get("line"))["id"]
+        safe_findings.append(safe)
+    findings = safe_findings
+    scope_reason = mask(scope_reason)
     result = engine().freeze_result(manifest, findings, checked, completed)
     if manifest.get("repairScope"):
-        if type(scope_satisfied) is not bool or not isinstance(scope_reason, str) or len(scope_reason) > 1000:
-            raise ValueError("授权范围复核格式无效")
         result.update(
             scopeSatisfied=scope_satisfied,
             scopeReason=scope_reason,
@@ -76,6 +89,19 @@ def validate_result(result: dict, manifest: dict) -> dict:
     for row in findings:
         if not isinstance(row, dict):
             raise ValueError("问题条目必须为对象")
+        if set(row) - {
+            "id",
+            "ruleId",
+            "file",
+            "line",
+            "message",
+            "suggestion",
+            "verification",
+            "reviewRequired",
+            "severity",
+            "points",
+        }:
+            raise ValueError("问题包含未声明字段")
         if not all(
             isinstance(row.get(k), str)
             for k in ("id", "ruleId", "file", "message", "suggestion", "verification")
@@ -93,6 +119,8 @@ def validate_result(result: dict, manifest: dict) -> dict:
         scope_satisfied=result.get("scopeSatisfied", False),
         scope_reason=result.get("scopeReason", ""),
     )
+    if set(result) != set(rebuilt):
+        raise ValueError("审计结果包含未声明字段或缺少必要字段")
     if manifest.get("repairScope"):
         for key in ("scopeSatisfied", "scopeReason", "repairRunId", "repairRound", "sourceVersionId"):
             if result.get(key) != rebuilt[key]:
@@ -136,7 +164,11 @@ def submit_result(root: Path, worker_id: str, attempt_id: str, generation: int, 
         row = valid_attempt(db, worker_id, attempt_id, generation)
         manifest = json.loads(row["manifest_json"])
         manifest.update(attemptId=attempt_id, leaseGeneration=generation)
+        from .repair_packages import unpack
+
+        _, files = unpack((root / "objects" / (manifest["artifactDigest"] + ".zip")).read_bytes())
         checked = validate_result(result, manifest)
+        TargetPrivacy(files).validate_report(checked)
         db.execute(
             "UPDATE audit_runs SET verdict=?,delivery_status='saved',report_digest=?,result_json=? WHERE id=?",
             (checked["verdict"], checked["reportDigest"], canonical, row["audit_run_id"]),

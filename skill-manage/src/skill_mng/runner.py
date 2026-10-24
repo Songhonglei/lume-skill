@@ -10,7 +10,7 @@ from pathlib import Path
 from .auditing import engine, freeze_audit
 from .config import write_secret_json
 from .packages import inspect_package
-from .repair_packages import redact, LITERAL_SECRET
+from .privacy import TargetPrivacy
 from .worker_client import Client, RequestFailure
 
 
@@ -98,31 +98,33 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
         raise ValueError("package_identity_mismatch")
     with zipfile.ZipFile(io.BytesIO(original)) as archive:
         files = {f["path"]: archive.read(f["archive_name"]) for f in package.files}
+    privacy = TargetPrivacy(files)
     checks = engine().static_checks(
         files, manifest["registeredVersion"], manifest["depth"], package.metadata, workdir / "virtual-skill"
     )
     findings, checked = checks["findings"], set(checks["checkedRuleIds"])
+    if privacy.locations and len(findings) > 350:
+        findings = findings[:350]
+        findings.append(
+            engine().finding("D3-E6", "静态问题过多，仅保留前 350 项；目标需人工复核。", review=True)
+        )
+    for path, line in sorted(set(privacy.locations))[:100]:
+        findings.append(
+            engine().finding(
+                "D5-W3",
+                "目标文本含疑似凭据（示例/占位值也需复核）；已阻断外部模型及自动修复，报告不回显原值。",
+                path,
+                line,
+                review=True,
+            )
+        )
     completed = False
     validation_notes = []
     scope_satisfied, scope_reason = False, ""
-    if manifest["mode"] == "full":
+    if manifest["mode"] == "full" and not privacy.locations:
         documents = {
             path: raw.decode("utf-8-sig") for path, raw in files.items() if len(raw) <= 262144 and _utf8(raw)
         }
-        # Redact before slicing so a chunk boundary cannot expose a split literal secret.
-        for path, document in documents.items():
-            for match in LITERAL_SECRET.finditer(document):
-                line = document[: match.start()].count("\n") + 1
-                findings.append(
-                    engine().finding(
-                        "D5-W3",
-                        "文本含已遮蔽的凭据字面量；需确认真实凭据或占位用途，报告不回显原值。",
-                        path,
-                        line,
-                        review=True,
-                    )
-                )
-            documents[path] = redact(document)
         intervals = {path: [] for path in documents}
 
         def read(path, offset, limit):
@@ -322,6 +324,7 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
         completed,
         scope_satisfied=scope_satisfied,
         scope_reason=scope_reason,
+        privacy=privacy,
     )
     write_secret_json(workdir / "result.json", result)
     (workdir / "report.md").write_text(result["reportMarkdown"], encoding="utf-8")
