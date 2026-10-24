@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill 工作台</title>
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <section id="gate" class="gate" aria-label="登录"><p>正在连接工作台…</p></section>
+  <div id="workspace" hidden>
+    <header class="app-header">
+      <a class="brand" href="#skills"><img src="/static/icon.svg" width="28" height="28" alt=""><strong>Skill 工作台</strong></a>
+      <span class="divider"></span>
+      <nav aria-label="主导航"><a href="#skills" data-nav="skills">Skill 库</a><a href="#tasks" data-nav="tasks">任务</a><a href="#settings" data-nav="settings">设置</a></nav>
+      <div class="spacer"></div><span class="release">本地部署 · v0.3.1</span>
+      <span id="account"></span><button id="logout" class="text-button">退出</button>
+    </header>
+    <main id="main"></main>
+    <footer>Open Skill Manager <span>自托管 · 数据保存在你的设备上</span></footer>
+  </div>
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <form id="import-form">
+      <div class="dialog-head"><h2 id="import-title">导入 Skill</h2><button type="button" data-action="close-import" class="icon-button" aria-label="关闭">×</button></div>
+      <div class="tabs" role="tablist" aria-label="导入方式">
+        <button type="button" data-mode="upload" role="tab" aria-selected="true">ZIP 文件</button>
+        <button type="button" data-mode="directory" role="tab" aria-selected="false">本地目录</button>
+        <button type="button" data-mode="url" role="tab" aria-selected="false">下载链接</button>
+      </div>
+      <div id="import-input"></div>
+      <div id="metadata-fields" hidden>
+        <p class="hint">包中缺少以下信息，补充后即可导入。</p>
+        <label>名称<input name="name" placeholder="例如 hello-skill" maxlength="80"></label>
+        <label>版本<input name="version" placeholder="例如 1.0.0" maxlength="80"></label>
+      </div>
+      <p id="import-error" class="error" role="alert"></p>
+      <div class="dialog-foot"><button type="button" data-action="close-import">取消</button><button type="submit" class="primary">导入</button></div>
+    </form>
+  </dialog>
+</body>
+</html>
