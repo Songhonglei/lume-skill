@@ -1,0 +1,33 @@
+{
+  "recorded_date": "2026-10-24",
+  "timezone": "Asia/Shanghai",
+  "code_baseline": "a3fc19f354f560fc21d33498515ea2462583350d",
+  "source_prs_merged": [
+    1,
+    2
+  ],
+  "main_ci": {
+    "run_id": 40080630091,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/Songhonglei/lume-skill/actions/runs/40080630091",
+    "scope": "40 PG tests, lint/build/source scan, Worker packaging, Linux x86_64 Docker build/fresh enrollment/restart; no model credentials or inference"
+  },
+  "revised_macos_worker_install": {
+    "status": "PASS",
+    "archive_sha256": "b0b4a7ed3667d40785fec6142a6b587589e3008be3486007f6bcb77b84967601",
+    "module_bytes_match_source": true,
+    "persistent_enrollment_reused": true,
+    "online_workers_at_install": 1,
+    "model_rerun": false,
+    "provenance": "Existing private install receipt reviewed during handoff; not a new installation or model test"
+  },
+  "historical_receipts_preserved": true,
+  "still_not_run": [
+    "Linux x86_64 standalone Worker installation and real evaluation",
+    "Linux x86_64 Docker real model evaluation/generation",
+    "macOS arm64 Docker Desktop full acceptance",
+    "formal Release/GHCR publication and public release fresh installation"
+  ],
+  "handoff_work_scope": "Documentation reconciliation and read-only status checks; no new model calls, deployment, container cleanup or formal release"
+}

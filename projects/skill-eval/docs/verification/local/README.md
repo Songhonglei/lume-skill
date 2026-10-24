@@ -2,7 +2,9 @@
 
 记录日期：2026-10-24。环境：macOS arm64；PostgreSQL 17.10；Python 3.12.12；Node 24.19.0；skill-up 0.14.0；Codex 0.162.1。模型为用户已选择的可用 Codex 连接，实际服务端模型身份未核实。
 
-本机验收对应源码提交：`6e70417977f53dee798a676d76ddcb81a4ef0886`。上述提交对应原生主链路证据；后续容器引导、自检与备份修复单独记录在 [containers.json](containers.json)，不将旧原生收据改写成新实测。
+当前源码已合入公开 main，最新代码基线 CI 40080630091 通过；完整状态与下一步见 [交接文档](../../AGENT-HANDOFF.md)。本目录原始收据保留历史检查点，不改写成后续实测。
+
+本机验收对应旧开发仓库源码提交：`6e70417977f53dee798a676d76ddcb81a4ef0886`。上述提交对应原生主链路证据；后续容器引导、自检与备份修复单独记录在 [containers.json](containers.json)，不将旧原生收据改写成新实测。
 
 本目录只存合成数据、脱敏摘要与产物 SHA256。模型登录、中心口令、Worker 凭据、真实连接地址和完整运行日志保留在私有目录，不进入源码。
 
@@ -33,13 +35,15 @@
 | 项目 | 状态 / 原因 |
 | --- | --- |
 | Linux x86_64 独立 Worker | NOT_RUN；当前机器为 macOS arm64 |
-| Linux Compose 与 macOS Docker Desktop | NOT_RUN；用户明确允许本次先完成源码和本机验证，容器另补 |
+| Linux Compose 与 macOS Docker Desktop | Linux x86_64 CI 构建/空卷引导/重启通过；真实推理/生成及 Mac Docker Desktop 完整路径未验 |
 | 容器 Codex 默认沙箱真实兼容 | Podman arm64 已实测失败：devpts 挂载拒绝；新自检在调用模型前拦截。Docker 目标平台另验 |
 | 容器全新环境、重启与恢复 | Podman Linux arm64 通过；全新项目/卷恢复后会话、Worker、任务与报告摘要一致。不能替代 Docker Desktop/Linux x86_64 验收 |
-| GitHub CI 与多架构镜像发布 | NOT_RUN；仅写入工作流，未连接远程仓库或推送 |
+| GitHub CI 与多架构镜像发布 | CI 40080630091 已通过，源码 PR #1/#2 已合 main；多架构镜像发布仍 NOT_RUN |
 | 公开发布后的最短重装 | NOT_RUN；没有已发布版本 |
 | 本项目公开许可证和目标仓库 | 已明确：MIT；Songhonglei/lume-skill 的 projects/skill-eval。候选源码接入和正式发布分开记录 |
 
-因此本机开发候选可以审阅和试用，**尚未达到公开发布放行条件**。最后一轮独立页面复核因原浏览器会话结束未执行，沿用已有完整主流程实测；最新源码的类型检查、构建和 API 检查已通过，未把这些检查替代为新的浏览器实测。
+因此本机开发候选可以审阅和试用，**尚未达到正式版本/镜像发布放行条件**。最后一轮独立页面复核因原浏览器会话结束未执行，沿用已有完整主流程实测；最新源码的类型检查、构建和 API 检查已通过，未把这些检查替代为新的浏览器实测。
+
+后续品牌变更已单独完成浏览器检查，见 [UGLIC-brand.md](audit/UGLIC-brand.md)；这不等于重跑此前全部业务边缘场景。修订 Mac ZIP 的安装/重连证据见 [handoff-checkpoint.json](handoff-checkpoint.json)，未为该包重复模型调用。
 
 完整逐条状态见 [acceptance.md](acceptance.md)，审计见 [audit/UGLIC.md](audit/UGLIC.md)。

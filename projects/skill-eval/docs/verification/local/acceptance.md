@@ -30,11 +30,11 @@
 | AC-24 | PASS（本机） | 错误模型、缺登录、超时真实结果；不回退、不自动重跑，部分报告保留 |
 | AC-25 | PASS（本机主链路） | 四页与已实现流程，真实上传→生成维护→全量评测→报告；末轮浏览器复核单独记录 |
 | AC-26 | PASS（本机） | 初始化、登录、登出、密码轮换、CSRF、来源和持续限速测试 |
-| AC-27 | NOT_RUN | Linux Compose 全新环境与真实 Codex；用户允许单独补齐 |
-| AC-28 | NOT_RUN（平台整体） | macOS 原生安装通过；Podman arm64 引导/恢复通过，Codex 沙箱失败；Linux x86_64 与 Docker Desktop 整套尚未验收 |
+| AC-27 | PARTIAL | Linux x86_64 GitHub CI 的 Docker 构建、空卷初始化、自动接入与重启保持通过；真实 Codex 推理/生成未验，用户明确先合 main 后补 |
+| AC-28 | PARTIAL | macOS 原生安装与真实评测通过；Podman arm64 引导/恢复通过、沙箱失败；Linux x86_64 CI 无模型路径通过，独立安装/真实推理与 Mac Docker Desktop 完整路径未验 |
 | AC-29 | PARTIAL | 缺登录、离线/等待、无效码、版本错误和故障提示已实现及测试；Podman 首次引导、重启已实测；端口冲突及 Docker 目标平台另验 |
 | AC-30 | PASS（本机） | restore.json；全新 PG、目录、配套密钥/Worker/模型资料，历史、会话和产物摘要一致；Podman arm64 新项目/卷恢复亦通过；Docker 目标平台另验 |
-| AC-31 | PARTIAL / 发布阻断 | UGLIC 与 Skill 审计、来源清点、秘密扫描已执行；项目 MIT 和合集目标已明确；本轮增量审计见 audit/UGLIC-container.md，平台发布门槛仍未完成 |
-| AC-32 | NOT_RUN | 无已公开仓库/镜像；工作流仅配置，远程 CI 与发布后安装没有实际收据 |
+| AC-31 | PARTIAL（正式发布） | UGLIC 与 Skill 审计、来源清点、秘密扫描已执行；项目 MIT 和合集目标已明确；本轮增量审计见 audit/UGLIC-container.md，源码已按用户授权合并，正式发布的平台门槛仍未完成 |
+| AC-32 | PARTIAL | 公开合集 PR #1/#2 已合 main，CI 40080630091 成功；正式 Release、GHCR 镜像与公开发布后最短重装仍 NOT_RUN |
 
-记录不会因前端出现、单测通过或候选 Dockerfile 存在而把未测项提升为 PASS。公开发布仍受 AC-27、28、31、32 及上述分支约束。
+记录不会因前端出现、单测通过或候选 Dockerfile 存在而把未测项提升为 PASS。正式版本/镜像发布仍受 AC-27、28、31、32 及上述分支约束；源码已公开并合 main。当前交接与 CI 链接见 [AGENT-HANDOFF.md](../../AGENT-HANDOFF.md)。

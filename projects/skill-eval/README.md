@@ -2,7 +2,7 @@
 
 自托管的通用 Skill 评测工作台。上传本地 Skill，维护可复用的评测集，由独立 Worker 使用 Codex 执行真实评测。
 
-**当前为本机已验证的开发候选。** macOS arm64 已完成真实生成、三类单裁判评测、网页维护闭环和备份恢复；Podman Linux arm64 的引导、重启和恢复已验证，容器内 Codex 沙箱未通过；Linux x86_64、Docker Desktop 与正式发布仍待验收。完整状态见[验收记录](docs/verification/local/README.md)。
+**源码已合入 main，当前为开发候选。** macOS arm64 已完成真实生成、三类单裁判评测、网页维护闭环和备份恢复；Podman Linux arm64 的引导、重启和恢复已验证，容器内 Codex 沙箱未通过；Linux x86_64 CI 已验证 Docker 构建、引导与重启；目标 Docker 平台真实模型和正式发布仍待验收。完整状态见[验收记录](docs/verification/local/README.md)。
 
 固定使用 **skill-up 0.14.0 + Codex CLI 0.162.1**，仅提供标准评测、全部案例、单裁判。没有内部平台或企业账号依赖。
 
@@ -90,6 +90,8 @@ npm --prefix frontend run build
 一期面向单管理员自用。任务目录、环境变量白名单和 Codex 沙箱用于减少无关上下文；它们不构成不可信多租户的强隔离。仅运行你信任的 Skill、脚本和附件。实际服务端模型身份无法从上游报告核实时，页面显示“未核实”。
 
 ## 文档
+
+- [完整 Agent 交接：进展、复盘、接手步骤与待办](docs/AGENT-HANDOFF.md)
 
 - [配置、升级、备份恢复与排障](docs/OPERATIONS.md)
 - [产品与技术方案](docs/PRODUCT-AND-TECHNICAL-PLAN.md) · [开发计划](docs/DEVELOPMENT-PLAN.md) · [实现进度](docs/IMPLEMENTATION-STATUS.md)
