@@ -1,0 +1,593 @@
+{
+  "schemaVersion": 1,
+  "id": "core-2026-10-25-v1",
+  "license": "Synthetic cases: project MIT; upstream snapshot: its retained Apache-2.0 LICENSE.txt.",
+  "cases": [
+    {
+      "id": "valid-multifile-l1",
+      "slug": "reg-valid-multifile-l1",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Pure greeting, explicit input/error/summary contract, no side effects or external dependencies.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-valid-multifile-l1\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "verdicts": [
+            "pass"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": true,
+          "strictConfirmed": true
+        }
+      },
+      "contentDigest": "c0d51d88f56bb3b8527af28258e17dde05fb72c2eac3e265bd0e83ec6b1a5abd",
+      "artifactDigest": "fe02d327983f8fa92a2b34d2d588fc5c446c639917fcdc75a9879a396a31e58d",
+      "privacyBlocked": false
+    },
+    {
+      "id": "valid-multifile-l2",
+      "slug": "reg-valid-multifile-l2",
+      "registeredVersion": "1.0.0",
+      "depth": "L2",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Same correct input at L2; unavailable optional Hub is a documented warning, not an ERR.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-valid-multifile-l2\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [
+            "D7-W1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "verdicts": [
+            "pass"
+          ],
+          "confirmedRules": [
+            "D7-W1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true,
+          "strictConfirmed": true
+        }
+      },
+      "contentDigest": "8a172318c53416469d8d4ec84b3be66a3c2543cd3c87a050df17916d2dc1d1b7",
+      "artifactDigest": "2ed1dcedc1f1eaae1d26d48171d264ee3d7e92868d9e83889527087bcff44ab9",
+      "privacyBlocked": false
+    },
+    {
+      "id": "syntax-error",
+      "slug": "reg-syntax-error",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Unclosed parenthesis is a definite parse error. Never execute the broken module.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-syntax-error\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    return f\"Hello, {name}!\"\n    broken = (\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D6-E1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D6-E1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "repair": {
+        "selectedRules": [
+          "D6-E1"
+        ],
+        "targetVersion": "1.0.1",
+        "maxRounds": 3
+      },
+      "contentDigest": "8a2931284052d283aa3f7786d7971e5e0a3d9a13007321bc94c5f1adc5bde494",
+      "artifactDigest": "fa90b71a1a8fdf90e6a5d821b7c630747a3155decc1b647d74219d33932ec4c4",
+      "privacyBlocked": false
+    },
+    {
+      "id": "description-short",
+      "slug": "reg-description-short",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Description omits trigger and is below the fixed minimum.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-description-short\nversion: 1.0.0\ndescription: Greeting\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D4-E2"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D4-E2"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "repair": {
+        "selectedRules": [
+          "D4-E2"
+        ],
+        "targetVersion": "1.0.1",
+        "maxRounds": 3
+      },
+      "contentDigest": "aedff9b82eaa04ce7633f27c8ca373d933e3a687f8407398e7484a5b22333409",
+      "artifactDigest": "60ad4c2fdfabee83a8f670c0b415e20d56f68c56801993b9ad8cc287bb51fb3a",
+      "privacyBlocked": false
+    },
+    {
+      "id": "version-mismatch",
+      "slug": "reg-version-mismatch",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Declared 0.9.0 conflicts with immutable registered 1.0.0; zero-point ERR must block.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-version-mismatch\nversion: 0.9.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D7-E1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D7-E1"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "contentDigest": "07ec8f2eb3455dea3f8a2ba86362e0fa2c448e279cbc765751b08e0d003ad280",
+      "artifactDigest": "684f8d8c22a75a3004bd54fa1a64921b94ed218b78a5ffe24b938fe8158aeba1",
+      "privacyBlocked": false
+    },
+    {
+      "id": "path-escape",
+      "slug": "reg-path-escape",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "The final path, not merely an intermediate parent, escapes the Skill root.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-path-escape\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n",
+          "scripts/anchor.py": "from pathlib import Path\nBASE = Path(__file__).resolve().parents[2] / \"external.txt\"\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D3-E5"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D3-E5"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "contentDigest": "c468c03b51773946b2ef7b44988cdd808e93fa5a1e8101c09731d5f08c730dbb",
+      "artifactDigest": "405a190413f0852926860fd36d771f381c491007704018fa792764ca9f931eb2",
+      "privacyBlocked": false
+    },
+    {
+      "id": "dynamic-path-review",
+      "slug": "reg-dynamic-path-review",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Runtime index cannot be proven in bounds by the fixed checker; unresolved evidence must survive.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-dynamic-path-review\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n",
+          "scripts/anchor.py": "from pathlib import Path\ndef anchor(depth):\n    return Path(__file__).parents[depth]\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D3-E5"
+          ],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "review_required",
+            "fail"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D3-E5"
+          ]
+        }
+      },
+      "contentDigest": "fc434b30d4f2898d77e0233186a9efd1b1a5d9658d9b4335a9cffaadc091407e",
+      "artifactDigest": "64e7d4fc3b89299b101c09d18968b8784bf3323d176a5de23512708713b5e7c7",
+      "privacyBlocked": false
+    },
+    {
+      "id": "long-chunked-evidence",
+      "slug": "reg-long-chunked-evidence",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Text exceeds one 12000-character read but remains within the supported text limit. Full coverage requires chunks.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-long-chunked-evidence\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n\nRead [all context](references/long.md) before reporting coverage.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n",
+          "references/long.md": {
+            "text": "This is read-only explanatory context for the greeting contract; no extra operations are required.\n",
+            "repeat": 240
+          }
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "verdicts": [
+            "pass"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": true,
+          "strictConfirmed": true
+        }
+      },
+      "contentDigest": "7632f27ba411bd988aaba36372f906594a327ad45d47ccd582fbb7ae06ed387f",
+      "artifactDigest": "340ab83b9a572562f13f1a532d79f996cfa12efa007515d8ee379bf3ac88b3f8",
+      "privacyBlocked": false
+    },
+    {
+      "id": "oversized-text-review",
+      "slug": "reg-oversized-text-review",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Necessary text above 256 KiB must remain reviewable, never silently PASS.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-oversized-text-review\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n",
+          "references/large.md": {
+            "text": "Read-only context requires manual review beyond the automatic text budget.\n",
+            "repeat": 4000
+          }
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D3-E6"
+          ],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "review_required",
+            "fail"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D3-E6"
+          ]
+        }
+      },
+      "contentDigest": "b9e30f5bc024453f62274432ca3c002096f88c87d138a014489b331c4a78adcf",
+      "artifactDigest": "bf0f645839c56222db1a536b81e230f0466dfeaab48209cf6702a57f57f1687b",
+      "privacyBlocked": false
+    },
+    {
+      "id": "short-credential-block",
+      "slug": "reg-short-credential-block",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Synthetic short password demonstrates T01 blocking. Zero provider calls in either mode.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-short-credential-block\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n",
+          ".env": "PASSWORD=\"demo1234\"\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D5-W3"
+          ],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [
+            "D5-W3"
+          ],
+          "semanticCompleted": false
+        }
+      },
+      "contentDigest": "4ba18e5e0104fae3d39e6aaaa5f87b10ce122c2b0760420f0890639fb6b72ce1",
+      "artifactDigest": "bcb5068087b3fda91760651f9a2dc2cfa6b32046c68116497650d65a50badccf",
+      "privacyBlocked": true
+    },
+    {
+      "id": "malformed-frontmatter",
+      "slug": "reg-malformed-frontmatter",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Invalid YAML is registered with explicit metadata, while original malformed bytes remain auditable.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-malformed-frontmatter\nversion: 1.0.0\ndescription: [unterminated\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D4-E1",
+            "D4-E2"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D4-E1",
+            "D4-E2"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "contentDigest": "0d5fbd4cb7bf1cb11bcb541e21906c1e0289f2c6b37af5bc4a7c4b707b56a025",
+      "artifactDigest": "0db0da7232a64b6140de0318981987954aadb5379740c325ae2adb157426d8be",
+      "privacyBlocked": false
+    },
+    {
+      "id": "semantic-behavior-mismatch",
+      "slug": "reg-semantic-behavior-mismatch",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Syntax is valid but output contradicts the declared greeting contract; only real semantic review can detect this.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-semantic-behavior-mismatch\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return 42\n",
+          "references/format.md": "Return exactly one greeting: Hello, <trimmed name>! Include a brief completion summary separately.\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "anyConfirmedRules": [
+            [
+              "D6-E4",
+              "D6-E2"
+            ]
+          ],
+          "semanticCompleted": true
+        }
+      },
+      "contentDigest": "a28dc7403fc48bbf0ef2b893a6046b5b032a78e14e5b3a159c225f6e69898e14",
+      "artifactDigest": "016ed71c313f7c27494d0636f62c865d0d731bbccb80da050f31219e81c38bfc",
+      "privacyBlocked": false
+    },
+    {
+      "id": "required-reference-missing",
+      "slug": "reg-required-reference-missing",
+      "registeredVersion": "1.0.0",
+      "depth": "L1",
+      "sourceKind": "synthetic",
+      "oracleRationale": "Required output-format reference in SKILL.md is absent. Static silence does not prove semantic correctness.",
+      "input": {
+        "files": {
+          "SKILL.md": "---\nname: reg-required-reference-missing\nversion: 1.0.0\ndescription: Use when the user requests a short English greeting for a supplied person name.\n---\n# Greeting\n## Prerequisites\nPython 3.11+, standard library only, no dependencies and no network access.\n## Input\nA nonempty person name is required. If missing, stop and ask for the name; do not invent it.\n## Procedure\n1. Explain that a greeting is being prepared. Validate the name is nonempty.\n2. The pure function in [scripts/greet.py](scripts/greet.py) formats the greeting. It performs no writes.\n3. Follow [the output format](references/format.md), then return the greeting and a brief completion summary.\n## Boundaries\nOnly produce a response. Never edit files, execute unrelated commands, install packages, or contact a service.\nOn any validation error, stop and explain how to provide a valid name. There is no batch operation.\n",
+          "scripts/greet.py": "def greet(name):\n    if not isinstance(name, str) or not name.strip():\n        raise ValueError(\"Provide a nonempty person name.\")\n    return f\"Hello, {name.strip()}!\"\n"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "review_required"
+          ],
+          "confirmedRules": [],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D6-E5"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": true
+        }
+      },
+      "contentDigest": "6bbc942bf3cee54abb9244e4bb2cb7cb61b8fa76484944d3720c194d8b6c9bfc",
+      "artifactDigest": "926ac77499408f3f4f039c6071452b3a609dfc3262c1d2566f794e3059e2a4cc",
+      "privacyBlocked": false
+    },
+    {
+      "id": "upstream-webapp-testing",
+      "slug": "webapp-testing",
+      "registeredVersion": "snapshot-dbd4588",
+      "depth": "L1",
+      "sourceKind": "licensed_upstream",
+      "oracleRationale": "Unmodified public Apache-2.0 Skill snapshot. Static baseline: missing explicit prerequisites and version. Full-model findings require human adjudication and are excluded from automatic accuracy rates.",
+      "provenance": "vendor/WEBAPP-TESTING-SOURCE.json",
+      "input": {
+        "directory": "vendor/webapp-testing",
+        "fileDigests": {
+          "SKILL.md": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+          "LICENSE.txt": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362",
+          "examples/console_logging.py": "ea46877289acb82da7e7ce59d0bc37c8977cd57e2a006d0c88d7a1c625bf95da",
+          "examples/static_html_automation.py": "9d533aafb875ee3ab8b8ebf8f5b9003ac8d999da3d09b285cce252e623140064",
+          "examples/element_discovery.py": "d63c89604a22f8845d724e95dda45db49b1bf57c25ce0a83afbb7b8da3d402f0",
+          "scripts/with_server.py": "b0dcf4918935b795f4eda9821579b9902119235ff4447f687a30286e7d0925fd"
+        }
+      },
+      "expected": {
+        "static": {
+          "verdicts": [
+            "fail"
+          ],
+          "confirmedRules": [
+            "D4-E3",
+            "D4-W7"
+          ],
+          "reviewRules": [],
+          "semanticCompleted": false,
+          "strictConfirmed": true
+        },
+        "full": {
+          "manualReview": true
+        }
+      },
+      "contentDigest": "7dd9eedc497fbf8b5634a293190b11f93cf4b80f7cd6c1a775def12deadeebb9",
+      "artifactDigest": "ec7641f81be86bc8aa0ef32617ebd295921b0d2d794c4c2bdefb2c395b124df1",
+      "privacyBlocked": false
+    }
+  ]
+}

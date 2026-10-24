@@ -1,0 +1,2 @@
+# Preserve pinned upstream fixture bytes, including upstream trailing spaces.
+regression/vendor/webapp-testing/** -whitespace

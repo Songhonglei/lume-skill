@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "open-skill-mng"
-version = "0.3.2.dev0"
+version = "0.3.2.dev1"
 description = "Self-hosted Skill registry with immutable versions"
 readme = "README.md"
 requires-python = ">=3.11"
