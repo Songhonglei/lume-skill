@@ -1,0 +1,43 @@
+services:
+  web:
+    build: .
+    image: open-skill-mng:0.3.1
+    command: ["skill-mng", "server", "run"]
+    environment:
+      SKILL_MNG_DATA: /data
+      SKILL_MNG_HOST: 0.0.0.0
+      SKILL_MNG_BUILTIN_CREDENTIALS: /link/credentials.json
+      SKILL_MNG_WORKER_SERVER: http://web:8765
+    ports:
+      - "127.0.0.1:${SKILL_MNG_PORT:-8765}:8765"
+    volumes:
+      - skill-data:/data
+      - worker-link:/link
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  worker:
+    image: open-skill-mng:0.3.1
+    command: ["skill-mng", "worker", "run"]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      SKILL_MNG_DATA: /worker-data
+      SKILL_MNG_WORKER_CREDENTIALS: /link/credentials.json
+    volumes:
+      - worker-data:/worker-data
+      - worker-link:/link:ro
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+volumes:
+  skill-data:
+  worker-data:
+  worker-link:

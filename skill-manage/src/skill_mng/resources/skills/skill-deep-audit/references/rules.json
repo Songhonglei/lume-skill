@@ -1,0 +1,369 @@
+{
+  "version": "1.2.0-platform.1",
+  "rules": [
+    {
+      "id": "D1-E1",
+      "title": "A write op must be followed by result verification",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D1-E2",
+      "title": "Check whether the write op is already done before executing",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D1-E3",
+      "title": "Exception branches must halt the subsequent flow",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D1-W1",
+      "title": "End-of-flow must emit a summary",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D1-W2",
+      "title": "Detect redundant ops / pointless relays",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D2-E1",
+      "title": "Forbid raw HTTP or browser bypass for sensitive / controlled domains",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D2-W1",
+      "title": "Audit dynamic command construction",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D2-W2",
+      "title": "Hardcoded URLs must be audited",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D2-W3",
+      "title": "Cross-layer command-call tracing",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E1",
+      "title": "No hardcoded local absolute paths",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E2",
+      "title": "No hardcoded environment-specific fixed values",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E3",
+      "title": "No hardcoded column indices",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-W1",
+      "title": "Forbid duplicating shared scripts across multiple skills",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-W2",
+      "title": "Branch reachability simulation",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L2"
+    },
+    {
+      "id": "D3-W3",
+      "title": "Error messages must be actionable",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E4",
+      "title": "Cross-skill references must declare their resolution base",
+      "points": 0,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E5",
+      "title": "Path derivation must survive relocation",
+      "points": 0,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-E6",
+      "title": "File reads and writes must handle failure",
+      "points": 0,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D3-W4",
+      "title": "Fixed-hop path derivation inside the skill",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E1",
+      "title": "SKILL.md frontmatter must be complete",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E2",
+      "title": "description must include trigger timing",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E3",
+      "title": "Must declare prerequisites",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E4",
+      "title": "Required args must give a clear message when missing",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E5",
+      "title": "Packaged files must follow conventions",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-W1",
+      "title": "Directory-structure convention",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-W2",
+      "title": "High-risk ops must have guardrail statements",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-W3",
+      "title": "Key steps must give progress feedback",
+      "points": 1,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-W6",
+      "title": "SKILL.md length is within budget",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-E6",
+      "title": "SKILL.md length control",
+      "points": 0,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-E1",
+      "title": "No plaintext-stored sensitive credentials",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-E2",
+      "title": "High-risk ops must not hardcode `--yes` / forced-confirm bypass",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-E3",
+      "title": "Forbid hardcoded credentials in URLs",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-W1",
+      "title": "Batch ops must have an upper-bound safeguard",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-W2",
+      "title": "Write ops must have a confirm step",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-W3",
+      "title": "Plaintext-credential scan in config files",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D5-W4",
+      "title": "HTTP batch-write audit",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E1",
+      "title": "Script syntax is correct",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E2",
+      "title": "Logic completeness defects",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E3",
+      "title": "Key boundaries are unhandled",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E4",
+      "title": "SKILL.md-described functional steps must have corresponding implementation",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E5",
+      "title": "Required reference paths in SKILL.md must exist",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E6",
+      "title": "Cross-table / cross-source field format compatibility",
+      "points": 3,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-E7",
+      "title": "Key columns must be format-validated after parsing",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-W1",
+      "title": "Code completeness",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-W2",
+      "title": "Dependency-tool versions are declared",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-W3",
+      "title": "Non-required reference paths in SKILL.md missing",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D6-W4",
+      "title": "Large codebase lacks test coverage",
+      "points": 3,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D7-W1",
+      "title": "Hub publish status",
+      "points": 1,
+      "severity": "WARN",
+      "depth": "L2"
+    },
+    {
+      "id": "D7-W2",
+      "title": "Dependency-skill list & health",
+      "points": 2,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D7-W3",
+      "title": "Skill footprint is reasonable",
+      "points": 1,
+      "severity": "WARN",
+      "depth": "L1"
+    },
+    {
+      "id": "D7-E1",
+      "title": "Declared version matches registered version",
+      "points": 0,
+      "severity": "ERR",
+      "depth": "L1"
+    },
+    {
+      "id": "D4-W7",
+      "title": "Declared version is missing",
+      "points": 0,
+      "severity": "WARN",
+      "depth": "L1"
+    }
+  ]
+}

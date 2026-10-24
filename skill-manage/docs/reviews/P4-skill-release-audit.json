@@ -1,0 +1,49 @@
+{
+  "skill": "skill-deep-audit",
+  "target": "github",
+  "modules": [
+    {
+      "module": "模块1 语法与逻辑",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块2 功能完整性",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块3 边界与异常处理",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块4 数据与配置安全",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块5 依赖检查",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块6 文档规范",
+      "status": "PASS",
+      "issues": [
+        {
+          "code": "",
+          "severity": "INFO",
+          "file": "SKILL.md",
+          "line": null,
+          "message": "frontmatter 缺少 version 字段。多数 Hub 视为可选，但部分私有 SkillHub 发布时必填，缺失会报「版本不允许为空」。建议添加：version: 1.0.0",
+          "variable": ""
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warns": 0
+  }
+}

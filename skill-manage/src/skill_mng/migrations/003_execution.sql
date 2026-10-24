@@ -1,0 +1,13 @@
+ALTER TABLE workers ADD COLUMN revoked_at TEXT;
+ALTER TABLE tasks ADD COLUMN audit_run_id TEXT REFERENCES audit_runs(id);
+ALTER TABLE tasks ADD COLUMN available_at INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE tasks ADD COLUMN cancel_requested INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN failure_code TEXT;
+ALTER TABLE tasks ADD COLUMN failure_message TEXT;
+ALTER TABLE tasks ADD COLUMN finished_at TEXT;
+ALTER TABLE tasks ADD COLUMN model_calls INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE task_attempts ADD COLUMN updated_at TEXT;
+ALTER TABLE task_attempts ADD COLUMN error_code TEXT;
+CREATE INDEX tasks_dispatch ON tasks(state,available_at);
+CREATE INDEX attempts_lease ON task_attempts(state,lease_until);
