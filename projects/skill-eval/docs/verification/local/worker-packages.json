@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0",
+  "macos_validation": "Final source ZIP extracted outside the source tree; installer created a private venv and hash-locked dependencies; official skill-up checksum verified; system Codex unchanged. Real execution evidence is recorded separately.",
+  "candidate_source_commit": "abeebd6556648878c8585cb775672c93665cf3b1",
+  "previous_verified_packages": [
+    {
+      "platform": "linux-x86_64",
+      "bytes": 71601,
+      "sha256": "1e2ca10f3dd01e09ae4e57f8bd4852b92820a0eb5399b2b4948a94de616fcdf3",
+      "files": 37,
+      "installation": "NOT_RUN"
+    },
+    {
+      "platform": "macos-arm64",
+      "bytes": 71600,
+      "sha256": "4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994556899cb91be",
+      "files": 37,
+      "installation": "PASS"
+    }
+  ],
+  "packages": [
+    {
+      "platform": "linux-x86_64",
+      "bytes": 72723,
+      "sha256": "f4b76f2026e4c2f406cf703b7ed6512029aad9af45dfed1c94b3d0ed97ddaf6d",
+      "files": 38,
+      "installation": "NOT_RUN for revised ZIP; prior macOS package real-run receipt retained",
+      "changes": "MIT and notices retained; Linux sandbox preflight; generation sandbox diagnostics"
+    },
+    {
+      "platform": "macos-arm64",
+      "bytes": 72722,
+      "sha256": "b0b4a7ed3667d40785fec6142a6b587589e3008be3486007f6bcb77b84967601",
+      "files": 38,
+      "installation": "NOT_RUN for revised ZIP; prior macOS package real-run receipt retained",
+      "changes": "MIT and notices retained; Linux sandbox preflight; generation sandbox diagnostics"
+    }
+  ],
+  "previous_verified_candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}

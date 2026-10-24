@@ -1,0 +1,57 @@
+name: Skill Eval checks
+on:
+  push:
+    branches: [main]
+    paths: ['projects/skill-eval/**', '.github/workflows/skill-eval-checks.yml']
+  pull_request:
+    paths: ['projects/skill-eval/**', '.github/workflows/skill-eval-checks.yml']
+  workflow_dispatch:
+defaults:
+  run:
+    working-directory: projects/skill-eval
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.10-bookworm
+        env:
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: ephemeral-ci-only
+          POSTGRES_DB: skill_eval_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U runner -d skill_eval_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: projects/skill-eval/frontend/package-lock.json
+      - run: python3 -m pip install uv==0.9.11
+      - run: uv sync --locked --group dev
+      - run: python3 deploy/install_tools.py
+      - run: uv run --locked ruff check backend worker tests deploy
+      - run: uv run --locked pytest -q
+        env:
+          OSE_TEST_DATABASE_URL: postgresql://runner:ephemeral-ci-only@127.0.0.1:5432/skill_eval_test
+      - run: npm --prefix frontend ci --ignore-scripts
+      - run: npm --prefix frontend run build
+      - run: python3 deploy/check_source.py
+      - run: python3 deploy/build_worker.py
+      - run: docker compose config --quiet
+      - run: docker compose build api worker
+      - run: docker compose up --no-build -d --wait
+      - run: uv run --locked python3 deploy/compose_smoke.py --state .local/compose-smoke.json
+      - run: docker compose down
+      - run: docker compose up --no-build -d --wait
+      - run: uv run --locked python3 deploy/compose_smoke.py --state .local/compose-smoke.json --verify
+      - if: always()
+        run: docker compose down --volumes

@@ -1,0 +1,25 @@
+export type Page = 'skills' | 'sets' | 'tasks' | 'settings'
+export type Selection = { skillId?: string; versionId?: string; setId?: string; taskId?: string; action?: 'import' }
+export type EditorFile = { encoding: 'utf-8' | 'base64'; content: string; mode: number }
+export type Files = Record<string, EditorFile>
+export type Issue = { path: string; message: string }
+export type CaseInfo = { id: string; file: string; title: string; prompt: string; judge: string; timeout_seconds: number }
+export type Validation = { valid?: boolean; issues?: Issue[]; warnings?: Issue[]; cases?: CaseInfo[]; native?: { message: string } }
+export type Skill = { id: string; name: string; description: string; default_set_id?: string; latest_version_id: string; latest_revision: number; declared_version: string; default_set_name?: string; active_version_id?: string; active_source_skill_version_id?: string; active_validation?: Validation; set_count: number; draft_count: number }
+export type SkillVersion = { id: string; revision: number; declared_version: string; blob: string; created_at: string }
+export type SkillDetail = Skill & { versions: SkillVersion[]; sets: EvalSet[] }
+export type EvalSet = { id: string; skill_id: string; skill_name: string; name: string; active_version_id?: string; active_revision?: number; active_validation?: Validation; draft_count: number; is_default?: boolean }
+export type SetVersion = { id: string; set_id: string; source_skill_version_id: string; source_skill_revision?: number; kind: 'DRAFT' | 'SAVED'; revision: number; edit_number: number; blob: string; validation: Validation; archived: boolean; files?: Files; created_at: string }
+export type SetDetail = EvalSet & { versions: SetVersion[] }
+export type Model = { id: string; name: string; connection_fingerprint: string; connection_label: string }
+export type Settings = { model?: Model; public_url: string; required_versions: { skill_up: string; codex: string }; storage: { database: string; files: string }; limits: { archive_mib: number; expanded_mib: number; files: number } }
+export type Probe = { id: string; model: string; success?: boolean; message?: string; observed_version?: string; observed_model?: string }
+export type Worker = { id: string; name: string; online: boolean; revoked: boolean; builtin: boolean; last_seen: string; capabilities: { codex_version: string; skill_up_version: string; login_configured: boolean; connection_fingerprint: string; connection_label: string; platform: string; diagnostic: string }; probe_request?: Probe; probe_result?: Probe }
+export type Assertion = { text: string; passed: boolean; evidence?: string }
+export type CaseResult = { case_id: string; verdict: string; reason: string; raw: { title?: string; duration_ms?: number; response?: string; grading?: { assertion_results?: Assertion[] } } }
+export type TaskSummary = { verdict?: string; expected?: number; passed?: number; failed?: number; cases?: CaseResult[]; exit_code?: number; actual_model?: string; observed_configuration?: { version?: string }; actual_count?: number; target_count?: number; draft_id?: string; set_id?: string; reason?: string; count_notice?: string; usage?: Record<string, number | null> }
+export type Task = { id: string; kind: 'evaluate' | 'generate'; state: string; verdict?: string; waiting_reason?: string; input: { skill_id: string; skill_version_id: string; skill_name: string; skill_revision: number; set_id?: string; set_revision?: number; set_version_id?: string; set_name?: string; source_skill_version_id?: string; cases?: CaseInfo[]; model: Model }; summary?: TaskSummary; created_at: string; finished_at?: string; current_attempt_id?: string }
+export type Attempt = { id: string; number: number; worker_name: string; state: string; created_at: string; finished_at?: string; summary?: TaskSummary }
+export type Artifact = { id: string; attempt_id: string; kind: string; html_available?: boolean; created_at: string }
+export type TaskDetail = Task & { attempts: Attempt[]; artifacts: Artifact[] }
+export type Common = { skills: Skill[]; settings?: Settings; workers: Worker[]; selection: Selection; navigate: (page: Page, selection?: Selection) => void; refresh: () => void; revision: number; notify: (message: string, error?: boolean) => void; setDirty: (dirty: boolean) => void }

@@ -1,0 +1,28 @@
+{
+  "scenario": "missing-login",
+  "versions": {
+    "skill_up": "skill-up version 0.14.0",
+    "codex": "codex-cli 0.162.1"
+  },
+  "exit_code": 1,
+  "execution_state": "FAILED",
+  "verdict": "INCOMPLETE",
+  "expected": 1,
+  "passed": 0,
+  "failed": 0,
+  "observed_configuration": {
+    "version": "0.162.1"
+  },
+  "actual_model": null,
+  "cases": [
+    {
+      "case_id": "label-basic",
+      "verdict": "INCOMPLETE"
+    }
+  ],
+  "artifacts": {
+    "events.jsonl": "5c2c30b2923bf8536dbabf8402b500c4ac23c83acd5ff50058088d834c50fe7c",
+    "iteration-1/result.json": "b4ce47d03d09a38fbf0ac2658c0b29f096089f3d1e462dbf8f3b2e37b5041859",
+    "iteration-1/report.html": "661e83bbc18da42d8cd6714a66279ae226c079acc6588542ac475eb081c3bb41"
+  }
+}

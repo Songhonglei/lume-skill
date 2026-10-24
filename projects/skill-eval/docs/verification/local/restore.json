@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "platform": "macOS arm64",
+  "method": "PostgreSQL custom dump + paired file volume archive; fresh database and directories",
+  "tasks": 4,
+  "session_restored": true,
+  "resources_versions_artifacts_identical": true,
+  "worker_and_selected_model_profile_hashes_identical": true,
+  "database_dump_sha256": "35e1688a3874b921dc7b799b9e842446ffb17767fd5e2070ed1d623390573390",
+  "file_archive_sha256": "1b89c2c7d146775a9a2ebd487cc9584e2bb6075c851190954d7b7d0a63ba0d96",
+  "candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}

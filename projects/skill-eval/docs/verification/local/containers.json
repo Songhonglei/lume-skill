@@ -1,0 +1,55 @@
+{
+  "recorded_client_date": "2026-10-24",
+  "status": "PARTIAL",
+  "engine": "Podman 6.0.2, rootless applehv Linux VM",
+  "compose": "Docker Compose 5.3.1 through Docker-compatible API",
+  "host_platform": "macOS arm64",
+  "container_platform": "Linux aarch64",
+  "source_build": "Unmodified Dockerfile; podman build --pull=never for center/worker. Docker Hub timed out; exact pinned base image tags were pulled from Docker official ECR namespace and tagged locally. Compose build lacked buildx; not equivalent to default Docker build acceptance.",
+  "build": "PASS",
+  "fresh_volumes_setup": "PASS",
+  "builtin_auto_enrollment": "PASS; exactly one Worker; skill-up 0.14.0 and Codex 0.162.1",
+  "service_user": "10001:10001, privileged=false, no-new-privileges",
+  "persistent_restart": "PASS; same session and Worker identity",
+  "real_model_evaluation": {
+    "task_id": "1c30e2ec-2c8c-45b3-8f10-3a8919c2af68",
+    "state": "SUCCEEDED",
+    "verdict": "FAILED",
+    "expected": 3,
+    "passed": 0,
+    "attempts": 1,
+    "reason": "Model could not read Skill: bwrap cannot mount devpts on /newroot/dev/pts: Permission denied",
+    "original_report_archive_sha256": "a87d4111b03f205e806e9daf46d5cee7ac2d744afba107ffc646f5bc550e3875"
+  },
+  "preflight": {
+    "task_id": "1c30e2ec-2c8c-45b3-8f10-3a8919c2af68",
+    "attempts": 2,
+    "state": "FAILED",
+    "verdict": "INCOMPLETE",
+    "model_run_started": false,
+    "reason": "EngineError: Codex 沙箱自检失败，尚未调用模型；请查看 sandbox.log 并使用兼容的 Worker 环境，不会绕过沙箱"
+  },
+  "paired_backup_restore": {
+    "status": "PASS",
+    "new_project_and_volumes": true,
+    "original_session": true,
+    "same_worker_id": true,
+    "workers": 1,
+    "tasks": 1,
+    "attempts": 2,
+    "original_report_sha256": "a87d4111b03f205e806e9daf46d5cee7ac2d744afba107ffc646f5bc550e3875"
+  },
+  "excluded_volatile_paths": [
+    "model/tmp"
+  ],
+  "backup_sha256": "0896a606b2682806a2769c2e7355caf9f5171e0165a2953fbcceca08d1a6e8e1",
+  "database_dump_sha256": "8082b45123f72cbbc2c0f701b650d204ced0a88f5a54a38d3ab4adcadeb22c04",
+  "docker_desktop": "NOT_RUN",
+  "linux_x86_64": "NOT_RUN",
+  "formal_release": "NOT_RUN",
+  "final_built_images": {
+    "center": "cc01d2402ebea0b53ae1301ce70678a3b1eb97d829627fb05fc87ec3c0d02b93",
+    "worker": "7eb4bfd200e0c2f8b8c144074b51193315df585eb6d5c3d67a3661f763f2859f"
+  },
+  "candidate_source_commit": "abeebd6556648878c8585cb775672c93665cf3b1"
+}

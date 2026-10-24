@@ -1,0 +1,132 @@
+{
+  "status": "PASS",
+  "platform": "macOS arm64",
+  "skill_up": "0.14.0",
+  "codex": "0.162.1",
+  "records": [
+    {
+      "id": "e249c0b3-4e60-42c4-a7f9-378476d85d9f",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "synthetic_skill": "label-text",
+      "skill_version_id": "a25f66e0-3c45-4fb4-9597-b3dd03d7d6ce",
+      "set_version_id": "bbe842bf-d573-4457-abd7-d129f2bd4076",
+      "frozen_cases": [
+        "label-basic",
+        "label-empty",
+        "label-chinese"
+      ],
+      "requested_model": "gpt-6-astra",
+      "actual_model": null,
+      "attempts": 1,
+      "passed": 3,
+      "actual_generated_count": null,
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "f4934ea32b817d4e07619bd9b41047f41fbfb6ef178e5e641c4a03a3f41e48f3",
+          "bytes": 110536
+        }
+      ],
+      "events": 15,
+      "created_at": "2026-10-23T20:31:54.980073+08:00",
+      "finished_at": "2026-10-23T20:32:53.764748+08:00"
+    },
+    {
+      "id": "787857e0-bce5-4126-8612-3107fb3cc92f",
+      "kind": "generate",
+      "state": "SUCCEEDED",
+      "verdict": null,
+      "synthetic_skill": "label-text-ui",
+      "skill_version_id": "71011dcc-ba87-452f-bc3c-0c8a0002872e",
+      "set_version_id": null,
+      "frozen_cases": [],
+      "requested_model": "gpt-6-astra",
+      "actual_model": null,
+      "attempts": 1,
+      "passed": null,
+      "actual_generated_count": 3,
+      "artifacts": [
+        {
+          "kind": "generation",
+          "sha256": "57560b8339f30a4fda3af18f128b1308e026b678adad909cab68a1d033b95d03",
+          "bytes": 21925
+        }
+      ],
+      "events": 0,
+      "created_at": "2026-10-23T20:55:50.158805+08:00",
+      "finished_at": "2026-10-23T20:57:12.857599+08:00"
+    },
+    {
+      "id": "5fd02deb-e63b-4c71-9e25-d0001a09256e",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "synthetic_skill": "label-text-ui",
+      "skill_version_id": "71011dcc-ba87-452f-bc3c-0c8a0002872e",
+      "set_version_id": "6a262a84-dce4-4ec4-8281-25213f952f69",
+      "frozen_cases": [
+        "english-text",
+        "chinese-text",
+        "empty-string",
+        "case-1"
+      ],
+      "requested_model": "gpt-6-astra",
+      "actual_model": null,
+      "attempts": 1,
+      "passed": 4,
+      "actual_generated_count": null,
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "29f5086fa9f2f0cb549129cfd30c9d50b87c6bb8c71855bdb334cc2d9c7d6535",
+          "bytes": 105743
+        }
+      ],
+      "events": 24,
+      "created_at": "2026-10-23T21:02:37.710854+08:00",
+      "finished_at": "2026-10-23T21:03:35.633187+08:00"
+    },
+    {
+      "id": "e0b7b4f4-d6db-4709-9d14-f2a840575dd2",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "synthetic_skill": "label-text-ui",
+      "skill_version_id": "71011dcc-ba87-452f-bc3c-0c8a0002872e",
+      "set_version_id": "6a262a84-dce4-4ec4-8281-25213f952f69",
+      "frozen_cases": [
+        "english-text",
+        "chinese-text",
+        "empty-string",
+        "case-1"
+      ],
+      "requested_model": "gpt-6-astra",
+      "actual_model": null,
+      "attempts": 1,
+      "passed": 4,
+      "actual_generated_count": null,
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "8342d043e47a3fc698d3c76d8fa461943f10506c341a55bf5c102b605c42563c",
+          "bytes": 105847
+        }
+      ],
+      "events": 24,
+      "created_at": "2026-10-23T21:06:03.621288+08:00",
+      "finished_at": "2026-10-23T21:06:52.342200+08:00"
+    }
+  ],
+  "browser_checks": {
+    "cancel_generation_created_no_task": true,
+    "generated_draft_requires_activation": true,
+    "edited_assertion_and_added_case": true,
+    "report_iframe_sandbox": "allow-scripts",
+    "report_same_origin_readable": false
+  },
+  "repeat_evaluation_reused_frozen_set": true,
+  "recorded_client_date": "2026-10-24",
+  "candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}

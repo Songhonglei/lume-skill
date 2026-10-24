@@ -1,0 +1,28 @@
+{
+  "scenario": "wrong-model",
+  "versions": {
+    "skill_up": "skill-up version 0.14.0",
+    "codex": "codex-cli 0.162.1"
+  },
+  "exit_code": 1,
+  "execution_state": "FAILED",
+  "verdict": "INCOMPLETE",
+  "expected": 1,
+  "passed": 0,
+  "failed": 0,
+  "observed_configuration": {
+    "version": "0.162.1"
+  },
+  "actual_model": null,
+  "cases": [
+    {
+      "case_id": "label-basic",
+      "verdict": "INCOMPLETE"
+    }
+  ],
+  "artifacts": {
+    "events.jsonl": "1903a1bd13b87bdbc2566bbeceec0ab7da14ee982003427fbe5728cdd240d1df",
+    "iteration-1/result.json": "d945e6acb7894c889f172d47a37bec18550761e5661dd2ea494ed53bc77ec869",
+    "iteration-1/report.html": "55ae076724b299c1c7c8304fdeb6bb48deabc515995eb6ccbb2e23cde654088a"
+  }
+}

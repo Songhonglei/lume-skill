@@ -1,0 +1,324 @@
+[
+  {
+    "package": "annotated-doc",
+    "version": "0.0.5",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "annotated-types",
+    "version": "0.8.0",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "anyio",
+    "version": "4.15.1",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "certifi",
+    "version": "2026.10.19",
+    "license_expression": null,
+    "license": "MPL-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "click",
+    "version": "8.5.0",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "fastapi",
+    "version": "0.161.1",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "h11",
+    "version": "0.16.0",
+    "license_expression": null,
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "httpcore",
+    "version": "1.0.9",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "httpx",
+    "version": "0.28.1",
+    "license_expression": null,
+    "license": "BSD-3-Clause",
+    "license_files": [],
+    "environment": "center"
+  },
+  {
+    "package": "idna",
+    "version": "3.20",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "opentelemetry-api",
+    "version": "1.45.1",
+    "license_expression": "Apache-2.0",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "psycopg",
+    "version": "3.3.6",
+    "license_expression": "LGPL-3.0-only",
+    "license": null,
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "psycopg-binary",
+    "version": "3.3.6",
+    "license_expression": "LGPL-3.0-only",
+    "license": null,
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "psycopg-pool",
+    "version": "3.3.3",
+    "license_expression": "LGPL-3.0-only",
+    "license": null,
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "pydantic",
+    "version": "2.14.1",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "pydantic-core",
+    "version": "2.50.1",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "pydantic-settings",
+    "version": "2.16.1",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "python-dotenv",
+    "version": "1.2.4",
+    "license_expression": null,
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "python-multipart",
+    "version": "0.0.32",
+    "license_expression": "Apache-2.0",
+    "license": null,
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "pyyaml",
+    "version": "6.0.3",
+    "license_expression": null,
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "starlette",
+    "version": "1.9.0",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "typing-extensions",
+    "version": "4.16.0",
+    "license_expression": "PSF-2.0",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "typing-inspection",
+    "version": "0.4.4",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "tzdata",
+    "version": "2026.5",
+    "not_installed_on_current_platform": true,
+    "environment": "center"
+  },
+  {
+    "package": "uvicorn",
+    "version": "0.54.0",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "environment": "center"
+  },
+  {
+    "package": "anyio",
+    "version": "4.15.1",
+    "environment": "standalone-worker",
+    "license_expression": "MIT",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "certifi",
+    "version": "2026.10.23",
+    "environment": "standalone-worker",
+    "license_expression": null,
+    "license": "MPL-2.0",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "h11",
+    "version": "0.16.0",
+    "environment": "standalone-worker",
+    "license_expression": null,
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ]
+  },
+  {
+    "package": "httpcore",
+    "version": "1.0.9",
+    "environment": "standalone-worker",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "package": "httpx",
+    "version": "0.28.1",
+    "environment": "standalone-worker",
+    "license_expression": null,
+    "license": "BSD-3-Clause",
+    "license_files": []
+  },
+  {
+    "package": "idna",
+    "version": "3.20",
+    "environment": "standalone-worker",
+    "license_expression": "BSD-3-Clause",
+    "license": null,
+    "license_files": [
+      "LICENSE.md"
+    ]
+  },
+  {
+    "package": "pyyaml",
+    "version": "6.0.3",
+    "environment": "standalone-worker",
+    "license_expression": null,
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "typing-extensions",
+    "version": "4.16.0",
+    "environment": "standalone-worker",
+    "license_expression": "PSF-2.0",
+    "license": null,
+    "license_files": [
+      "LICENSE"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "actual_request": true,
+  "result": {
+    "model": "gpt-6-astra",
+    "message": "实际模型请求成功；服务端模型身份未核实",
+    "success": true,
+    "duration_ms": 11627,
+    "observed_model": null,
+    "observed_version": "0.162.1"
+  },
+  "candidate_source_commit": "6e70417977f53dee798a676d76ddcb81a4ef0886"
+}

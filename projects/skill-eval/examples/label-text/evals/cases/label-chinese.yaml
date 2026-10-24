@@ -1,0 +1,13 @@
+id: label-chinese
+title: 中文与标点保持
+input:
+  prompt: 请使用 label-text Skill 标记文本「你好，世界！」，只输出结果。
+expect:
+  exit_code: 0
+  must_contain: ["LABEL: 你好，世界！"]
+judge:
+  type: agent_judge
+  model: __SELECT_MODEL__
+  criteria:
+    - "输出是 LABEL: 你好，世界！且没有额外解释；保持了原始中文标点。"
+  pass_threshold: 1

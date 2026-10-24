@@ -1,0 +1,31 @@
+{
+  "recorded_client_date": "2026-10-24",
+  "platform": "macOS arm64",
+  "tests": {
+    "status": "PASS",
+    "passed": 40,
+    "warnings": 2,
+    "database": "PostgreSQL 17.10, isolated schema per test"
+  },
+  "ruff": "PASS",
+  "frontend_production_build": "PASS",
+  "public_source_check": "PASS",
+  "static_yaml_parse": "PASS (not Docker engine validation)",
+  "markdown_internal_links": "PASS",
+  "versions": {
+    "global_skill_up": "skill-up version 0.10.0",
+    "codex": "codex-cli 0.162.1",
+    "installed_skill_up": "skill-up version 0.14.0",
+    "python": "Python 3.12.12",
+    "installed_worker_python": "Python 3.13.2",
+    "node": "v24.19.0"
+  },
+  "docker": "NOT_RUN",
+  "remote_ci": "NOT_RUN",
+  "final_browser_recheck": "NOT_RUN; previous full user flow evidence retained after browser session ended",
+  "candidate_source_commit": "abeebd6556648878c8585cb775672c93665cf3b1",
+  "container_compatibility": "PARTIAL; see containers.json",
+  "project_license": "MIT",
+  "target_repository": "Songhonglei/lume-skill",
+  "project_subdirectory": "projects/skill-eval"
+}

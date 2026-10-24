@@ -1,0 +1,14 @@
+{
+  "skill_up": {
+    "version": "0.14.0",
+    "repository": "https://github.com/alibaba/skill-up",
+    "commit": "53f6daecf4ac79e4e53ea53f3fe17dac3114debb",
+    "artifacts": {
+      "darwin_arm64": "cae016a78bc99ef51ef695937f7edba4b7512808a94421b81620ca6d2b8fbb71",
+      "darwin_amd64": "ea2306520737521eda12aae6475bebfade1629517201c810fa9b5e046ceccd24",
+      "linux_amd64": "307f2082ce5489c61f6a01ce6c78225dfd3974b4b54227426b87e1b6330dbfc9",
+      "linux_arm64": "f6d18695b590966180afce8e6176c957be435b5c9c74d69f2a5ee9aa67e38308"
+    }
+  },
+  "codex": {"version": "0.162.1", "package": "@openai/codex"}
+}

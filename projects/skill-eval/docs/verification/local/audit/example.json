@@ -1,0 +1,66 @@
+{
+  "skill": "label-text",
+  "target": "generic",
+  "modules": [
+    {
+      "module": "模块1 语法与逻辑",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块2 功能完整性",
+      "status": "WARN",
+      "issues": [
+        {
+          "code": "",
+          "severity": "WARN",
+          "file": "SKILL.md",
+          "line": null,
+          "message": "SKILL.md 正文内容过少，缺少使用说明",
+          "variable": ""
+        }
+      ]
+    },
+    {
+      "module": "模块3 边界与异常处理",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块4 数据与配置安全",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块5 依赖检查",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "module": "模块6 文档规范",
+      "status": "WARN",
+      "issues": [
+        {
+          "code": "",
+          "severity": "WARN",
+          "file": "SKILL.md",
+          "line": null,
+          "message": "description 过短（18 字符），建议描述使用场景和触发词",
+          "variable": ""
+        },
+        {
+          "code": "",
+          "severity": "WARN",
+          "file": "SKILL.md",
+          "line": null,
+          "message": "description 建议包含使用场景（'当用户说...' 或 'Use when...'）",
+          "variable": ""
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warns": 3
+  }
+}
