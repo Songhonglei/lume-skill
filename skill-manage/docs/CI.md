@@ -6,6 +6,8 @@
 
 2026-10-25 已在 [PR #6](https://github.com/Songhonglei/lume-skill/pull/6) 实际运行：`1a9afef` 的 T02/T04 首轮和 `11e7ca1` 的 T05 轮四个环境均成功。冻结记录见 [首轮](evidence/T02-T04-CI-2026-10-25.json)、[T05 轮](evidence/T05-CI-2026-10-25.json)。T05 轮 Linux 3.11 日志确认 179 项测试、50 个应用文件和 126 个源文件分发对应；每个环境也完成静态 14 例及独立 wheel 烟测。
 
+`db1f421` 已进入 main，PR #6 已合并；[main push 运行](https://github.com/Songhonglei/lume-skill/actions/runs/40202445879) 的四个环境全部通过，包含完整检查链路，详见 [主干回执](evidence/MAIN-CI-2026-10-25.json)。它与 PR 验证分开记录，不将先前 PR 的成功冒充 main 运行。
+
 ## 每次检查
 
 1. `uv sync --locked --extra dev`，ruff check/format、JS 语法、Git 差异空白检查、完整 pytest。
