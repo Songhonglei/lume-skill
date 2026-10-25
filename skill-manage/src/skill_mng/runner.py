@@ -24,6 +24,40 @@ def assistant_message(response):
     return message
 
 
+def anchor_findings(semantic, files):
+    """Derive source lines from exact quotes, never a model's guessed offset."""
+    if not isinstance(semantic, dict) or not isinstance(semantic.get("findings"), list):
+        return []  # Structural errors are reported by semantic_consistency.
+    errors = []
+    for row in semantic["findings"]:
+        if not isinstance(row, dict) or not isinstance(row.get("file"), str) or row["file"] not in files:
+            errors.append("Finding path must exist in the current fixed package")
+            continue
+        quote = row.get("evidence")
+        if not isinstance(quote, str) or not quote.strip() or len(quote) > 1000:
+            errors.append("Every finding requires a nonempty exact source quote (at most 1000 characters)")
+            continue
+        try:
+            text = files[row["file"]].decode("utf-8-sig")
+        except UnicodeDecodeError:
+            errors.append("Finding evidence must reference readable UTF-8 text")
+            continue
+        lines, offset, occurrences = set(), 0, 0
+        while (start := text.find(quote, offset)) >= 0:
+            occurrences += 1
+            lines.add(text.count("\n", 0, start) + 1)
+            if occurrences > 100:
+                break
+            offset = start + 1
+        if occurrences > 100:
+            errors.append("Evidence quote is too common; supply a more specific exact excerpt")
+        elif len(lines) == 1:
+            row["line"] = next(iter(lines))
+        elif not lines or type(row.get("line")) is not int or row["line"] not in lines:
+            errors.append("Evidence quote is absent or ambiguous; supply a unique exact source excerpt")
+    return errors
+
+
 def semantic_consistency(semantic, depth, files=None, repair=False):
     if not isinstance(semantic, dict):
         return ["Final output must be a JSON object"]
@@ -267,7 +301,7 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
                 continue
             try:
                 semantic = json.loads(response.get("content") or "")
-                errors = semantic_consistency(
+                errors = anchor_findings(semantic, files) + semantic_consistency(
                     semantic, manifest["depth"], files, bool(manifest.get("repairScope"))
                 )
             except (ValueError, TypeError):

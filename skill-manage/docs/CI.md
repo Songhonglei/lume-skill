@@ -33,13 +33,13 @@ uv run python3 -m skill_mng.distribution --dist-dir dist \
   --runtime-requirements .local/runtime-requirements.txt --output .local/manifest-ci-01.json
 uv venv --python 3.12 .local/wheel-env
 uv pip install --python .local/wheel-env/bin/python --no-deps -r .local/runtime-requirements.txt
-uv pip install --python .local/wheel-env/bin/python --no-deps dist/open_skill_mng-0.3.2.dev4-py3-none-any.whl
+uv pip install --python .local/wheel-env/bin/python --no-deps dist/open_skill_mng-0.3.2.dev5-py3-none-any.whl
 uv run python3 tests/smoke_wheel.py .local/wheel-env/bin/skill-mng
 ```
 
 使用新的输出路径保留历史记录。`distribution` 只读检查已有产物；不重打包旧版。manifest 包含源文件树摘要、逐文件 SHA-256、构建物 SHA-256、版本、依赖锁/许可/运行数据排除结果。能找到 Git 时另外记录 commit 与本项目工作区是否有改动；未提交构建不能冒充干净提交的发行物。无 Git 的 sdist 环境仍可用源文件树摘要核对。
 
-本轮可迁移的确定性输入、公开样例来源及静态回执均进入 Git；动态构建清单和候选包保留在 CI artifacts 或本地 ignored 目录，避免把产物自身摘要嵌入源码造成循环依赖。历史 0.3.1 及已验收 0.3.2.dev1 产物摘要保持；当前开发版本为 0.3.2.dev4。
+本轮可迁移的确定性输入、公开样例来源及静态回执均进入 Git；动态构建清单和候选包保留在 CI artifacts 或本地 ignored 目录，避免把产物自身摘要嵌入源码造成循环依赖。历史 0.3.1 及已验收 0.3.2.dev1 产物摘要保持；当前开发版本为 0.3.2.dev5。
 
 2026-10-25 的 dev4 本地检查为 168 项测试、14 例零模型静态回归、49 个应用文件分发字节匹配和 7 组独立 wheel 烟测通过。源码 `65aeac3` 的冻结清单及模型回归边界见 [本轮证据](KIMI-REGRESSION.md)；该提交后的报告文档另行构建，不改写历史产物或清单。
 

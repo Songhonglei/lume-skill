@@ -18,6 +18,9 @@ def adjudicate(run_bytes, review):
     ):
         raise ValueError("review_run_binding_invalid")
     reviewer = review.get("reviewer")
+    reviewer_kind = review.get("reviewerKind", "human")
+    if reviewer_kind not in {"human", "agent"}:
+        raise ValueError("reviewer_kind_invalid")
     if not isinstance(reviewer, str) or not reviewer.strip() or len(reviewer) > 100:
         raise ValueError("reviewer_required")
     rows = review.get("reviews")
@@ -62,7 +65,8 @@ def adjudicate(run_bytes, review):
         )
     return {
         "schemaVersion": 1,
-        "evidenceKind": "human_review",
+        "evidenceKind": "human_review" if reviewer_kind == "human" else "agent_review",
+        "reviewerKind": reviewer_kind,
         "runDigest": review["runDigest"],
         "suiteDigest": run["suiteDigest"],
         "reviewer": redact(reviewer),

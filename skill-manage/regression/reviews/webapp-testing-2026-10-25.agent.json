@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "evidenceKind": "agent_source_review",
+  "reviewerKind": "agent",
+  "reviewer": "Codex source review",
+  "scope": "The four existing findings only; not a complete new ground-truth annotation or human sign-off.",
+  "runDigest": "6db41d1fb7ee0f6f804349d743a024762aafd3a361bd8299f8e71ef89743d36a",
+  "caseId": "upstream-webapp-testing",
+  "repetition": 1,
+  "reportDigest": "453024c961521f9eb9f50bdcb7d83afb1076b7972861691a7855f1d9be40f254",
+  "inputContentDigest": "7dd9eedc497fbf8b5634a293190b11f93cf4b80f7cd6c1a775def12deadeebb9",
+  "ruleLevelFalsePositives": [],
+  "findingReviews": [
+    {
+      "findingId": "1583e9532ac7402b47ebcaae",
+      "ruleId": "D4-E3",
+      "decision": "confirmed",
+      "originalLine": 1,
+      "correctedLine": 1,
+      "file": "SKILL.md",
+      "sourceDigest": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+      "evidenceStartLine": 1,
+      "evidenceEndLine": 5,
+      "exactEvidence": "---\nname: webapp-testing\ndescription: Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.\nlicense: Complete terms in LICENSE.txt\n---\n",
+      "note": "Prerequisites are not explicitly declared under the current rule. Mentioning Playwright does not describe installation or environment preparation."
+    },
+    {
+      "findingId": "e068fe699e68649150cd100f",
+      "ruleId": "D2-W1",
+      "decision": "confirmed_with_corrections",
+      "originalLine": 89,
+      "correctedLine": 69,
+      "file": "scripts/with_server.py",
+      "sourceDigest": "b0dcf4918935b795f4eda9821579b9902119235ff4447f687a30286e7d0925fd",
+      "evidenceStartLine": 68,
+      "evidenceEndLine": 74,
+      "exactEvidence": "            # Use shell=True to support commands with cd and &&\n            process = subprocess.Popen(\n                server['cmd'],\n                shell=True,\n                stdout=subprocess.PIPE,\n                stderr=subprocess.PIPE\n            )\n",
+      "note": "The code deliberately accepts shell commands from --server, including cd and &&. Retain the policy warning and require trusted caller input; the source alone does not establish an exploitable injection. Original line 89 is incorrect; the call begins at 69 and shell=True is at 71."
+    },
+    {
+      "findingId": "6a34f2077221fa81cb94664a",
+      "ruleId": "D4-W7",
+      "decision": "confirmed",
+      "originalLine": 1,
+      "correctedLine": 1,
+      "file": "SKILL.md",
+      "sourceDigest": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+      "evidenceStartLine": 1,
+      "evidenceEndLine": 5,
+      "exactEvidence": "---\nname: webapp-testing\ndescription: Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.\nlicense: Complete terms in LICENSE.txt\n---\n",
+      "note": "Frontmatter lacks a version field. Retain the zero-point warning without changing the pinned vendor snapshot."
+    },
+    {
+      "findingId": "866d6f92af94c72198ac7322",
+      "ruleId": "D6-W2",
+      "decision": "confirmed_with_corrections",
+      "originalLine": 9,
+      "correctedLine": 9,
+      "file": "SKILL.md",
+      "sourceDigest": "51b7349e77ec63b7744a6f63647e7566a0b4d2e301121cc10e8c2113af6556a2",
+      "evidenceStartLine": 9,
+      "evidenceEndLine": 9,
+      "exactEvidence": "To test local web applications, write native Python Playwright scripts.\n",
+      "note": "Playwright is a Python dependency with no requirements file or version notes. Node/npm are optional example-specific commands, not universal prerequisites. Do not invent an unsupported minimum version."
+    }
+  ],
+  "originalReportPreserved": true,
+  "humanReview": "pending"
+}

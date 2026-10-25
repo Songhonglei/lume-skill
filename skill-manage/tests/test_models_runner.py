@@ -409,3 +409,19 @@ def test_editor_replays_reasoning_for_tool_results():
             return {"message": {"content": '{"needsAttention":false,"reason":"done"}'}}
 
     assert edit_candidate(manifest, files, Fixture(), 1, []) == files
+
+
+def test_source_quote_corrects_line_and_rejects_invented_or_ambiguous_evidence():
+    from skill_mng.runner import anchor_findings
+
+    files = {"script.py": b"# header\n# comment\nsubprocess.Popen(cmd, shell=True)\n"}
+    row = {"file": "script.py", "line": 89, "evidence": "subprocess.Popen(cmd, shell=True)"}
+    assert anchor_findings({"findings": [row]}, files) == []
+    assert row["line"] == 3
+    row["evidence"] = "invented source"
+    assert anchor_findings({"findings": [row]}, files)
+    assert anchor_findings({"findings": [{"file": [], "evidence": "bad"}]}, files)
+    row.update(evidence="repeat", line=5)
+    assert anchor_findings({"findings": [row]}, {"script.py": b"repeat\nrepeat\n"})
+    row.update(evidence="x", line=1)
+    assert anchor_findings({"findings": [row]}, {"script.py": b"x" * 10000})

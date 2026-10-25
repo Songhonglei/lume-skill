@@ -261,6 +261,12 @@ def test_human_review_binds_exact_run_and_report_without_rewriting():
     }
     assert "synthetic-secret" not in json.dumps(result)
     assert json.loads(raw) == source
+    review["reviewerKind"] = "agent"
+    assert adjudicate(raw, review)["evidenceKind"] == "agent_review"
+    review["reviewerKind"] = "invalid"
+    with pytest.raises(ValueError, match="reviewer_kind"):
+        adjudicate(raw, review)
+    review["reviewerKind"] = "human"
     review["reviews"][0]["reportDigest"] = "another-report"
     with pytest.raises(ValueError, match="binding"):
         adjudicate(raw, review)
