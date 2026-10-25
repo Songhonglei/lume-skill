@@ -164,6 +164,38 @@ def test_error_preserves_partial_receipt_and_stops_next_case(tmp_path, monkeypat
         run(CORPUS, output)
 
 
+def test_failed_capability_preserves_stable_reason_and_model_without_secret(tmp_path, monkeypatch):
+    @contextlib.contextmanager
+    def platform():
+        class Fixture:
+            def api(self, path, body, **kwargs):
+                if path == "/model/probe":
+                    return {"ready": False, "failure_code": "model_http_403"}
+                assert path == "/model" and kwargs["method"] == "PUT"
+
+        yield Fixture()
+
+    config = tmp_path / "private.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_url": "https://provider.example/v1",
+                "model": "synthetic-fixture",
+                "api_key": "synthetic-private-key",
+            }
+        )
+    )
+    config.chmod(0o600)
+    monkeypatch.setattr("skill_mng.regression.isolated_platform", platform)
+    result = run(CORPUS, tmp_path / "result.json", mode="full", model_config=config, max_model_calls=16)
+    assert result["status"] == "interrupted" and not result["cases"]
+    assert result["capabilityProbe"] == {"ready": False, "failureCode": "model_http_403"}
+    assert result["modelId"] == "synthetic-fixture"
+    assert result["summary"]["modelCallsIncludingProbeUpperBound"] == 2
+    assert "synthetic-private-key" not in json.dumps(result)
+    assert "provider.example" not in json.dumps(result)
+
+
 def test_real_static_web_worker_cases_and_repeat_isolation(tmp_path):
     # Actual CLI processes/HTTP/worker; model service is never configured.
     result = run(

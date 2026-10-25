@@ -369,6 +369,7 @@ def run(
         "cases": [],
     }
     if config:
+        result["modelId"] = config["model"]
         result["modelConfigFingerprint"] = digest(
             json.dumps({k: config[k] for k in ("base_url", "model")}, sort_keys=True).encode()
         )
@@ -394,7 +395,12 @@ def run(
                     budget.charge(
                         2
                     )  # Capability detection issues at most two requests, even on early failure.
-                    if not service.api("/model/probe", {})["ready"]:
+                    probe = service.api("/model/probe", {})
+                    result["capabilityProbe"] = {
+                        "ready": probe["ready"],
+                        "failureCode": probe.get("failure_code"),
+                    }
+                    if not probe["ready"]:
                         raise RegressionError("model_probe_failed")
                 for case in selected:
                     try:
