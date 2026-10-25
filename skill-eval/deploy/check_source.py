@@ -31,6 +31,11 @@ def main():
         path = root / 'vendor/skill-upper' / name
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             issues.append(f'vendor/skill-upper/{name}: upstream content checksum mismatch')
+    seccomp_source = json.loads((root / 'deploy/worker-seccomp.SOURCE.json').read_text())
+    for name, expected in seccomp_source['files'].items():
+        path = root / name
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            issues.append(f'{name}: pinned seccomp source checksum mismatch')
     project = tomllib.loads((root / 'pyproject.toml').read_text())['project']
     web = json.loads((root / 'frontend/package.json').read_text())
     if project['version'] != web['version']:

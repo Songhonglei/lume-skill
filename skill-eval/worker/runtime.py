@@ -364,8 +364,7 @@ class Worker:
                 self.stop.wait(reply.get("poll_seconds", 3))
             except ProtocolError as error:
                 if error.status in {401, 403}:
-                    print(str(error), flush=True)
-                    return
+                    raise
                 if str(error) != last_error:
                     print(str(error), flush=True)
                     last_error = str(error)

@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-25",
+  "scope": "Local Harness gateway availability and native ARM64 Docker Worker probe; not full evaluation acceptance",
+  "gateway": {
+    "address": "http://127.0.0.1:8326/v1",
+    "observed_running_before_changes": true,
+    "configuration_modified": false,
+    "authenticated_model_list": "PASS",
+    "container_host_route": "PASS",
+    "text_response": {
+      "model": "buddy/glm-5.3-flash",
+      "path": "/v1/responses",
+      "status": 200,
+      "response_status": "completed",
+      "model_returned": "buddy/glm-5.3-flash",
+      "connection_ok": true,
+      "usage": {
+        "input_tokens": 23,
+        "input_tokens_details": {
+          "cached_tokens": 0
+        },
+        "output_tokens": 36,
+        "output_tokens_details": {
+          "reasoning_tokens": 31
+        },
+        "total_tokens": 59
+      },
+      "duration_ms": 2362
+    }
+  },
+  "worker_probe": {
+    "machine": "aarch64",
+    "sandbox": "PASS",
+    "capabilities": {
+      "skill_up_version": "0.14.0",
+      "codex_version": "0.162.1",
+      "login_configured": true,
+      "connection_fingerprint": "c7c52f3ba0a3bf378fa2682005ace5b7e4d831e2ac70e757de43dfb51872cc49",
+      "connection_label": "Harness local gateway",
+      "platform": "Linux aarch64",
+      "diagnostic": ""
+    },
+    "probe": {
+      "id": "3ba4ce56-be81-450f-b2a5-58dffee634a8",
+      "model": "buddy/glm-5.3-flash",
+      "success": false,
+      "message": "模型请求失败，请检查 Worker 的 Codex 登录和模型名称",
+      "observed_version": "0.162.1",
+      "observed_model": null,
+      "duration_ms": 8056
+    },
+    "outer_security": [
+      "CapEff:\t0000000000000000",
+      "NoNewPrivs:\t1",
+      "Seccomp:\t2"
+    ],
+    "container_exit_code": 0
+  },
+  "failure": {
+    "provider": "buddy",
+    "reason": "Illegal API invocation from an unapproved channel",
+    "restriction_bypassed": false,
+    "successful_worker_model_probe": false,
+    "additional_diagnostic_cli_exit_code": 1
+  },
+  "alternatives": [
+    {
+      "model": "xhsmaas-gpt/gpt-6-luna",
+      "status": 502,
+      "error_type": "server_error",
+      "duration_ms": 730
+    },
+    {
+      "model": "codearts/glm-5.3-flash",
+      "status": 502,
+      "error_type": "server_error",
+      "duration_ms": 411
+    }
+  ],
+  "remaining": [
+    "A configured upstream channel that accepts Codex agent requests",
+    "Full evaluation, judges and generation on Docker",
+    "Native Linux x86_64 validation"
+  ],
+  "secrets_in_report": false,
+  "transient_containers_removed": true
+}

@@ -1,0 +1,560 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Shanghai",
+  "status": "PASS_WITH_RECORDED_INITIAL_CASE_VARIABILITY",
+  "scope": "Local Docker Desktop native Linux aarch64; not native Linux x86_64 or release acceptance",
+  "source_commit": "eca5e692c142d0305d4dd5ef1029874720715d7e",
+  "uncommitted_local_changes": true,
+  "authentication": {
+    "method": "Codex Sign in with ChatGPT",
+    "reported_login_status": "Logged in using ChatGPT",
+    "credential_location": "Dedicated Docker model-home named volume",
+    "host_codex_credentials_read": false,
+    "credentials_in_repository_or_image": false
+  },
+  "environment": {
+    "docker_desktop": "4.96.3",
+    "engine": "29.9.2",
+    "worker_security": {
+      "image_id": "sha256:df84d456faa6dd86ca51878754486e66eb4f0f2403507fb2cfdb5cb8b9ea885c",
+      "configured_user": "10001:10001",
+      "privileged": false,
+      "cap_drop": [
+        "ALL"
+      ],
+      "no_new_privileges": true,
+      "finite_seccomp_configured": true,
+      "host_home_mounted": false,
+      "docker_socket_mounted": false,
+      "uid": 10001,
+      "model_auth_mode": "0o600",
+      "outer_security": [
+        "CapEff:\t0000000000000000",
+        "NoNewPrivs:\t1",
+        "Seccomp:\t2"
+      ]
+    }
+  },
+  "requested_model": "gpt-6-luna",
+  "server_model_identity_verified": false,
+  "probe": {
+    "machine": "aarch64",
+    "sandbox": "PASS",
+    "capabilities": {
+      "skill_up_version": "0.14.0",
+      "codex_version": "0.162.1",
+      "login_configured": true,
+      "connection_fingerprint": "071365fd895c2f5ffc71e5b6034c84da81c68cc9bb939dc6d156aa9f888c394d",
+      "connection_label": "openai",
+      "platform": "Linux aarch64",
+      "diagnostic": ""
+    },
+    "probe": {
+      "id": "2b903263-2296-41bf-9640-b6eff07eac6f",
+      "model": "gpt-6-luna",
+      "success": true,
+      "message": "实际模型请求成功；服务端模型身份未核实",
+      "observed_version": "0.162.1",
+      "observed_model": null,
+      "duration_ms": 10367
+    },
+    "outer_security": [
+      "CapEff:\t0000000000000000",
+      "NoNewPrivs:\t1",
+      "Seccomp:\t2"
+    ]
+  },
+  "tasks": {
+    "three-judges": {
+      "id": "aeb12bb2-6899-424e-8381-4c0fefb5f730",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "skill_version_id": "662b70f9-e5ae-40fc-a928-3791642904a2",
+      "set_version_id": "8a77c77b-95aa-414c-9154-3c5a468056da",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "label-basic",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "label-empty",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "label-chinese",
+          "verdict": "PASSED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "9de61b4e4ae5024a68bfa47cf569afb3c35f6af113eb6b0cb161e78d2e4a7576",
+          "bytes": 104477,
+          "source_unchanged": true,
+          "exit_code": 0,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:14:39.330833+00:00",
+      "finished_at": "2026-10-25T08:15:25.681942+00:00"
+    },
+    "generation": {
+      "id": "e700ac8b-4346-44cd-80d4-5e61b4d43687",
+      "kind": "generate",
+      "state": "SUCCEEDED",
+      "verdict": null,
+      "skill_version_id": "bbb62aa1-3cc9-4c45-986c-0917f4ae3720",
+      "set_version_id": null,
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": null,
+      "failed": null,
+      "expected": null,
+      "actual_count": 3,
+      "target_count": 3,
+      "reason": null,
+      "cases": [],
+      "artifacts": [
+        {
+          "kind": "generation",
+          "sha256": "df4c30ffa60103c4a6cbd141c7e08c290fa1be6abc1971df696cdde24c85a25e",
+          "bytes": 15872,
+          "source_unchanged": true,
+          "exit_code": 0,
+          "error": ""
+        }
+      ],
+      "event_count": 0,
+      "created_at": "2026-10-25T08:15:27.535375+00:00",
+      "finished_at": "2026-10-25T08:15:55.588391+00:00"
+    },
+    "generated-evaluation": {
+      "id": "84ffc789-a85d-4945-b914-8b61ed8e938e",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "skill_version_id": "bbb62aa1-3cc9-4c45-986c-0917f4ae3720",
+      "set_version_id": "d84e9ccd-79f8-4dfe-ac56-6cd6567d991d",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "english-case",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "chinese-punctuation",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "empty-string",
+          "verdict": "PASSED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "b345aa5f8a11091f98c06cd01eb69c8d61c90f38574d449e44c7b52eee8d3373",
+          "bytes": 83101,
+          "source_unchanged": true,
+          "exit_code": 0,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:15:57.681195+00:00",
+      "finished_at": "2026-10-25T08:16:36.126567+00:00"
+    },
+    "reused-evaluation": {
+      "id": "6ccd0196-330e-4397-a6cc-41bfc9524636",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "FAILED",
+      "skill_version_id": "bbb62aa1-3cc9-4c45-986c-0917f4ae3720",
+      "set_version_id": "d84e9ccd-79f8-4dfe-ac56-6cd6567d991d",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 2,
+      "failed": 1,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "english-case",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "chinese-punctuation",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "empty-string",
+          "verdict": "FAILED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "fc3671acc2e9bc2bb2ec0eae6b68afefd8ec0e4f4ae3dbcf9d96c0a21ad79cbb",
+          "bytes": 82245,
+          "source_unchanged": true,
+          "exit_code": 1,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:16:36.837884+00:00",
+      "finished_at": "2026-10-25T08:17:12.006829+00:00"
+    },
+    "clarified-evaluation": {
+      "id": "825ff64c-03b1-45b1-bbb2-58ce7cf91f9c",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "skill_version_id": "bbb62aa1-3cc9-4c45-986c-0917f4ae3720",
+      "set_version_id": "906b7d16-3cfb-45c9-a028-62813b59f1ed",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "english-case",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "chinese-punctuation",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "empty-string",
+          "verdict": "PASSED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "1833c95f8e53c5c3e694f413efffdf6d7e0b7c79321a4d5f89a470339c29ebe5",
+          "bytes": 83159,
+          "source_unchanged": true,
+          "exit_code": 0,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:18:24.014039+00:00",
+      "finished_at": "2026-10-25T08:19:06.211797+00:00"
+    },
+    "clarified-reuse": {
+      "id": "42780b69-ecaa-4e91-ade8-8abbe4152733",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "skill_version_id": "bbb62aa1-3cc9-4c45-986c-0917f4ae3720",
+      "set_version_id": "906b7d16-3cfb-45c9-a028-62813b59f1ed",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "english-case",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "chinese-punctuation",
+          "verdict": "PASSED"
+        },
+        {
+          "id": "empty-string",
+          "verdict": "PASSED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "42b1c1d83cecd60a99c6366c23ce1912d82fb228d5eb965c6d52f814541afc40",
+          "bytes": 83471,
+          "source_unchanged": true,
+          "exit_code": 0,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:19:09.188212+00:00",
+      "finished_at": "2026-10-25T08:19:48.172000+00:00"
+    },
+    "broken-skill-negative": {
+      "id": "eac20ee8-d9b3-4289-bfc8-dae3c1ae9019",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "FAILED",
+      "skill_version_id": "c8fce9bb-b514-4691-86f4-ebdd866caf49",
+      "set_version_id": "906b7d16-3cfb-45c9-a028-62813b59f1ed",
+      "model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b37a30f1-98a5-452d-88ac-e651251bd1f1"
+      ],
+      "passed": 0,
+      "failed": 3,
+      "expected": 3,
+      "actual_count": null,
+      "target_count": null,
+      "reason": null,
+      "cases": [
+        {
+          "id": "english-case",
+          "verdict": "FAILED"
+        },
+        {
+          "id": "chinese-punctuation",
+          "verdict": "FAILED"
+        },
+        {
+          "id": "empty-string",
+          "verdict": "FAILED"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "report",
+          "sha256": "3b5b9803c755c770a0a7c69a48531d47542265a7dd206f8030ec8156505dade4",
+          "bytes": 83371,
+          "source_unchanged": true,
+          "exit_code": 1,
+          "error": "",
+          "raw_engine": "codex",
+          "raw_requested_configuration": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "raw_observed_configuration": {
+            "version": "0.162.1"
+          },
+          "html_status": 200,
+          "html_csp": "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+        }
+      ],
+      "event_count": 20,
+      "created_at": "2026-10-25T08:19:48.353509+00:00",
+      "finished_at": "2026-10-25T08:20:28.253582+00:00"
+    }
+  },
+  "checks": {
+    "generated_count": 3,
+    "generation_remained_draft_until_saved_and_activated": true,
+    "initial_generated_suite_first_run_passed": 3,
+    "initial_generated_suite_repeat_passed": 2,
+    "initial_generated_suite_repeat_expected": 3,
+    "initial_repeat_failure": "Empty-text prompt was ambiguous; model asked for text and failed the existing assertion",
+    "clarified_case_input_only_assertions_unchanged": true,
+    "clarified_saved_set_reused": true,
+    "clarified_positive_runs": [
+      3,
+      3
+    ],
+    "controlled_broken_prefix_passed": 0,
+    "controlled_broken_prefix_failed": 3,
+    "task_attempt_counts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "browser_qa_repeated_this_increment": false
+  },
+  "previous_checks": {
+    "python_pg_tests_passed": 45,
+    "frontend_node_tests_passed": 19,
+    "rerun_this_increment": false,
+    "reason": "This increment changes verification documentation only; runtime source matches the tested worker image"
+  },
+  "remaining": [
+    "Native Linux x86_64 installation plus sandbox and real model flow",
+    "Other host kernels and Podman-specific sandbox behavior",
+    "Remote CI, unavailable external audit tools, formal release and image publication"
+  ],
+  "source_sha256": {
+    "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+    "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+    "worker/generate.py": "a516e058268fb7aa0bf68b0dcdbf2ff31ec67b6d2ae6dc8879522e8583bdce03",
+    "worker/results.py": "32f6b28f7c5e71723f627d627c3eb1cba07ab8e34ef2758c0cc3a0a5ca038362",
+    "compose.yaml": "cb39fbc6c085cc7e0f41165cc5d5fa3d46fae2e4a783b965767dbc00c8fcce31",
+    "deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+    "deploy/volume_backup.py": "d824ef509d231ffc3c7b78d7260c6311c417ffa232b6c145fc155f3f9ec7b9c0"
+  },
+  "paired_backup_restore": {
+    "status": "PASS",
+    "platform": "Docker Desktop native Linux aarch64",
+    "restored_into_fresh_project_and_volumes": true,
+    "same_pair_of_pg_dump_and_files": true,
+    "original_session_authenticated_after_restore": true,
+    "task_count": 7,
+    "validated_task_ids": [
+      "aeb12bb2-6899-424e-8381-4c0fefb5f730",
+      "e700ac8b-4346-44cd-80d4-5e61b4d43687",
+      "84ffc789-a85d-4945-b914-8b61ed8e938e",
+      "6ccd0196-330e-4397-a6cc-41bfc9524636",
+      "825ff64c-03b1-45b1-bbb2-58ce7cf91f9c",
+      "42780b69-ecaa-4e91-ade8-8abbe4152733",
+      "eac20ee8-d9b3-4289-bfc8-dae3c1ae9019"
+    ],
+    "task_inputs_results_and_downloaded_artifact_hashes_equal": true,
+    "worker_identity_preserved": true,
+    "fresh_heartbeat_after_restore": true,
+    "connection_fingerprint_preserved": true,
+    "chatgpt_login_retained": true,
+    "new_model_execution_after_restore": false,
+    "backup_file_count": 20,
+    "backup_roots": [
+      "center",
+      "worker",
+      "model",
+      "database",
+      "builtin"
+    ],
+    "excluded": [
+      "model/tmp"
+    ],
+    "backups_private": true,
+    "database_dump_sha256": "fd5494508c6e0fde8e1c59a76bd485cb48ccb8d527a14036ca4ee66183904e05",
+    "files_zip_sha256": "510f8518d78d6ebee071d2e0a5dc8e10a2075a2ee3f06f7160ca404d835c2107",
+    "restored_deployment_stopped_before_original_resume": true
+  },
+  "runtime_services": {
+    "original_project": "resumed after paired restore verification",
+    "restored_project": "stopped; private volumes retained",
+    "subscription_login": "retained in dedicated model-home volume"
+  },
+  "final_checks": {
+    "public_candidate_scan": "PASS",
+    "public_files_scanned": 168,
+    "pinned_vendor_and_seccomp_hashes": "PASS",
+    "git_diff_check": "PASS",
+    "compose_config": "PASS",
+    "machine_receipt_json": "PASS"
+  }
+}

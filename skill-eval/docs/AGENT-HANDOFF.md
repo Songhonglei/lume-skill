@@ -1,6 +1,16 @@
 # LumaSkill · Skill Eval 完整交接
 
+2026-10-25 最新用户决策：暂缓原生 Linux x86_64 验证，合并本轮开发分支到 main。继续保留该平台的未验证状态；未经用户恢复此项，不主动安排 x86_64 机器或继续该项验证。整合范围和合并前检查见 [main 整合记录](verification/local/main-integration-2026-10-25.md)。下面“未推送”等字样属于各次验证的历史检查点，当前分支状态以 Git 历史为准。
+
+2026-10-25 最新 Pro 登录验收：用户亲自为独立容器授权 ChatGPT 登录；原生 ARM64 Docker Worker 真实连接、三类裁判 3/3、生成 3 个案例、草稿维护、启用复用和配套恢复通过。初始生成案例复跑 2/3 的结果保留，明确空字符串输入后新版本连续两次 3/3；错误前缀 Skill 为 0/3，正确判错。先读 [Pro / Docker 真实链路](verification/local/pro-docker-e2e-2026-10-25.md)。原生 Linux x86_64、其他平台与正式发布仍待验；下列较早检查点保留历史边界。
+
+2026-10-25 最新模型连接增量：Harness 网关已在运行，最小 Responses 文本请求成功；ARM64 Docker Worker 的实际 Codex 请求被上游通道拒绝，两个替代通道返回 502。未绕过服务限制，完整模型验收仍待完成。先读 [Harness 网关检查](verification/local/harness-gateway-2026-10-25.md)。
+
 更新时间：2026-10-24（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。
+
+2026-10-25 本地续开发：已修复案例编辑器异常 YAML 白屏、附件 BOM 丢失和保存后旧快照回写，并增加附件替换确认、保存期间编辑保护及 19 项前端回归测试。详见[本次续开发与验证](verification/local/continuation-2026-10-25.md)。本次记录对应本地改动，不表示已合入远端 main；Docker、Linux Worker 和真实模型平台验收的待办状态保持。
+
+同日本地 Docker 增量：已安装 Desktop 4.96.3/Rosetta；修复读写自检误用只读模式和 Worker 鉴权失败退出码；Compose 使用固定上游有限 seccomp 加 cap-drop ALL。原生 arm64 沙箱正反检查、Docker 引导/重启、amd64 模拟 ZIP 安装接入有新增证据；原生 Linux x86_64、真实模型和正式发布仍待完成。后续优先读 [Docker / Worker 验证](verification/local/docker-worker-2026-10-25.md)，下文 2026-10-24 记录继续作为历史基线，不扩展为新模型验收。
 
 目录已按用户最新要求简化为合集根目录下的 `skill-eval/`，不再使用中间 projects 层；工作流、下载后的进入目录及接手指令已同步。本次布局调整不新增模型验收。复核见 [UGLIC-layout.md](verification/local/audit/UGLIC-layout.md)。
 
