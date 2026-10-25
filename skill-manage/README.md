@@ -1,6 +1,6 @@
 # Open Skill Manager
 
-自托管 Skill 工作台。当前开发版本 **0.3.2.dev5**，历史验收基线 **0.3.1**：注册与不可变版本、独立 worker、真实模型审计、授权修复、独立复审、新版本登记与任务中心。Python 3.11+，SQLite + 本地文件，无内部平台依赖。
+自托管 Skill 工作台。当前开发版本 **0.3.2.dev6**，历史验收基线 **0.3.1**：注册与不可变版本、独立 worker、真实模型审计、授权修复、独立复审、新版本登记与任务中心。Python 3.11+，SQLite + 本地文件，无内部平台依赖。
 
 注册 → 审计 → 选择问题并授权修复 → 独立全量复审 → 登记新版本 → 下载已接通。原版本保持不变；静态预检不会冒充完整 PASS。
 
@@ -140,6 +140,7 @@ skill-mng --data-dir /absolute/path/new-empty-data start
 - [固定样例、批量回归与人工复核](docs/REGRESSION.md)
 - [K2.8 真实回归、修复结果与调用台账](docs/KIMI-REGRESSION.md)
 - [项目专用 CI 与源码/产物清单](docs/CI.md)
+- [任务历史分页、筛选与事件记录](docs/TASK-HISTORY.md)
 - [合成示例](examples/hello-skill/SKILL.md)
 
 全部业务代码在本仓库重新实现，无原项目业务数据或历史 Git。内置审计 Skill 保留 MIT 许可证与固定来源，详见 [能力迁移清单](docs/AUDIT-CAPABILITY-MAP.md)。

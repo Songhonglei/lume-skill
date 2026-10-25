@@ -148,7 +148,7 @@ wheels = [
 
 [[package]]
 name = "open-skill-mng"
-version = "0.3.2.dev5"
+version = "0.3.2.dev6"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },

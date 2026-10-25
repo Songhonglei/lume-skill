@@ -278,6 +278,9 @@ def test_runner_real_api_tools_fresh_review_and_frozen_resume(client, tmp_path, 
     from skill_mng.worker_client import RequestFailure
 
     root, user, worker, source, manifest, task, raw, body = setup_repair(client)
+    page = client.get("/api/task-history?kind=repair").json()
+    assert [item["id"] for item in page["items"]] == [task["task_id"]]
+    assert page["items"][0]["repair_state"] == "editing"
     _, final_files = unpack(candidate_for(raw))
     observed = []
 

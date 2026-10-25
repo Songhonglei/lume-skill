@@ -7,3 +7,11 @@ a.button{display:inline-flex;align-items:center;justify-content:center;padding:6
 .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.finding-text{min-width:280px;max-width:800px;overflow-wrap:anywhere}.badge.danger{color:var(--danger)}@media(max-width:600px){.app-header{padding:0 10px;gap:8px}.brand strong{font-size:13px}nav{gap:12px}.page-head .actions{flex-wrap:wrap;justify-content:flex-end}h1{font-size:18px}}
 
 .check-row{display:flex;align-items:center;gap:8px}.check-row input{min-height:0}textarea{font:inherit;max-width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:4px}summary{cursor:pointer;padding:8px 0}details details{margin-left:12px}.finding-text{margin-bottom:10px}
+
+.history-filters { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.history-filters label { flex:1 1 140px; margin:0; }
+.history-filters label:first-child { flex-basis:220px; }
+.history-pager { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+#task-events details { margin:10px 0; }
+@media (max-width:600px) { .history-filters label { flex-basis:100%; } }
+.history-filters + .table-wrap table { min-width:860px; }

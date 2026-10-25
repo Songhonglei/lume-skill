@@ -2,7 +2,7 @@ import json
 import time
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -182,6 +182,16 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
                 )
             ]
 
+    @router.get("/worker-enrollment-history")
+    def enrollment_pages(
+        limit: int = Query(default=25, ge=1, le=100),
+        cursor: str | None = Query(default=None, max_length=1024),
+        user=Depends(admin),
+    ):
+        from .history import enrollment_history
+
+        return enrollment_history(root, user, limit=limit, cursor=cursor)
+
     @router.delete("/worker-enrollments/{enrollment_id}")
     def cancel_enrollment(enrollment_id: str, user=Depends(admin)):
         with transaction(root, write=True) as db:
@@ -258,7 +268,42 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
                     (task_id, row["audit_run_id"], row["repair_run_id"]),
                 )
             ]
+            latest = db.execute(
+                "SELECT kind,detail_json,created_at FROM events WHERE subject_id IN (?,?,?) AND kind='model.failed' ORDER BY id DESC LIMIT 1",
+                (task_id, row["audit_run_id"], row["repair_run_id"]),
+            ).fetchone()
+            result["latest_model_error"] = dict(latest) if latest else None
             return result
+
+    @router.get("/task-history")
+    def task_pages(
+        limit: int = Query(default=25, ge=1, le=100),
+        cursor: str | None = Query(default=None, max_length=1024),
+        q: str = Query(default="", max_length=120),
+        state: Literal[
+            "queued", "waiting_configuration", "running", "cancelling", "succeeded", "failed", "cancelled"
+        ]
+        | None = None,
+        skill_id: str | None = Query(default=None, max_length=128),
+        kind: Literal["audit", "repair"] | None = None,
+        user=Depends(authenticated),
+    ):
+        from .history import task_history
+
+        return task_history(
+            root, user, limit=limit, cursor=cursor, q=q, state=state, skill_id=skill_id, kind=kind
+        )
+
+    @router.get("/tasks/{task_id}/events")
+    def event_pages(
+        task_id: str,
+        limit: int = Query(default=50, ge=1, le=100),
+        cursor: str | None = Query(default=None, max_length=1024),
+        user=Depends(authenticated),
+    ):
+        from .history import event_history
+
+        return event_history(root, user, task_id, limit=limit, cursor=cursor)
 
     @router.post("/tasks/{task_id}/cancel")
     def cancel(task_id: str, user=Depends(authenticated)):
