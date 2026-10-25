@@ -284,6 +284,17 @@ def test_runner_real_api_tools_fresh_review_and_frozen_resume(client, tmp_path, 
     def completion(config, payload, *, timeout):
         observed.append(payload)
         names = [tool["function"]["name"] for tool in payload.get("tools", [])]
+        # Inspect the actual post-redaction wire payload: a canned review alone
+        # used to hide evidence erased after the authorization field.
+        initial = json.loads(payload["messages"][1]["content"])
+        scope = initial.get("editScope") or initial["manifest"]["editScope"]
+        assert scope == manifest["authorization"]
+        entrypoint = initial.get("entrypoint") or initial["skill"]
+        assert "SKILL.md" == entrypoint["path"]
+        assert "# Example" in entrypoint["content"]
+        assert "Preserve this file." in json.dumps(initial["suppliedEvidence"])
+        assert manifest["authorization"]["targetVersion"] in payload["messages"][0]["content"]
+        assert not payload["messages"][0]["content"].rstrip().endswith("*")
 
         def call(name, args, index):
             return {

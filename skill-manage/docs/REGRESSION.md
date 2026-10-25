@@ -1,6 +1,6 @@
 # T02：固定样例与批量回归
 
-开发版本 0.3.2.dev3。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。
+开发版本 0.3.2.dev4。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。
 
 ## 输入、期望与证据
 
@@ -91,3 +91,7 @@ uv run python3 -m skill_mng.regression_review --run .local/model-run-01.json \
 ```
 
 只接受绑定原运行 SHA-256、确切 case/重复号/报告摘要的记录；误报必须对应已确认规则，漏报必须是该深度的活动规则。`accepted`、`rejected`、`uncertain` 由实际复核人填写，不由模型或工具自动生成。新复核产物保存 reviewer、规则计数与待复核数量；不改写原报告、finding ID 或评分。
+
+## dev4：保留修复协议的证据
+
+真实回归定位到 dev3 的通用脱敏会把 JSON 协议中的 `authorization` 对象视作口令赋值，遮掉后续文件证据。dev4 只将发往模型的元数据标签改为 `editScope`，system 提示使用 Frozen edit scope；平台/worker 冻结授权、目标原包检测和通用脱敏规则保持原样。真实 API 协议测试现在解析脱敏后的请求，核对完整授权、SKILL.md 与引用证据，避免只靠固定回复掩盖输入损坏。
