@@ -46,7 +46,7 @@ def main():
     (target / 'backend').mkdir()
     for filename in ('__init__.py', 'storage.py'):
         shutil.copyfile(source / 'backend' / filename, target / 'backend' / filename)
-    for filename in ('worker-requirements.txt', 'toolchain.json', 'install_tools.py'):
+    for filename in ('worker-requirements.txt', 'toolchain.json', 'install_tools.py', 'worker-seccomp.json', 'worker-seccomp.SOURCE.json'):
         shutil.copyfile(source / 'deploy' / filename, target / 'deploy' / filename)
     venv.EnvBuilder(with_pip=True).create(target / 'venv')
     executable = target / 'venv/bin/python3'

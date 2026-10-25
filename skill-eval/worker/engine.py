@@ -180,7 +180,7 @@ def check_sandbox(output: Path, env: dict[str, str],
         return
     workspace = output / "sandbox-check"
     workspace.mkdir(parents=True)
-    code = run_process(["codex", "sandbox", "--", "/bin/sh", "-c",
+    code = run_process(["codex", "sandbox", "-c", 'sandbox_mode="workspace-write"', "--", "/bin/sh", "-c",
                         'printf sandbox-ready > probe && test "$(cat probe)" = sandbox-ready && rm probe'],
                        workspace, env, output / "sandbox.log", 15, should_stop, lease_file)
     if code:

@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Shanghai",
+  "baseline_commit": "eca5e692c142d0305d4dd5ef1029874720715d7e",
+  "scope": "local uncommitted working tree; no remote CI/push/release",
+  "host": {
+    "os": "macOS 26.5.1",
+    "architecture": "arm64"
+  },
+  "docker": {
+    "desktop": "4.96.3,244472",
+    "installer_url": "https://desktop.docker.com/mac/main/arm64/244472/Docker.dmg",
+    "installer_sha256": "a3ac78b7de67af169ca58f33a4fa4c26007840870574c80c59a7ab0c7f68d954",
+    "installer_verified": true,
+    "application_signature_verified": true,
+    "rosetta_installed": true,
+    "engine": "29.9.2",
+    "vm_architecture": "arm64",
+    "kernel": "7.0.14-linuxkit",
+    "compose": "5.6.1"
+  },
+  "images": {
+    "open-skill-eval-center:0.1.0-local": {
+      "id": "sha256:1b9bc165f26e682cb14da493a23d2889b43027ca2f19137b1b59a9918606f0d4",
+      "architecture": "arm64"
+    },
+    "ose-worker-arm64-verify:20261025": {
+      "id": "sha256:df84d456faa6dd86ca51878754486e66eb4f0f2403507fb2cfdb5cb8b9ea885c",
+      "architecture": "arm64"
+    },
+    "ose-worker-verify:20261025": {
+      "id": "sha256:536c524c81f50bbed5d8dc12ebef822aa00837cb5a8b954ef2d66197c7aee8d6",
+      "architecture": "amd64"
+    }
+  },
+  "fresh_compose_bootstrap": "PASS; single builtin Worker, exact toolchain",
+  "restart": {
+    "session_preserved": true,
+    "worker_identity_preserved": true,
+    "fresh_heartbeat_after_restart": true,
+    "worker_count": 1,
+    "model_invocations": 0
+  },
+  "linux_worker_package": {
+    "platform": "Linux x86_64 under Docker Desktop Rosetta emulation",
+    "package_sha256": "54216e0775978b1409a79e0034132110b27f9f5ccd5f5e79fa5c9b84a5958fcc",
+    "isolated_install": "PASS",
+    "nonroot_uid": 10001,
+    "connection_mode": "0o600",
+    "one_time_enrollment": "PASS",
+    "used_code_http_status": 401,
+    "process_restart_without_new_code": "PASS",
+    "identity_and_token_preserved": true,
+    "container_restart_connection_preserved": true,
+    "online_before_revoke": true,
+    "reported_versions": {
+      "codex": "0.162.1",
+      "skill_up": "0.14.0"
+    },
+    "login_configured": false,
+    "revoked_connection_rejected": true,
+    "revoked_exit_code": 1,
+    "model_invocations": 0,
+    "zip_entries": 41,
+    "installed_public_files_compared": 39,
+    "installed_files_byte_equal_to_zip": true
+  },
+  "mac_worker_package": {
+    "sha256": "2dded610e7c0a67ae07dfe6e5e9a5a4e457966106d39b9c99cdbd87bcfd28fd5",
+    "rebuilt": true,
+    "installation_this_round": "NOT_RUN"
+  },
+  "sandbox_native_arm64": {
+    "state": "PASS",
+    "protected_home_write_denied": true,
+    "outer_security": [
+      "CapEff:\t0000000000000000",
+      "NoNewPrivs:\t1",
+      "Seccomp:\t2"
+    ],
+    "tool_versions": {
+      "skill_up": "skill-up version 0.14.0",
+      "codex": "codex-cli 0.162.1"
+    },
+    "model_requests": 0
+  },
+  "sandbox_emulated_amd64": {
+    "state": "FAIL",
+    "diagnostic": "Codex Sandbox SeccompInstall EINVAL under amd64 emulation",
+    "outer_security": [
+      "CapEff:\t0000000000000000",
+      "NoNewPrivs:\t1",
+      "Seccomp:\t2"
+    ],
+    "model_requests": 0
+  },
+  "tests": {
+    "python_pg_passed": 45,
+    "skipped": 0,
+    "postgresql": "17.10 in isolated Docker test instance",
+    "ruff": "PASS",
+    "source_scan_vendor_and_seccomp_hashes": "PASS",
+    "compose_config": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "model_connections": {
+    "local_text_service": "NOT_RUNNING; existing proxy exposes Chat Completions only",
+    "harness_remote_responses": "DNS_RESOLUTION_FAILED",
+    "harness_local_responses_gateway": "NOT_LISTENING",
+    "model_requests_this_round": 0
+  },
+  "remaining": [
+    "native Linux x86_64 sandbox and real model acceptance",
+    "arm64 Docker real inference and generation",
+    "Docker paired backup and restore",
+    "remote CI and required release audits",
+    "formal Release/GHCR/public reinstall"
+  ],
+  "source_sha256": {
+    "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+    "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+    "compose.yaml": "cb39fbc6c085cc7e0f41165cc5d5fa3d46fae2e4a783b965767dbc00c8fcce31",
+    "Dockerfile": "9e258e53ab81102558e1316ab38d825838fc4b7a66a98bb101d5c446fc9bcc51",
+    "deploy/build_worker.py": "51789e5ceecb383b93238ce62148da6b7401a6610a1089ab69f36463200c0b84",
+    "deploy/install_worker.py": "d0ed478ae0bf8f01d64fd1d12700a15534a7b477c9cf839458973bbb24625f9d",
+    "deploy/check_source.py": "2b15597c229f75b69d4955968339da593e3cd1e043e0acd30ab239fb3e8938a1",
+    "deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+    "deploy/worker-seccomp.SOURCE.json": "da5f990163655cf27667e91064049ffce892bc34363f92b7345aa75eb4b13b9c",
+    "docs/WORKER.md": "f72c4acf4473ece79496cae928075b6f9d240d4e7079cec407581c85e0d6dd0f",
+    "THIRD-PARTY-NOTICES.md": "e2feee116ad9f722cd332596471cff758aba930a0c8e1e4a99ec1466858130b1",
+    "licenses/codex-security-Apache-2.0.txt": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+    "tests/test_engine_process.py": "6d523595fafd2dd313fba2c11d4dc2de0ed39ad36c62fff1eec4ff442bd86464",
+    "tests/test_deployment_security.py": "b99d7d3aae6ddc04499a9ca3673987b4c5148d8f4ef022eb1b068d2e32e9e8d6",
+    "tests/test_worker_runtime.py": "5e360607332932f5a5be841a048a8c73cdc77b3192c22849be683248fa9e8d74"
+  },
+  "raw_receipt_sha256": {
+    "sandbox-arm64-final-image.json": "6fd430633add37ffe41cc284382c1f290cf81629b1b69385beb888c1bb442067",
+    "sandbox-amd64-final-image.json": "46e8e6eeaf2f429243323c88befa6fda3125a487164d4214c5dc292375c2f497",
+    "docker-restart-result.json": "515ec156e302dce34c7f457a14ece2d0c3017c071b95546c5d37030e287b9f88",
+    "linux-worker-protocol-result.json": "369d74ce5921a65da3baee05b53c8c837b9eb194e47b2017475cbd05065b810c"
+  }
+}

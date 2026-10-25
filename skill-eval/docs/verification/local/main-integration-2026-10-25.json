@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Shanghai",
+  "user_decision": {
+    "native_linux_x86_64": "DEFERRED_BY_USER; NOT_RUN/PARTIAL retained",
+    "merge_development_branch_into_main": true,
+    "formal_release_or_image_publication": false
+  },
+  "development_branch": "fix/eval-editor-integrity",
+  "source_baseline": "eca5e692c142d0305d4dd5ef1029874720715d7e",
+  "fetched_main_at_integration": "db1f421ff6cb0628ef8e17ffbcbed961c5294583",
+  "scope": [
+    "skill-eval/",
+    ".github/workflows/skill-eval-checks.yml"
+  ],
+  "unrelated_remote_skill_manage_changes_preserved": true,
+  "local_checks": {
+    "python_postgresql_tests": {
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0,
+      "postgresql": "17.10",
+      "warnings": 2
+    },
+    "frontend_node_tests": {
+      "passed": 19,
+      "failed": 0
+    },
+    "typescript_and_vite_build": "PASS",
+    "ruff": "PASS",
+    "public_candidate_scan": "PASS",
+    "vendor_and_seccomp_hashes": "PASS",
+    "compose_config": "PASS",
+    "git_diff_check": "PASS",
+    "workflow_yaml_parse_and_frontend_test_step": "PASS"
+  },
+  "model_tests_repeated_for_this_merge": false,
+  "model_evidence": "pro-docker-e2e-2026-10-25.json",
+  "remote_ci": "Separate from these local results; consult the resulting main commit checks",
+  "sensitive_runtime_files_in_source": false
+}

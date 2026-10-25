@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/openai/codex-security",
+  "commit": "0aeb39d501e03f4f3a9374dbc6d8d44940af0d46",
+  "upstream_path": "docker/codex-security-seccomp.json",
+  "upstream_blob": "9b281782c0a61303751f97933dc6c4726b76112e",
+  "license": "Apache-2.0",
+  "modified": false,
+  "required_options": [
+    "cap_drop=ALL",
+    "no-new-privileges=true"
+  ],
+  "files": {
+    "deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+    "licenses/codex-security-Apache-2.0.txt": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc"
+  }
+}

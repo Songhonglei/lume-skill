@@ -15,11 +15,12 @@ def build(output: Path):
     asset_root = root / 'vendor/skill-upper'
     asset_manifest = json.loads((asset_root / 'UPSTREAM.json').read_text())
     files += [asset_root / name for name in (*asset_manifest['files'], 'LICENSE', 'UPSTREAM.json')]
-    files += [root / 'deploy' / name for name in ('install_worker.py', 'install_tools.py', 'toolchain.json', 'worker-requirements.txt')]
+    files += [root / 'deploy' / name for name in ('install_worker.py', 'install_tools.py', 'toolchain.json', 'worker-requirements.txt', 'worker-seccomp.json', 'worker-seccomp.SOURCE.json')]
     files += [root / 'deploy/codex' / name for name in ('package.json', 'package-lock.json')]
     files += [root / 'docs/WORKER.md', root / 'THIRD-PARTY-NOTICES.md']
     files += list((root / 'licenses').glob('*-LICENSE.txt'))
     files.append(root / 'licenses/skill-up-Apache-2.0.txt')
+    files.append(root / 'licenses/codex-security-Apache-2.0.txt')
     if (root / 'LICENSE').is_file():
         files.append(root / 'LICENSE')
     output.mkdir(parents=True, exist_ok=True)

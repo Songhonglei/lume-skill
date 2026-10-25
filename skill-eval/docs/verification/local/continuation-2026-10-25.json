@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Shanghai",
+  "baseline_commit": "eca5e692c142d0305d4dd5ef1029874720715d7e",
+  "scope": "local working tree; no remote push or CI run; editor fixes only",
+  "environment": {
+    "os": "macOS 26.5.1",
+    "architecture": "arm64",
+    "python": "3.12.12",
+    "node": "24.19.0",
+    "uv": "0.12.3",
+    "postgresql": "17.11 Homebrew",
+    "skill_up": "0.14.0",
+    "docker": "not installed"
+  },
+  "checks": {
+    "python_tests": {
+      "passed": 40,
+      "skipped": 0
+    },
+    "frontend_tests": {
+      "passed": 19
+    },
+    "ruff": "PASS",
+    "typescript_vite": "PASS",
+    "source_scan_and_vendor_hashes": "PASS",
+    "workflow_yaml_and_added_test_step": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "browser": {
+    "backend": "real API and isolated PostgreSQL",
+    "malformed_yaml_recovery": "PASS",
+    "bom_crlf_round_trip": "PASS",
+    "binary_attachment_round_trip": "PASS",
+    "duplicate_attachment_cancel_and_confirm": "PASS",
+    "slow_save_edit_locks": "PASS",
+    "stale_refresh_held_after_save": "PASS",
+    "saved_version_active_and_readonly": "PASS",
+    "exported_files": 8,
+    "viewport_900_horizontal_overflow": false
+  },
+  "model_invocations": 0,
+  "not_run": [
+    "Docker real model acceptance",
+    "independent Linux Worker acceptance",
+    "remaining AC-09 combinations",
+    "AC-12 live model execution with activation change",
+    "port-conflict operation",
+    "remote CI",
+    "formal Release/GHCR",
+    "glic-check tool",
+    "skill-release-audit tool"
+  ],
+  "source_sha256": {
+    "frontend/src/CaseEditor.tsx": "1c51ee21a95e46d578f1ef745ae95761fbf1123084e6a555ab95523e12831b68",
+    "frontend/src/SetsPage.tsx": "3835503a4c01944d48e4514059eedfc9e3def0de7531987e54ad66b64dc4e336",
+    "frontend/src/editorFiles.ts": "2f8469faa355794cfa937df0db42c7c743d2f2e8ed679806167ddd34c2c2b35c",
+    "frontend/src/editorYaml.ts": "ed882a3433c0042d41c0c7cf10135f0bdcf0151fbc3f0d0328e0aaa323903791",
+    "frontend/src/editorState.ts": "ad0248a26d68e46243655bbe5c47e7f3c4e4a8b2d7b81afade7adce48aa5cff9",
+    "frontend/src/style.css": "874652e38a7c1ee1f34368600b0c75a65fa1d3afd4ab12de3edaf2b3762e1be3",
+    "frontend/tests/editor.test.mjs": "a8ec507460f71c08bc3f1546834ac77ac9662949b04002d6f755a40912bfe4ee",
+    "frontend/package.json": "42b9f85569570c1127886f03e05498b4e54810c87ef5994a57ebe085e6a70e71"
+  },
+  "workflow_sha256": "7c9db1235ecf28a2cf361fe8d8787fe0ee000f67e9f3fb05f3a6283f4d12c988",
+  "local_evidence_sha256": {
+    "editor-final.png": "27e555e7a9f277a4e84bccd3588f5966e800ba5d0e8d63711b3fbdeeaf0b813e",
+    "editor-900.png": "402de598aa1662cc57da328b7fb6cb8fbbcd0c9d60ff582b2f99b92beb6b9e8b",
+    "saved-export.zip": "9dffcc3f017e5b7f62ed6d0d7535382c2184d9a18c87994eab532d1f1e3dafa6"
+  }
+}
