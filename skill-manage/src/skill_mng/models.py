@@ -137,7 +137,7 @@ def probe_model(root: Path) -> dict:
     messages = [
         {
             "role": "user",
-            "content": "Call capability_check with value ok, then return the tool result as {ok:true}.",
+            "content": "Call capability_check now with value ok. You must use the provided function tool. Do not answer directly or return JSON before the tool is called; its result is not available yet.",
         }
     ]
     try:
@@ -172,7 +172,16 @@ def probe_model(root: Path) -> dict:
             or json.loads(calls[0]["function"]["arguments"]) != {"value": "ok"}
         ):
             raise ModelError("tools_not_supported")
-        messages.extend([first, {"role": "tool", "tool_call_id": calls[0]["id"], "content": '{"ok":true}'}])
+        messages.extend(
+            [
+                first,
+                {"role": "tool", "tool_call_id": calls[0]["id"], "content": '{"ok":true}'},
+                {
+                    "role": "user",
+                    "content": "Return the supplied tool result as JSON matching the response schema.",
+                },
+            ]
+        )
         second = completion(
             config,
             {
