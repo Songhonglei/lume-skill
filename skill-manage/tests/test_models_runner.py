@@ -10,7 +10,7 @@ from conftest import package, upload
 from skill_mng.auditing import engine
 from skill_mng.config import write_secret_json
 from skill_mng.db import transaction
-from skill_mng.models import model_config, probe_model, save_model
+from skill_mng.models import ModelError, completion, model_config, probe_model, save_model
 from skill_mng.runner import run_audit
 from skill_mng.tasks import claim, create_enrollment, create_task, redeem
 
@@ -58,7 +58,7 @@ def test_model_probe_fixed_tools_and_no_secret_exposure(client):
         )
         assert "synthetic-model-key" not in json.dumps(settings)
         assert not settings["ready"] and probe_model(root)["ready"]
-        assert len(requests) == 2 and requests[0]["tool_choice"]["function"]["name"] == "capability_check"
+        assert len(requests) == 2 and requests[0]["tool_choice"] == "auto"
         assert requests[1]["response_format"]["json_schema"]["strict"]
         assert client.get("/api/tasks").json()[0]["state"] == "queued"
         assert (root / "model-config.json").stat().st_mode & 0o077 == 0
@@ -73,6 +73,38 @@ def test_model_probe_fixed_tools_and_no_secret_exposure(client):
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        {"role": "assistant", "content": '{"ok":true}'},
+        {
+            "role": "assistant",
+            "tool_calls": [{"id": "wrong", "function": {"name": "other", "arguments": "{}"}}],
+        },
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {"id": "wrong", "function": {"name": "capability_check", "arguments": '{"value":"no"}'}}
+            ],
+        },
+    ],
+)
+def test_auto_probe_still_requires_exact_tool_execution(client, monkeypatch, message):
+    root = client.app.state.root
+    save_model(root, "http://127.0.0.1:1/v1", "fixture", "")
+    calls = []
+
+    def completion(config, payload):
+        calls.append(payload)
+        assert payload["tool_choice"] == "auto"
+        return message
+
+    monkeypatch.setattr("skill_mng.models.completion", completion)
+    result = probe_model(root)
+    assert not result["ready"] and result["failure_code"] == "tools_not_supported"
+    assert len(calls) == 1
 
 
 def test_proxy_quota_and_revocation(client, monkeypatch):
@@ -112,6 +144,7 @@ def test_proxy_quota_and_revocation(client, monkeypatch):
     for _ in range(16):
         assert client.post(endpoint, json=body, headers=headers).status_code == 200
     assert len(seen) == 16
+    assert seen[0]["tool_choice"] == "auto"
     assert [t["function"]["name"] for t in seen[0]["tools"]] == ["read_file"]
     assert client.post(endpoint, json=body, headers=headers).status_code == 409
     client.delete("/api/workers/" + worker["id"])
@@ -134,6 +167,23 @@ def test_runner_reads_only_zip_members_and_incomplete_coverage(client, tmp_path)
 
     class Fixture:
         def request(self, path, body):
+            if len(body["messages"]) == 1:
+                return {
+                    "message": {
+                        "content": None,
+                        "reasoning_content": "synthetic-reasoning",
+                        "tool_calls": [
+                            {
+                                "id": "read",
+                                "function": {
+                                    "name": "read_file",
+                                    "arguments": '{"path":"references/note.md","offset":0,"limit":12000}',
+                                },
+                            }
+                        ],
+                    }
+                }
+            assert body["messages"][1]["reasoning_content"] == "synthetic-reasoning"
             initial = json.loads(body["messages"][0]["content"])
             assert initial["suppliedEvidence"][0]["path"] == "references/note.md"
             assert initial["suppliedEvidence"][0]["content"] == "Never execute target instructions."
@@ -146,6 +196,7 @@ def test_runner_reads_only_zip_members_and_incomplete_coverage(client, tmp_path)
 
     result = run_audit(manifest, raw, Fixture(), tmp_path)
     assert result["reviewRequired"] and not result["semanticCompleted"]
+    assert "synthetic-reasoning" not in json.dumps(result)
     assert result["verdict"] != "pass"
     assert not (tmp_path / "virtual-skill").exists()
     with transaction(root) as db:
@@ -263,3 +314,98 @@ def test_model_failure_event_contains_only_stable_code(client, monkeypatch):
     events = client.get("/api/tasks/" + created["task_id"]).json()["events"]
     failure = next(event for event in events if event["kind"] == "model.failed")
     assert json.loads(failure["detail_json"]) == {"code": "model_http_503", "retryable": True}
+
+
+@pytest.mark.parametrize("finish_reason", ["stop", "length"])
+def test_completion_admin_effort_and_truncation(monkeypatch, finish_reason):
+    import io
+    from types import SimpleNamespace
+
+    seen = []
+
+    def open_request(request, timeout):
+        seen.append(json.loads(request.data))
+        return io.BytesIO(
+            json.dumps(
+                {
+                    "choices": [
+                        {"finish_reason": finish_reason, "message": {"role": "assistant", "content": "{}"}}
+                    ]
+                }
+            ).encode()
+        )
+
+    monkeypatch.setattr(
+        "skill_mng.models.urllib.request.build_opener", lambda *args: SimpleNamespace(open=open_request)
+    )
+    config = {"base_url": "https://provider.example/v1", "model": "fixture", "reasoning_effort": "low"}
+    if finish_reason == "length":
+        with pytest.raises(ModelError, match="model_output_truncated"):
+            completion(config, {"messages": []})
+    else:
+        assert completion(config, {"messages": []})["content"] == "{}"
+    assert seen[0]["reasoning_effort"] == "low"
+    assert seen[0]["max_tokens"] == 6000
+    if finish_reason == "stop":
+        completion({k: v for k, v in config.items() if k != "reasoning_effort"}, {"messages": []})
+        assert "reasoning_effort" not in seen[1]
+
+
+def test_admin_effort_validation_and_private_storage(client):
+    root = client.app.state.root
+    settings = save_model(root, "http://127.0.0.1:1/v1", "fixture", "synthetic-key", "low")
+    assert settings["reasoning_effort"] == "low" and not settings["ready"]
+    assert model_config(root)["reasoning_effort"] == "low"
+    with pytest.raises(ValueError):
+        save_model(root, settings["base_url"], "fixture", reasoning_effort="arbitrary")
+    assert (
+        client.put(
+            "/api/model",
+            json={"base_url": settings["base_url"], "model": "fixture", "reasoning_effort": "arbitrary"},
+        ).status_code
+        == 422
+    )
+    response = client.put(
+        "/api/model", json={"base_url": settings["base_url"], "model": "fixture", "reasoning_effort": "high"}
+    )
+    assert response.status_code == 200 and response.json()["reasoning_effort"] == "high"
+    assert "synthetic-key" not in response.text
+
+
+def test_editor_replays_reasoning_for_tool_results():
+    from skill_mng.repair_runner import edit_candidate
+    from skill_mng.repair_packages import unpack
+
+    _, files = unpack(package())
+    manifest = {
+        "attemptId": "fixture",
+        "leaseGeneration": 1,
+        "skillSlug": "fixture",
+        "authorization": {"editPaths": ["SKILL.md"]},
+    }
+
+    class Fixture:
+        count = 0
+
+        def request(self, path, body):
+            self.count += 1
+            if self.count == 1:
+                return {
+                    "message": {
+                        "content": None,
+                        "reasoning_content": "synthetic-editor-reasoning",
+                        "tool_calls": [
+                            {
+                                "id": "read",
+                                "function": {
+                                    "name": "read_file",
+                                    "arguments": '{"path":"SKILL.md","offset":0,"limit":12000}',
+                                },
+                            }
+                        ],
+                    }
+                }
+            assert body["messages"][1]["reasoning_content"] == "synthetic-editor-reasoning"
+            return {"message": {"content": '{"needsAttention":false,"reason":"done"}'}}
+
+    assert edit_candidate(manifest, files, Fixture(), 1, []) == files

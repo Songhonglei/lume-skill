@@ -264,3 +264,61 @@ def test_human_review_binds_exact_run_and_report_without_rewriting():
     review["reviews"][0]["reportDigest"] = "another-report"
     with pytest.raises(ValueError, match="binding"):
         adjudicate(raw, review)
+
+
+def test_private_config_retains_validated_effort(tmp_path):
+    config = tmp_path / "model.json"
+    data = {
+        "base_url": "https://provider.example/v1",
+        "model": "fixture",
+        "api_key": "synthetic-key",
+        "reasoning_effort": "low",
+    }
+    config.write_text(json.dumps(data))
+    config.chmod(0o600)
+    assert read_model_config(config)["reasoning_effort"] == "low"
+    data["reasoning_effort"] = "arbitrary"
+    config.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match="reasoning_effort_invalid"):
+        read_model_config(config)
+
+
+def test_failed_repair_keeps_frozen_review_and_candidate_identity():
+    _, cases = load_corpus(CORPUS)
+    case = next(c for c in cases if c.get("repair"))
+    rules = case["repair"]["selectedRules"]
+    review = {
+        "reportMarkdown": "Frozen incomplete review",
+        "reportDigest": digest(b"Frozen incomplete review"),
+        "semanticCompleted": False,
+    }
+
+    class Fixture:
+        def api(self, path, body=None):
+            if path == "/repairs":
+                return {"task_id": "task", "repair_run_id": "repair"}
+            assert path == "/repairs/repair"
+            return {
+                "state": "needs_attention",
+                "failure_code": "independent_review_requires_attention",
+                "round": 1,
+                "rounds": [
+                    {
+                        "round_number": 1,
+                        "artifact_digest": "artifact",
+                        "content_digest": "content",
+                        "review": review,
+                        "diff": [],
+                    }
+                ],
+            }
+
+        def await_task(self, identity, timeout):
+            return {"state": "succeeded", "model_calls": 4}
+
+    budget = Budget(128)
+    report = {"findings": [{"id": rule, "ruleId": rule, "reviewRequired": False} for rule in rules]}
+    record = repair_case(Fixture(), case, {}, "audit", report, budget, "cohort")
+    assert record["status"] == "needs_attention" and budget.used == 4
+    assert record["roundReceipts"][0]["review"] == review
+    assert record["roundReceipts"][0]["artifactDigest"] == "artifact"

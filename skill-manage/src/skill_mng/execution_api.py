@@ -55,6 +55,7 @@ class ResultBody(AttemptBody):
 
 
 class ModelSettings(BaseModel):
+    reasoning_effort: Literal["low", "medium", "high", "max"] | None = None
     base_url: str = Field(max_length=2048)
     model: str = Field(max_length=160)
     api_key: str | None = Field(default=None, max_length=4096)
@@ -148,7 +149,7 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
 
     @router.put("/model")
     def configure_model(body: ModelSettings, user=Depends(admin)):
-        result = save_model(root, body.base_url, body.model, body.api_key)
+        result = save_model(root, body.base_url, body.model, body.api_key, body.reasoning_effort)
         with transaction(root, write=True) as db:
             record_event(db, user["id"], "model.configured", result["revision"])
         return result
@@ -409,9 +410,7 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
             payload.update(
                 tools=tools,
                 parallel_tool_calls=False,
-                tool_choice="auto"
-                if body.phase == "repair"
-                else {"type": "function", "function": {"name": "read_file"}},
+                tool_choice="auto",
             )
         else:
             payload["response_format"] = {

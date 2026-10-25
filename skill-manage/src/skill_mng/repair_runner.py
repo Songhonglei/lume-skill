@@ -7,7 +7,7 @@ from .auditing import validate_result
 from .config import write_secret_json
 from .repair_packages import bump_version, pack, redact, unpack
 from .repairs import review_manifest
-from .runner import run_audit
+from .runner import assistant_message, run_audit
 from .privacy import TargetPrivacy, redact_value
 
 
@@ -151,7 +151,7 @@ def edit_candidate(manifest, files, client, round_number, feedback, trace_path=N
                         },
                     )
                 raise NeedsAttention("tool_budget_exceeded")
-            messages.append({"role": "assistant", "content": response.get("content"), "tool_calls": calls})
+            messages.append(assistant_message(response))
             for call in calls:
                 try:
                     function = call["function"]

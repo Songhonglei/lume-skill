@@ -30,6 +30,7 @@ def public_model_config(root: Path) -> dict:
         "ready": bool(config.get("ready")),
         "base_url": config.get("base_url", ""),
         "model": config.get("model", ""),
+        "reasoning_effort": config.get("reasoning_effort"),
         "api_key_configured": bool(config.get("api_key")),
         "revision": config.get("revision"),
         "checked_at": config.get("checked_at"),
@@ -37,7 +38,13 @@ def public_model_config(root: Path) -> dict:
     }
 
 
-def save_model(root: Path, base_url: str, model: str, api_key: str | None = None) -> dict:
+def save_model(
+    root: Path,
+    base_url: str,
+    model: str,
+    api_key: str | None = None,
+    reasoning_effort: str | None = None,
+) -> dict:
     parsed = urlsplit(base_url.strip())
     if (
         parsed.scheme not in ("http", "https")
@@ -52,6 +59,8 @@ def save_model(root: Path, base_url: str, model: str, api_key: str | None = None
         raise ValueError("请填写有效的服务地址与模型名")
     if api_key is not None and (len(api_key) > 4096 or "\n" in api_key or "\r" in api_key):
         raise ValueError("模型密钥格式不正确")
+    if reasoning_effort not in (None, "low", "medium", "high", "max"):
+        raise ValueError("模型思考程度无效")
     with storage_lock(root):
         previous = model_config(root)
         write_secret_json(
@@ -59,6 +68,7 @@ def save_model(root: Path, base_url: str, model: str, api_key: str | None = None
             {
                 "base_url": base_url.strip().rstrip("/"),
                 "model": model.strip(),
+                "reasoning_effort": reasoning_effort,
                 "api_key": api_key
                 if api_key is not None
                 else (
@@ -79,7 +89,10 @@ def completion(config: dict, payload: dict, *, timeout: int = 40) -> dict:
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if config.get("api_key"):
         headers["Authorization"] = "Bearer " + config["api_key"]
-    body = json.dumps({**payload, "model": config["model"], "stream": False, "max_tokens": 6000}).encode()
+    options = {"reasoning_effort": config["reasoning_effort"]} if config.get("reasoning_effort") else {}
+    body = json.dumps(
+        {**payload, **options, "model": config["model"], "stream": False, "max_tokens": 6000}
+    ).encode()
     request = urllib.request.Request(config["base_url"] + "/chat/completions", data=body, headers=headers)
 
     # Do not forward credentials through redirects or environment proxies.
@@ -94,7 +107,12 @@ def completion(config: dict, payload: dict, *, timeout: int = 40) -> dict:
         if len(raw) > 2 * 1024 * 1024:
             raise ModelError("model_response_too_large")
         result = json.loads(raw)
-        message = result["choices"][0]["message"]
+        choice = result["choices"][0]
+        if not isinstance(choice, dict):
+            raise ValueError("invalid choice")
+        if choice.get("finish_reason") == "length":
+            raise ModelError("model_output_truncated")
+        message = choice["message"]
         if not isinstance(message, dict):
             raise ValueError("invalid message")
         return message
@@ -142,7 +160,9 @@ def probe_model(root: Path) -> dict:
                         },
                     }
                 ],
-                "tool_choice": {"type": "function", "function": {"name": "capability_check"}},
+                # Thinking models may reject a forced tool choice. Still require
+                # the exact tool name and arguments in the response below.
+                "tool_choice": "auto",
             },
         )
         calls = first.get("tool_calls", [])

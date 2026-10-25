@@ -14,6 +14,16 @@ from .privacy import TargetPrivacy
 from .worker_client import Client, RequestFailure
 
 
+def assistant_message(response):
+    """Replay protocol reasoning only in bounded model context, never reports."""
+    message = {"role": "assistant", "content": response.get("content")}
+    if response.get("tool_calls"):
+        message["tool_calls"] = response["tool_calls"]
+    if isinstance(response.get("reasoning_content"), str):
+        message["reasoning_content"] = response["reasoning_content"]
+    return message
+
+
 def semantic_consistency(semantic, depth, files=None, repair=False):
     if not isinstance(semantic, dict):
         return ["Final output must be a JSON object"]
@@ -202,9 +212,7 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
                 if any(not isinstance(c, dict) or not isinstance(c.get("id"), str) for c in calls):
                     validation_notes = ["Model returned an invalid tool-call identity"]
                     break
-                messages.append(
-                    {"role": "assistant", "content": response.get("content"), "tool_calls": calls}
-                )
+                messages.append(assistant_message(response))
                 for call in calls:
                     try:
                         function = call["function"]
@@ -227,7 +235,7 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
                     )
                 continue
             if not all(fully_read(path) for path in documents):
-                messages.append({"role": "assistant", "content": response.get("content") or ""})
+                messages.append(assistant_message(response))
                 messages.append(
                     {
                         "role": "user",
@@ -258,7 +266,7 @@ def run_audit(manifest: dict, original: bytes, client: Client, workdir: Path) ->
                 errors = ["Final output must be valid JSON matching the supplied schema"]
             validation_notes = errors
             if errors:
-                messages.append({"role": "assistant", "content": response.get("content") or ""})
+                messages.append(assistant_message(response))
                 messages.append(
                     {
                         "role": "user",

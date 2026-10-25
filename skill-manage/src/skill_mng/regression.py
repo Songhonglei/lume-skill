@@ -40,7 +40,12 @@ def read_model_config(path):
     config = json.loads(path.read_text())
     if not isinstance(config, dict) or not config.get("base_url") or not config.get("model"):
         raise ValueError("model_config_invalid")
-    return {key: config.get(key, "") for key in ("base_url", "model", "api_key")}
+    result = {key: config.get(key, "") for key in ("base_url", "model", "api_key")}
+    if config.get("reasoning_effort") is not None:
+        if config["reasoning_effort"] not in ("low", "medium", "high", "max"):
+            raise ValueError("model_config_reasoning_effort_invalid")
+        result["reasoning_effort"] = config["reasoning_effort"]
+    return result
 
 
 class Budget:
@@ -200,6 +205,21 @@ def repair_case(service, case, registered, audit_id, report, budget, cohort):
         "modelCalls": finished["model_calls"],
         "elapsedSeconds": round(time.monotonic() - started, 3),
     }
+    # Failed or unresolved repair reviews are evidence too; retain their frozen
+    # reports and candidate identities rather than only a terminal state.
+    record["roundReceipts"] = []
+    for receipt in detail["rounds"]:
+        if receipt["review"]:
+            verify_report(receipt["review"])
+        record["roundReceipts"].append(
+            {
+                "roundNumber": receipt["round_number"],
+                "artifactDigest": receipt["artifact_digest"],
+                "contentDigest": receipt["content_digest"],
+                "review": receipt["review"],
+                "diff": receipt["diff"],
+            }
+        )
     if detail["state"] != "published":
         return record
     receipt = detail["rounds"][-1]
@@ -370,8 +390,13 @@ def run(
     }
     if config:
         result["modelId"] = config["model"]
+        if config.get("reasoning_effort"):
+            result["modelParameters"] = {"reasoningEffort": config["reasoning_effort"]}
         result["modelConfigFingerprint"] = digest(
-            json.dumps({k: config[k] for k in ("base_url", "model")}, sort_keys=True).encode()
+            json.dumps(
+                {k: config[k] for k in ("base_url", "model", "reasoning_effort") if k in config},
+                sort_keys=True,
+            ).encode()
         )
     write_secret_json(output, result)
     try:

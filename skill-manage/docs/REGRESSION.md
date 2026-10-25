@@ -1,6 +1,6 @@
 # T02：固定样例与批量回归
 
-开发版本 0.3.2.dev2。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。
+开发版本 0.3.2.dev3。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。
 
 ## 输入、期望与证据
 
@@ -46,13 +46,19 @@ uv run python3 -m skill_mng.regression --mode full \
   --with-repair --output .local/model-run-01.json
 ```
 
-本轮用户已给出 **256 次**上限。2026-10-25 已只读提取 Kimi 本地文件中的相关密钥，模型列表查询返回 200；所选代际对应列表 ID `kimi-for-coding-highspeed`，实际能力请求返回 403，供应商明确说明该订阅无此模型权限。尚未创建目标审计，已保守累计 4 次、剩余 252 次；待用户选择其他模型后继续，不自动跨代切换。无凭据证据见 `docs/evidence/KIMI-CAPABILITY-2026-10-25.json`。此前给出的 Harness 工具补丁不含连接字段，始终未修改 Harness 设置。
+本轮用户已给出 **256 次**上限。2026-10-25 已只读提取 Kimi 本地文件中的相关密钥，模型列表查询返回 200；所选代际对应列表 ID `kimi-for-coding-highspeed`，实际能力请求返回 403，供应商明确说明该订阅无此模型权限。该 K2.7 探测未创建目标审计，保守累计 4 次。随后用户已明确授权切换到 `kimi-for-coding`（K2.8 Preview）；新的真实批次与协议兼容检查正在本地运行，调用预算跨进程累计。无凭据证据见 `docs/evidence/KIMI-CAPABILITY-2026-10-25.json`。此前给出的 Harness 工具补丁不含连接字段，始终未修改 Harness 设置。
+
+0.3.2.dev3 增加可选管理员设置 `reasoning_effort`（`low` / `medium` / `high` / `max`，省略为服务默认）；设置页和私有回归 JSON 均支持，worker 不能覆盖。仅在显式设置时发往供应商，不给其他服务增加默认参数。结果保存 `modelParameters.reasoningEffort`，连接指纹也绑定此参数。本轮 K2.8 后续批次选择 `low`，思考仍开启；不提高 6000 输出 token、单任务调用或总时限上限。
+
+能力与证据工具请求使用 `tool_choice=auto`，仍严格要求能力检测返回指定工具及参数，且 runner 未读完证据不能完成语义审计。多轮仅回传响应中的 `content`、`tool_calls` 和字符串 `reasoning_content`，受原有消息/上下文限制；思考字段不写入审计报告。供应商 `finish_reason=length` 明确报 `model_output_truncated`，不把截断输出当完整结论。协议依据为 [Kimi 思考模型](https://platform.kimi.ai/docs/guide/use-thinking-models)与 [Kimi Code 模型设置](https://www.kimi.com/en/help/kimi-code/models)。
+
+修复结果自 dev3 保留全部 `roundReceipts`（候选双摘要、脱敏 diff、冻结独立复审报告）；失败、未决和成功均适用。旧批次在未收敛复审期间由 Agent 中断，保留原始中断结果；其活动修复按完整 96 次上限计费，不把采样时已观察到的次数当最终费用。因此切换到 dev3 后跨进程保守累计 110/256 次，下一批次上限 146；最终余额以完整调用台账为准。
 
 0.3.2.dev2 起，结果另存 `modelId` 与 `capabilityProbe.ready/failureCode`，避免只见 `model_probe_failed` 而无法区别鉴权、订阅权限或协议问题。只记录本地生成的稳定码，不保存上游原始响应或 Key；历史失败记录保持原样。
 
 预算按保守上限预留：每轮能力检测最多 2 次、普通完整审计预留 16 次、修复任务预留平台 manifest 的 96 次；余额不足时记录 `skipped_budget` 并返回非零状态，不创建该任务。完成后按平台累计调用数扣账，再决定下一项。T01 阻断的包预留审计调用 0 次。平台原有总时限、重试、评分和发布门禁不变。无法取得终态时停止后续任务、保留 `modelSpendUncertain`，不把未知费用算作零；此处统计调用次数，不推测供应商费用或保证上游即时取消。
 
-参数约束本次批量进程；跨进程重试必须扣除已有回执。本轮 Kimi 探测已保守占用 4 次，后续同一授权下的新批次最多传 `--max-model-calls 252`，不能重新分配完整 256 次。
+参数约束本次批量进程；跨进程重试必须扣除已有回执。例如首次 Kimi 探测已保守占用 4 次时，下一批次最多传 `--max-model-calls 252`；后续诊断或重试也须继续扣除，不能重新分配完整 256 次。
 
 当前只有语法和 description 两例设有明确自动修复契约。只有指定规则出现可修复的已确认 finding 才授权；不能扩大到其他问题。成功必须经过平台独立完整复审与发布门禁，另外核对候选/报告双摘要、原包不变、current 不变和重复登记幂等。失败、未决、预算跳过和模型不收敛分别保留，不能删除失败后重跑到成功再只报告最后一次。
 
