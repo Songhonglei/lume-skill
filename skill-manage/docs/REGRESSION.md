@@ -46,7 +46,7 @@ uv run python3 -m skill_mng.regression --mode full \
   --with-repair --output .local/model-run-01.json
 ```
 
-本轮用户已给出 **256 次**上限。2026-10-25 已只读提取 Kimi 本地文件中的相关密钥，模型列表查询返回 200；所选代际对应列表 ID `kimi-for-coding-highspeed`，实际能力请求返回 403，供应商明确说明该订阅无此模型权限。该 K2.7 探测未创建目标审计，保守累计 4 次。随后用户已明确授权切换到 `kimi-for-coding`（K2.8 Preview）；新的真实批次与协议兼容检查正在本地运行，调用预算跨进程累计。无凭据证据见 `docs/evidence/KIMI-CAPABILITY-2026-10-25.json`。此前给出的 Harness 工具补丁不含连接字段，始终未修改 Harness 设置。
+本轮用户已给出 **256 次**上限。2026-10-25 已只读提取 Kimi 本地文件中的相关密钥，模型列表查询返回 200；所选代际对应列表 ID `kimi-for-coding-highspeed`，实际能力请求返回 403，供应商明确说明该订阅无此模型权限。该 K2.7 探测未创建目标审计，保守累计 4 次。随后用户已明确授权切换到 `kimi-for-coding`（K2.8 Preview）；真实批次与协议兼容检查已完成，调用预算跨进程累计。无凭据证据见 `docs/evidence/KIMI-CAPABILITY-2026-10-25.json`。此前给出的 Harness 工具补丁不含连接字段，始终未修改 Harness 设置。
 
 0.3.2.dev3 增加可选管理员设置 `reasoning_effort`（`low` / `medium` / `high` / `max`，省略为服务默认）；设置页和私有回归 JSON 均支持，worker 不能覆盖。仅在显式设置时发往供应商，不给其他服务增加默认参数。结果保存 `modelParameters.reasoningEffort`，连接指纹也绑定此参数。本轮 K2.8 后续批次选择 `low`，思考仍开启；不提高 6000 输出 token、单任务调用或总时限上限。
 
@@ -95,3 +95,9 @@ uv run python3 -m skill_mng.regression_review --run .local/model-run-01.json \
 ## dev4：保留修复协议的证据
 
 真实回归定位到 dev3 的通用脱敏会把 JSON 协议中的 `authorization` 对象视作口令赋值，遮掉后续文件证据。dev4 只将发往模型的元数据标签改为 `editScope`，system 提示使用 Frozen edit scope；平台/worker 冻结授权、目标原包检测和通用脱敏规则保持原样。真实 API 协议测试现在解析脱敏后的请求，核对完整授权、SKILL.md 与引用证据，避免只靠固定回复掩盖输入损坏。
+
+## 本轮最终结果
+
+2026-10-25：完整 14 例回执 `regression/baselines/kimi-k28-before-context-fix-2026-10-25.json`（源码 `7eb8571`）得到 13 个自动预期匹配、1 个人工待复核，无审计执行失败、预期不匹配或预算跳过。两次旧修复的未决结果原样保留。dev4 修正后专门重验两例，回执 `regression/baselines/kimi-k28-repairs-2026-10-25.json`（源码 `65aeac3`）显示均 1 轮修复、完整独立复审 117/117 并登记，原包/current/摘要/幂等校验通过。
+
+最终台账 `docs/evidence/KIMI-CALL-LEDGER-2026-10-25.json` 保守占用 **159/256**、剩余 **97**；包含旧中断修复完整 96 次预留，只核回有观测证据的已完成诊断。不能把该保守数当作实际供应商请求或 token 用量。完整 14 例和两类修复重验来自不同源码提交，不声称 dev4 又重跑了全部 14 例；全部真实报告仍待人工复核。完整说明见 [KIMI-REGRESSION.md](KIMI-REGRESSION.md)。

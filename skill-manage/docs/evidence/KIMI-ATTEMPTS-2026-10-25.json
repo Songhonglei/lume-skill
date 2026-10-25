@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 1,
+  "snapshotDate": "2026-10-25",
+  "note": "Full prior failed or interrupted receipts, preserved unchanged. live-02 was interrupted by the Agent to apply compatibility fixes, not by the human. Its active repair is charged at the complete 96-call bound. No model reasoning or credentials included.",
+  "attempts": [
+    {
+      "sourceFile": "t02-kimi-live-01.json",
+      "sourceDigest": "e527a5e622e2d8f513998c642ef067f9ca5fa1007da3897ea42a064fbf6060bd",
+      "run": {
+        "schemaVersion": 1,
+        "suiteId": "core-2026-10-25-v1",
+        "suiteDigest": "aba13624e6433af62f55f5e326c462e1bb10dfbd3607a60eeac5f7862725e4a6",
+        "platformVersion": "0.3.2.dev1",
+        "ruleVersion": "deep-audit-1.2.0-platform.1",
+        "pythonVersion": "3.12.13",
+        "system": "Darwin",
+        "machine": "arm64",
+        "createdAt": "2026-10-25T03:05:10.313767+00:00",
+        "mode": "full",
+        "evidenceKind": "capability_only",
+        "humanReview": "pending",
+        "maxModelCalls": 256,
+        "status": "interrupted",
+        "cases": [],
+        "modelConfigFingerprint": "3937122997249c39f22b43d9e7ea3206376508b74868dbc45498a17cdfad7258",
+        "failureCode": "model_probe_failed",
+        "summary": {
+          "passed": 0,
+          "manual_review": 0,
+          "oracle_mismatch": 0,
+          "execution_failed": 0,
+          "skipped_budget": 0,
+          "total": 0,
+          "modelCallsIncludingProbeUpperBound": 2,
+          "falsePositiveRuleCount": 0,
+          "falseNegativeRuleCount": 0,
+          "repairRequested": 0,
+          "repairPassed": 0,
+          "repairAttentionOrFailure": 0,
+          "repairSkippedBudget": 0
+        }
+      }
+    },
+    {
+      "sourceFile": "t02-kimi-k28-live-01.json",
+      "sourceDigest": "95fbd092330e73e5a92b502beb045ef21767ec4728b9aff194dfb5a55d72c6dc",
+      "run": {
+        "schemaVersion": 1,
+        "suiteId": "core-2026-10-25-v1",
+        "suiteDigest": "aba13624e6433af62f55f5e326c462e1bb10dfbd3607a60eeac5f7862725e4a6",
+        "platformVersion": "0.3.2.dev2",
+        "ruleVersion": "deep-audit-1.2.0-platform.1",
+        "pythonVersion": "3.12.13",
+        "system": "Darwin",
+        "machine": "arm64",
+        "createdAt": "2026-10-25T06:42:46.763935+00:00",
+        "mode": "full",
+        "evidenceKind": "capability_only",
+        "humanReview": "pending",
+        "maxModelCalls": 252,
+        "status": "interrupted",
+        "cases": [],
+        "modelId": "kimi-for-coding",
+        "modelConfigFingerprint": "f8508165623a728b410903b61bb7315386a34d761ad304e348f07c08befae0ee",
+        "capabilityProbe": {
+          "ready": false,
+          "failureCode": "model_http_400"
+        },
+        "failureCode": "model_probe_failed",
+        "summary": {
+          "passed": 0,
+          "manual_review": 0,
+          "oracle_mismatch": 0,
+          "execution_failed": 0,
+          "skipped_budget": 0,
+          "total": 0,
+          "modelCallsIncludingProbeUpperBound": 2,
+          "falsePositiveRuleCount": 0,
+          "falseNegativeRuleCount": 0,
+          "repairRequested": 0,
+          "repairPassed": 0,
+          "repairAttentionOrFailure": 0,
+          "repairSkippedBudget": 0
+        }
+      }
+    },
+    {
+      "sourceFile": "t02-kimi-k28-live-02.json",
+      "sourceDigest": "39f46ea4ddf03c94c41067b74e821b91cdc9d1bef9dc8dbe57515fa60cad3e82",
+      "run": {
+        "schemaVersion": 1,
+        "suiteId": "core-2026-10-25-v1",
+        "suiteDigest": "aba13624e6433af62f55f5e326c462e1bb10dfbd3607a60eeac5f7862725e4a6",
+        "platformVersion": "0.3.2.dev2",
+        "ruleVersion": "deep-audit-1.2.0-platform.1",
+        "pythonVersion": "3.12.13",
+        "system": "Darwin",
+        "machine": "arm64",
+        "createdAt": "2026-10-25T06:43:46.121579+00:00",
+        "mode": "full",
+        "evidenceKind": "incomplete_model_run",
+        "humanReview": "pending",
+        "maxModelCalls": 248,
+        "status": "interrupted",
+        "cases": [
+          {
+            "caseId": "valid-multifile-l1",
+            "repetition": 1,
+            "inputContentDigest": "c0d51d88f56bb3b8527af28258e17dde05fb72c2eac3e265bd0e83ec6b1a5abd",
+            "inputArtifactDigest": "fe02d327983f8fa92a2b34d2d588fc5c446c639917fcdc75a9879a396a31e58d",
+            "depth": "L1",
+            "sourceKind": "synthetic",
+            "modelCalls": 1,
+            "evidenceKind": "real_model",
+            "taskState": "succeeded",
+            "elapsedSeconds": 30.086,
+            "status": "passed",
+            "assessment": {
+              "matched": true,
+              "manualReview": false,
+              "falsePositiveRuleIds": [],
+              "falseNegativeRuleIds": [],
+              "missingReviewRuleIds": [],
+              "missingAnyConfirmedRules": []
+            },
+            "verdict": "pass",
+            "semanticCompleted": true,
+            "reviewRequired": false,
+            "score": 117,
+            "maxScore": 117,
+            "confirmedRules": [],
+            "reviewRules": [],
+            "reportDigest": "cfb5f341643fbc2ca6c6df84686f3e8e8ab6f4901ae0d37fae3559e7f9a54657",
+            "report": {
+              "artifactDigest": "fe02d327983f8fa92a2b34d2d588fc5c446c639917fcdc75a9879a396a31e58d",
+              "attemptId": "747a831d261940849376936ec88a82e7",
+              "auditRunId": "017d2e4a6f224a1ca5db0ffcb64ff015",
+              "checkedRuleIds": [
+                "D1-E1",
+                "D1-E2",
+                "D1-E3",
+                "D1-W1",
+                "D1-W2",
+                "D2-E1",
+                "D2-W1",
+                "D2-W2",
+                "D2-W3",
+                "D3-E1",
+                "D3-E2",
+                "D3-E3",
+                "D3-E4",
+                "D3-E5",
+                "D3-E6",
+                "D3-W1",
+                "D3-W3",
+                "D3-W4",
+                "D4-E1",
+                "D4-E2",
+                "D4-E3",
+                "D4-E4",
+                "D4-E5",
+                "D4-E6",
+                "D4-W1",
+                "D4-W2",
+                "D4-W3",
+                "D4-W6",
+                "D4-W7",
+                "D5-E1",
+                "D5-E2",
+                "D5-E3",
+                "D5-W1",
+                "D5-W2",
+                "D5-W3",
+                "D5-W4",
+                "D6-E1",
+                "D6-E2",
+                "D6-E3",
+                "D6-E4",
+                "D6-E5",
+                "D6-E6",
+                "D6-E7",
+                "D6-W1",
+                "D6-W2",
+                "D6-W3",
+                "D6-W4",
+                "D7-E1",
+                "D7-W2",
+                "D7-W3"
+              ],
+              "contentDigest": "c0d51d88f56bb3b8527af28258e17dde05fb72c2eac3e265bd0e83ec6b1a5abd",
+              "depth": "L1",
+              "errorCount": 0,
+              "findings": [],
+              "leaseGeneration": 1,
+              "maxScore": 117,
+              "repairPrompt": "仅修复明确授权的问题 ID；原包保持不变，修改候选后做全量独立复审。\n",
+              "reportDigest": "cfb5f341643fbc2ca6c6df84686f3e8e8ab6f4901ae0d37fae3559e7f9a54657",
+              "reportMarkdown": "# Skill 审计报告\n\n- 结论：pass\n- 分数：117/117\n- ERR：0；WARN：0\n- 待复核：False\n- 版本 ID：6e877c9ee7394c118580363e9389b2de\n- 内容摘要：c0d51d88f56bb3b8527af28258e17dde05fb72c2eac3e265bd0e83ec6b1a5abd\n- 规则：deep-audit-1.2.0-platform.1\n\n## 问题\n\n未发现已确认问题。\n",
+              "reviewRequired": false,
+              "ruleVersion": "deep-audit-1.2.0-platform.1",
+              "schemaVersion": 1,
+              "score": 117,
+              "semanticCompleted": true,
+              "taskId": "b542d05babb449069400f8116d7ac629",
+              "verdict": "pass",
+              "versionId": "6e877c9ee7394c118580363e9389b2de",
+              "warningCount": 0
+            }
+          },
+          {
+            "caseId": "valid-multifile-l2",
+            "repetition": 1,
+            "inputContentDigest": "8a172318c53416469d8d4ec84b3be66a3c2543cd3c87a050df17916d2dc1d1b7",
+            "inputArtifactDigest": "2ed1dcedc1f1eaae1d26d48171d264ee3d7e92868d9e83889527087bcff44ab9",
+            "depth": "L2",
+            "sourceKind": "synthetic",
+            "modelCalls": 2,
+            "evidenceKind": "real_model",
+            "taskState": "succeeded",
+            "elapsedSeconds": 53.345,
+            "status": "passed",
+            "assessment": {
+              "matched": true,
+              "manualReview": false,
+              "falsePositiveRuleIds": [],
+              "falseNegativeRuleIds": [],
+              "missingReviewRuleIds": [],
+              "missingAnyConfirmedRules": []
+            },
+            "verdict": "pass",
+            "semanticCompleted": true,
+            "reviewRequired": false,
+            "score": 119,
+            "maxScore": 120,
+            "confirmedRules": [
+              "D7-W1"
+            ],
+            "reviewRules": [],
+            "reportDigest": "72e0469f69dd036fe1a4e2d177db3052f1a851d11bc64007fcb5b676fad33e7e",
+            "report": {
+              "artifactDigest": "2ed1dcedc1f1eaae1d26d48171d264ee3d7e92868d9e83889527087bcff44ab9",
+              "attemptId": "8a0f82fd63794384a3476478096108fc",
+              "auditRunId": "9868e701f3a54b00b7665b2cb4979f1f",
+              "checkedRuleIds": [
+                "D1-E1",
+                "D1-E2",
+                "D1-E3",
+                "D1-W1",
+                "D1-W2",
+                "D2-E1",
+                "D2-W1",
+                "D2-W2",
+                "D2-W3",
+                "D3-E1",
+                "D3-E2",
+                "D3-E3",
+                "D3-E4",
+                "D3-E5",
+                "D3-E6",
+                "D3-W1",
+                "D3-W2",
+                "D3-W3",
+                "D3-W4",
+                "D4-E1",
+                "D4-E2",
+                "D4-E3",
+                "D4-E4",
+                "D4-E5",
+                "D4-E6",
+                "D4-W1",
+                "D4-W2",
+                "D4-W3",
+                "D4-W6",
+                "D4-W7",
+                "D5-E1",
+                "D5-E2",
+                "D5-E3",
+                "D5-W1",
+                "D5-W2",
+                "D5-W3",
+                "D5-W4",
+                "D6-E1",
+                "D6-E2",
+                "D6-E3",
+                "D6-E4",
+                "D6-E5",
+                "D6-E6",
+                "D6-E7",
+                "D6-W1",
+                "D6-W2",
+                "D6-W3",
+                "D6-W4",
+                "D7-E1",
+                "D7-W1",
+                "D7-W2",
+                "D7-W3"
+              ],
+              "contentDigest": "8a172318c53416469d8d4ec84b3be66a3c2543cd3c87a050df17916d2dc1d1b7",
+              "depth": "L2",
+              "errorCount": 0,
+              "findings": [
+                {
+                  "file": "SKILL.md",
+                  "id": "ab6ca0800c4ff9115d9456dd",
+                  "line": 1,
+                  "message": "未配置可选 Hub 查询工具，无法核验发布状态；已按规则降为 WARN。",
+                  "points": 1,
+                  "reviewRequired": false,
+                  "ruleId": "D7-W1",
+                  "severity": "WARN",
+                  "suggestion": "按该规则修正对应位置，保留已授权范围。",
+                  "verification": "修改后重新执行该规则，并完成独立复审。"
+                }
+              ],
+              "leaseGeneration": 1,
+              "maxScore": 120,
+              "repairPrompt": "仅修复明确授权的问题 ID；原包保持不变，修改候选后做全量独立复审。\nab6ca0800c4ff9115d9456dd: D7-W1 SKILL.md:1 按该规则修正对应位置，保留已授权范围。",
+              "reportDigest": "72e0469f69dd036fe1a4e2d177db3052f1a851d11bc64007fcb5b676fad33e7e",
+              "reportMarkdown": "# Skill 审计报告\n\n- 结论：pass\n- 分数：119/120\n- ERR：0；WARN：1\n- 待复核：False\n- 版本 ID：35057cfa99de4009b057b646230c352a\n- 内容摘要：8a172318c53416469d8d4ec84b3be66a3c2543cd3c87a050df17916d2dc1d1b7\n- 规则：deep-audit-1.2.0-platform.1\n\n## 问题\n\n### D7-W1 · WARN · SKILL.md:1\n未配置可选 Hub 查询工具，无法核验发布状态；已按规则降为 WARN。\n建议：按该规则修正对应位置，保留已授权范围。\n验证：修改后重新执行该规则，并完成独立复审。\n\n",
+              "reviewRequired": false,
+              "ruleVersion": "deep-audit-1.2.0-platform.1",
+              "schemaVersion": 1,
+              "score": 119,
+              "semanticCompleted": true,
+              "taskId": "91c17e2203ac4565aed95ae8efb5eaba",
+              "verdict": "pass",
+              "versionId": "35057cfa99de4009b057b646230c352a",
+              "warningCount": 1
+            }
+          }
+        ],
+        "modelId": "kimi-for-coding",
+        "modelConfigFingerprint": "f8508165623a728b410903b61bb7315386a34d761ad304e348f07c08befae0ee",
+        "capabilityProbe": {
+          "ready": true,
+          "failureCode": null
+        },
+        "summary": {
+          "passed": 2,
+          "manual_review": 0,
+          "oracle_mismatch": 0,
+          "execution_failed": 0,
+          "skipped_budget": 0,
+          "total": 2,
+          "modelCallsIncludingProbeUpperBound": 6,
+          "falsePositiveRuleCount": 0,
+          "falseNegativeRuleCount": 0,
+          "repairRequested": 0,
+          "repairPassed": 0,
+          "repairAttentionOrFailure": 0,
+          "repairSkippedBudget": 0
+        },
+        "failureCode": "user_interrupted",
+        "modelSpendUncertain": true
+      }
+    },
+    {
+      "sourceFile": "t02-kimi-k28-live-03.json",
+      "sourceDigest": "f3eb4a35bbfb2ce9e527b6f53c13537a427eb552333d05bb8290852bbc9c0d77",
+      "run": {
+        "schemaVersion": 1,
+        "suiteId": "core-2026-10-25-v1",
+        "suiteDigest": "aba13624e6433af62f55f5e326c462e1bb10dfbd3607a60eeac5f7862725e4a6",
+        "platformVersion": "0.3.2.dev3",
+        "ruleVersion": "deep-audit-1.2.0-platform.1",
+        "pythonVersion": "3.12.13",
+        "system": "Darwin",
+        "machine": "arm64",
+        "createdAt": "2026-10-25T06:56:09.214521+00:00",
+        "mode": "full",
+        "evidenceKind": "capability_only",
+        "humanReview": "pending",
+        "maxModelCalls": 146,
+        "status": "interrupted",
+        "cases": [],
+        "modelId": "kimi-for-coding",
+        "modelParameters": {
+          "reasoningEffort": "low"
+        },
+        "modelConfigFingerprint": "33cd932b40e3a9d300e0528fa15d8e953a7e00daec6aab67a8b134b102e58dbb",
+        "capabilityProbe": {
+          "ready": false,
+          "failureCode": "tools_not_supported"
+        },
+        "failureCode": "model_probe_failed",
+        "summary": {
+          "passed": 0,
+          "manual_review": 0,
+          "oracle_mismatch": 0,
+          "execution_failed": 0,
+          "skipped_budget": 0,
+          "total": 0,
+          "modelCallsIncludingProbeUpperBound": 2,
+          "falsePositiveRuleCount": 0,
+          "falseNegativeRuleCount": 0,
+          "repairRequested": 0,
+          "repairPassed": 0,
+          "repairAttentionOrFailure": 0,
+          "repairSkippedBudget": 0
+        }
+      }
+    }
+  ],
+  "interruptedTaskSnapshot": {
+    "records": [
+      {
+        "tasks": [
+          {
+            "id": "b542d05babb449069400f8116d7ac629",
+            "kind": "audit",
+            "state": "succeeded",
+            "model_calls": 1,
+            "failure_code": null
+          },
+          {
+            "id": "91c17e2203ac4565aed95ae8efb5eaba",
+            "kind": "audit",
+            "state": "succeeded",
+            "model_calls": 2,
+            "failure_code": null
+          },
+          {
+            "id": "30a435cd3784409f8e850641cf2aa5aa",
+            "kind": "audit",
+            "state": "succeeded",
+            "model_calls": 1,
+            "failure_code": null
+          },
+          {
+            "id": "c7017c80c3d74f50b1fbefd345211611",
+            "kind": "repair",
+            "state": "running",
+            "model_calls": 13,
+            "failure_code": null
+          }
+        ],
+        "rounds": [
+          {
+            "roundNumber": 1,
+            "contentDigest": "4fe472f0b4a57238505e03b3f93f71052c71799f57fc2616aa570c79752cce18",
+            "review": null,
+            "diff": [
+              {
+                "path": "SKILL.md",
+                "beforeDigest": "e70d89c760e13424f08f6824e171275929f25982fc124613c6af3221eeca5935",
+                "afterDigest": "3b55bf4b6f35e1569dee0b30ecfb69c5dc91ff11cfa3ab5d963170cc35553866",
+                "kind": "modified",
+                "diff": "--- original/SKILL.md\n+++ candidate/SKILL.md\n@@ -1,6 +1,6 @@\n ---\n name: reg-syntax-error\n-version: 1.0.0\n+version: \"1.0.1\"\n description: Use when the user requests a short English greeting for a supplied person name.\n ---\n # Greeting\n",
+                "binary": false
+              },
+              {
+                "path": "scripts/greet.py",
+                "beforeDigest": "934b34bb894ad3c05258c72ad9ca30009fd7446fedef95b27b09ef75ef3c8a8a",
+                "afterDigest": "a55c14346b5c0e11da873793db175efd28d4840a330a5edba18d03d7d7310626",
+                "kind": "modified",
+                "diff": "--- original/scripts/greet.py\n+++ candidate/scripts/greet.py\n@@ -1,3 +1,2 @@\n def greet(name):\n     return f\"Hello, {name}!\"\n-    broken = (\n",
+                "binary": false
+              }
+            ]
+          }
+        ],
+        "modelFailures": [
+          {
+            "code": "model_timeout",
+            "retryable": true
+          },
+          {
+            "code": "model_timeout",
+            "retryable": true
+          }
+        ]
+      }
+    ],
+    "note": "Snapshot immediately before interrupt. Active repair charged at its complete 96-call upper bound, not this snapshot count."
+  },
+  "diagnostics": [
+    {
+      "ready": false,
+      "failureCode": "model_http_403",
+      "observedCalls": 1,
+      "requests": [
+        {
+          "phase": 1,
+          "status": 403,
+          "error": {
+            "type": "invalid_authentication_error",
+            "code": "",
+            "message": "Your current subscription does not have access to kimi-for-coding-highspeed. Upgrade to higher-tier Kimi Code plans. Upgrade: https://www.kimi.com/code?from=server_highspeed_error#pricing"
+          }
+        }
+      ],
+      "cumulativeModelCallUpperBound": 4
+    },
+    {
+      "model": "kimi-for-coding",
+      "ready": false,
+      "failureCode": "model_http_400",
+      "observedCalls": 1,
+      "requests": [
+        {
+          "status": 400,
+          "error": {
+            "type": "invalid_request_error",
+            "message": "tool_choice 'specified' is incompatible with thinking enabled"
+          }
+        }
+      ]
+    },
+    {
+      "model": "kimi-for-coding",
+      "reasoningEffort": "low",
+      "ready": false,
+      "failureCode": "tools_not_supported",
+      "observedCalls": 1,
+      "responses": [
+        {
+          "message": {
+            "role": "assistant",
+            "content": "{ok:true}",
+            "tool_calls": null
+          },
+          "reasoningCharacters": 100
+        }
+      ]
+    }
+  ]
+}

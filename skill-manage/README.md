@@ -138,6 +138,7 @@ skill-mng --data-dir /absolute/path/new-empty-data start
 - [来源与提取边界](docs/SOURCES.md)
 - [验收证据](docs/VALIDATION.md)
 - [固定样例、批量回归与人工复核](docs/REGRESSION.md)
+- [K2.8 真实回归、修复结果与调用台账](docs/KIMI-REGRESSION.md)
 - [项目专用 CI 与源码/产物清单](docs/CI.md)
 - [合成示例](examples/hello-skill/SKILL.md)
 

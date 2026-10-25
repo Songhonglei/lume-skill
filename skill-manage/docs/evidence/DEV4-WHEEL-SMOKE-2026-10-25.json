@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "setup_idempotent",
+    "start_idempotent",
+    "wheel_static_api_upload_download",
+    "native_builtin_worker_real_static_audit",
+    "external_worker_join_separate_storage_audit_restart",
+    "backup_restore",
+    "stop_restart_same_port"
+  ]
+}

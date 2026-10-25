@@ -1,0 +1,56 @@
+{
+  "limit": 256,
+  "usedUpperBound": 159,
+  "remaining": 97,
+  "runs": [
+    {
+      "name": "t02-kimi-live-01",
+      "upperBound": 2
+    },
+    {
+      "name": "capability-diagnostic",
+      "upperBound": 1,
+      "previousUpperBound": 2,
+      "basis": "Instrumented completed diagnostic observed exactly one request",
+      "evidence": "kimi-capability-diagnostic.json"
+    },
+    {
+      "name": "t02-kimi-k28-live-01",
+      "upperBound": 2
+    },
+    {
+      "name": "k28-capability-diagnostic",
+      "upperBound": 1,
+      "previousUpperBound": 2,
+      "basis": "Instrumented completed diagnostic observed exactly one request",
+      "evidence": "kimi-k28-capability-diagnostic.json"
+    },
+    {
+      "name": "t02-kimi-k28-live-02",
+      "upperBound": 102,
+      "basis": "2 capability + 4 audit calls + entire 96-call active repair reservation; interrupted in-flight spend uncertain"
+    },
+    {
+      "name": "t02-kimi-k28-live-03",
+      "upperBound": 1,
+      "previousUpperBound": 2,
+      "basis": "tools_not_supported is raised after exactly the first completion, before a second request"
+    },
+    {
+      "name": "k28-low-diagnostic",
+      "upperBound": 1,
+      "previousUpperBound": 2,
+      "basis": "Instrumented completed diagnostic observed exactly one request",
+      "evidence": "kimi-k28-low-diagnostic.json"
+    },
+    {
+      "name": "t02-kimi-k28-live-04",
+      "upperBound": 38
+    },
+    {
+      "name": "t02-kimi-k28-repair-05",
+      "upperBound": 11
+    }
+  ],
+  "note": "Conservative request upper bounds, including full 96-call interrupted repair reservation; not provider billing or token quota."
+}
