@@ -1,5 +1,9 @@
 # 开发接续与历史验收记录
 
+## 2026-10-25 / main 阶段确认
+
+代码基线 `db1f421` 已直接进入 main，PR #6 已合并。[main CI](https://github.com/Songhonglei/lume-skill/actions/runs/40202445879) 的 Ubuntu Python 3.11/3.12/3.13、macOS Python 3.12 四个环境均成功，见 [主干回执](evidence/MAIN-CI-2026-10-25.json)。当前版本仍为 0.3.2.dev6，179 项代码测试；本次只更新进展、总结与计划，未改动运行代码或消耗模型额度。阶段状态与后续验收标准集中于 [交接首页](HANDOFF.md)。
+
 ## 2026-10-25 / 0.3.2.dev6 / 四项复核与 T05
 
 四项公开样例已完成 Agent 源码复核及真实模型重验，原始报告未改写。累计预算保守 162/256、剩余 94；新报告保留有依据的四条规则，纠正行号和风险/依赖表述，见 [逐项核对](WEBAPP-TESTING-REVIEW.md)。
