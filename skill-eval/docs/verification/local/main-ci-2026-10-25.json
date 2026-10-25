@@ -1,0 +1,210 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Shanghai",
+  "repository": "Songhonglei/lume-skill",
+  "head_sha": "bca9c236342f826fbde961ba0fbc6780b913afa8",
+  "feature_commit": "78e4527",
+  "workflow": "Skill Eval checks",
+  "run_id": 40203314300,
+  "url": "https://github.com/Songhonglei/lume-skill/actions/runs/40203314300",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 121198895594,
+      "name": "test",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run python3 -m pip install uv==0.9.11",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run uv sync --locked --group dev",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run python3 deploy/install_tools.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run uv run --locked ruff check backend worker tests deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run uv run --locked python3 -m pytest -q",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Run npm --prefix frontend ci --ignore-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Run npm --prefix frontend test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Run npm --prefix frontend run build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13
+        },
+        {
+          "name": "Run python3 deploy/check_source.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14
+        },
+        {
+          "name": "Run python3 deploy/build_worker.py",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Run docker compose config --quiet",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Run docker compose build api worker",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        },
+        {
+          "name": "Run docker compose up --no-build -d --wait",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Run uv run --locked python3 deploy/compose_smoke.py --state .local/compose-smoke.json",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        },
+        {
+          "name": "Run docker compose down",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20
+        },
+        {
+          "name": "Run docker compose up --no-build -d --wait",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        },
+        {
+          "name": "Run uv run --locked python3 deploy/compose_smoke.py --state .local/compose-smoke.json --verify",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Run docker compose down --volumes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 44
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 45
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 46
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 47
+        }
+      ]
+    }
+  ],
+  "coverage": [
+    "Python/PostgreSQL tests",
+    "Frontend regression tests and production build",
+    "Ruff",
+    "Public source and upstream hash checks",
+    "Worker source ZIP build",
+    "Compose validation",
+    "Docker API/Worker builds",
+    "Fresh Compose bootstrap and builtin enrollment",
+    "Recreation with original session and worker identity retained"
+  ],
+  "real_model_requests_in_ci": false,
+  "platform_acceptance": "Native Linux x86_64 real model validation remains DEFERRED_BY_USER; this workflow proves the listed no-model CI paths only",
+  "local_premerge_checks": {
+    "python_postgresql_passed": 45,
+    "frontend_node_passed": 19
+  },
+  "scope": "Functional integration baseline. Subsequent documentation-only commits are separate CI runs.",
+  "sensitive_credentials_in_record": false
+}

@@ -2,13 +2,11 @@
 
 自托管的通用 Skill 评测工作台。上传本地 Skill，维护可复用的评测集，由独立 Worker 使用 Codex 执行真实评测。
 
-2026-10-25 用户决定：本轮暂缓原生 Linux x86_64 验证，并将已完成的编辑器与 Worker 修复、ARM64 Docker 验证记录整合到 main。x86_64 保留 NOT_RUN/PARTIAL，不作为本次源码合并的阻塞，也不视为跨平台或正式发布验收通过。
+**源码已合入并推送 main，当前为 0.1.0 开发候选。** 本轮功能提交 78e4527、整合基线 bca9c23；[main CI 40203314300](https://github.com/Songhonglei/lume-skill/actions/runs/40203314300) 已通过。阶段进展与后续优先级见 [实现进度](docs/IMPLEMENTATION-STATUS.md)。
 
-**源码已合入 main，当前为开发候选。** 2026-10-25 本地续开发已补齐 Docker Desktop 原生 arm64 的真实模型、三类裁判、案例生成维护复用及配套恢复；这些本地修改尚未推送。历史 macOS 原生链路和 Linux x86_64 CI 引导有独立证据；原生 Linux x86_64 真实模型、其他宿主组合及正式发布仍待验收。完整状态见[验收记录](docs/verification/local/README.md)。
+Docker Desktop 原生 ARM64 已通过 Pro 独立登录的真实模型连接、三类裁判 3/3、生成 3 个案例、维护启用复用和配套恢复。原生成案例复跑 2/3 的结果保留；只明确空文本输入后的保存版本连续两次 3/3，错误前缀 Skill 为 0/3，正确判错。详见 [Pro Docker 实测](docs/verification/local/pro-docker-e2e-2026-10-25.md)。
 
-最新：[ChatGPT Pro 登录的 Docker Worker 验收](docs/verification/local/pro-docker-e2e-2026-10-25.md)。三类裁判 3/3，生成 3 个案例，明确空文本输入后的保存版本连续两次 3/3；错误前缀 Skill 为 0/3，正确判错。初始生成案例复跑 2/3 的原始结果保留。
-
-2026-10-25 较早检查点：Docker Desktop 安装、原生 arm64 沙箱正反检查、空卷引导与重启，以及 amd64 模拟环境的独立 ZIP 安装接入通过，详见[安装与沙箱收据](docs/verification/local/docker-worker-2026-10-25.md)。该模拟路径的 seccomp EINVAL 仍未解除。
+用户已暂缓原生 Linux x86_64 验证，保留 NOT_RUN/PARTIAL，不作为本轮源码合并阻塞。amd64 模拟路径的 seccomp EINVAL 和 Podman 历史沙箱故障没有由 ARM64 结果解除。正式 Release/GHCR 尚未发布；当前先补浏览器边界与异常操作引导，再整理生成案例质量检查和发布候选。
 
 固定使用 **skill-up 0.14.0 + Codex CLI 0.162.1**，仅提供标准评测、全部案例、单裁判。没有内部平台或企业账号依赖。
 
@@ -22,7 +20,7 @@
 docker compose up -d --build
 ```
 
-打开 [本机工作台](http://127.0.0.1:8765)，设置管理员密码。数据库、实例密钥与内置 Worker 接入自动初始化。当前本地版本使用有限 seccomp 配置，并在 Docker Desktop 原生 arm64 通过真实模型验证；Podman 的历史 devpts 故障与原生 Linux x86_64 的未验收状态仍单独保留，不保证任意宿主内核均可运行。
+打开 [本机工作台](http://127.0.0.1:8765)，设置管理员密码。数据库、实例密钥与内置 Worker 接入自动初始化。当前源码使用有限 seccomp 配置，并在 Docker Desktop 原生 arm64 通过真实模型验证；Podman 的历史 devpts 故障与原生 Linux x86_64 的未验收状态仍单独保留，不保证任意宿主内核均可运行。
 
 在内置 Worker 的独立凭据卷中登录 Codex：
 

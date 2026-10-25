@@ -1,39 +1,29 @@
 # LumaSkill · Skill Eval 完整交接
 
-2026-10-25 最新用户决策：暂缓原生 Linux x86_64 验证，合并本轮开发分支到 main。继续保留该平台的未验证状态；未经用户恢复此项，不主动安排 x86_64 机器或继续该项验证。整合范围和合并前检查见 [main 整合记录](verification/local/main-integration-2026-10-25.md)。下面“未推送”等字样属于各次验证的历史检查点，当前分支状态以 Git 历史为准。
-
-2026-10-25 最新 Pro 登录验收：用户亲自为独立容器授权 ChatGPT 登录；原生 ARM64 Docker Worker 真实连接、三类裁判 3/3、生成 3 个案例、草稿维护、启用复用和配套恢复通过。初始生成案例复跑 2/3 的结果保留，明确空字符串输入后新版本连续两次 3/3；错误前缀 Skill 为 0/3，正确判错。先读 [Pro / Docker 真实链路](verification/local/pro-docker-e2e-2026-10-25.md)。原生 Linux x86_64、其他平台与正式发布仍待验；下列较早检查点保留历史边界。
-
-2026-10-25 最新模型连接增量：Harness 网关已在运行，最小 Responses 文本请求成功；ARM64 Docker Worker 的实际 Codex 请求被上游通道拒绝，两个替代通道返回 502。未绕过服务限制，完整模型验收仍待完成。先读 [Harness 网关检查](verification/local/harness-gateway-2026-10-25.md)。
-
-更新时间：2026-10-24（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。
-
-2026-10-25 本地续开发：已修复案例编辑器异常 YAML 白屏、附件 BOM 丢失和保存后旧快照回写，并增加附件替换确认、保存期间编辑保护及 19 项前端回归测试。详见[本次续开发与验证](verification/local/continuation-2026-10-25.md)。本次记录对应本地改动，不表示已合入远端 main；Docker、Linux Worker 和真实模型平台验收的待办状态保持。
-
-同日本地 Docker 增量：已安装 Desktop 4.96.3/Rosetta；修复读写自检误用只读模式和 Worker 鉴权失败退出码；Compose 使用固定上游有限 seccomp 加 cap-drop ALL。原生 arm64 沙箱正反检查、Docker 引导/重启、amd64 模拟 ZIP 安装接入有新增证据；原生 Linux x86_64、真实模型和正式发布仍待完成。后续优先读 [Docker / Worker 验证](verification/local/docker-worker-2026-10-25.md)，下文 2026-10-24 记录继续作为历史基线，不扩展为新模型验收。
-
-目录已按用户最新要求简化为合集根目录下的 `skill-eval/`，不再使用中间 projects 层；工作流、下载后的进入目录及接手指令已同步。本次布局调整不新增模型验收。复核见 [UGLIC-layout.md](verification/local/audit/UGLIC-layout.md)。
+更新时间：2026-10-25（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。阶段进展、总结和计划以 [实现进度](IMPLEMENTATION-STATUS.md) 为当前索引，原始验证收据保留各自检查点。
 
 ## 1. 接手先看这里
 
-项目已经完成可运行的源码、本机真实模型主链路、新版品牌资产及 GitHub CI，源码已合入 main。下一步优先在其他电脑补齐 Docker 的真实模型验收，再决定正式版本与镜像发布。不要重新从需求设计或重写页面开始。
+本轮编辑器与 Worker 修复已合并并推送 main，ARM64 Docker 的真实模型与配套恢复通过，main CI 成功。当前进入可用性收尾与发布准备阶段；不重做已完成的一期方案。
+
+用户最新决定：**暂缓原生 Linux x86_64 验证**。该项保留 NOT_RUN/PARTIAL，不作为本轮源码合并的阻塞；未经用户恢复，不主动安排目标机器或继续该项。正式 Release、镜像发布仍需单独确定范围。
 
 | 事项 | 当前结论 |
 | --- | --- |
-| 唯一权威仓库 | [Songhonglei/lume-skill](https://github.com/Songhonglei/lume-skill)，多项目合集 |
-| 应用目录 | `skill-eval/`，后续命令未特别说明都在此目录运行 |
-| 本文代码基线 | `a3fc19f354f560fc21d33498515ea2462583350d`；之后本文档更新不代表新增模型验收 |
-| 产品源码 | [PR #1](https://github.com/Songhonglei/lume-skill/pull/1) 已合并，main 提交 `97a29f3` |
-| LumaSkill 品牌 | [PR #2](https://github.com/Songhonglei/lume-skill/pull/2) 已合并，main 提交 `a3fc19f` |
-| 最新代码基线 CI | [40080630091](https://github.com/Songhonglei/lume-skill/actions/runs/40080630091)，completed / success |
-| 应用版本 | `0.1.0` 开发候选；这个版本号不表示已有正式 Release |
-| 开源许可 | 原创代码 MIT；第三方许可保留 |
-| 真实评测 | macOS arm64 原生路径通过；目标 Docker 平台仍待真实模型验收 |
-| 正式分发 | 没有发布正式 Release、GHCR 镜像或已验收的公开安装资产 |
+| 权威仓库与目录 | [Songhonglei/lume-skill](https://github.com/Songhonglei/lume-skill)，应用位于 skill-eval/，不是旧 projects/skill-eval/ |
+| 本轮功能提交 | 78e4527：编辑器保真/竞争保护、Worker 沙箱与鉴权退出修复及脱敏收据 |
+| 已推送整合基线 | bca9c236342f826fbde961ba0fbc6780b913afa8，保留同时发生的 skill-manage 更新 |
+| 功能基线 CI | [40203314300](https://github.com/Songhonglei/lume-skill/actions/runs/40203314300)，completed / success；[脱敏收据](verification/local/main-ci-2026-10-25.json) |
+| 自动检查 | 合并前 45 项 Python/PG、19 项前端测试、Ruff、TS/Vite、扫描和 Compose 配置通过；CI 包含无模型构建、引导和重启检查 |
+| ARM64 Docker | 独立 Pro 登录、三类裁判 3/3、生成 3 案例、维护启用复用、错误 Skill 0/3、7 任务配套恢复通过 |
+| 真实失败边界 | 原生成案例复跑 2/3 保留；只明确空字符串输入的新版本连续两次 3/3；服务端实际模型身份仍未核实 |
+| 原生 Linux x86_64 | 用户暂缓；amd64 模拟安装接入有证据，模拟路径 seccomp EINVAL 未解除，不等于原生验收 |
+| 应用版本与许可 | 0.1.0 开发候选；原创 MIT、第三方许可保留；无正式 Release/GHCR 发布 |
+| 下一步 | 优先补 AC-09/12 浏览器组合与异常操作引导，再整理生成案例质量检查和发布候选 |
 
-用户明确决策：先前要求保留候选 PR，后来已改为“先合并到main，我会在其他电脑下载此项目代码继续docker验证”。因此源码合并已完成且有授权，剩余平台验证继续如实保留。不要因旧文档的“发布未放行”误判为源码尚未公开；也不要把源码合并理解为正式镜像已验收。
+本轮入口：[编辑器实测](verification/local/continuation-2026-10-25.md)、[Docker 安装/沙箱](verification/local/docker-worker-2026-10-25.md)、[Pro 模型与恢复](verification/local/pro-docker-e2e-2026-10-25.md)、[main 整合](verification/local/main-integration-2026-10-25.md)。Harness 受限通道的失败保存在[历史网关记录](verification/local/harness-gateway-2026-10-25.md)，不再作为当前模型主链路的阻断。
 
-**旧开发仓库与新合集是两个 Git 仓库。** 原开发目录的平铺仓库仅保存历史实现与本机测试资料，没有配置远端；当前应用已迁入合集子目录，品牌也只在合集更新。旧证据中的 `6e704179…`、`abeebd655…` 是旧仓库提交，不能假定在 GitHub main 中可直接检出。新 Agent 应 clone 合集，并从子目录继续。
+旧开发仓库与当前合集是两个 Git 仓库。历史 6e704179、abeebd655 等提交属于旧仓库，不能假定可在 GitHub main 检出；PR #1/#2 与早期 CI 是历史基线。品牌和一期源码已完成，不因这些旧记录重新设计产品。
 
 ## 2. 用户要解决的问题与已冻结边界
 
@@ -113,28 +103,26 @@
 
 ## 4. 验证结论与证据
 
-PASS 仅针对该行记录的环境、源码/安装包和路径；不把旧实测延伸为新版本全平台实测。
+PASS 仅针对收据记录的环境、代码或安装包；本次状态整理没有重跑模型。以下为当前索引，原始收据中的“本轮 0 次模型调用”“尚未推送”等仍保留历史含义。
 
-| 验证项 | 结论 | 证据与限制 |
+| 验证项 | 当前结论 | 证据与限制 |
 | --- | --- | --- |
-| 自动测试与静态构建 | PASS | 40 项 PG 测试、Ruff、TS/Vite、源码扫描；[main CI](https://github.com/Songhonglei/lume-skill/actions/runs/40080630091) |
-| Linux x86_64 CI 容器 | PASS（无模型路径） | Docker api/worker 构建、空卷初始化、唯一内置 Worker、重启后会话/Worker 身份保持；不含模型凭据或真实推理 |
-| 原生三类裁判 | PASS | [three-judges.json](verification/p1/three-judges.json)，各一案例 3/3 |
-| 原生生成质量 | PASS | [generated-good.json](verification/p1/generated-good.json)、[generated-bad.json](verification/p1/generated-bad.json)：正常 5/5，预设错误前缀 0/5 |
-| 故障不会伪装通过 | PASS | P1 缺登录、错误模型、1 秒超时；技术失败保持不完整 |
-| API→独立 Worker | PASS | [e2e.json](verification/local/e2e.json)，真实三类评测及原始产物 |
-| 浏览器主链路 | PASS | 无案例上传→取消不创建任务→确认生成 3 案例→维护新增至 4→保存启用 4/4→再次复用同版本 4/4 |
-| 原始报告隔离 | PASS | opaque iframe sandbox、CSP、同源 DOM 不可读取，ZIP 可下载 |
-| 真实断网恢复 | PASS | [network-faults.json](verification/local/network-faults.json)：20 秒断连恢复 4/4；70 秒超过租约中断，迟到回执不覆盖重试终态，无自动重跑 |
-| 原生备份恢复 | PASS | [restore.json](verification/local/restore.json)：新 PG/目录，历史任务、版本、产物摘要和会话保持 |
-| Mac 独立 Worker ZIP | PASS（有版本区分） | 旧 ZIP `4f77ebd7…` 安装后真实三类 3/3，见 [packaged-worker-e2e.json](verification/local/packaged-worker-e2e.json) |
-| 后续修订 Mac ZIP | PASS（安装/重连） | ZIP `b0b4a7ed…` 新目录安装、源码字节相同、持久接入复用、在线；未为该 ZIP 重跑模型，见 [handoff-checkpoint.json](verification/local/handoff-checkpoint.json) |
-| Linux 独立 Worker ZIP | NOT_RUN（安装/真实模型） | 已构建并记录哈希，尚无独立 Linux 机器安装收据 |
-| Podman Linux arm64 | PARTIAL / 沙箱阻断 | 构建/引导/非 root/重启/配套恢复通过；Codex 沙箱 devpts 挂载被拒绝，见 [containers.json](verification/local/containers.json) |
-| Linux x86_64 Docker 真实推理/生成 | NOT_RUN | CI 成功不覆盖这条；接手优先项 |
-| macOS arm64 Docker Desktop 完整路径 | NOT_RUN | 需要目标电脑补齐；Podman 与原生都不能代替 |
-| 完整浏览器边缘组合 | PARTIAL | 附件/源码编辑全部交互组合、运行中切换启用版本未逐个浏览器验证；PG 相关机制有测试 |
-| 正式镜像/Release/公开资产重装 | NOT_RUN | 工作流已写，未执行发布；AC-32 未整体通过 |
+| main 自动检查 | PASS | 45 项 Python/PG、19 项前端、Ruff、TS/Vite、扫描与打包；[CI 40203314300](https://github.com/Songhonglei/lume-skill/actions/runs/40203314300) |
+| x86_64 CI 容器 | PASS（无模型） | Docker 构建、空卷引导、内置 Worker、重新创建后会话与身份保持；不能代替原生 x86_64 模型验收 |
+| 编辑器新增边界 | PASS（已列场景） | [continuation](verification/local/continuation-2026-10-25.md)：异常 YAML、BOM/二进制、替换取消/确认、慢保存和旧快照、启用只读 |
+| ARM64 Docker 安全 | PASS | [docker-worker](verification/local/docker-worker-2026-10-25.md)：有限 seccomp、UID 10001、cap-drop ALL、沙箱正反检查；无 host HOME/socket |
+| ARM64 Docker 模型与裁判 | PASS | [pro-docker-e2e](verification/local/pro-docker-e2e-2026-10-25.md)：Pro 独立登录、真实连接、三类裁判 3/3；实际模型身份未核实 |
+| ARM64 Docker 生成与复用 | PASS（记录初始波动） | 生成 3 案例；旧版本复跑 2/3 保留；明确空输入的新版本连续两次 3/3，错误前缀 Skill 0/3 |
+| ARM64 Docker 配套恢复 | PASS | 新项目、空卷、PG 与五个文件 root；7 任务、报告摘要、会话、Worker 身份、登录和新心跳保持；恢复后未再运行模型 |
+| macOS 原生与历史浏览器主链路 | PASS（历史检查点） | e2e.json：上传、取消/确认生成、维护新增、启用 4/4、复用 4/4；报告 iframe/CSP 与下载检查 |
+| 故障与技术失败 | PASS（已列路径） | P1 缺登录/错误模型/超时；network-faults.json 短断连恢复与超租约中断，迟到回执不覆盖，无自动重跑 |
+| 独立 Mac ZIP | 分包记录 | packaged-worker-e2e.json 的旧 ZIP 有真实三类收据；handoff-checkpoint.json 的修订包仅安装重连；本轮 Mac 重打包未重做独立安装 |
+| 独立 Linux ZIP | PARTIAL（amd64 模拟） | 当前包在模拟环境完成安装、接入、重启重连、重复码拒绝和撤销；原生 x86_64 安装与模型由用户暂缓 |
+| Podman arm64 | PARTIAL / 历史沙箱失败 | containers.json：引导、重启、恢复通过；devpts 挂载拒绝未由本轮 Docker 成功解除 |
+| 浏览器完整边缘组合 | PARTIAL | AC-09 附件组合、AC-12 运行中切换启用版本与异常操作路径仍需补齐 |
+| 正式发布与公开资产重装 | NOT_RUN | 无正式 Release/GHCR 镜像；未运行公开发布后的最短重装 |
+
+以下包摘要属于历史安装/分发检查点；当前包与对应安装证据须按各自收据核对：
 
 历史包 SHA256：
 
@@ -152,25 +140,27 @@ Mac 已真实评测旧 ZIP: 4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994
 
 ## 5. 当前最重要的阻断与后续顺序
 
-### P0：在其他电脑完成目标 Docker 真实验收
+### P0：补齐可用性验收
 
-已有明确故障：Podman rootless Linux arm64 上 bwrap 报 `Can't mount devpts on /newroot/dev/pts: Permission denied`。第一次任务 `1c30e2ec-2c8c-45b3-8f10-3a8919c2af68` 虽然正常结束，三个案例均因无法读取 Skill 而失败。后续加入调用模型前的 Linux 本地读写沙箱自检，人工重试在推理前以 `FAILED + INCOMPLETE` 停止，没有 run_started 事件或新模型调用。
+从 AC-09 附件/源码交互组合、AC-12 任务运行中切换启用版本开始，再检查端口冲突、Worker 离线和授权失效时的操作引导。优先使用自己的合成数据和隔离实例；新浏览器证据绑定当前代码，不把既有单测当成浏览器验证。
 
-接手后先用真正的 Linux x86_64 Docker 或 Mac Docker Desktop 验证当前默认路径。若仍失败，保留宿主/引擎版本、沙箱日志、任务与 attempt 状态再定位兼容原因。不能用 privileged、SYS_ADMIN、关闭沙箱、挂 Docker socket、挂完整宿主 HOME、自动改引擎/模型来制造“通过”。
+完成标准：运行中的任务始终使用冻结版本；保存和附件读取期间上下文受保护；取消不改原文件；诊断指向可执行的恢复步骤，不终止用户其他服务。不重复已通过且未受改动影响的全部模型任务。
 
-完成标准：新环境空卷启动；精确工具版本；登录及模型检查；真实三类案例 3/3；真实生成草稿、维护启用后全量评测；重启与配套备份恢复；缺登录/错误模型/超时诊断；记录 commit、环境、单次模型启动数、结果/报告摘要和剩余限制。不同目标平台分别记结果。
+### P1：整理生成案例质量
 
-### P1：独立 Linux Worker 与发布准备
+本轮空文本歧义表明生成成功不等于案例稳定。形成生成后审查清单：输入是否明确、期望与完整输出是否一致、边界/失败条件是否覆盖、附件是否自包含。评估增强生成指令或页面提示，保留原失败结果与正反例；不能弱化断言换取通过。
 
-1. Linux x86_64 上从当前 main 构建/安装独立 ZIP 到新应用目录，使用新接入码、自己登录，完成三类真实评测和重连。
-2. 补 AC-09/12 的浏览器边界组合与端口冲突操作路径；不为了“全绿”重复已通过且未受改动影响的用例。
-3. 按 UGLIC → skill-release-audit → 修复/复核 → PR/CI → main 完成必要修改。
-4. 目标验收完成后再确认正式版本/镜像发布范围。镜像工作流是手动 `workflow_dispatch`，带 `release` environment；当前没有已发布镜像可直接拉取。
-5. 正式发布还需要：来源/许可、版本一致、固定 tag/digest、公开安装说明、公开来源的全新安装、备份恢复与实际平台证据。发布后才可把 AC-32 标整体通过。
+### P2：准备候选发布
 
-### P2：后续整理
+统一候选包摘要、来源许可、平台边界、部署与独立登录说明。复核当前可用的审计工具；缺少的 glic-check/skill-release-audit 不冒充已重跑。实际修改完成后按范围检查、提交和 CI，不为了整理文档扩展产品方案。
 
-合集 README 仅保留必要入口，用户允许晚些丰富。其他 skill 管理/运营项目今后放其他子目录；当前应用目录直接位于合集根目录，应用文件保留在 `skill-eval/` 内。不要在这次接手中无授权扩展一期范围。
+正式版本号、Release、GHCR 镜像和公开资产重装由用户另行确定范围；当前不触发发布。发布时明确覆盖平台，并用实际公开资产做新环境安装与恢复，不能沿用本地候选包收据。
+
+### 暂缓：原生 Linux x86_64
+
+原生 x86_64 的独立安装、内核沙箱、真实推理/生成验收由用户明确暂缓。amd64 模拟的 seccomp EINVAL、Podman 历史 devpts 故障继续保留。仅在用户恢复此项后安排目标机器；不使用 privileged、SYS_ADMIN、关闭沙箱或挂宿主 HOME/socket 绕过。
+
+合集其他项目保留独立目录与提交范围，本轮不修改 skill-manage。
 
 ## 6. 新电脑最短接手步骤
 
@@ -328,26 +318,28 @@ Docker Hub 网络问题曾使用同版本官方 ECR 镜像本地标记、Podman 
 
 `deploy/check_source.py` 检查应用子目录的私人路径、内部端点、凭据形状、运行文件、版本和 vendor 摘要。**合集根目录资产、workflow、文档若有改动须另外检查**，不能声称应用扫描器覆盖整个合集。`.env`、auth.json、connection.json、instance-key、数据库备份、完整日志、模型 profile/Worker state 不进入 Git。
 
+2026-10-25 增量：此电脑缺少 glic-check、skill-release-audit，本轮执行人工复核和公开候选扫描，没有声称重跑这两个工具。历史工具收据和当前人工检查分别保留。
+
 已有审计：[UGLIC](verification/local/audit/UGLIC.md)、[容器增量](verification/local/audit/UGLIC-container.md)、[品牌增量](verification/local/audit/UGLIC-brand.md)。本轮交接检查见 [UGLIC-handoff.md](verification/local/audit/UGLIC-handoff.md)。远程 PR/CI 是代码检查；正式模型与平台验收另记。
 
 ## 11. 接手第一小时清单
 
-1. clone 合集，确认 `skill-eval/` 与当前 SHA；阅读本文、README、OPERATIONS、验收矩阵。
-2. 查明本机 OS/架构、Docker/Compose 版本、端口占用及是否有现存数据；只使用自己的新验收实例。
-3. 按第 6 节构建/引导，检查固定工具与沙箱；失败先记日志，不先改权限或模型。
-4. 登录后完成一次合成三类案例，再确认生成与复用路径；记任务、attempt、报告与冻结版本。
-5. 写新环境证据及剩余限制，按优先级继续恢复/独立 Worker 验收。若环境仍不可用，交付具体阻断与下一步，不把未跑项写成通过。
+1. 确认当前 main、工作区改动和 skill-eval/ 路径，阅读本文、实现进度与验收矩阵。
+2. 核对原生 x86_64 仍为用户暂缓，正式发布尚未授权；不要自行恢复这些工作。
+3. 从 P0 选一个未测浏览器场景，确认已有服务、端口和要保留的数据；仅在独立合成实例复现。
+4. 按结果做必要修复、范围内检查和证据记录；生成案例质量问题保留旧版本与原断言。
+5. 更新当前状态索引，保持历史收据不变。没有新代码或新问题时，不重复完整模型验收。
 
 ## 12. 可直接交给下一位 Agent 的指令
 
 ```text
-请接手 Songhonglei/lume-skill 的 skill-eval 项目。先读 docs/AGENT-HANDOFF.md、README.md、docs/OPERATIONS.md 和 docs/verification/local/acceptance.md，再检查当前 main 与本机环境。
+请接手 Songhonglei/lume-skill 的 skill-eval 项目。先读 docs/AGENT-HANDOFF.md、docs/IMPLEMENTATION-STATUS.md、README.md、docs/OPERATIONS.md 和 docs/verification/local/acceptance.md，再检查当前 main。
 
-项目已完成四页、自托管中心、独立 Worker、固定 skill-up 0.14.0/Codex 0.162.1、本机真实评测和 LumaSkill 蓝白标识；PR #1/#2 已合并，代码基线 a3fc19f 的 CI 已通过。请在当前源码上继续，不重做产品方案、不扩大一期范围、不覆盖系统工具或个人数据。
+一期四页、中心与独立 Worker 已实现。固定 skill-up 0.14.0/Codex 0.162.1；功能提交 78e4527 已合 main，整合基线 bca9c23 的 CI 40203314300 通过。Docker Desktop 原生 ARM64 的 Pro 独立登录、三类裁判、生成维护启用复用和配套恢复有真实证据。不要重做方案或把历史失败抹掉。
 
-优先完成此电脑的 Docker 真实验收：空卷引导、沙箱、自己登录/模型检查、三类合成案例、生成草稿维护启用后全量评测及复用、重启和配套备份恢复。Podman arm64 曾因 devpts 挂载被拒绝，不能以关闭沙箱、提权或挂宿主 HOME/socket 绕过。CI 启动通过不代表模型已验收。
+用户已暂缓原生 Linux x86_64 验证，未经恢复不安排目标机器或继续该项。下一步优先补 AC-09/12 浏览器边缘组合与异常操作引导，再整理生成案例质量清单和发布候选。正式 Release/GHCR 发布另行确认，当前不发布。
 
-每项记录当前 commit、OS/架构/引擎版本、结果和脱敏证据；真实收据保留本地，秘密不能进 Git。历史证据不改写为新实测。需要代码修复时按 UGLIC→skill-release-audit→修复/复核→PR/CI→main 的已授权流程执行。源码合并已获授权，正式镜像/Release 仍待目标验收与发布范围确认。默认中文，先结果，少打扰。
+只修改 skill-eval 及其必要工作流，保留 skill-manage 等独立项目。真实模型登录留在自己的独立 Worker 目录/卷，不读取或复制宿主 Codex 凭据，不把秘密或完整模型日志提交到 Git。原生 ARM64 通过不代表 x86_64、Podman 或正式发布通过；不关闭沙箱或提权制造通过。已有审计流程按实际可用工具执行，缺失工具如实记录。默认中文、先结果、少打扰。
 ```
 
 ## 13. 阅读顺序与资料位置
