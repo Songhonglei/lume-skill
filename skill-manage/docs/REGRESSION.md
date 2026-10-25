@@ -1,6 +1,6 @@
 # T02：固定样例与批量回归
 
-开发版本 0.3.2.dev4。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。
+当前开发版本 0.3.2.dev6。执行入口 `python3 -m skill_mng.regression`，使用临时数据目录中的真实 CLI、Web/API、SQLite 和 worker；结束或中断时停止实例并清理临时数据，不连接现有共享库，不执行目标脚本。下文 dev4 运行是保留的历史回执；最新四项源码复核及真实重验见 [WEBAPP-TESTING-REVIEW.md](WEBAPP-TESTING-REVIEW.md)，累计预算保守 162/256、剩余 94。
 
 ## 输入、期望与证据
 
@@ -67,6 +67,8 @@ uv run python3 -m skill_mng.regression --mode full \
 ## 人工复核
 
 完整报告保留在结果 JSON 的 `cases[].report`，复审及脱敏差异在 `cases[].repair`。人工单独写复核文件，不编辑冻结运行结果：
+
+实际由 Agent 完成源码复核时显式设置 `reviewerKind: "agent"`，输出 `evidenceKind=agent_review`；不填写真人姓名冒充审核。省略此字段保持原人工工具兼容，只有真实人工复核者才能按人工口径使用。公开样例四项已完成绑定源码核对与更正，真人签字状态仍单独保留。
 
 ```json
 {

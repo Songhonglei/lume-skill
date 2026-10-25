@@ -2,7 +2,9 @@
 
 `.github/workflows/skill-manage-checks.yml` 只响应本项目或自身工作流变化，覆盖 main push、PR 和手动触发。独立于 Skill Eval 的 CI；只有 `contents: read`，不使用模型密钥，不部署、不发包、不推镜像。GitHub Actions 固定到已核对的 commit SHA；uv 固定 0.12.3。
 
-矩阵为 Ubuntu 24.04 的 Python 3.11/3.12/3.13，以及 macOS 14 的 Python 3.12。工作流已在本地编写并检查；未推送前不能宣称 GitHub 托管 runner 已通过此矩阵。T03 的真实跨机器 HTTPS、arm64/x86_64 部署组合也不由这份矩阵替代。
+矩阵为 Ubuntu 24.04 的 Python 3.11/3.12/3.13，以及 macOS 14 的 Python 3.12，均已有实际成功回执。T03 的真实跨机器 HTTPS 和部署组合仍单独验收。
+
+2026-10-25 已在 [PR #6](https://github.com/Songhonglei/lume-skill/pull/6) 实际运行：`1a9afef` 的 T02/T04 首轮和 `11e7ca1` 的 T05 轮四个环境均成功。冻结记录见 [首轮](evidence/T02-T04-CI-2026-10-25.json)、[T05 轮](evidence/T05-CI-2026-10-25.json)。T05 轮 Linux 3.11 日志确认 179 项测试、50 个应用文件和 126 个源文件分发对应；每个环境也完成静态 14 例及独立 wheel 烟测。
 
 ## 每次检查
 

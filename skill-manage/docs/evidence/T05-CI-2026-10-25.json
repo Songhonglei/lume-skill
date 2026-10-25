@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "ubuntu311LogExcerpt": ["2026-10-25T08:23:36.8829831Z 179 passed, 1 warning in 49.15s","2026-10-25T08:23:59.7468222Z Successfully built dist/open_skill_mng-0.3.2.dev6.tar.gz","2026-10-25T08:23:59.7469215Z Successfully built dist/open_skill_mng-0.3.2.dev6-py3-none-any.whl","2026-10-25T08:23:59.8908585Z {\"version\": \"0.3.2.dev6\", \"applicationFilesMatched\": 50, \"sourceFilesMatched\": 126, \"sourceTreeDigest\": \"3cce7559736eb45c702bab073140bebafe98a9656e526bfe643b7480b61fdf51\"}"],
+  "headCommit": "11e7ca106a2e5163004f5a792ee711f66a9919c0",
+  "pullRequest": "https://github.com/Songhonglei/lume-skill/pull/6",
+  "runUrl": "https://github.com/Songhonglei/lume-skill/actions/runs/40176356930",
+  "runs": [
+    {
+      "id": 40176356930,
+      "name": "Skill Manage checks",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 2,
+      "jobs_url": "https://api.github.com/repos/Songhonglei/lume-skill/actions/runs/40176356930/jobs",
+      "logs_url": "https://api.github.com/repos/Songhonglei/lume-skill/actions/runs/40176356930/logs",
+      "workflow_id": 395753490
+    }
+  ],
+  "jobs": [
+    {
+      "id": 121117778741,
+      "name": "macos-14 / Python 3.12",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 -m pip install uv==0.12.3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv sync --locked --extra dev",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff format --check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node --check src/skill_mng/static/app.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run git diff --check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked python3 -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real static Web and worker corpus (no model)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv build --out-dir dist",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check runtime lock and all distribution bytes",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install the wheel into a clean environment",
+          "conclusion": "success"
+        },
+        {
+          "name": "Installed CLI and worker smoke",
+          "conclusion": "success"
+        },
+        {
+          "name": "Save only selected evidence and candidate artifacts",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 121117778867,
+      "name": "ubuntu-24.04 / Python 3.12",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 -m pip install uv==0.12.3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv sync --locked --extra dev",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff format --check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node --check src/skill_mng/static/app.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run git diff --check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked python3 -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real static Web and worker corpus (no model)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv build --out-dir dist",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check runtime lock and all distribution bytes",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install the wheel into a clean environment",
+          "conclusion": "success"
+        },
+        {
+          "name": "Installed CLI and worker smoke",
+          "conclusion": "success"
+        },
+        {
+          "name": "Save only selected evidence and candidate artifacts",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 121117778899,
+      "name": "ubuntu-24.04 / Python 3.11",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 -m pip install uv==0.12.3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv sync --locked --extra dev",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff format --check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node --check src/skill_mng/static/app.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run git diff --check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked python3 -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real static Web and worker corpus (no model)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv build --out-dir dist",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check runtime lock and all distribution bytes",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install the wheel into a clean environment",
+          "conclusion": "success"
+        },
+        {
+          "name": "Installed CLI and worker smoke",
+          "conclusion": "success"
+        },
+        {
+          "name": "Save only selected evidence and candidate artifacts",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 121117778971,
+      "name": "ubuntu-24.04 / Python 3.13",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 -m pip install uv==0.12.3",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv sync --locked --extra dev",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked ruff format --check src tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node --check src/skill_mng/static/app.js",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run git diff --check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv run --locked python3 -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real static Web and worker corpus (no model)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run uv build --out-dir dist",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check runtime lock and all distribution bytes",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install the wheel into a clean environment",
+          "conclusion": "success"
+        },
+        {
+          "name": "Installed CLI and worker smoke",
+          "conclusion": "success"
+        },
+        {
+          "name": "Save only selected evidence and candidate artifacts",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,10 @@
 
 契约版本 1。历史验收平台版本 0.3.1，当前开发版本 0.3.2.dev6，schema 4 不变。注册、任务、审计与授权修复已实现。
 
+dev5 的语义中间协议增加 `findings[].evidence` 精确源码片段，runner 以其匹配位置确定行号并拒绝无效证据；最终冻结报告字段与摘要契约不变。复核记录新增 reviewerKind，Agent 与 human 证据类型分开。
+
+dev6 新增 `/api/task-history`、`/api/tasks/{id}/events` 和管理员 `/api/worker-enrollment-history`，使用范围快照和游标，返回 items/hasMore/nextCursor；旧接口形状保持。具体筛选、权限和刷新语义见 [任务历史契约](../TASK-HISTORY.md)。任务详情增加 latest_model_error 只读摘要，不改变写权限。
+
 目标隐私补充：UTF-8 目标文本命中疑似凭据时，静态报告包含 D5-W3 待复核，`semanticCompleted=false`；即使请求完整审计也不调用外部模型。模型代理、候选接收和发布门禁独立阻断，稳定码 `target_credentials_require_review`，修复终态为 `needs_attention`。服务端拒收不安全或含未声明字段的新报告，保持冻结字节及摘要绑定；检测范围见 [目标隐私策略](../TARGET-PRIVACY.md)。
 
 ## 存储与身份
