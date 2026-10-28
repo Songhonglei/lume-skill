@@ -22,4 +22,4 @@ export type Task = { id: string; kind: 'evaluate' | 'generate'; state: string; v
 export type Attempt = { id: string; number: number; worker_name: string; state: string; created_at: string; finished_at?: string; summary?: TaskSummary }
 export type Artifact = { id: string; attempt_id: string; kind: string; html_available?: boolean; created_at: string }
 export type TaskDetail = Task & { attempts: Attempt[]; artifacts: Artifact[] }
-export type Common = { skills: Skill[]; settings?: Settings; workers: Worker[]; selection: Selection; navigate: (page: Page, selection?: Selection) => void; refresh: () => void; revision: number; notify: (message: string, error?: boolean) => void; setDirty: (dirty: boolean) => void }
+export type Common = { skills: Skill[]; settings?: Settings; workers: Worker[]; selection: Selection; navigate: (page: Page, selection?: Selection) => void; refresh: () => void; revision: number; notify: (message: string, error?: boolean) => void; setDirty: (dirty: boolean) => void; setEditingBusy: (busy: boolean) => void }

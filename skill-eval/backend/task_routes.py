@@ -32,6 +32,15 @@ def idempotency(value: str | None) -> str:
     return value
 
 
+def annotate_queue_waiting(connection, rows):
+    queued = [row for row in rows if row["state"] == "QUEUED"]
+    if not queued:
+        return
+    workers = connection.execute("SELECT capabilities FROM workers WHERE NOT revoked AND last_seen>now()-interval '30 seconds'").fetchall()
+    for row in queued:
+        row["waiting_reason"] = "排队中" if any(capable(worker["capabilities"], row["input"]) for worker in workers) else "等待匹配连接与版本的 Worker"
+
+
 @router.post("/tasks")
 def create_task(body: TaskInput, request: Request,
                 idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection)):
@@ -103,10 +112,7 @@ def list_tasks(connection=Depends(db_connection), limit: int = 100,
            AND (%s='' OR input->>'skill_name' ILIKE %s OR id::text ILIKE %s)
            ORDER BY created_at DESC,id DESC LIMIT %s OFFSET %s""",
         (kind, kind, query, "%" + query + "%", "%" + query + "%", min(max(limit, 1), 200), offset)).fetchall()
-    workers = connection.execute("SELECT capabilities FROM workers WHERE NOT revoked AND last_seen>now()-interval '30 seconds'").fetchall()
-    for row in rows:
-        if row["state"] == "QUEUED":
-            row["waiting_reason"] = "排队中" if any(capable(worker["capabilities"], row["input"]) for worker in workers) else "等待匹配连接与版本的 Worker"
+    annotate_queue_waiting(connection, rows)
     return rows
 
 
@@ -114,6 +120,7 @@ def list_tasks(connection=Depends(db_connection), limit: int = 100,
 def task_detail(task_id: UUID, connection=Depends(db_connection)):
     expire_leases(connection)
     task = required(connection.execute("SELECT * FROM tasks WHERE id=%s", (task_id,)).fetchone())
+    annotate_queue_waiting(connection, [task])
     attempts = connection.execute("SELECT a.id,a.number,a.worker_id,w.name AS worker_name,a.state,a.created_at,a.finished_at,a.summary FROM attempts a JOIN workers w ON w.id=a.worker_id WHERE task_id=%s ORDER BY number", (task_id,)).fetchall()
     artifacts = connection.execute("SELECT ar.id,ar.attempt_id,ar.kind,ar.blob,ar.created_at,(a.summary->>'html_available')::boolean AS html_available FROM artifacts ar JOIN attempts a ON a.id=ar.attempt_id WHERE ar.task_id=%s ORDER BY ar.created_at", (task_id,)).fetchall()
     return {**task, "attempts": attempts, "artifacts": artifacts}

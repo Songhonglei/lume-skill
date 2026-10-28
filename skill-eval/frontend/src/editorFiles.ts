@@ -1,4 +1,4 @@
-import type { EditorFile } from './types.ts'
+import type { EditorFile, Files } from './types.ts'
 
 export async function browserFile(file: File): Promise<EditorFile> {
   const bytes = new Uint8Array(await file.arrayBuffer())
@@ -14,4 +14,14 @@ export async function browserFile(file: File): Promise<EditorFile> {
     }
     return { encoding: 'base64', content: btoa(chunks.join('')), mode: 0o644 }
   }
+}
+export function conflictingAttachmentNames(selected: Pick<File, 'name'>[], existing: Files): string[] {
+  const seen = new Set(Object.keys(existing))
+  const conflicts = new Set<string>()
+  for (const file of selected) {
+    const path = `evals/fixtures/${file.name}`
+    if (seen.has(path)) conflicts.add(file.name)
+    seen.add(path)
+  }
+  return [...conflicts]
 }

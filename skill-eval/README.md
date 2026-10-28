@@ -2,6 +2,8 @@
 
 自托管的通用 Skill 评测工作台。上传本地 Skill，维护可复用的评测集，由独立 Worker 使用 Codex 执行真实评测。
 
+2026-10-28 增量：[浏览器边界与运行快照验收](docs/verification/local/browser-boundaries-2026-10-28.md)。修复跨页丢附件、批内同名覆盖和详情等待原因缺失；后端 46 / 前端 23 项通过。旧任务冻结、新任务切新版、新 Skill 复用旧案例及会话/离线恢复有新证据。Linux x86_64 继续暂缓。
+
 **源码已合入并推送 main，当前为 0.1.0 开发候选。** 本轮功能提交 78e4527、整合基线 bca9c23；[main CI 40203314300](https://github.com/Songhonglei/lume-skill/actions/runs/40203314300) 已通过。阶段进展与后续优先级见 [实现进度](docs/IMPLEMENTATION-STATUS.md)。
 
 Docker Desktop 原生 ARM64 已通过 Pro 独立登录的真实模型连接、三类裁判 3/3、生成 3 个案例、维护启用复用和配套恢复。原生成案例复跑 2/3 的结果保留；只明确空文本输入后的保存版本连续两次 3/3，错误前缀 Skill 为 0/3，正确判错。详见 [Pro Docker 实测](docs/verification/local/pro-docker-e2e-2026-10-25.md)。

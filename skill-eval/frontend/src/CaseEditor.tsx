@@ -3,7 +3,7 @@ import { parseDocument, stringify } from 'yaml'
 import { api, message, post } from './api'
 import { Badge, Button, Dialog, ValidationView } from './ui'
 import type { Common, EditorFile, Files, SetVersion, Validation } from './types'
-import { browserFile } from './editorFiles'
+import { browserFile, conflictingAttachmentNames } from './editorFiles'
 import { canEditCase, formDocument, mapping } from './editorYaml'
 import { shouldSyncVersion } from './editorState'
 
@@ -26,7 +26,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
   const fixture = useRef<HTMLInputElement>(null)
   const readonly = version.kind !== 'DRAFT' || version.archived
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
-  useEffect(() => { onBusy(!!busy); return () => onBusy(false) }, [busy, onBusy])
+  useEffect(() => () => onBusy(false), [onBusy])
   useEffect(() => {
     if (shouldSyncVersion(version, initial, dirty)) { setVersion(initial); setFiles(initial.files); setValidation(initial.validation) }
   }, [initial, dirty, version.blob, version.edit_number, version.archived, version.kind])
@@ -63,9 +63,9 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     return updated
   }
   const action = async (name: string, operation: () => Promise<void>) => {
-    setBusy(name); setError('')
+    setBusy(name); onBusy(true); setError('')
     try { await operation() } catch (error) { setError(message(error)) }
-    finally { setBusy('') }
+    finally { setBusy(''); onBusy(false) }
   }
   const saveVersion = (enable: boolean) => action(enable ? 'enable' : 'version', async () => {
     const current = await saveDraft()
@@ -111,6 +111,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     <a className="button" href={`/api/set-versions/${version.id}/export`}>导出</a>
   </div></div>
     {error && <p className="error-text" role="alert">{error}</p>}
+    {busy === 'attachment' && <p className="small-note" role="status">正在读取附件，请稍候…</p>}
     <fieldset className="editor-content" aria-label="案例内容" disabled={!!busy}>
     <div className="segmented"><button className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
     {mode === 'form' ? <div className="case-layout"><aside className="case-list"><div className="case-list-head"><span>入口案例 · {entries.length}</span>{!readonly && <button className="text-button" onClick={addCase}>＋ 添加</button>}</div>{entries.map(path => {
@@ -140,13 +141,13 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
       const selected = Array.from(event.target.files || [])
       event.target.value = ''
       if (!selected.length || readonly || busy) return
-      if (selected.some(file => files[`evals/fixtures/${file.name}`])) setPendingAttachments(selected)
+      if (conflictingAttachmentNames(selected, files).length) setPendingAttachments(selected)
       else void uploadAttachments(selected)
     }} />
     </fieldset>
     {pendingAttachments && <Dialog title="替换同名附件" onClose={() => setPendingAttachments(null)}>
-      <p>以下附件已存在，替换后将使用新文件内容：</p>
-      <ul>{pendingAttachments.filter(file => files[`evals/fixtures/${file.name}`]).map(file => <li key={file.name}>{file.name}</li>)}</ul>
+      <p>以下文件名重复，确认后将使用本次最后选择的文件内容：</p>
+      <ul>{conflictingAttachmentNames(pendingAttachments, files).map(name => <li key={name}>{name}</li>)}</ul>
       <div className="dialog-actions"><Button onClick={() => setPendingAttachments(null)}>取消</Button><Button variant="primary" onClick={() => { const selected = pendingAttachments; setPendingAttachments(null); void uploadAttachments(selected) }}>替换附件</Button></div>
     </Dialog>}
     <div className="editor-validation"><h3>校验结果</h3><ValidationView validation={validation} /></div>

@@ -116,8 +116,9 @@ Compose 恢复在新项目和全新卷执行；恢复前不要启动 init、api�
 | 现象 | 下一步 |
 | --- | --- |
 | 端口被占用 | 换 OSE_PORT 和 PUBLIC_URL；不结束其他应用的进程 |
+| 管理员登录失效 | 保存触发登录提示时先重新登录，未保存草稿保留；登录后再次保存。不要把这等同于 Worker 的模型登录到期 |
 | 页面请求来源不受信任 | 使用 PUBLIC_URL 对应地址访问，注意 localhost 与 127.0.0.1 不等价 |
-| Worker 离线 / 无法连接 | 核对中心 URL、HTTPS、网络和 Worker 进程；已接入的 Worker 启动会自动重连 |
+| Worker 离线 / 无法连接 | 从任务详情的“查看 Worker 状态”进入系统配置；核对中心 URL、HTTPS、网络和 Worker 进程；启动原 Worker 会自动重连并领取未取消的排队任务，无需重复提交 |
 | 接入码无效 | 10 分钟内只可兑换一次；在系统配置生成新码 |
 | 已撤销的内置 Worker | 保留旧 state-dir 备份，使用新 state-dir 和网页单次码接入；不要删库恢复旧权限 |
 | 需要 Codex 0.162.1 | 使用 Worker 安装器的 --install-codex 安装私有版本；不修改系统版本 |
@@ -133,3 +134,13 @@ Compose 恢复在新项目和全新卷执行；恢复前不要启动 init、api�
 CI 使用 `python3 deploy/compose_smoke.py --state .local/compose-smoke.json` 验证全新空库引导与唯一内置 Worker；重建容器并保留卷后加 `--verify` 检查原会话与 Worker 身份。脚本不调用模型，状态文件含会话凭据，不得上传。`--url` 默认为本机 8765，验证时必须与原地址一致；`--timeout` 为 10–1800 秒，默认 180。真实模型和目标平台验收另行记录。
 
 Linux Worker 在生成和评测前显式使用 `codex sandbox -c 'sandbox_mode="workspace-write"' -- ...` 执行本地读写自检；失败时保存 sandbox.log，任务记为不完整，不调用模型、不放宽权限。固定 CLI 的独立 sandbox 命令需要该显式模式，不能把只读探针的失败当成工作区写沙箱不可用。当前 Docker Desktop arm64 的正反检查通过；amd64 模拟路径在 Codex 自身 seccomp 安装阶段返回 EINVAL，仍不能执行真实模型验收。Podman 的历史 devpts 失败也保留原边界。
+
+### 端口冲突处理
+
+若启动出现 address already in use、port is already allocated 或绑定失败，先确认占用来源，不结束其他应用进程。为当前实例换端口前先等运行任务结束，并同步中心地址；例如：
+
+```bash
+OSE_PORT=8770 OSE_PUBLIC_URL=http://127.0.0.1:8770 docker compose up -d
+```
+
+随后用新地址访问；使用外部地址的独立 Worker 需同步其中心地址，Compose 内置 Worker 的服务间地址不随宿主端口改变。新建独立测试部署时使用自己的 Compose 项目名和卷，保留已有实例数据。10/28 本机对自身测试端口的冲突启动返回 125，原 API 仍健康，见 [浏览器边界收据](verification/local/browser-boundaries-2026-10-28.md)。

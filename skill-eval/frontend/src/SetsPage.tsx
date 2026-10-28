@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { message, api, post } from './api'
 import { Badge, Button, Dialog, Empty, Icon, useData, ValidationView } from './ui'
 import { CaseEditor } from './CaseEditor'
@@ -18,6 +18,9 @@ export function SetsPage(common: Common) {
   const [generating, setGenerating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [editorBusy, setEditorBusy] = useState(false)
+  const updateEditorBusy = useCallback((value: boolean) => { setEditorBusy(value); common.setEditingBusy(value) }, [common.setEditingBusy])
+  const updateDirty = useCallback((value: boolean) => { setDirty(value); common.setDirty(value) }, [common.setDirty])
+  useEffect(() => () => common.setEditingBusy(false), [common.setEditingBusy])
   const input = useRef<HTMLInputElement>(null)
   const directory = useRef<HTMLInputElement>(null)
   const skill = common.skills.find(item => item.id === skillId)
@@ -50,7 +53,7 @@ export function SetsPage(common: Common) {
     <div className="filter-bar"><label>Skill <select aria-label="选择 Skill" disabled={editorBusy} value={skillId} onChange={event => leave(() => { setSkillId(event.target.value); setSetId(''); setVersionId('') })}>{common.skills.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><span className="muted">{sets.data.length} 个评测集</span></div>
     {!skill ? <section className="panel"><Empty title="先添加一个 Skill" description="案例需要关联到一个具体 Skill。"><Button onClick={() => common.navigate('skills')}>去添加 Skill</Button></Empty></section> : <div className="sets-layout"><aside className="panel set-list"><div className="panel-head"><h2>评测集</h2></div>{sets.data.map(item => <button key={item.id} disabled={editorBusy} className={`set-item ${item.id === setId ? 'active' : ''}`} onClick={() => leave(() => { setSetId(item.id); setVersionId('') })}><span className="inline"><strong>{item.name}</strong>{item.is_default && <span className="subtle-chip blue">默认</span>}</span><small>{item.active_version_id ? `${item.active_validation?.cases?.length || 0} 个启用案例` : '待启用'} · {item.draft_count} 个草稿</small></button>)}{!sets.data.length && <div className="padded muted">还没有评测集，导入或生成后会显示在这里。</div>}</aside>
       <section className="panel set-workspace">{detail.data?.id === setId ? <><div className="panel-head"><div><h2>{detail.data.name}</h2><p className="muted">{detail.data.skill_name} · 独立维护版本与附件</p></div><div className="actions"><select aria-label="评测集版本" disabled={editorBusy} value={versionId} onChange={event => leave(() => setVersionId(event.target.value))}>{detail.data.versions.map(item => <option key={item.id} value={item.id}>{item.kind === 'DRAFT' ? '草稿' : '版本'} {item.revision}{item.id === detail.data?.active_version_id ? ' · 启用中' : ''}{item.archived ? ' · 已归档' : ''} · 源修订 {item.source_skill_revision}</option>)}</select>{skill.default_set_id !== setId && <Button variant="small" onClick={async () => { try { await post(`/api/skills/${skill.id}/default-set`, { set_id: setId }); common.refresh(); common.notify('默认评测集已更新。') } catch (error) { common.notify(message(error), true) } }}>设为默认</Button>}</div></div>
-        {version.data?.id === versionId ? <CaseEditor key={versionId} version={version.data} common={common} onVersion={setVersionId} active={detail.data.active_version_id === versionId} onBusy={setEditorBusy} onDirty={value => { setDirty(value); common.setDirty(value) }} /> : <p className="padded muted">{version.error || '正在读取案例…'}</p>}
+        {version.data?.id === versionId ? <CaseEditor key={versionId} version={version.data} common={common} onVersion={setVersionId} active={detail.data.active_version_id === versionId} onBusy={updateEditorBusy} onDirty={updateDirty} /> : <p className="padded muted">{version.error || '正在读取案例…'}</p>}
       </> : <Empty title="准备一份评测集" description="可以导入原生 ZIP 或 evals.json，也可以让 Codex 生成草稿。"><Button onClick={openImport}>导入案例</Button></Empty>}</section></div>}
     {sets.error && <p className="error-text">{sets.error}</p>}
     {showImport && <Dialog title="导入评测集" wide onClose={() => setShowImport(false)}><p className="muted">支持包含 evals/eval.yaml 的 ZIP，或 evals.json。导入后保存为草稿。</p>

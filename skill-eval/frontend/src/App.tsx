@@ -42,6 +42,7 @@ export default function App() {
   const [selection, setSelection] = useState<Selection>({})
   const [notice, setNotice] = useState<{ message: string; error: boolean } | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [editingBusy, setEditingBusy] = useState(false)
   const refresh = () => setRevision(value => value + 1)
   const notify = (text: string, error = false) => setNotice({ message: text, error })
   useEffect(() => { if (notice && !notice.error) { const timer = setTimeout(() => setNotice(null), 6000); return () => clearTimeout(timer) } }, [notice])
@@ -61,11 +62,12 @@ export default function App() {
     return () => window.removeEventListener('ose-auth-expired', listener)
   }, [phase])
   useEffect(() => {
-    const listener = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = '' } }
+    const listener = (event: BeforeUnloadEvent) => { if (dirty || editingBusy) { event.preventDefault(); event.returnValue = '' } }
     window.addEventListener('beforeunload', listener)
     return () => window.removeEventListener('beforeunload', listener)
-  }, [dirty])
+  }, [dirty, editingBusy])
   const navigate = (page: Page, values?: Selection) => {
+    if (editingBusy) return
     if (dirty && !window.confirm('草稿有未保存的修改，确定离开吗？')) return
     setDirty(false); setTab(page); location.hash = page; refresh()
     if (values) setSelection(previous => ({ ...previous, ...values }))
@@ -73,16 +75,17 @@ export default function App() {
   const skills = useData<Skill[]>(phase === 'ready' ? '/api/skills' : null, [], revision)
   const settings = useData<Settings | undefined>(phase === 'ready' ? '/api/settings' : null, undefined, revision)
   const workers = useData<Worker[]>(phase === 'ready' ? '/api/workers' : null, [], revision, phase === 'ready' ? 10000 : 0)
-  const common: Common = { skills: skills.data, settings: settings.data, workers: workers.data, selection, navigate, refresh, revision, notify, setDirty }
+  const common: Common = { skills: skills.data, settings: settings.data, workers: workers.data, selection, navigate, refresh, revision, notify, setDirty, setEditingBusy }
   const online = workers.data.filter(worker => worker.online && !worker.revoked).length
   if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
     {phase === 'loading' ? <p>{initialError || '正在连接工作台…'}</p> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
   </div><p className="auth-foot">本地资源 · Codex 执行 · 可维护的评测案例</p></div>
-  return <div className="app-shell"><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" onClick={async () => {
+  return <div className="app-shell"><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
+      if (editingBusy) return
       if (dirty && !window.confirm('草稿有未保存的修改，确定退出吗？')) return
       try { await api('/api/session', { method: 'DELETE' }); setDirty(false); setPhase('login') } catch (error) { notify(message(error), true) }
     }}>退出</button></div></header>
-    <nav className="workspace-tabs" aria-label="主要导航">{navigation.map(([page, label]) => <button key={page} className={tab === page ? 'active' : ''} onClick={() => navigate(page)}><Icon name={page} />{label}</button>)}</nav>
+    <nav className="workspace-tabs" aria-label="主要导航">{navigation.map(([page, label]) => <button key={page} disabled={editingBusy} title={editingBusy ? '正在保存或读取附件，请稍候' : undefined} className={tab === page ? 'active' : ''} onClick={() => navigate(page)}><Icon name={page} />{label}</button>)}</nav>
     <main>{notice && <div className={`notice ${notice.error ? 'error' : ''}`} role={notice.error ? 'alert' : 'status'}><span>{notice.message}</span><button className="close" onClick={() => setNotice(null)} aria-label="关闭提示">×</button></div>}
       {skills.error && <p className="error-text">{skills.error}</p>}
       {tab === 'skills' && <SkillsPage {...common} />}{tab === 'sets' && <SetsPage {...common} />}{tab === 'tasks' && <TasksPage {...common} />}{tab === 'settings' && <SettingsPage {...common} />}

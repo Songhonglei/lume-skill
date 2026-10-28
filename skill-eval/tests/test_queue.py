@@ -88,6 +88,27 @@ def test_double_click_and_two_workers_compete(admin):
     assert jobs[0] is None or claim(admin, auth) is None
 
 
+def test_task_detail_and_list_explain_queue_waiting_and_clear_it_after_claim(admin):
+    registered, authorization, uploaded, _ = ready(admin)
+    created = task(admin, uploaded)
+
+    def waiting(expected):
+        listed = next(row for row in admin.get('/api/tasks').json() if row['id'] == created['id'])
+        detail = admin.get(f"/api/tasks/{created['id']}").json()
+        assert listed.get('waiting_reason') == detail.get('waiting_reason') == expected
+
+    waiting('排队中')
+    with admin.app.state.database.connection() as connection:
+        connection.execute("UPDATE workers SET last_seen=now()-interval '1 minute' WHERE id=%s",
+                           (registered['worker_id'],))
+    waiting('等待匹配连接与版本的 Worker')
+    response = admin.post('/api/worker/heartbeat', json={'capabilities': CAPABILITIES}, headers=authorization)
+    assert response.status_code == 200
+    waiting('排队中')
+    assert claim(admin, authorization)
+    waiting(None)
+
+
 def test_receipt_is_idempotent_and_report_is_sandboxed(admin):
     _, authorization, uploaded, _ = ready(admin)
     created = task(admin, uploaded)
