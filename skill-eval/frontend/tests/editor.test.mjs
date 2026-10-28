@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { browserFile } from '../src/editorFiles.ts'
+import { browserFile, conflictingAttachmentNames } from '../src/editorFiles.ts'
 import { canEditCase, formDocument } from '../src/editorYaml.ts'
 import { shouldSyncVersion } from '../src/editorState.ts'
 
@@ -19,6 +19,30 @@ for (const [name, bytes, encoding] of [
     assert.deepEqual([...restored], bytes)
   })
 }
+
+test('same-batch duplicate names require confirmation even without existing attachments', () => {
+  const existing = {}
+  const files = [new File(['first'], 'duplicate.txt'), new File(['last'], 'duplicate.txt')]
+  assert.deepEqual(conflictingAttachmentNames(files, existing), ['duplicate.txt'])
+  assert.deepEqual(existing, {})
+})
+test('existing and repeated names are listed once without changing the original files', () => {
+  const original = { encoding: 'utf-8', content: 'ORIGINAL\r\n', mode: 0o644 }
+  const existing = { 'evals/fixtures/existing.txt': original }
+  const files = ['existing.txt', 'new.txt', 'existing.txt', 'new.txt'].map(name => ({ name }))
+  assert.deepEqual(conflictingAttachmentNames(files, existing), ['existing.txt', 'new.txt'])
+  assert.equal(existing['evals/fixtures/existing.txt'], original)
+  assert.equal(original.content, 'ORIGINAL\r\n')
+})
+test('distinct fixture names do not conflict with similarly named case files', () => {
+  const existing = { 'evals/cases/example.yaml': { encoding: 'utf-8', content: '', mode: 0o644 } }
+  assert.deepEqual(conflictingAttachmentNames([{ name: 'example.yaml' }, { name: 'other.txt' }], existing), [])
+})
+test('failed file reads stay errors instead of becoming empty attachments', async () => {
+  const file = new File(['preserve'], 'unreadable.txt')
+  file.arrayBuffer = async () => { throw new Error('read failed') }
+  await assert.rejects(browserFile(file), /read failed/)
+})
 
 const entry = formDocument('cases:\n  files: [evals/cases/example.yaml]\n')
 for (const source of [

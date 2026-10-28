@@ -1,0 +1,457 @@
+{
+  "date": "2026-10-28",
+  "timezone": "Asia/Shanghai",
+  "source_baseline": "44e91039dc49b84a3b509fa18817e03d05119c10",
+  "scope": "Browser boundary continuation on native ARM64 Docker; not native Linux x86_64 or release acceptance",
+  "native_linux_x86_64": "DEFERRED_BY_USER",
+  "environment": {
+    "docker_desktop": "4.96.3",
+    "engine": "29.9.2",
+    "worker_platform": "Linux aarch64",
+    "database": "PostgreSQL 17.10",
+    "skill_up": "0.14.0",
+    "codex": "0.162.1",
+    "isolated_center_and_database_and_worker_state": true,
+    "existing_project_untouched": true,
+    "own_model_volume_read_only": true,
+    "host_codex_credentials_read": false
+  },
+  "reproductions": {
+    "editor": {
+      "slowRead": {
+        "contentDisabled": true,
+        "navDisabled": false,
+        "navigatedAway": true
+      },
+      "duplicateBatch": {
+        "replacementDialog": false,
+        "saved_content": "LAST_IN_BATCH"
+      }
+    },
+    "queue_detail": {
+      "taskId": "5c8d8751-fb68-4fdf-a326-9f31493b96a4",
+      "warning": true,
+      "backend": {
+        "state": "QUEUED",
+        "detailWaiting": null,
+        "listWaiting": "等待匹配连接与版本的 Worker",
+        "skillVersion": "06789606-186c-4a6a-8656-9dd5b7d645d0",
+        "setVersion": "bdfec37e-12ed-4102-80ca-7c88c24092a6"
+      },
+      "visible": false
+    }
+  },
+  "browser_checks": {
+    "slow_attachment_read": {
+      "during": {
+        "readStarted": true,
+        "navDisabled": true,
+        "logoutDisabled": true,
+        "localDisabled": true,
+        "status": "正在读取附件，请稍候…"
+      },
+      "stayed": true,
+      "after": {
+        "navEnabled": true,
+        "attachmentPresent": true,
+        "dirty": true
+      }
+    },
+    "read_failure_and_replacement": {
+      "failure": {
+        "error": "附件读取失败，请重试。",
+        "files": [
+          "cases/label-basic.yaml",
+          "eval.yaml",
+          "fixtures/duplicate.txt",
+          "fixtures/existing.txt",
+          "fixtures/slow.txt",
+          "新建文件",
+          "上传附件"
+        ],
+        "navEnabled": true,
+        "dirty": false,
+        "filesUnchanged": true
+      },
+      "mixedDialog": {
+        "open": true,
+        "names": [
+          "existing.txt"
+        ]
+      },
+      "cancelled": {
+        "content": "ORIGINAL\n",
+        "bomAdded": false,
+        "dirty": false
+      },
+      "batch": {
+        "open": true,
+        "names": [
+          "duplicate.txt"
+        ]
+      },
+      "batchCancelled": true,
+      "accepted": {
+        "file": "evals/fixtures/duplicate.txt",
+        "content": "LAST_IN_BATCH"
+      }
+    },
+    "slow_save_and_enable": {
+      "during": {
+        "delayed": true,
+        "navDisabled": true,
+        "logoutDisabled": true,
+        "versionDisabled": true,
+        "contentDisabled": true
+      },
+      "stayed": true,
+      "after": {
+        "navEnabled": true,
+        "readonly": true,
+        "dirty": false,
+        "selectedVersion": "1c896f71-4d1f-40b5-bf09-97758607ca7d",
+        "selectedLabel": "版本 8 · 启用中 · 源修订 1"
+      }
+    },
+    "exported_attachment_bytes": {
+      "saved_version": "1c896f71-4d1f-40b5-bf09-97758607ca7d",
+      "attachments": {
+        "existing.txt": {
+          "bytes": 10,
+          "sha256": "15aa1936d4454a12ef5bdedc6d1f3d3faa051bb559cd0aeca696152cfa8e48df",
+          "round_trip": "PASS"
+        },
+        "bom.txt": {
+          "bytes": 18,
+          "sha256": "4df9ba353b512df3e5f6f93f4a93eca169dbe631259c7379e6c7744847509fd2",
+          "round_trip": "PASS"
+        },
+        "binary.bin": {
+          "bytes": 7,
+          "sha256": "ae778dc13feeafc17c12e0b8b1d192b243e8d1eb677e86e1af6dab2b192b329d",
+          "round_trip": "PASS"
+        },
+        "empty.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "round_trip": "PASS"
+        },
+        "slow.txt": {
+          "bytes": 20,
+          "sha256": "0ef906e5aece8d0a3da69094df7e1e07ca1b131e0e888eb62c1d6938492b1ab6",
+          "round_trip": "PASS"
+        },
+        "duplicate.txt": {
+          "bytes": 13,
+          "sha256": "394ee74c5c7a045ff10edbf5239112ed0186e1a8147add0b89b1ca8f4e8b1ed5",
+          "round_trip": "PASS"
+        }
+      },
+      "unreadable_file_absent": true
+    },
+    "admin_session_recovery": {
+      "invalidated": 200,
+      "expired": {
+        "dialog": "登录已过期",
+        "draftTitle": "重新登录后保留的草稿",
+        "busyReleased": true
+      },
+      "recovered": {
+        "dialogClosed": true,
+        "draftTitle": "重新登录后保留的草稿",
+        "dirty": true
+      },
+      "saved": {
+        "dirty": false,
+        "versionId": "8e12fbf6-437a-4b54-868a-32d7d6744401"
+      }
+    },
+    "live_version_switch": {
+      "taskId": "f59bbcde-f11c-4a6e-92f4-f62427f71a1f",
+      "before": {
+        "id": "f59bbcde-f11c-4a6e-92f4-f62427f71a1f",
+        "state": "RUNNING",
+        "setVersion": "65b865d3-006e-4090-a3a1-5d12288c1b85",
+        "casePrompt": "请使用 label-text Skill 标记文本 Hello WORLD，只输出结果。"
+      },
+      "after": {
+        "state": "RUNNING",
+        "frozenSetVersion": "65b865d3-006e-4090-a3a1-5d12288c1b85",
+        "frozenPrompt": "请使用 label-text Skill 标记文本 Hello WORLD，只输出结果。",
+        "activeSetVersion": "bdfec37e-12ed-4102-80ca-7c88c24092a6"
+      }
+    },
+    "old_snapshot_in_browser": {
+      "frozenGrid": "Skill 版本\n修订 1\n评测集\n随 Skill 导入的评测集 · 版本 2\n请求模型\ngpt-6-luna\n实际模型\n未核实",
+      "caseTitles": [
+        "英文文本保留大小写"
+      ]
+    },
+    "new_task_created_in_browser": {
+      "id": "ea777ea9-2edf-42a5-8c26-7e89e8efb7e0",
+      "state": "QUEUED",
+      "setVersion": "bdfec37e-12ed-4102-80ca-7c88c24092a6",
+      "prompt": "请使用 label-text Skill 标记文本 AFTER SWITCH，只输出结果。"
+    },
+    "offline_guidance": {
+      "queue": {
+        "waitingVisible": true,
+        "actionVisible": true,
+        "grid": "Skill 版本\n修订 2\n评测集\n随 Skill 导入的评测集 · 版本 4\n请求模型\ngpt-6-luna\n实际模型\n未核实"
+      },
+      "settings": {
+        "offlineHint": true,
+        "resumeHint": true,
+        "offlineRow": true
+      }
+    },
+    "old_report_in_narrow_view": {
+      "width": 900,
+      "horizontalOverflow": false,
+      "grid": "Skill 版本\n修订 1\n评测集\n随 Skill 导入的评测集 · 版本 2\n请求模型\ngpt-6-luna\n实际模型\n未核实",
+      "oldOutputVisible": true,
+      "downloadUrl": "/api/artifacts/d139e6f8-0a74-46ee-9654-7a10b6cad1ae/download"
+    }
+  },
+  "model_preflight": {
+    "id": "browser-boundary-preflight-20261028",
+    "model": "gpt-6-luna",
+    "message": "实际模型请求成功；服务端模型身份未核实",
+    "success": true,
+    "duration_ms": 22838,
+    "observed_model": null,
+    "observed_version": "0.162.1"
+  },
+  "real_tasks": [
+    {
+      "id": "f59bbcde-f11c-4a6e-92f4-f62427f71a1f",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "set_version_id": "65b865d3-006e-4090-a3a1-5d12288c1b85",
+      "set_revision": 2,
+      "skill_version_id": "1d34c2f6-8922-4d59-ba8c-27b9d6cb5f64",
+      "requested_model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b7b99135-c5fe-4dfe-ac06-9ce1d09a808c"
+      ],
+      "passed": 1,
+      "expected": 1,
+      "cases": [
+        {
+          "id": "label-basic",
+          "verdict": "PASSED",
+          "prompt": "请使用 label-text Skill 标记文本 Hello WORLD，只输出结果。",
+          "response": "LABEL: Hello WORLD"
+        }
+      ],
+      "created_at": "2026-10-28T15:10:29.581896+00:00",
+      "finished_at": "2026-10-28T15:10:53.949666+00:00",
+      "artifacts": [
+        {
+          "id": "d139e6f8-0a74-46ee-9654-7a10b6cad1ae",
+          "sha256": "020a9f3915715b7b4da871762f7b504cee5a8a91f8647ce94dfcd44f7ba4d8a2",
+          "bytes": 48769,
+          "source_unchanged": true,
+          "engine": "codex",
+          "requested": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "observed": {
+            "version": "0.162.1"
+          }
+        }
+      ],
+      "reason": null,
+      "suite_source_skill_version_id": "1d34c2f6-8922-4d59-ba8c-27b9d6cb5f64"
+    },
+    {
+      "id": "ea777ea9-2edf-42a5-8c26-7e89e8efb7e0",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "set_version_id": "bdfec37e-12ed-4102-80ca-7c88c24092a6",
+      "set_revision": 4,
+      "skill_version_id": "1d34c2f6-8922-4d59-ba8c-27b9d6cb5f64",
+      "requested_model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b7b99135-c5fe-4dfe-ac06-9ce1d09a808c"
+      ],
+      "passed": 1,
+      "expected": 1,
+      "cases": [
+        {
+          "id": "label-basic",
+          "verdict": "PASSED",
+          "prompt": "请使用 label-text Skill 标记文本 AFTER SWITCH，只输出结果。",
+          "response": "LABEL: AFTER SWITCH"
+        }
+      ],
+      "created_at": "2026-10-28T15:12:54.817750+00:00",
+      "finished_at": "2026-10-28T15:13:22.159757+00:00",
+      "artifacts": [
+        {
+          "id": "578efb6d-cf68-47be-805b-a2f8ae966db3",
+          "sha256": "ae5a83e21586a58aa491ef7ab251102ee8c33f973a49c9ef3c92839fc4878d99",
+          "bytes": 48728,
+          "source_unchanged": true,
+          "engine": "codex",
+          "requested": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "observed": {
+            "version": "0.162.1"
+          }
+        }
+      ],
+      "reason": null,
+      "suite_source_skill_version_id": "1d34c2f6-8922-4d59-ba8c-27b9d6cb5f64"
+    },
+    {
+      "id": "5c8d8751-fb68-4fdf-a326-9f31493b96a4",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "set_version_id": "bdfec37e-12ed-4102-80ca-7c88c24092a6",
+      "set_revision": 4,
+      "skill_version_id": "06789606-186c-4a6a-8656-9dd5b7d645d0",
+      "requested_model": "gpt-6-luna",
+      "actual_model": null,
+      "attempts": 1,
+      "worker_ids": [
+        "b7b99135-c5fe-4dfe-ac06-9ce1d09a808c"
+      ],
+      "passed": 1,
+      "expected": 1,
+      "cases": [
+        {
+          "id": "label-basic",
+          "verdict": "PASSED",
+          "prompt": "请使用 label-text Skill 标记文本 AFTER SWITCH，只输出结果。",
+          "response": "LABEL: AFTER SWITCH"
+        }
+      ],
+      "created_at": "2026-10-28T15:17:16.036415+00:00",
+      "finished_at": "2026-10-28T15:20:36.495390+00:00",
+      "artifacts": [
+        {
+          "id": "c8c670b0-9310-4fbe-b290-85068b6a7c9c",
+          "sha256": "a271860291cd6d155fc3b6f7ee874138758323b677749562405e03b9d034e405",
+          "bytes": 48739,
+          "source_unchanged": true,
+          "engine": "codex",
+          "requested": {
+            "role": "runner",
+            "engine": "codex",
+            "protocol": "openai",
+            "model": "gpt-6-luna",
+            "version": "0.162.1"
+          },
+          "observed": {
+            "version": "0.162.1"
+          }
+        }
+      ],
+      "reason": null,
+      "suite_source_skill_version_id": "1d34c2f6-8922-4d59-ba8c-27b9d6cb5f64"
+    }
+  ],
+  "task_checks": {
+    "old_reports_unchanged_after_activation_and_new_skill": true,
+    "new_skill_reused_old_suite_source": true,
+    "only_three_evaluation_tasks": true,
+    "no_generation_tasks": true,
+    "all_attempts_one": true,
+    "worker_reconnected_without_new_enrollment": true
+  },
+  "port_conflict": {
+    "conflicting_start_exit_code": 125,
+    "port_conflict_diagnosed": true,
+    "existing_api_healthy_before_and_after": true,
+    "existing_service_not_stopped": true,
+    "temporary_container_removed": true
+  },
+  "production_image": {
+    "backend_sha256": "21d36fb924803ae4eda725d06c7b50c4c68cf2bbf8d21a5c883a64c195155c6a",
+    "bundle_name": "index-DvqQs9Un.js",
+    "bundle_sha256": "c1c0e378e842a921f542a224ea88d47ea755212ffe7a686083ea8db4fccdf64c",
+    "image_id": "sha256:a902ed451cfe48319982533868ef0b027b91500add0d41253d4b61b669a35083",
+    "no_source_bind_mounts": true,
+    "retained_session_and_three_tasks": true
+  },
+  "fault_injection": {
+    "slow_file_read_ms": 3000,
+    "delayed_actual_draft_put_ms": 2200,
+    "file_read_failure": true,
+    "admin_session_invalidated_using_real_logout_endpoint": true,
+    "test_metadata_or_model_reports_faked": false
+  },
+  "checks": {
+    "python_postgresql": {
+      "passed": 46,
+      "failed": 0,
+      "skipped": 0
+    },
+    "frontend_node": {
+      "passed": 23,
+      "failed": 0
+    },
+    "typescript_vite": "PASS",
+    "ruff": "PASS",
+    "diff": "PASS",
+    "source_scan": "PASS",
+    "source_files_scanned": 173
+  },
+  "execution_counts": {
+    "worker_probe_commands": 1,
+    "real_evaluation_tasks": 3,
+    "generation_tasks": 0,
+    "attempts_per_evaluation_task": [
+      1,
+      1,
+      1
+    ],
+    "upstream_request_count": "Not independently counted; CLI may make multiple requests per task"
+  },
+  "source_file_sha256": {
+    "backend/task_routes.py": "21d36fb924803ae4eda725d06c7b50c4c68cf2bbf8d21a5c883a64c195155c6a",
+    "frontend/src/App.tsx": "0e348e9fd87bced2c36a9a906fafbcaf240229da2a9420a488fc6f47d9dc60c0",
+    "frontend/src/CaseEditor.tsx": "b5ba0284b01ba73f05731a998cf8505c4265b072f46525639b77235f4b1c63b4",
+    "frontend/src/SetsPage.tsx": "861a7555b181a207a5817f50867f636410f74c0c296feed1ecc697444e8e4781",
+    "frontend/src/SettingsPage.tsx": "47a6afafb953ad55501d4612ce98b7e38a32ac69db4e9af71224853913901592",
+    "frontend/src/TasksPage.tsx": "c163845fefb2054d6061e5c745cf88b19a9f08f469885c5239001e501002e46e",
+    "frontend/src/editorFiles.ts": "fdb8750c72491cb0c39a0ea6a6a596055e406879ba4eaba1195b8b273211c90f",
+    "frontend/src/types.ts": "eb1a4ffa319ff191f5ddcf848a48e6338211755752c86b2d3a14f5db9a46759a",
+    "frontend/tests/editor.test.mjs": "a2fe0e414b1d2721f7fa6e55ae29f8c0a5175a44b4126935d74a0c7994a713c6",
+    "tests/test_queue.py": "927d2c189e12a4241b98fed2429131e6db32d2efa3859fbdbb9ac8e89f78891c"
+  },
+  "screenshot_sha256": {
+    "frozen-task-running.png": "b0da6f59b16102fca7b3e705df1501e24276e94f42c282d0be95d82a42d3a8e6",
+    "baseline.png": "0ad771b5ea8b5a2ca06da145f13451513633575dbe8fb2e7ba3b720afd60403c",
+    "worker-offline-guidance.png": "8179e2e7cb02a1ab80ad07b64184261e2234a3d36e9a315c9426323ac1fb6ac7",
+    "attachments-saved.png": "af16909656c11edc33311adb9b442485b468b37b800141c462feac96fd3c589d",
+    "frozen-history-900.png": "f73ba94b715d943661dd5e90e38e54c9c16e114da56d0434fa04d4a622bab26a",
+    "baseline-duplicate.png": "9c92b72a8108f16f2940dc623f4569dfc1954e746da7c0523961b01bbed66079"
+  },
+  "remaining": [
+    "Native Linux x86_64 remains deferred",
+    "Additional script/attachment editing combinations remain partially covered",
+    "Codex credential expiry and complete center-unreachable UI workflow not covered by admin session test",
+    "Generation-quality improvements and formal publication are separate work"
+  ],
+  "private_artifacts": "Screenshots, full model logs, reports, credentials and test state stay in ignored local directories",
+  "review": {
+    "manual_uglic": "Completed",
+    "glic_check_cli": "Unavailable in PATH; not executed",
+    "skill_release_audit_cli": "Unavailable in PATH; not executed"
+  }
+}
