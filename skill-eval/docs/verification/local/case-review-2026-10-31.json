@@ -1,0 +1,269 @@
+{
+  "date": "2026-10-31",
+  "base_commit": "506a16ef182ff8568f6a9f7b29b3ad1a5b35c947",
+  "scope": "Case generation clarity and non-blocking review guidance; local ARM64 Docker",
+  "fixed_versions": {
+    "skill_up": "0.14.0",
+    "codex": "0.162.1"
+  },
+  "requested_model": "gpt-6-luna",
+  "actual_model": null,
+  "checks": {
+    "python_postgresql": {
+      "passed": 49,
+      "skipped": 0
+    },
+    "frontend": {
+      "passed": 23
+    },
+    "ruff": "PASS",
+    "typescript_vite": "PASS",
+    "compose_config": "PASS",
+    "full_center_build": "PASS",
+    "full_worker_build": "PASS",
+    "source_scan": "PASS",
+    "diff": "PASS"
+  },
+  "source_sha256": {
+    "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+    "frontend/src/CaseReview.tsx": "4ede1ae1e0930fbb58b8e7a019ba3e5ae36596583f0df36a57f853b70369a46d",
+    "frontend/src/CaseEditor.tsx": "78ae2b6fa1a06fc0176933a815b6ca27e3b59541d2054f2ff491bf51f21f67bb",
+    "frontend/src/TaskDialog.tsx": "226ca564fbb2128dc8c8bba93d74167f5db49613a55dcce7a9dd90d4442da70b",
+    "frontend/src/TasksPage.tsx": "79032403647e81fe9319d54b64d3c3496e64cbca2ca60570ed5d87a3e2053c16",
+    "frontend/src/ui.tsx": "b26881d425434040ad09caa6fab0cedaea205e84df2a10456d5a7e2ddf2f850b",
+    "frontend/src/style.css": "70725e783f61ded555da8a5bf7e897e66091d9d6a83067405e79f4d8a05769c1",
+    "tests/test_generation.py": "58e434af9afc8fb7e8683d2df91d7cefb8dc45c5f6d33cdf659242e34c6fa681"
+  },
+  "images": {
+    "center": {
+      "image": "ose-center-case-review:20261031",
+      "image_id": "sha256:26f96bdad1b96d8bdb251c1d43b1dfcf02b15edc122c31400a35e4f254ee362b",
+      "source": {
+        "generate_sha256": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+        "frontend": {
+          "index-D9o6VGwx.css": "a6743936c4b41728b2a50da8931a6822654e6a3c851ab6b3c79f01d1fc3ec3f7",
+          "index-CNw4S2Vw.js": "b45bf4556d2e2e3849232219dedf5966dbca6b033c4917e07cbd615b7d4548dd"
+        }
+      },
+      "host_bind_mounts": [],
+      "cap_drop": null,
+      "no_new_privileges": true,
+      "finite_seccomp": false
+    },
+    "worker": {
+      "image": "ose-worker-case-review:20261031",
+      "image_id": "sha256:07ba9b270c0fb2718aba6f4b28d61cfc941c0c1f09c6d2f35c73539266443a73",
+      "source": {
+        "generate_sha256": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e"
+      },
+      "host_bind_mounts": [],
+      "cap_drop": [
+        "ALL"
+      ],
+      "model_home_read_only": true,
+      "no_new_privileges": true,
+      "finite_seccomp": true
+    }
+  },
+  "browser": {
+    "cancel_creates_no_tasks": true,
+    "generated_draft_requires_review_message": true,
+    "draft_checklist_open": true,
+    "saved_checklist_collapsed": true,
+    "review_does_not_edit_files": true,
+    "complete_judge_source_link": true,
+    "regex_rules_not_misrepresented_as_missing": true,
+    "structural_validation_not_quality_approval": true,
+    "original_snapshot_retained": true,
+    "manual_fix_only_empty_input_prompt": true,
+    "manual_fix_preserves_all_assertions": true,
+    "final_generated_files_saved_unchanged": true,
+    "width_900_no_page_overflow": true,
+    "final_passed_task_and_download_visible": true
+  },
+  "known_generation_findings": [
+    "First 3-case draft put an input-end label between empty-input delimiters. Original output retained; a new version only clarified the empty input prompt.",
+    "Generic Skill references were ambiguous; the original 3-case evaluation was 2/3. The Chinese wrong-label output was correctly rejected.",
+    "An intermediate JSON-empty generation still used generic instructions. It was preserved as a draft, never enabled or evaluated.",
+    "Final instructions explicitly name the Skill and use JSON empty input. Two resulting cases were reviewed and saved unchanged; their evaluation passed 2/2."
+  ],
+  "review_invariants": {
+    "original_saved_id": "775026f6-aeb7-4f96-bcf7-f14f5858e15b",
+    "original_snapshot_unchanged": true,
+    "changed_files": [
+      "evals/cases/empty-string.yaml"
+    ],
+    "only_prompt_changed": true,
+    "all_judges_and_expects_unchanged": true,
+    "task_count": 1,
+    "active_before_enable": null
+  },
+  "source_invariants": [
+    {
+      "task_id": "04661216-8f3d-4aef-85fb-390502849637",
+      "source_digest": "d2fe226d890a2a64112be31b9e4be3c179dca4911d3a18f82ac1953a177b582f",
+      "source_unchanged": true
+    },
+    {
+      "task_id": "05185c50-bcff-4b4a-96de-e338f77c2128",
+      "source_digest": "d2fe226d890a2a64112be31b9e4be3c179dca4911d3a18f82ac1953a177b582f",
+      "source_unchanged": true
+    },
+    {
+      "task_id": "41ae092d-3038-4977-82b4-1b379c9a328d",
+      "source_digest": "e4ec0f4262f2ce654bec3e2dbffa82419c0cb009283e654e5d3aa93e96a97289",
+      "source_unchanged": true
+    },
+    {
+      "task_id": "697d4f27-65b9-479d-804e-e5cca0ed732a",
+      "source_digest": "d2fe226d890a2a64112be31b9e4be3c179dca4911d3a18f82ac1953a177b582f",
+      "source_unchanged": true
+    },
+    {
+      "task_id": "e937ee9e-9f95-468e-9efe-8392dde4918f",
+      "source_digest": "d2fe226d890a2a64112be31b9e4be3c179dca4911d3a18f82ac1953a177b582f",
+      "source_unchanged": true
+    },
+    {
+      "task_id": "09b234bf-6e02-417f-8a45-3844d7ded9b9",
+      "source_digest": "d2fe226d890a2a64112be31b9e4be3c179dca4911d3a18f82ac1953a177b582f",
+      "source_unchanged": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "04661216-8f3d-4aef-85fb-390502849637",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "40b3e721-f531-4b6a-b517-bad71f50afa3",
+      "set_version_id": "5922b713-503b-40a5-b0bc-960af96fd9e7",
+      "actual_count": null,
+      "passed": 2,
+      "failed": 0,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "d3ab7033-4121-4b91-88ff-0f65fbbe9895",
+          "sha256": "79f092e7f79d1a28202ecc17abdc92540f1423055136b00253f51ae158a7a0a7"
+        }
+      ]
+    },
+    {
+      "id": "05185c50-bcff-4b4a-96de-e338f77c2128",
+      "kind": "generate",
+      "state": "SUCCEEDED",
+      "verdict": null,
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "40b3e721-f531-4b6a-b517-bad71f50afa3",
+      "set_version_id": null,
+      "actual_count": 2,
+      "passed": null,
+      "failed": null,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "8190f03c-88fc-46ce-bccf-b4fdb975b82b",
+          "sha256": "d46b29bee9df7f4a05dac24aa8db33a74127c5dbbca203d8ceebdb8c56b913b4"
+        }
+      ]
+    },
+    {
+      "id": "41ae092d-3038-4977-82b4-1b379c9a328d",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "FAILED",
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "eeb98d9c-b5c9-4389-bc8a-69aafb7182c4",
+      "set_version_id": "ec0063f8-7b97-49d8-8c1d-818f20af6460",
+      "actual_count": null,
+      "passed": 0,
+      "failed": 3,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "2effccc5-196f-47dd-ae4a-2b97990bb27e",
+          "sha256": "7b6489b51bb93a280eed15e07cecdce5f20c9c92c3e9c3efd0b04abf304f0fda"
+        }
+      ]
+    },
+    {
+      "id": "697d4f27-65b9-479d-804e-e5cca0ed732a",
+      "kind": "generate",
+      "state": "SUCCEEDED",
+      "verdict": null,
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "40b3e721-f531-4b6a-b517-bad71f50afa3",
+      "set_version_id": null,
+      "actual_count": 1,
+      "passed": null,
+      "failed": null,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "d387d503-af3d-494b-a653-87b114e0e6b4",
+          "sha256": "36369dfdae9cbef96733ecaa4ce766a5087c6d33b895ee4240ce0fb0a31fbb2f"
+        }
+      ]
+    },
+    {
+      "id": "e937ee9e-9f95-468e-9efe-8392dde4918f",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "FAILED",
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "40b3e721-f531-4b6a-b517-bad71f50afa3",
+      "set_version_id": "ec0063f8-7b97-49d8-8c1d-818f20af6460",
+      "actual_count": null,
+      "passed": 2,
+      "failed": 1,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "e23b2180-a4b2-4078-9755-b0aeddbdc8fa",
+          "sha256": "190fe2c1979e5687fc6af8d0944bba2231f54b58bbfc5b2690196611542ac6f7"
+        }
+      ]
+    },
+    {
+      "id": "09b234bf-6e02-417f-8a45-3844d7ded9b9",
+      "kind": "generate",
+      "state": "SUCCEEDED",
+      "verdict": null,
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "40b3e721-f531-4b6a-b517-bad71f50afa3",
+      "set_version_id": null,
+      "actual_count": 3,
+      "passed": null,
+      "failed": null,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "7073b2b2-f871-49e1-805e-659825bb0d4e",
+          "sha256": "d20927373cfe334b6541432e42f8a41ef33729357f06047f7d22dd3b06d678ed"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No guarantee that arbitrary model generations are unambiguous.",
+    "Negative Skill 0/3 used the earlier 3-case saved suite, not the final 2-case suite.",
+    "Native Linux x86_64 remains deferred by user.",
+    "No formal Release or image publication.",
+    "Three generations and three evaluations are task counts, not HTTP request counts.",
+    "Actual server-side model identity is unverified."
+  ],
+  "cleanup": {
+    "browser_task_space_109": "closed; done true",
+    "own_compose_services": "stopped; volumes preserved",
+    "test_postgresql": "stopped and removed",
+    "original_8765_services": "untouched; healthy"
+  }
+}

@@ -6,6 +6,7 @@ import type { Common, EditorFile, Files, SetVersion, Validation } from './types'
 import { browserFile, conflictingAttachmentNames } from './editorFiles'
 import { canEditCase, formDocument, mapping } from './editorYaml'
 import { shouldSyncVersion } from './editorState'
+import { CaseReview } from './CaseReview'
 
 const textFile = (content: string): EditorFile => ({ encoding: 'utf-8', content, mode: 0o644 })
 
@@ -112,6 +113,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
   </div></div>
     {error && <p className="error-text" role="alert">{error}</p>}
     {busy === 'attachment' && <p className="small-note" role="status">正在读取附件，请稍候…</p>}
+    <CaseReview saved={readonly} />
     <fieldset className="editor-content" aria-label="案例内容" disabled={!!busy}>
     <div className="segmented"><button className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
     {mode === 'form' ? <div className="case-layout"><aside className="case-list"><div className="case-list-head"><span>入口案例 · {entries.length}</span>{!readonly && <button className="text-button" onClick={addCase}>＋ 添加</button>}</div>{entries.map(path => {
@@ -121,15 +123,15 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     })}{!entries.length && <p className="muted padded">还没有入口案例，可以添加或在源码中修复。</p>}</aside><div className="case-form">
       {!canForm ? <div className="callout">当前 YAML 无法安全映射到表单，请在“源码与附件”中编辑。</div> : <><div className="form-top"><code>{String(item.id || selected.split('/').pop())}</code>{!readonly && <div className="actions"><button className="text-button muted" disabled={entries.indexOf(selected) === 0} onClick={() => moveCase(-1)}>上移</button><button className="text-button muted" disabled={entries.indexOf(selected) === entries.length - 1} onClick={() => moveCase(1)}>下移</button><button className="text-button danger" onClick={removeCase}>移除案例</button></div>}</div>
         <label className="field"><span>案例名称</span><input disabled={readonly} value={String(item.title || '')} onChange={event => setValue(['title'], event.target.value)} /></label>
-        <label className="field"><span>任务描述</span><textarea rows={5} disabled={readonly} value={String(item.input?.prompt || '')} onChange={event => setValue(['input', 'prompt'], event.target.value)} /></label>
+        <label className="field"><span>任务描述</span><textarea rows={5} disabled={readonly} value={String(item.input?.prompt || '')} onChange={event => setValue(['input', 'prompt'], event.target.value)} /><small className="muted">写出实际输入及边界；零长度字符串请明确说明，避免被理解为等待补充输入。</small></label>
         <label className="field"><span>前置条件：输出需包含 <small>每行一条，选填</small></span>{simpleLines(must) ? <textarea rows={2} disabled={readonly} value={must.join('\n')} onChange={event => setValue(['expect', 'must_contain'], lines(event.target.value))} placeholder="输入必须出现在结果中的文字" /> : <span className="small-note">包含复杂或多行断言，请使用源码编辑，原条件仍会保留。</span>}</label>
-        <div className="form-section"><h3>判分方式</h3>{!localJudge ? <div className="callout">这个案例继承入口的裁判。<Button disabled={readonly} onClick={() => setValue(['judge'], judge)}>为此案例单独设置</Button></div> : <><label className="field"><span>裁判</span><select disabled={readonly} value={judge.type || 'rule_based'} onChange={event => mutate(selected, document => {
+        <div className="form-section"><h3>判分方式</h3><button className="text-button" onClick={() => { setSourceFile(localJudge ? selected : 'evals/eval.yaml'); setMode('source') }}>查看完整判分源码 →</button>{!localJudge ? <div className="callout">这个案例继承入口的裁判。<Button disabled={readonly} onClick={() => setValue(['judge'], judge)}>为此案例单独设置</Button></div> : <><label className="field"><span>裁判</span><select disabled={readonly} value={judge.type || 'rule_based'} onChange={event => mutate(selected, document => {
           for (const key of ['criteria', 'model', 'pass_threshold', 'script_path', 'success', 'failure']) document.deleteIn(['judge', key])
           document.setIn(['judge', 'type'], event.target.value)
           if (event.target.value === 'agent_judge') { document.setIn(['judge', 'model'], '__SELECT_MODEL__'); document.setIn(['judge', 'criteria'], []) }
           if (event.target.value === 'rule_based') document.setIn(['judge', 'success'], [{ output_contains: { all: [] } }])
         })}><option value="rule_based">规则判分</option><option value="script">脚本判分</option><option value="agent_judge">Codex 语义裁判</option></select></label>
-          {judge.type === 'rule_based' && <label className="field"><span>成功条件：输出需包含 <small>每行一条</small></span>{simpleLines(ruleValues) ? <textarea rows={3} disabled={readonly} value={ruleValues.join('\n')} onChange={event => updateRules(event.target.value)} /> : <span className="small-note">复杂规则请使用源码编辑。</span>}<small className="muted">其他已有规则会保留，可在源码中查看。</small></label>}
+          {judge.type === 'rule_based' && <label className="field"><span>{ruleIndex < 0 && rules.length ? '补充包含规则' : '成功条件：输出需包含'} <small>每行一条</small></span>{simpleLines(ruleValues) ? <textarea rows={3} disabled={readonly} value={ruleValues.join('\n')} onChange={event => updateRules(event.target.value)} /> : <span className="small-note">复杂规则请使用源码编辑。</span>}<small className="muted">{ruleIndex < 0 && rules.length ? '已有正则或其他判分规则未显示在此输入框；留空不会删除，请查看完整判分源码。' : '其他已有规则会保留，可在源码中查看。'}</small></label>}
           {judge.type === 'agent_judge' && <label className="field"><span>评判标准 <small>每行一条</small></span>{simpleLines(judge.criteria || []) ? <textarea rows={4} disabled={readonly} value={(judge.criteria || []).join('\n')} onChange={event => setValue(['judge', 'criteria'], lines(event.target.value))} /> : <span className="small-note">多行标准请使用源码编辑。</span>}<small className="muted">使用任务选定模型的独立会话。</small></label>}
           {judge.type === 'script' && <label className="field"><span>脚本路径</span><input disabled={readonly} value={judge.script_path || ''} onChange={event => setValue(['judge', 'script_path'], event.target.value)} placeholder="evals/fixtures/scripts/check.py" /><small className="muted">在“源码与附件”中添加脚本；退出码 0 表示通过。</small></label>}
         </>}</div>
