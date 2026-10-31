@@ -67,7 +67,8 @@ export function Empty({ title, description, children }: { title: string; descrip
 
 export function ValidationView({ validation }: { validation?: Validation }) {
   if (!validation || validation.valid === undefined) return <p className="muted">修改后请重新校验。</p>
-  return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `校验通过 · ${validation.cases?.length || 0} 个案例` : '需要修复'}</Badge></div>
+  return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `结构校验通过 · ${validation.cases?.length || 0} 个案例` : '结构校验需要修复'}</Badge></div>
+    <p className="muted">仅检查格式、配置和文件引用，不执行模型或判分脚本；案例含义与断言仍需人工审查。</p>
     {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}><code>{item.path}</code><span>{item.message}</span></li>)}</ul>}
     {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}><code>{item.path}</code><span>{item.message}</span></li>)}</ul></details>}
   </div>

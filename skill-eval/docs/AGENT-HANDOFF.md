@@ -1,8 +1,10 @@
 # LumaSkill · Skill Eval 完整交接
 
-更新时间：2026-10-28（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。阶段进展、总结和计划以 [实现进度](IMPLEMENTATION-STATUS.md) 为当前索引，原始验证收据保留各自检查点。
+更新时间：2026-10-31（Asia/Shanghai）。交接对象：继续开发、部署验收和维护本项目的 Agent。阶段进展、总结和计划以 [实现进度](IMPLEMENTATION-STATUS.md) 为当前索引，原始验证收据保留各自检查点。
 
 ## 1. 接手先看这里
+
+2026-10-31 增量：[案例明确性与审查验证](verification/local/case-review-2026-10-31.md)、[审查指南](CASE-REVIEW.md)。补齐 Skill 名称、空字符串 JSON 写法、完整断言要求和非阻塞审查提示，区分结构校验与人工审查。不要新增自动质量通过标记，不修改第三方资产，不删减断言换通过；真实验证中的原始歧义、2/3 失败和错误变体 0/3 都保留。本机后端 49 / 前端 23 项通过，本轮提交与 CI 以 Git 历史为准。
 
 2026-10-28 最新增量：[浏览器边界与运行快照](verification/local/browser-boundaries-2026-10-28.md)。已修复全局导航未锁定、同批附件重复名漏确认、详情缺少排队原因；本机后端 46 / 前端 23 项通过。浏览器实测旧任务冻结、新任务切新版本、新 Skill 复用旧案例、会话恢复、离线队列重连和端口冲突；原生 Linux x86_64 仍暂缓。以下 78e4527 / bca9c23 / CI 40203314300 属于 10/25 功能基线，本轮提交与 CI 以 Git 历史为准。
 
@@ -21,7 +23,7 @@
 | 真实失败边界 | 原生成案例复跑 2/3 保留；只明确空字符串输入的新版本连续两次 3/3；服务端实际模型身份仍未核实 |
 | 原生 Linux x86_64 | 用户暂缓；amd64 模拟安装接入有证据，模拟路径 seccomp EINVAL 未解除，不等于原生验收 |
 | 应用版本与许可 | 0.1.0 开发候选；原创 MIT、第三方许可保留；无正式 Release/GHCR 发布 |
-| 下一步 | 优先生成案例明确性与审查提示；按需补剩余脚本/附件组合、模型凭据失效与中心不可达；不恢复 x86_64 |
+| 下一步 | 案例审查提示已补，整理发布候选资料；按需补剩余脚本/附件组合、模型凭据失效与中心不可达；不恢复 x86_64 |
 
 本轮入口：[编辑器实测](verification/local/continuation-2026-10-25.md)、[Docker 安装/沙箱](verification/local/docker-worker-2026-10-25.md)、[Pro 模型与恢复](verification/local/pro-docker-e2e-2026-10-25.md)、[main 整合](verification/local/main-integration-2026-10-25.md)。Harness 受限通道的失败保存在[历史网关记录](verification/local/harness-gateway-2026-10-25.md)，不再作为当前模型主链路的阻断。
 
