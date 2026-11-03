@@ -12,3 +12,5 @@
 | skill-upper 案例编写指令 | 上游同一提交的固定资产，仅用于生成候选案例；不安装观察器或自我修复流程 |
 
 第三方指令资产保留原始许可及摘要。测试登录配置与原始运行记录位于被忽略的本地区域，不进入源码。用户已指定公开目标为 Songhonglei/lume-skill 的 skill-eval 子目录，并确认原创代码采用 MIT；候选源码接入与正式版本发布分别记录，不能据此宣称平台验收完成。
+
+当前候选的源码提交、源档/Worker ZIP 摘要与完整逐文件清单见[11/03 候选收据](verification/local/release-candidate-2026-11-03.json)，实际安装依赖元数据见[当前候选许可清单](verification/local/candidate-licenses-2026-11-03.json)。它们分别说明源档身份、安装来源和适用平台的依赖信息；不把元数据清单当作完整镜像 SBOM 或外部发布审计。未适用本机的环境 marker 另列。

@@ -1,0 +1,669 @@
+{
+  "date": "2026-11-03",
+  "candidate": {
+    "date": "2026-11-03",
+    "source_commit": "21240ea3632fdddafb3f579b5527eb4444be3915",
+    "version": "0.1.0",
+    "publication": "NOT_PUBLISHED",
+    "source": {
+      "file": "lume-skill-eval-source-0.1.0-21240ea3632f.zip",
+      "size": 664904,
+      "sha256": "1eb75f073e0375892857376b524dab12b6d541fa88cd836cc4e665a8c0562d79",
+      "files": {
+        ".github/workflows/skill-eval-checks.yml": "7c9db1235ecf28a2cf361fe8d8787fe0ee000f67e9f3fb05f3a6283f4d12c988",
+        ".github/workflows/skill-eval-images.yml": "a2e2ba488be76749716e72af7779c868b1157711ca92758844ff4663876ba1c0",
+        "assets/brand/LICENSE": "d3e79f6806a3920067b8e699ebc3b65ba34a4f8d3fe233b70d96fe1b0547bac4",
+        "assets/brand/README.md": "43a7735168d2abee502e9aab0dd2954da42ef626586233c41b71dc6b418bac84",
+        "assets/brand/apple-touch-icon.png": "0afd47c7bf644f71002d9d1b9c84c7f2010579b02fb1deb34ba2d34f3d0b1246",
+        "assets/brand/favicon-16.png": "68f01791c11c805982ed308df219e1b9aedbe793515c0081eae6d4ebbb0ebafe",
+        "assets/brand/favicon-32.png": "9f8a18595e5aab83c7e1494c316eeb4b05dd3f8ca22b5068966aee16c4b77191",
+        "assets/brand/favicon-48.png": "b5829dfcaf702be75428ceabbda4fd6bc3dd300f95ad902e00722509086e34fe",
+        "assets/brand/favicon.ico": "b08f9bf856105a0d880794ae7783323a8c39ce3eedf215144fdbd03a279398e8",
+        "assets/brand/lumaskill-favicon.svg": "ac8648a7c8dd098186429cbec4a98bed27d92167f5f7f6d21eee6502fc06fc03",
+        "assets/brand/lumaskill-mark.png": "40a5243c87cfb2d065ad077b2686ee93b1a62f7a9c1d5c50d429ae65de860623",
+        "assets/brand/lumaskill-mark.svg": "bef78037e2b133ce0a4a491bfb5f6803bb0fc56eb5fe92ed8c6952a4dbdc5097",
+        "assets/brand/lumaskill-wordmark.png": "222cdd729351ac9683299cd2aa2d49d8b0f0c1fc02b55bd7a4a29fb3988ee6ba",
+        "assets/brand/lumaskill-wordmark.svg": "ea726f6fa220ad471c2b0b040dbeb1c4eeb7c3d5e2f892f8557d0f75a0755e88",
+        "assets/brand/preview.png": "cb5bf03be1635c53f15b97ff99e49a42ac5c2aca7d67e965415f3d017236ffd9",
+        "skill-eval/.dockerignore": "241eb6be0da7871b86d3b4141e23d3564eb8201c8523f19e82bb66253c1c359e",
+        "skill-eval/.env.example": "fd00e25aa0f791406b685558a4ad61908f665e80092dc9f124760678b3081547",
+        "skill-eval/.gitignore": "26196a5cf733a1c8f5919c67965a1ef77628fdc946f093b4fe15e3e6757c0d66",
+        "skill-eval/Dockerfile": "9e258e53ab81102558e1316ab38d825838fc4b7a66a98bb101d5c446fc9bcc51",
+        "skill-eval/LICENSE": "d3e79f6806a3920067b8e699ebc3b65ba34a4f8d3fe233b70d96fe1b0547bac4",
+        "skill-eval/README.md": "e428a9d4119a7e351af0d9ed9f9b37b4aa1614ff5b81daa81a8ee2b451dac970",
+        "skill-eval/THIRD-PARTY-NOTICES.md": "99107e91fca3a74a7690dce9fb181e48c03461a89bd9923166706906a1c70571",
+        "skill-eval/backend/__init__.py": "4b70ad67e5f1ea95aa59a167bb9d2b730e68008c1632a7cac38b61f499c59807",
+        "skill-eval/backend/api.py": "faa69a27103657779170d3762bfe104d4ac7771d87a9bb94e4ae8aec14082315",
+        "skill-eval/backend/auth_routes.py": "d35fd209ad8496d8d04ad63ec070dde9f07c1a2cd4c2c54e2f283d8684c92efb",
+        "skill-eval/backend/body_limit.py": "7315d01b84997aa3c22fa1940839145a750f095117021e89d716d96ab955a0b1",
+        "skill-eval/backend/common.py": "3d3432c9c5bf5f4aecf8f03bd18c14871d7939a298a965d0d020cf4d44629f37",
+        "skill-eval/backend/config.py": "ccfa0506e50bf52416a9fb1ad57c5dfc120101836c3650e53eecc4dbe0f7cdde",
+        "skill-eval/backend/db.py": "298038ed77319fd1c561c74a430e95e5d3f1758d7a4c003436f8ca1264ed4636",
+        "skill-eval/backend/queue.py": "a732f8b724c53da3ef1d1b7d1e13d0d1dea2bc2c2374d2ed055a3b79c4f6a3f8",
+        "skill-eval/backend/resource_routes.py": "79e8f106c8234abbe341286a121d6dcece62c9ec50cdaaa96d26ff106c0710e3",
+        "skill-eval/backend/schema.sql": "78e67e940bb449dafa0d1fcfb7f727f1bc281821a2c482d5d911caa222a9febc",
+        "skill-eval/backend/security.py": "87fe3e79198b740d4c308039cf4c7d35715713b1e91143bd23bf83ee4d15d08f",
+        "skill-eval/backend/settings_routes.py": "027398c401ea912f55a60d918fdf9cb3761c4d1b404a903e47cef66ac6b9a07c",
+        "skill-eval/backend/storage.py": "a6d69b3f3408598946128c921d52fb991666da7d75ceba960d8f232511f43c83",
+        "skill-eval/backend/task_routes.py": "21d36fb924803ae4eda725d06c7b50c4c68cf2bbf8d21a5c883a64c195155c6a",
+        "skill-eval/backend/validation.py": "2618423a16593bd759724e366f888641caba48f20e23367be6f123b683945e22",
+        "skill-eval/backend/worker_routes.py": "60c25d29d21557448c5446b83548eef9f5b3d7efa182b38153bf72592ed1eeac",
+        "skill-eval/compose.yaml": "cb39fbc6c085cc7e0f41165cc5d5fa3d46fae2e4a783b965767dbc00c8fcce31",
+        "skill-eval/deploy/bootstrap.py": "9250c6ffa325f78e1402dd60a6efc944e0ac938e9bdd5480e8921477ad86a53d",
+        "skill-eval/deploy/build_worker.py": "51789e5ceecb383b93238ce62148da6b7401a6610a1089ab69f36463200c0b84",
+        "skill-eval/deploy/center_entry.py": "f34eaa2625f039253b2da10b4febddb150ca5a1529c5d82b2afe0096c19d4492",
+        "skill-eval/deploy/check_source.py": "2b15597c229f75b69d4955968339da593e3cd1e043e0acd30ab239fb3e8938a1",
+        "skill-eval/deploy/codex/package-lock.json": "a16409d5a2288c03ab4d452d5a7b64b511059178734cf55b08a9fdcade9925c1",
+        "skill-eval/deploy/codex/package.json": "a33db33ba58dfb252a9bd1aac15af323ba94665b3f7bc78efc5521bf23e128af",
+        "skill-eval/deploy/compose_smoke.py": "3afbab2031e73f235373ebab9b487848f43cb6b56773bf359ab8ba94a70e0c48",
+        "skill-eval/deploy/install_tools.py": "dea77662d018430850e7df767b662865761e8b91c7f386fd0d6eb67fb6cbe884",
+        "skill-eval/deploy/install_worker.py": "8df908d184f6e61d5a676f02946e775937e762e423bc7550c24633a9ade4dc56",
+        "skill-eval/deploy/requirements.txt": "8934f64c840af9baa87860c13b1e534740745da0ccd93ca407ff89ff1060fb34",
+        "skill-eval/deploy/toolchain.json": "c6de14da119ad422afe19c9cc5d93382bfe174f2516250fc1c688db1282b492e",
+        "skill-eval/deploy/volume_backup.py": "d824ef509d231ffc3c7b78d7260c6311c417ffa232b6c145fc155f3f9ec7b9c0",
+        "skill-eval/deploy/worker-requirements.in": "cfa6898a4e7526bed087a184d516bacf8b8d096347fb4829ab9c8947a5ff0e06",
+        "skill-eval/deploy/worker-requirements.txt": "eea2cfb926f86213833269116ebb4c1812f1d06cc8990e6af0017fdc489ba09d",
+        "skill-eval/deploy/worker-seccomp.SOURCE.json": "da5f990163655cf27667e91064049ffce892bc34363f92b7345aa75eb4b13b9c",
+        "skill-eval/deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+        "skill-eval/docs/ACCEPTANCE-CRITERIA.md": "15086061c209787da03d2299ef2e9b964b91c9997bfa007f9e50e56a98647f4a",
+        "skill-eval/docs/AGENT-HANDOFF.md": "8e82d67bdf89bbe75d806293b36304654ad34926860f301fd36b209e0efc1351",
+        "skill-eval/docs/CASE-REVIEW.md": "d40088f63d5d5939cd7530fa832a7580e44b25327ee566f78cd9efa1628ec51c",
+        "skill-eval/docs/COMPATIBILITY.md": "135de018769e19f64772465b0c88e834ea575b0b760d1c34af55ce8b79da6a84",
+        "skill-eval/docs/DESIGN.md": "8f62fea88d8818c386ce033a883131a8763f10ee0104a42092b6f6a8c931df78",
+        "skill-eval/docs/DEVELOPMENT-PLAN.md": "c20b80d5c158de841a3d95dd57f27bb0ca1c7741c2787d2c191d1466aaf710db",
+        "skill-eval/docs/IMPLEMENTATION-STATUS.md": "619da5dcfc92ba10597e5a983e743b66e304eef92b468c1ffca87ad6746263d1",
+        "skill-eval/docs/OPERATIONS.md": "32a5bdf348e6603c8c9ce91e2aba1187fd56ba5eff1e770298cca8a1d22176eb",
+        "skill-eval/docs/PRODUCT-AND-TECHNICAL-PLAN.md": "5ac27e9c4b3ef904eed848d6ece96ad68a5139ec2a1df1e615c25a8164b72c13",
+        "skill-eval/docs/RELEASE-CANDIDATE.md": "d4ec28a1a45ac860147afd5f303dd1dfaf13450ff50efd976b2c5171f7104bb2",
+        "skill-eval/docs/SOURCE-INVENTORY.md": "83dd655ff385c46407f79d7d4d5bdce082627620cb09746e746d291570b68cdb",
+        "skill-eval/docs/WORKER.md": "4c55054c6e0c37fe109c52100cf3c7c24754a9825447425fa098b5a2d13074bb",
+        "skill-eval/docs/verification/local/README.md": "07a22ee6904e3d66ae76e75ee53ae94d20ded2f3165cfb01fd96ca2a82d78611",
+        "skill-eval/docs/verification/local/acceptance.md": "66ec55a94b3dbfc297cc12819bce2c2e2b2187a1a6bc7b6a51aa8a6d96d27b85",
+        "skill-eval/docs/verification/local/audit/UGLIC-brand.md": "9d6da519a88ccc713492c0b2be3bcfab834aa5744708657475b4855b4c5ade84",
+        "skill-eval/docs/verification/local/audit/UGLIC-container.md": "998720054ca9afc66c8c1b23f3057ff047a0d542fcc0e27b1cd223e5c0f06f2d",
+        "skill-eval/docs/verification/local/audit/UGLIC-handoff.md": "0689f578df2a532b5a47a2c319a221e4785fa9fdedeb1f2ecd89dd82dbf3bec4",
+        "skill-eval/docs/verification/local/audit/UGLIC-layout.md": "cac9bd9516fb36338e23cd1ddb5923cd1bcb620c2ddc448be41d7ad16878f74f",
+        "skill-eval/docs/verification/local/audit/UGLIC.md": "27a58cb37be5da0ab9873b04246224b0f8a3ebac956c9cc60b099123259d2a11",
+        "skill-eval/docs/verification/local/audit/example.json": "12e0d978e5929de284f157fa488d1a33a1bb9e5a03286c048eb1e46861e498be",
+        "skill-eval/docs/verification/local/audit/skill-release-audit.md": "64de69a411f3c0f3a3c1be6e9cb8c24fa2b00317ede0f56acbf99edd724dc8d2",
+        "skill-eval/docs/verification/local/audit/vendor-after.json": "dcd3ed9414a6cae3d0370d94f416ca1f9a5c2cb07f32078d2cafed88e7247391",
+        "skill-eval/docs/verification/local/audit/vendor-before.json": "add08dca15f0067c5d8ee21fd9629d5a1dd34dc81fd9ca115ba636cf0ff382ee",
+        "skill-eval/docs/verification/local/browser-boundaries-2026-10-28.json": "209b75890225e4cc93f2218da94bf0b74004ad21edb6173827d21fd3af7a9c11",
+        "skill-eval/docs/verification/local/browser-boundaries-2026-10-28.md": "39d2252250f49261731622e5eb97e0e2009233453e6575febaa7cc128cfd59df",
+        "skill-eval/docs/verification/local/case-review-2026-10-31.json": "fd23bc86699122e57334844646ba56c5adbaee74c0778ee412c6ab26365b09bb",
+        "skill-eval/docs/verification/local/case-review-2026-10-31.md": "903d75ce0d38cb73951e5cb9d7f7a4c81b82b62f1224f9d630040f1942b20e2e",
+        "skill-eval/docs/verification/local/checks.json": "d8451501b8db690e91a7193698f81031a3cdd9d648d4fd88bd10630e02d9bb64",
+        "skill-eval/docs/verification/local/containers.json": "470c38b4d45ce454626fea561bd0ebe8c50b92ecbe0c8bffa16139fa1fbd0c95",
+        "skill-eval/docs/verification/local/continuation-2026-10-25.json": "067fbf0f9a953f39410ee197788380e0aa2a70b8fc747a746abccfb60cb8e1c1",
+        "skill-eval/docs/verification/local/continuation-2026-10-25.md": "f937e4c5e30cb5c5b38eb7e9cda9ea2e517091e5ff345b3a6143d300019fc5e3",
+        "skill-eval/docs/verification/local/dependency-licenses.json": "1aba911858ed82af92785a60eb68b7bceeb19ef9ae5c082e2b99d2327bae141b",
+        "skill-eval/docs/verification/local/docker-worker-2026-10-25.json": "4aa92bfc1b20ee52e9aaf685c7f6041af747dd53ec684974db0a01dd0f92e5e1",
+        "skill-eval/docs/verification/local/docker-worker-2026-10-25.md": "8a2ae6b80b90f43cf6b4904032f11cdf4eaebda0cee4d8cfa607c14548ecfc59",
+        "skill-eval/docs/verification/local/e2e.json": "60eb12b3b10da78be98c9dd9a1b76790b103f9eb53430f16cbf463990765c3ec",
+        "skill-eval/docs/verification/local/handoff-checkpoint.json": "45d6047086b52953d15ee1b79164487634e343208fa51765d8b76a54cb3ad19f",
+        "skill-eval/docs/verification/local/harness-gateway-2026-10-25.json": "385d2f3a217e547b0751e7a407852b44b3ef394c1b192cb22b253874a6138cb2",
+        "skill-eval/docs/verification/local/harness-gateway-2026-10-25.md": "4b5305365faba9647aef6a233d3dc0ed3ca639c872b91369b77b79dcebe18444",
+        "skill-eval/docs/verification/local/main-ci-2026-10-25.json": "1f8f0ef527e4832dc087db80076bf9883990329a8e2c8bc94e362b29515d4ace",
+        "skill-eval/docs/verification/local/main-integration-2026-10-25.json": "204a06ad816f6d1332e840a075a8d1d3d44ac108899a99cc6d3d0db7fd53a330",
+        "skill-eval/docs/verification/local/main-integration-2026-10-25.md": "d08faded5996428864f5fb35ae20e7a12fc110e30d41c0482dc95533ba4589ae",
+        "skill-eval/docs/verification/local/model-probe.json": "64cec11df74f3e22cf198aaa59634b89c8d2a2280c5fe4fcb553a45f20757246",
+        "skill-eval/docs/verification/local/network-faults.json": "b555c6a218251ecf41a97bcfad756449776f34cc0a53320db559e9f388972b3d",
+        "skill-eval/docs/verification/local/packaged-worker-e2e.json": "e583409de88c94d97e7d4610f8188501b6e51d037c1b61476e10c1806d184a1e",
+        "skill-eval/docs/verification/local/pro-docker-e2e-2026-10-25.json": "95441d55c374e3da521cfd65706b3a85bc1916b848bb2ad9abf208bf82052a9e",
+        "skill-eval/docs/verification/local/pro-docker-e2e-2026-10-25.md": "73339b47c2d4811e415c43ba265fb352ae861308f0e7760648f7ffff3b11ec86",
+        "skill-eval/docs/verification/local/restore.json": "9552674535dc1cf86c3cba8a2367c6c12ebd8e3a7ef02bd67d4e650663dffe66",
+        "skill-eval/docs/verification/local/worker-packages.json": "5aa3783ad099db6e5053eaacf234044666d1359fd8e6650237372af4361b2a3e",
+        "skill-eval/docs/verification/p1/generated-bad.json": "fb4b9e7907eb12979edb576822050a38cc3a813c45d42f15661bcdda693b46aa",
+        "skill-eval/docs/verification/p1/generated-good.json": "767bf10aa2de7b4a684439a02759caf1805d41375a4d89c60011cde210f615ef",
+        "skill-eval/docs/verification/p1/missing-login.json": "cd6cfcc32f4ff4227c8f839c0cf6683a062d8d2010ad82714abbab2a5ddfca50",
+        "skill-eval/docs/verification/p1/three-judges.json": "16a02aee990921b32b73ba7fc4950953a3e70e710469a171fafc13332d0b81f1",
+        "skill-eval/docs/verification/p1/timeout.json": "2f00481d1d7e144a6960c6db11b680e248ccb8920d804484f38efaa15c84b0fd",
+        "skill-eval/docs/verification/p1/wrong-model.json": "4758e82bf023b96d6137699b3c80ee4347685018866725e03b6d74177749c8db",
+        "skill-eval/examples/label-text-generated-evals/evals/cases/chinese-text.yaml": "9f8824e3a2a23fc8eb2bc80dacdfe62042ac9e3a0fde2329c15b72bc3b28102a",
+        "skill-eval/examples/label-text-generated-evals/evals/cases/empty-text.yaml": "ca06bd9a38c926ba920d530b04abebc45b946e51c677531c1bead07e1a0a8e95",
+        "skill-eval/examples/label-text-generated-evals/evals/cases/instruction-text.yaml": "735133de8f9aa4f066588ae38831df81c1a91ee598a8bd9cb13a3d2684d4d8d5",
+        "skill-eval/examples/label-text-generated-evals/evals/cases/mixed-case.yaml": "0553f6f5ff26f98023accb849566c03b8018b73991657eecf50dbd800aa0316d",
+        "skill-eval/examples/label-text-generated-evals/evals/cases/punctuation.yaml": "c87d0c9ad50e88933c8ae784b97fd98ea8dcc4c70bbd25523a798b329b00bf5f",
+        "skill-eval/examples/label-text-generated-evals/evals/eval.yaml": "2a5a2fe4a4d7c1e746c8cdf231989dfac4dd94fab9922877a4749633a0f61c16",
+        "skill-eval/examples/label-text/SKILL.md": "be3f5e6093bcf34ca15b57eaa8a79f1f4fc918658592b351c883708cb8dd2a01",
+        "skill-eval/examples/label-text/evals/cases/label-basic.yaml": "5cd59331bb84fc7e4fe11b2430abcbb019a22111af7cec69350108e1c4a8cdeb",
+        "skill-eval/examples/label-text/evals/cases/label-chinese.yaml": "006af3ecdccedf9a9b5206f2d64b48b6575e8efa0c36a4b0900b0e9162997690",
+        "skill-eval/examples/label-text/evals/cases/label-empty.yaml": "76fe2bd90b77bf12c4ae868837da324ec6ab832b721205be141f7468364f71d3",
+        "skill-eval/examples/label-text/evals/eval.yaml": "494bf8ff494c5f21a6619810a06f5cb6fbd7b88672379f588864291f7a772e25",
+        "skill-eval/examples/label-text/evals/fixtures/scripts/check-empty.py": "b31fc0e0c0dd7ec97004fe5d6f51d4dba6fc328adaca779f0e6defabd54e1ec1",
+        "skill-eval/frontend/index.html": "8cee311b5f7198b9bc3693877420b3e1bc688bf6b6eab1e0622412278c47f07a",
+        "skill-eval/frontend/package-lock.json": "2bb96658bbd1654b56b23ec6232d90484fc39f8ae1bb07526b27b0fc00cfb517",
+        "skill-eval/frontend/package.json": "42b9f85569570c1127886f03e05498b4e54810c87ef5994a57ebe085e6a70e71",
+        "skill-eval/frontend/public/apple-touch-icon.png": "0afd47c7bf644f71002d9d1b9c84c7f2010579b02fb1deb34ba2d34f3d0b1246",
+        "skill-eval/frontend/public/brand/lumaskill-mark.svg": "bef78037e2b133ce0a4a491bfb5f6803bb0fc56eb5fe92ed8c6952a4dbdc5097",
+        "skill-eval/frontend/public/brand/lumaskill-wordmark.svg": "ea726f6fa220ad471c2b0b040dbeb1c4eeb7c3d5e2f892f8557d0f75a0755e88",
+        "skill-eval/frontend/public/favicon-32.png": "9f8a18595e5aab83c7e1494c316eeb4b05dd3f8ca22b5068966aee16c4b77191",
+        "skill-eval/frontend/public/favicon.ico": "b08f9bf856105a0d880794ae7783323a8c39ce3eedf215144fdbd03a279398e8",
+        "skill-eval/frontend/public/favicon.svg": "ac8648a7c8dd098186429cbec4a98bed27d92167f5f7f6d21eee6502fc06fc03",
+        "skill-eval/frontend/public/third-party-licenses.txt": "d8074e25353f5c4867491a6c8bd1fb257711367ab25613da6d297d86928db2ec",
+        "skill-eval/frontend/src/App.tsx": "0e348e9fd87bced2c36a9a906fafbcaf240229da2a9420a488fc6f47d9dc60c0",
+        "skill-eval/frontend/src/CaseEditor.tsx": "78ae2b6fa1a06fc0176933a815b6ca27e3b59541d2054f2ff491bf51f21f67bb",
+        "skill-eval/frontend/src/CaseReview.tsx": "4ede1ae1e0930fbb58b8e7a019ba3e5ae36596583f0df36a57f853b70369a46d",
+        "skill-eval/frontend/src/SetsPage.tsx": "861a7555b181a207a5817f50867f636410f74c0c296feed1ecc697444e8e4781",
+        "skill-eval/frontend/src/SettingsPage.tsx": "47a6afafb953ad55501d4612ce98b7e38a32ac69db4e9af71224853913901592",
+        "skill-eval/frontend/src/SkillsPage.tsx": "992bf231f6d82e88a46fa24ab21873fe6759b1bdfebd9c4906621c991bea7bab",
+        "skill-eval/frontend/src/TaskDialog.tsx": "226ca564fbb2128dc8c8bba93d74167f5db49613a55dcce7a9dd90d4442da70b",
+        "skill-eval/frontend/src/TasksPage.tsx": "79032403647e81fe9319d54b64d3c3496e64cbca2ca60570ed5d87a3e2053c16",
+        "skill-eval/frontend/src/api.ts": "d159c9bece9bdb1027f87a1b55c7313b73c0dfa79ad98f883ac55c9afdde976c",
+        "skill-eval/frontend/src/editorFiles.ts": "fdb8750c72491cb0c39a0ea6a6a596055e406879ba4eaba1195b8b273211c90f",
+        "skill-eval/frontend/src/editorState.ts": "ad0248a26d68e46243655bbe5c47e7f3c4e4a8b2d7b81afade7adce48aa5cff9",
+        "skill-eval/frontend/src/editorYaml.ts": "ed882a3433c0042d41c0c7cf10135f0bdcf0151fbc3f0d0328e0aaa323903791",
+        "skill-eval/frontend/src/main.tsx": "fbe585aa1b80edf9228fc8b74a36960de96094e2cda3eb1b4ba6ee47c5c33d22",
+        "skill-eval/frontend/src/style.css": "70725e783f61ded555da8a5bf7e897e66091d9d6a83067405e79f4d8a05769c1",
+        "skill-eval/frontend/src/types.ts": "eb1a4ffa319ff191f5ddcf848a48e6338211755752c86b2d3a14f5db9a46759a",
+        "skill-eval/frontend/src/ui.tsx": "b26881d425434040ad09caa6fab0cedaea205e84df2a10456d5a7e2ddf2f850b",
+        "skill-eval/frontend/src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+        "skill-eval/frontend/tests/editor.test.mjs": "a2fe0e414b1d2721f7fa6e55ae29f8c0a5175a44b4126935d74a0c7994a713c6",
+        "skill-eval/frontend/tsconfig.json": "cb0e07bc843d810a05ec269e057bc221800c5b649040128acddfabea27bf2f4d",
+        "skill-eval/frontend/vite.config.ts": "94c91bf6f64b34ff15da15df6ade211dd4f6988e5fad636ffa0f156230305069",
+        "skill-eval/licenses/codex-security-Apache-2.0.txt": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+        "skill-eval/licenses/react-LICENSE.txt": "09b68db29f6ce8111f9a338181b81d82e45ee256e898bc716ac240d90551ea8e",
+        "skill-eval/licenses/react-dom-LICENSE.txt": "209df22207f05b7cc49fc1e275d68ee4950586c59ee9be343ffda2e27e1087fe",
+        "skill-eval/licenses/scheduler-LICENSE.txt": "f53e250fe3c6989cab12e8f311823b7db9970f7d4da4f7a3508360ac5b25a663",
+        "skill-eval/licenses/skill-up-Apache-2.0.txt": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+        "skill-eval/licenses/yaml-LICENSE.txt": "c0a0eb51815f04064bc182acf1b2c6fb7a5fe31c5ec5ef32de255d9de72ea501",
+        "skill-eval/pyproject.toml": "5e7739b45eddbcc998e4e462f468f051600e518e5b185930ef4ccc2281fc234f",
+        "skill-eval/tests/conftest.py": "900530a324ee91c176d8a8fb615432588ab210c16b249ba854956a7a27b7c3c1",
+        "skill-eval/tests/real_smoke.py": "a7b2ea60fb37d1137b2d48fd5ca0d1462a837e558df7ab14987579c69dd8404d",
+        "skill-eval/tests/test_backup.py": "df804cea9adbee58da7c8b1eaf58173fc806ff20ef0dddd8540346f81cb8576c",
+        "skill-eval/tests/test_deployment_security.py": "b99d7d3aae6ddc04499a9ca3673987b4c5148d8f4ef022eb1b068d2e32e9e8d6",
+        "skill-eval/tests/test_engine_process.py": "6d523595fafd2dd313fba2c11d4dc2de0ed39ad36c62fff1eec4ff442bd86464",
+        "skill-eval/tests/test_events.py": "d192252106e4c97c5a9d4488786254e3a52419de6a516d35c6091f7aaa169b9b",
+        "skill-eval/tests/test_generation.py": "58e434af9afc8fb7e8683d2df91d7cefb8dc45c5f6d33cdf659242e34c6fa681",
+        "skill-eval/tests/test_queue.py": "b8b37ca0fa7269a9720f97c810fedfbf62f3f4196874fe9d5e553e71fddf099b",
+        "skill-eval/tests/test_resources.py": "06b3008c2c3dbfd6dfa27a8208f35f6ed1d0341efd7f6bc99692728e6e7484d6",
+        "skill-eval/tests/test_results.py": "7bc356e79e5107555388e0a563df7e737dcf2ef6ff87e30fe3987eafdeb86294",
+        "skill-eval/tests/test_security.py": "366a428ea58f1b5fb1d48bbf39ce455adcd8d48a445d2d0cc414f8fedf4c80e1",
+        "skill-eval/tests/test_storage.py": "f82f7a7340dcbf5e1c413c38144ef26764a46c2d82f787e625ffa40b59db5bfe",
+        "skill-eval/tests/test_supervisor.py": "3e97c553ff2aa2adfe050674896e1e9d0a0627e58ad9693b2b415f8b6ed9dd3f",
+        "skill-eval/tests/test_worker_install.py": "5fe34065f1061f1a820342564098b1b53b2541d7624064abb59f920deaef5afb",
+        "skill-eval/tests/test_worker_runtime.py": "5e360607332932f5a5be841a048a8c73cdc77b3192c22849be683248fa9e8d74",
+        "skill-eval/uv.lock": "fb6375595e76aac221cf9d93bc02219e8ad189f0408a4f44e96ea017a5c7e089",
+        "skill-eval/vendor/skill-upper/LICENSE": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+        "skill-eval/vendor/skill-upper/SKILL.md": "5d0c34f4f58cfdce5a52aaf7690f7de46e35534ce023f15d0e663d53693bdf37",
+        "skill-eval/vendor/skill-upper/UPSTREAM.json": "dfe247097f58272a617a9c013260b7afa90b9bef0954118d47e255da3dce3370",
+        "skill-eval/vendor/skill-upper/assets/case.yaml.tmpl": "5f7d3d0945f5bd986fc7f77b1721ea9be324ebe5fc9187cdb7c8dd1d78e641f0",
+        "skill-eval/vendor/skill-upper/assets/eval.yaml.tmpl": "0c94c33f4d25a629a270ffe10af5434a645f8990d3a905fd42238516faceba39",
+        "skill-eval/vendor/skill-upper/references/case-yaml.md": "2edc8f5dee429cf7337586b120492dff1a6ac70580626844c01b4d741044585f",
+        "skill-eval/vendor/skill-upper/references/cli.md": "a11211e030158bd2f477600e6035e6d6a6f0bf0235e92f636ce4898a2de169bf",
+        "skill-eval/vendor/skill-upper/references/eval-yaml.md": "fd0dae96cad6e74fb9a6976cad43e291ff2e9cadfadda56963b634c278d059a2",
+        "skill-eval/vendor/skill-upper/references/install.md": "097a654376949c39ca807acef5cf98ed2949a3ed6b2f753875d3265f3c3b9fff",
+        "skill-eval/vendor/skill-upper/references/judge-types.md": "c70783a42d9498090c24abfe97d04186ace57f27d7d61506f57f1b95dcea1a5e",
+        "skill-eval/vendor/skill-upper/references/migrate-anthropic.md": "13832439ff65ed900dfe3f9b78f3b6a9220f1ee75349de04aa0f959ee8da9fa6",
+        "skill-eval/vendor/skill-upper/references/observations.md": "6d0c59559b3840c068994df730f093280678a6e25a9a2a3c43b5a01ca5620f89",
+        "skill-eval/worker/__init__.py": "d545d27297eee18cab383d76b98d4d050926f76d85da428115d7434eac5796e9",
+        "skill-eval/worker/__main__.py": "f9e25011296aa8c5d0437f89b11323e7267b6583aef910ba83fc23e28ae92f88",
+        "skill-eval/worker/capabilities.py": "0295da88f5a591c63de455221c278240d15bb8417bac24c052cbb9b41c98abda",
+        "skill-eval/worker/client.py": "293aa8e6a0ac2e0f933ce6077d962b070399d827a71c48960e006839855f3902",
+        "skill-eval/worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+        "skill-eval/worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+        "skill-eval/worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+        "skill-eval/worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+        "skill-eval/worker/supervisor.py": "40bac32bb8b520d0e40d2def81ed20d355b0bccdf21faa62d201ce10c8d0b7d9"
+      },
+      "reproducible_twice": true
+    },
+    "worker_packages": {
+      "macos-arm64": {
+        "file": "open-skill-eval-worker-0.1.0-macos-arm64.zip",
+        "size": 82030,
+        "sha256": "c02c5fb710acc7454138f282cab005715afcaacdd4238bf17665ffd6f4560c45",
+        "reproducible_twice": true,
+        "files": {
+          "LICENSE": "d3e79f6806a3920067b8e699ebc3b65ba34a4f8d3fe233b70d96fe1b0547bac4",
+          "THIRD-PARTY-NOTICES.md": "99107e91fca3a74a7690dce9fb181e48c03461a89bd9923166706906a1c70571",
+          "backend/__init__.py": "4b70ad67e5f1ea95aa59a167bb9d2b730e68008c1632a7cac38b61f499c59807",
+          "backend/storage.py": "a6d69b3f3408598946128c921d52fb991666da7d75ceba960d8f232511f43c83",
+          "deploy/codex/package-lock.json": "a16409d5a2288c03ab4d452d5a7b64b511059178734cf55b08a9fdcade9925c1",
+          "deploy/codex/package.json": "a33db33ba58dfb252a9bd1aac15af323ba94665b3f7bc78efc5521bf23e128af",
+          "deploy/install_tools.py": "dea77662d018430850e7df767b662865761e8b91c7f386fd0d6eb67fb6cbe884",
+          "deploy/install_worker.py": "8df908d184f6e61d5a676f02946e775937e762e423bc7550c24633a9ade4dc56",
+          "deploy/toolchain.json": "c6de14da119ad422afe19c9cc5d93382bfe174f2516250fc1c688db1282b492e",
+          "deploy/worker-requirements.txt": "eea2cfb926f86213833269116ebb4c1812f1d06cc8990e6af0017fdc489ba09d",
+          "deploy/worker-seccomp.SOURCE.json": "da5f990163655cf27667e91064049ffce892bc34363f92b7345aa75eb4b13b9c",
+          "deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+          "docs/WORKER.md": "4c55054c6e0c37fe109c52100cf3c7c24754a9825447425fa098b5a2d13074bb",
+          "licenses/codex-security-Apache-2.0.txt": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+          "licenses/react-LICENSE.txt": "09b68db29f6ce8111f9a338181b81d82e45ee256e898bc716ac240d90551ea8e",
+          "licenses/react-dom-LICENSE.txt": "209df22207f05b7cc49fc1e275d68ee4950586c59ee9be343ffda2e27e1087fe",
+          "licenses/scheduler-LICENSE.txt": "f53e250fe3c6989cab12e8f311823b7db9970f7d4da4f7a3508360ac5b25a663",
+          "licenses/skill-up-Apache-2.0.txt": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+          "licenses/yaml-LICENSE.txt": "c0a0eb51815f04064bc182acf1b2c6fb7a5fe31c5ec5ef32de255d9de72ea501",
+          "vendor/skill-upper/LICENSE": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+          "vendor/skill-upper/SKILL.md": "5d0c34f4f58cfdce5a52aaf7690f7de46e35534ce023f15d0e663d53693bdf37",
+          "vendor/skill-upper/UPSTREAM.json": "dfe247097f58272a617a9c013260b7afa90b9bef0954118d47e255da3dce3370",
+          "vendor/skill-upper/assets/case.yaml.tmpl": "5f7d3d0945f5bd986fc7f77b1721ea9be324ebe5fc9187cdb7c8dd1d78e641f0",
+          "vendor/skill-upper/assets/eval.yaml.tmpl": "0c94c33f4d25a629a270ffe10af5434a645f8990d3a905fd42238516faceba39",
+          "vendor/skill-upper/references/case-yaml.md": "2edc8f5dee429cf7337586b120492dff1a6ac70580626844c01b4d741044585f",
+          "vendor/skill-upper/references/cli.md": "a11211e030158bd2f477600e6035e6d6a6f0bf0235e92f636ce4898a2de169bf",
+          "vendor/skill-upper/references/eval-yaml.md": "fd0dae96cad6e74fb9a6976cad43e291ff2e9cadfadda56963b634c278d059a2",
+          "vendor/skill-upper/references/install.md": "097a654376949c39ca807acef5cf98ed2949a3ed6b2f753875d3265f3c3b9fff",
+          "vendor/skill-upper/references/judge-types.md": "c70783a42d9498090c24abfe97d04186ace57f27d7d61506f57f1b95dcea1a5e",
+          "vendor/skill-upper/references/migrate-anthropic.md": "13832439ff65ed900dfe3f9b78f3b6a9220f1ee75349de04aa0f959ee8da9fa6",
+          "vendor/skill-upper/references/observations.md": "6d0c59559b3840c068994df730f093280678a6e25a9a2a3c43b5a01ca5620f89",
+          "worker/__init__.py": "d545d27297eee18cab383d76b98d4d050926f76d85da428115d7434eac5796e9",
+          "worker/__main__.py": "f9e25011296aa8c5d0437f89b11323e7267b6583aef910ba83fc23e28ae92f88",
+          "worker/capabilities.py": "0295da88f5a591c63de455221c278240d15bb8417bac24c052cbb9b41c98abda",
+          "worker/client.py": "293aa8e6a0ac2e0f933ce6077d962b070399d827a71c48960e006839855f3902",
+          "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+          "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+          "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+          "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+          "worker/supervisor.py": "40bac32bb8b520d0e40d2def81ed20d355b0bccdf21faa62d201ce10c8d0b7d9",
+          "worker-package.json": "340e775db6efca4fda3ab43926e830feca249f754dbbd1d2c48b08d84dba0a04"
+        },
+        "native_model_acceptance": "PASS_SINGLE_CASE_CURRENT_ARCHIVE",
+        "fresh_installation": "PASS",
+        "native_model_cases": 1
+      },
+      "linux-x86_64": {
+        "file": "open-skill-eval-worker-0.1.0-linux-x86_64.zip",
+        "size": 82031,
+        "sha256": "51541df1513a9bb7005543e7140a5ba2ef3e014a5aca3b0d8b0e85b272301b69",
+        "reproducible_twice": true,
+        "files": {
+          "LICENSE": "d3e79f6806a3920067b8e699ebc3b65ba34a4f8d3fe233b70d96fe1b0547bac4",
+          "THIRD-PARTY-NOTICES.md": "99107e91fca3a74a7690dce9fb181e48c03461a89bd9923166706906a1c70571",
+          "backend/__init__.py": "4b70ad67e5f1ea95aa59a167bb9d2b730e68008c1632a7cac38b61f499c59807",
+          "backend/storage.py": "a6d69b3f3408598946128c921d52fb991666da7d75ceba960d8f232511f43c83",
+          "deploy/codex/package-lock.json": "a16409d5a2288c03ab4d452d5a7b64b511059178734cf55b08a9fdcade9925c1",
+          "deploy/codex/package.json": "a33db33ba58dfb252a9bd1aac15af323ba94665b3f7bc78efc5521bf23e128af",
+          "deploy/install_tools.py": "dea77662d018430850e7df767b662865761e8b91c7f386fd0d6eb67fb6cbe884",
+          "deploy/install_worker.py": "8df908d184f6e61d5a676f02946e775937e762e423bc7550c24633a9ade4dc56",
+          "deploy/toolchain.json": "c6de14da119ad422afe19c9cc5d93382bfe174f2516250fc1c688db1282b492e",
+          "deploy/worker-requirements.txt": "eea2cfb926f86213833269116ebb4c1812f1d06cc8990e6af0017fdc489ba09d",
+          "deploy/worker-seccomp.SOURCE.json": "da5f990163655cf27667e91064049ffce892bc34363f92b7345aa75eb4b13b9c",
+          "deploy/worker-seccomp.json": "4d9767cdcdc79338c0ce172baab5042d1c5a7d847a0d73a10e308f54c44a286d",
+          "docs/WORKER.md": "4c55054c6e0c37fe109c52100cf3c7c24754a9825447425fa098b5a2d13074bb",
+          "licenses/codex-security-Apache-2.0.txt": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+          "licenses/react-LICENSE.txt": "09b68db29f6ce8111f9a338181b81d82e45ee256e898bc716ac240d90551ea8e",
+          "licenses/react-dom-LICENSE.txt": "209df22207f05b7cc49fc1e275d68ee4950586c59ee9be343ffda2e27e1087fe",
+          "licenses/scheduler-LICENSE.txt": "f53e250fe3c6989cab12e8f311823b7db9970f7d4da4f7a3508360ac5b25a663",
+          "licenses/skill-up-Apache-2.0.txt": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+          "licenses/yaml-LICENSE.txt": "c0a0eb51815f04064bc182acf1b2c6fb7a5fe31c5ec5ef32de255d9de72ea501",
+          "vendor/skill-upper/LICENSE": "c417f515c774c00d0c6c8e6f84d3993c3e87c78e316fac6d03ea5606e20b683d",
+          "vendor/skill-upper/SKILL.md": "5d0c34f4f58cfdce5a52aaf7690f7de46e35534ce023f15d0e663d53693bdf37",
+          "vendor/skill-upper/UPSTREAM.json": "dfe247097f58272a617a9c013260b7afa90b9bef0954118d47e255da3dce3370",
+          "vendor/skill-upper/assets/case.yaml.tmpl": "5f7d3d0945f5bd986fc7f77b1721ea9be324ebe5fc9187cdb7c8dd1d78e641f0",
+          "vendor/skill-upper/assets/eval.yaml.tmpl": "0c94c33f4d25a629a270ffe10af5434a645f8990d3a905fd42238516faceba39",
+          "vendor/skill-upper/references/case-yaml.md": "2edc8f5dee429cf7337586b120492dff1a6ac70580626844c01b4d741044585f",
+          "vendor/skill-upper/references/cli.md": "a11211e030158bd2f477600e6035e6d6a6f0bf0235e92f636ce4898a2de169bf",
+          "vendor/skill-upper/references/eval-yaml.md": "fd0dae96cad6e74fb9a6976cad43e291ff2e9cadfadda56963b634c278d059a2",
+          "vendor/skill-upper/references/install.md": "097a654376949c39ca807acef5cf98ed2949a3ed6b2f753875d3265f3c3b9fff",
+          "vendor/skill-upper/references/judge-types.md": "c70783a42d9498090c24abfe97d04186ace57f27d7d61506f57f1b95dcea1a5e",
+          "vendor/skill-upper/references/migrate-anthropic.md": "13832439ff65ed900dfe3f9b78f3b6a9220f1ee75349de04aa0f959ee8da9fa6",
+          "vendor/skill-upper/references/observations.md": "6d0c59559b3840c068994df730f093280678a6e25a9a2a3c43b5a01ca5620f89",
+          "worker/__init__.py": "d545d27297eee18cab383d76b98d4d050926f76d85da428115d7434eac5796e9",
+          "worker/__main__.py": "f9e25011296aa8c5d0437f89b11323e7267b6583aef910ba83fc23e28ae92f88",
+          "worker/capabilities.py": "0295da88f5a591c63de455221c278240d15bb8417bac24c052cbb9b41c98abda",
+          "worker/client.py": "293aa8e6a0ac2e0f933ce6077d962b070399d827a71c48960e006839855f3902",
+          "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+          "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+          "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+          "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+          "worker/supervisor.py": "40bac32bb8b520d0e40d2def81ed20d355b0bccdf21faa62d201ce10c8d0b7d9",
+          "worker-package.json": "b9d34d09df2bcb27933af2d925917db548d103690a00d7229b59c933c451d104"
+        },
+        "native_model_acceptance": "DEFERRED_BY_USER"
+      }
+    },
+    "fixed_versions": {
+      "skill_up": "0.14.0",
+      "codex": "0.162.1"
+    },
+    "no_credentials_or_runtime_dirs": true,
+    "images": "NOT_BUILT_OR_PUBLISHED_THIS_STEP"
+  },
+  "original_main": "db4d5f36bce176714975c7f2ece1eba8211241b1",
+  "code_changed_after_candidate": "Only subsequent receipts and documentation indexes; runtime inputs remain bound to candidate commit",
+  "checks": {
+    "python_postgresql": {
+      "passed": 57,
+      "skipped": 0
+    },
+    "frontend": {
+      "passed": 23
+    },
+    "ruff": "PASS",
+    "typescript_vite": "PASS",
+    "source_scan": "PASS",
+    "diff": "PASS",
+    "external_glic_check": "NOT_AVAILABLE",
+    "external_skill_release_audit": "NOT_AVAILABLE"
+  },
+  "installer_regression": {
+    "failed_candidate_commit": "ccaf6e48c801e64b9b9117d7a79a82098ca821e5",
+    "copied_standalone_python_exit": -6,
+    "failure": "dyld cannot locate @rpath/libpython3.12.dylib",
+    "symlink_environment_python_exit": 0,
+    "new_venv_runs_python_and_private_pip": true
+  },
+  "macos_current_package": {
+    "source_commit": "21240ea3632fdddafb3f579b5527eb4444be3915",
+    "package_sha256": "c02c5fb710acc7454138f282cab005715afcaacdd4238bf17665ffd6f4560c45",
+    "installer_exit": 0,
+    "fresh_private_directory": true,
+    "python": "3.12.12",
+    "python_prefix_is_private_venv": true,
+    "worker_import_from_installed_copy": true,
+    "all_installed_worker_files_match_zip": true,
+    "checks": {
+      "skill_up": "skill-up version 0.14.0",
+      "codex": "codex-cli 0.162.1",
+      "launcher": "help exits 0"
+    },
+    "dependencies": [
+      {
+        "name": "certifi",
+        "version": "2026.10.23",
+        "license_expression": null,
+        "license": "MPL-2.0",
+        "license_files": [
+          "LICENSE"
+        ]
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9",
+        "license_expression": "BSD-3-Clause",
+        "license": null,
+        "license_files": [
+          "LICENSE.md"
+        ]
+      },
+      {
+        "name": "pip",
+        "version": "25.0.1",
+        "license_expression": null,
+        "license": "MIT",
+        "license_files": [
+          "LICENSE.txt",
+          "AUTHORS.txt"
+        ]
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0",
+        "license_expression": null,
+        "license": "MIT",
+        "license_files": [
+          "LICENSE.txt"
+        ]
+      },
+      {
+        "name": "PyYAML",
+        "version": "6.0.3",
+        "license_expression": null,
+        "license": "MIT",
+        "license_files": [
+          "LICENSE"
+        ]
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1",
+        "license_expression": null,
+        "license": "BSD-3-Clause",
+        "license_files": []
+      },
+      {
+        "name": "typing_extensions",
+        "version": "4.16.0",
+        "license_expression": "PSF-2.0",
+        "license": null,
+        "license_files": [
+          "LICENSE"
+        ]
+      },
+      {
+        "name": "anyio",
+        "version": "4.15.1",
+        "license_expression": "MIT",
+        "license": null,
+        "license_files": [
+          "LICENSE"
+        ]
+      },
+      {
+        "name": "idna",
+        "version": "3.20",
+        "license_expression": "BSD-3-Clause",
+        "license": null,
+        "license_files": [
+          "LICENSE.md"
+        ]
+      }
+    ],
+    "model_execution_at_install_checkpoint": "NOT_RUN_CURRENT_MAC_PACKAGE"
+  },
+  "export_proof": {
+    "changed_only_title": true,
+    "all_other_files_and_modes_identical": true,
+    "binary_bom_empty_and_chinese_paths_preserved": true,
+    "script_modes": [
+      493,
+      493
+    ]
+  },
+  "center_offline_before": {
+    "error": "Failed to fetch",
+    "navPresent": true
+  },
+  "center_offline_after": {
+    "error": "无法连接评测中心，请检查中心服务和网络，恢复后重试。",
+    "sessionNotInvalidated": true
+  },
+  "center_recovery": {
+    "same_worker_identity": true,
+    "same_admin_session": true,
+    "same_resource_and_enabled_suite": "8105512d-a623-4ef0-8411-984fa20d58f2",
+    "task_count": 0,
+    "failed_probe_replay_returns_cached_result": true,
+    "source_profile_restored_read_only": true
+  },
+  "invalid_login": {
+    "profile": "synthetic expired/invalid tokens in separate volume; original credentials untouched",
+    "file_detected_as_configured": true,
+    "result": {
+      "id": "12dc316d-44f0-4bc3-a543-c7fa50537e81",
+      "model": "gpt-6-luna",
+      "message": "模型请求失败，请检查 Worker 的 Codex 登录和模型名称",
+      "success": false,
+      "duration_ms": 48125,
+      "observed_model": null,
+      "observed_version": "0.162.1"
+    },
+    "not_natural_expiry": true
+  },
+  "restored_login": {
+    "id": "a8484e21-2cb8-40b7-83c3-773e8fda3595",
+    "model": "gpt-6-luna",
+    "message": "实际模型请求成功；服务端模型身份未核实",
+    "success": true,
+    "duration_ms": 23316,
+    "observed_model": null,
+    "observed_version": "0.162.1"
+  },
+  "report_selection_repro": {
+    "original_artifact_sha256": "07f3c7db1fdec4a3893d9d4f60635c605f9c16f5ebf60de4be24b9bbf002c0bf",
+    "old_suffix_result_count": 3,
+    "selected_report_path": "iteration-1/result.json",
+    "offline_reparse_verdict": "PASSED",
+    "offline_reparse_passed": 2,
+    "original_task_not_modified": true
+  },
+  "mixed_retry": {
+    "task_id": "7999c60b-fb4a-4724-82c1-ae64ceb12d42",
+    "attempts": 2,
+    "first_verdict": "INCOMPLETE",
+    "second_verdict": "PASSED",
+    "passed": 2,
+    "expected": 2,
+    "frozen_input_unchanged": true,
+    "report_path": "iteration-1/result.json",
+    "original_report_sha256": "07f3c7db1fdec4a3893d9d4f60635c605f9c16f5ebf60de4be24b9bbf002c0bf",
+    "retry_report_sha256": "596d689aa49b09fad7207c3ea38b24626ce1d1b9b10c226990e29bc7ef0ee89e",
+    "returned_manifests_independently_verified_against_raw_fixture_bytes": 2
+  },
+  "native_package_model": {
+    "task_id": "9dddb82a-e541-4d6b-9af9-f40deb5aadc0",
+    "worker_platform": "Darwin arm64",
+    "worker_matches_attempt": true,
+    "state": "SUCCEEDED",
+    "verdict": "PASSED",
+    "passed": 1,
+    "expected": 1,
+    "attempts": 1,
+    "report_path": "iteration-1/result.json",
+    "actual_model": null,
+    "host_codex_credentials_read": false
+  },
+  "native_process": {
+    "source_commit": "21240ea3632fdddafb3f579b5527eb4444be3915",
+    "package_sha256": "c02c5fb710acc7454138f282cab005715afcaacdd4238bf17665ffd6f4560c45",
+    "process_exit": 0,
+    "launcher_from_installed_zip": true,
+    "explicit_private_state_and_codex_home": true,
+    "host_codex_credentials_read": false
+  },
+  "real_tasks": [
+    {
+      "id": "9dddb82a-e541-4d6b-9af9-f40deb5aadc0",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "attempts": 1,
+      "actual_model": null,
+      "skill_version_id": "246e4ddb-5bac-4c21-a157-c828d990fec8",
+      "set_version_id": "06d4f6d1-9797-419e-a9c2-a5d4b9f80176",
+      "actual_count": null,
+      "passed": 1,
+      "failed": 0,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "91d99812-fdff-4a99-8daf-e43224ea0a3c",
+          "sha256": "2151ff3cf17d90be87a31412158f5da537484ae1bedef87d1d28253e880e33fd"
+        }
+      ]
+    },
+    {
+      "id": "7999c60b-fb4a-4724-82c1-ae64ceb12d42",
+      "kind": "evaluate",
+      "state": "SUCCEEDED",
+      "verdict": "PASSED",
+      "attempts": 2,
+      "actual_model": null,
+      "skill_version_id": "3a8226f4-f6e5-4b0f-84cc-56191579ed2d",
+      "set_version_id": "8105512d-a623-4ef0-8411-984fa20d58f2",
+      "actual_count": null,
+      "passed": 2,
+      "failed": 0,
+      "reason": null,
+      "artifacts": [
+        {
+          "id": "3b41417c-61d3-4840-bbc5-d97dd364bb18",
+          "sha256": "07f3c7db1fdec4a3893d9d4f60635c605f9c16f5ebf60de4be24b9bbf002c0bf"
+        },
+        {
+          "id": "7517f0bb-b0f1-47c2-bd9c-77f26cc48a0e",
+          "sha256": "596d689aa49b09fad7207c3ea38b24626ce1d1b9b10c226990e29bc7ef0ee89e"
+        }
+      ]
+    }
+  ],
+  "archive_images": {
+    "source_commit": "21240ea3632fdddafb3f579b5527eb4444be3915",
+    "runtime_content_matches_tested_images": true,
+    "images": {
+      "center": {
+        "tested": {
+          "image": "ose-center-candidate:20261103",
+          "image_id": "sha256:29215788957b225bce4fdad0f627f231d3efe6807006cd637d199633dd1b43c3",
+          "content": {
+            "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+            "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+            "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+            "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+            "backend/worker_routes.py": "60c25d29d21557448c5446b83548eef9f5b3d7efa182b38153bf72592ed1eeac",
+            "frontend": {
+              "index-D9o6VGwx.css": "a6743936c4b41728b2a50da8931a6822654e6a3c851ab6b3c79f01d1fc3ec3f7",
+              "index-BjAO-faE.js": "d35399df38f22ad6ab06e6677b0533ff70a641cf4895684fd375eb1ac453c637"
+            }
+          }
+        },
+        "archive": {
+          "image": "ose-center-candidate-final:20261103",
+          "image_id": "sha256:ed5ab0378790515aa3e93fe889fc14a88ff6fd287b0a6d8a14174d3648f05cef",
+          "content": {
+            "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+            "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+            "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+            "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+            "backend/worker_routes.py": "60c25d29d21557448c5446b83548eef9f5b3d7efa182b38153bf72592ed1eeac",
+            "frontend": {
+              "index-D9o6VGwx.css": "a6743936c4b41728b2a50da8931a6822654e6a3c851ab6b3c79f01d1fc3ec3f7",
+              "index-BjAO-faE.js": "d35399df38f22ad6ab06e6677b0533ff70a641cf4895684fd375eb1ac453c637"
+            }
+          }
+        }
+      },
+      "worker": {
+        "tested": {
+          "image": "ose-worker-candidate:20261103",
+          "image_id": "sha256:5b6b9a9344f1b9943f89c4a5b8478768c61820c7b156c57b63eb20e2270be982",
+          "content": {
+            "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+            "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+            "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+            "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+            "codex": "codex-cli 0.162.1",
+            "skill_up": "skill-up version 0.14.0"
+          }
+        },
+        "archive": {
+          "image": "ose-worker-candidate-final:20261103",
+          "image_id": "sha256:39e048941a431803aad38fe89360077caf7497503b50a86b833028f18365650c",
+          "content": {
+            "worker/results.py": "9848a4db5a1ceaee7d32a4911f616b1a6d10dcd61dd1215fd7599a9ba9ce176f",
+            "worker/runtime.py": "a6cd1f92c5ce34cf3db27b49d41942e57d8eb0782446d24fc8fdc28df66ef9b1",
+            "worker/engine.py": "7c44511eef908a1823b1b32d7ec65583e4e75ace3326b29735f1b00f19bed23a",
+            "worker/generate.py": "3ff88d4c1f1243a58a15e140f9dfe838ad942d8cc9d58f53bbc2fc8ca4fabe8e",
+            "codex": "codex-cli 0.162.1",
+            "skill_up": "skill-up version 0.14.0"
+          }
+        }
+      }
+    }
+  },
+  "archive_image_restart": {
+    "same_admin_session": true,
+    "task_count": 2,
+    "task_summaries_preserved": true,
+    "original_container_worker_id_preserved": true,
+    "no_new_model_tasks": true
+  },
+  "limits": [
+    "Native Linux x86_64 remains deferred; ZIP checks are static only.",
+    "Natural OAuth expiry/revocation was not reproduced; synthetic invalid credentials are a controlled failure.",
+    "Current native macOS archive model result is a single rule-based case, not a renewed three-judge matrix.",
+    "Mixed fixture scenario covers specified byte types and overrides, not every possible script/attachment combination.",
+    "No Release, tag, version bump or image push.",
+    "Actual server-side model identity remains unverified.",
+    "Model request counts are not inferred from task/attempt counts."
+  ],
+  "cleanup": {
+    "browser_space_7": "closed via finish",
+    "new_compose_services": "stopped; volumes retained",
+    "temporary_postgres": "stopped and removed",
+    "synthetic_invalid_model_volume": "removed",
+    "copied_native_model_profile": "auth/config copies removed",
+    "original_project": "kept stopped; no existing data deleted",
+    "docker_desktop": "stopped; engine/VM/UI processes and engine socket absent"
+  }
+}

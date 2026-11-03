@@ -1,26 +1,29 @@
 # LumaSkill · Skill Eval 完整交接
 
-更新时间：2026-11-03（Asia/Shanghai）。阶段进展、总结和计划以[实现进度](IMPLEMENTATION-STATUS.md)为当前索引；原始验证收据保留各自检查点。本次只核对和更新文档，没有启动本地 Docker 或重跑模型。
+更新时间：2026-11-03（Asia/Shanghai）。阶段进展、总结和计划以[实现进度](IMPLEMENTATION-STATUS.md)为当前索引；原始验证收据保留各自检查点。本轮已完成候选实物与限定边界补验：见[候选指南](RELEASE-CANDIDATE.md)和[11/03 收据](verification/local/release-candidate-2026-11-03.md)。候选源码固定为 21240ea，后续只增加收据与索引；本地 Docker 仅临时运行自己的隔离项目，结束后停止。
 
 ## 1. 接手先看这里
 
-一期主链路、重点浏览器边界和生成案例审查提示均已完成。当前进入剩余验证与发布候选准备阶段，不重做一期方案。权威仓库为 [Songhonglei/lume-skill](https://github.com/Songhonglei/lume-skill)，应用在 `skill-eval/`，不是旧 `projects/skill-eval/`。
+一期主链路、重点浏览器边界和生成案例审查提示均已完成。当前候选资料与限定补验已齐，进入发布范围审阅阶段，不重做一期方案。权威仓库为 [Songhonglei/lume-skill](https://github.com/Songhonglei/lume-skill)，应用在 `skill-eval/`，不是旧 `projects/skill-eval/`。
 
 | 事项 | 当前结论 |
 | --- | --- |
-| 最新功能提交 | `360d6fd`：生成案例明确性、非阻塞审查清单与完整判分源码入口 |
-| 最新功能 main 基线 | `b6061504be623648db5567db78de642e5a3b83af`；[PR #8](https://github.com/Songhonglei/lume-skill/pull/8) 已合并 |
-| 最新功能 main CI | [41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469)，completed / success；11/03 再次核对 |
-| 最近自动检查 | 10/31 本机 Python/PG 49 项、前端 23 项通过；Ruff、TS/Vite、扫描和完整镜像构建通过。CI 含无模型引导/重启检查 |
+| 10/31 功能提交 | `360d6fd`：生成案例明确性、非阻塞审查清单与完整判分源码入口 |
+| 10/31 功能 main 基线 | `b6061504be623648db5567db78de642e5a3b83af`；[PR #8](https://github.com/Songhonglei/lume-skill/pull/8) 已合并 |
+| 10/31 main CI | [41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469)，completed / success；11/03 再次核对 |
+| 当前候选源码 | 21240ea3632fdddafb3f579b5527eb4444be3915；源码和两平台 ZIP 摘要已绑定；Mac 当前 ZIP 新安装及原生单案例 1/1，Linux 仅静态核对 |
+| 最近自动检查 | 11/03 本机 Python/PG 57 项、前端 23 项通过；Ruff、TS/Vite、归档构建镜像与内容核对通过；本轮 CI 以 PR/Git 历史为准 |
 | 浏览器补强 | 10/28 [PR #7](https://github.com/Songhonglei/lume-skill/pull/7) 合 main `506a16e`；[CI 40719380041](https://github.com/Songhonglei/lume-skill/actions/runs/40719380041) 成功；旧快照、复用、附件及会话/离线恢复有证据 |
 | 案例质量实测 | 10/31 初次正常集 2/3 保留；错误 Skill 在同一三案例版本 0/3；最终生成两案例原样保存后 2/2。不能宣称任意生成都明确 |
 | ARM64 Docker 基线 | 10/25 三类裁判 3/3、生成/维护/启用复用、七任务配套恢复；与 10/28、10/31 收据分别理解 |
-| 当前运行状态 | 用户于 11/01 关闭 Docker Desktop，数据卷保留；11/03 无引擎/虚拟机进程。本地工作台/Worker 暂停，按需联调，不后台常驻 |
+| 当前运行状态 | 本轮仅临时启动隔离项目，原实例保持停止；验证结束后容器停止、Docker Desktop 再次关闭，按需联调，不后台常驻 |
 | 原生 Linux x86_64 | 用户暂缓，保留 NOT_RUN/PARTIAL；amd64 模拟与无模型 CI 不是原生真实模型验收 |
 | 版本与发布 | 0.1.0 开发候选，原创 MIT、第三方许可保留；没有正式 Release/GHCR 发布 |
-| 下一步 | 先整理候选资料与支持范围，再按具体缺口补脚本/附件和异常操作验证；发布范围另行确定 |
+| 下一步 | 审阅候选/发布范围草案；需要时按剩余缺口补自然授权失效等验证，正式发布版本/平台/资产由用户另行确定 |
 
 用户决定：**原生 Linux x86_64 继续暂缓。** 未经用户恢复，不安排目标机器或继续该项；该项不阻塞当前源码合并。正式 Release、镜像发布需单独确定范围。停止 Docker 保留数据不等于此后已复核卷内容；Git main 更新也不代表旧验证实例已经换成新镜像，后续启动时须核对部署来源与版本。
+
+11/03 新发现：独立 Python venv 复制解释器导致动态库路径错误、中心断网提示、模型产物 result.json 干扰标准报告识别均已修复。报告回归先红后绿，实际附件任务第一次 INCOMPLETE 保留，明确手动重试后 2/2；受控无效登录与恢复已补，不冒充自然 OAuth 到期。
 
 接手入口：[案例审查指南](CASE-REVIEW.md)、[10/31 案例明确性验证](verification/local/case-review-2026-10-31.md)、[10/28 浏览器与运行快照](verification/local/browser-boundaries-2026-10-28.md)、[10/25 Pro 模型与恢复](verification/local/pro-docker-e2e-2026-10-25.md)、[验收矩阵](verification/local/acceptance.md)。结构校验与人工审查分开，不引入自动质量通过标记，不删减断言换通过，不改写失败报告。
 
@@ -108,7 +111,7 @@ PASS 仅针对收据记录的环境、代码或安装包；本次状态整理没
 
 | 验证项 | 当前结论 | 证据与限制 |
 | --- | --- | --- |
-| main 自动检查 | PASS | 最近本机 49 项 Python/PG、23 项前端；[CI 41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469) 含测试、构建、扫描、打包和无模型引导/重启 |
+| main 自动检查 | PASS | 最近本机 57 项 Python/PG、23 项前端；[CI 41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469) 含测试、构建、扫描、打包和无模型引导/重启 |
 | x86_64 CI 容器 | PASS（无模型） | Docker 构建、空卷引导、内置 Worker、重新创建后会话与身份保持；不能代替原生 x86_64 模型验收 |
 | 编辑器新增边界 | PASS（已列场景） | [continuation](verification/local/continuation-2026-10-25.md)：异常 YAML、BOM/二进制、替换取消/确认、慢保存和旧快照、启用只读 |
 | ARM64 Docker 安全 | PASS | [docker-worker](verification/local/docker-worker-2026-10-25.md)：有限 seccomp、UID 10001、cap-drop ALL、沙箱正反检查；无 host HOME/socket |
@@ -143,13 +146,13 @@ Mac 已真实评测旧 ZIP: 4f77ebd7b6cc8266a0baac90963d10ba62dea94044e646b73994
 
 ## 5. 后续顺序与完成标准
 
-### 先做：整理发布候选资料
+### 本轮已完成：发布候选资料
 
-按[阶段计划](IMPLEMENTATION-STATUS.md)汇总候选源码/包摘要、来源许可、固定依赖、平台支持边界、安装与独立登录、备份恢复步骤和未完成项。优先处理不需要 Docker 的源码与文档；不要把 Git main 更新当作既有运行实例已更新。缺少的 glic-check/skill-release-audit 仍如实记未执行，不冒充重跑。
+候选源码、两平台 ZIP、逐文件与包摘要、当前许可元数据、平台边界、安装/登录、备份恢复和未完成项已整理，见[候选指南](RELEASE-CANDIDATE.md)。Mac 当前 ZIP 新安装和单案例 1/1、Docker 附件组合手动重试 2/2已有收据，不能将 Linux 静态打包升级为原生验收。优先处理不需要 Docker 的源码与文档；不要把 Git main 更新当作既有运行实例已更新。缺少的 glic-check/skill-release-audit 仍如实记未执行，不冒充重跑。
 
 ### 按缺口补：剩余异常操作验证
 
-10/28 已补 AC-12 的本机浏览器路径、典型附件操作、管理员会话恢复、Worker 离线恢复和端口冲突。AC-09 更多脚本/附件组合、模型凭据失效和中心不可达的完整路径仍需按具体场景补齐。每次绑定当前代码与环境，使用合成数据和隔离实例，记录失败及恢复；不重复未受改动影响的整套模型矩阵。
+11/03 另补二进制/BOM/空文件/中文路径、fixture 与 files 覆盖、脚本权限、报告识别、受控失效登录/恢复和空闲中心停启；仍未穷举所有组合或自然 OAuth 到期。10/28 已补 AC-12 的本机浏览器路径、典型附件操作、管理员会话恢复、Worker 离线恢复和端口冲突。AC-09 更多脚本/附件组合、模型凭据失效和中心不可达的完整路径仍需按具体场景补齐。每次绑定当前代码与环境，使用合成数据和隔离实例，记录失败及恢复；不重复未受改动影响的整套模型矩阵。
 
 用户已关闭本地 Docker；只在确需联调时按需启动，任务完成后停止，保留数据。源码/文档检查无需常驻 Docker。不要终止未知服务、覆写原有凭据或恢复到非空卷。
 
@@ -340,9 +343,9 @@ Docker Hub 网络问题曾使用同版本官方 ECR 镜像本地标记、Podman 
 ```text
 请接手 Songhonglei/lume-skill 的 skill-eval 项目。先读 docs/AGENT-HANDOFF.md、docs/IMPLEMENTATION-STATUS.md、README.md、docs/OPERATIONS.md 和 docs/verification/local/acceptance.md，再检查当前 main。
 
-一期四页、中心与独立 Worker 已实现。固定 skill-up 0.14.0/Codex 0.162.1；最新功能提交 360d6fd 已合 main b606150，CI 41213636469 通过。Docker Desktop 原生 ARM64 的 Pro 独立登录、三类裁判、生成维护启用复用和配套恢复有真实证据。不要重做方案或把历史失败抹掉。
+一期四页、中心与独立 Worker 已实现。固定 skill-up 0.14.0/Codex 0.162.1；10/31 功能 main b606150 的 CI 41213636469 通过；当前候选源码检查点 21240ea，本轮 PR/CI 以 Git 历史为准。Docker Desktop 原生 ARM64 的 Pro 独立登录、三类裁判、生成维护启用复用和配套恢复有真实证据。不要重做方案或把历史失败抹掉。
 
-10/28 浏览器边界与运行快照、10/31 生成案例明确性与审查提示均已有收据；最近本机后端 49 / 前端 23 项通过。最终生成两案例原样启用后 2/2，之前的 2/3 失败和错误变体在旧集 0/3 都保留。用户已关闭本地 Docker，按需联调，不后台常驻。原生 Linux x86_64 继续暂缓。下一步先整理候选资料与支持范围，再按缺口补脚本/附件、模型登录失效和中心不可达操作。正式 Release/GHCR 范围另行确定，当前不发布。
+10/28 浏览器边界与运行快照、10/31 生成案例明确性与审查提示均已有收据；最近本机后端 57 / 前端 23 项通过。候选源码/两平台 ZIP/来源许可与发布草案已整理，Mac 当前 ZIP 新安装并真实单案例 1/1；Linux ZIP 仅静态核对。最终生成两案例原样启用后 2/2，之前的 2/3 失败和错误变体在旧集 0/3 都保留。用户已关闭本地 Docker，按需联调，不后台常驻。原生 Linux x86_64 继续暂缓。下一步审阅发布范围草案，按实际缺口继续补自然授权失效和更多组合；本轮受控失效/恢复、空闲中心停启及两个脚本附件组合已补。正式 Release/GHCR 范围另行确定，当前不发布。
 
 只修改 skill-eval 及其必要工作流，保留 skill-manage 等独立项目。真实模型登录留在自己的独立 Worker 目录/卷，不读取或复制宿主 Codex 凭据，不把秘密或完整模型日志提交到 Git。原生 ARM64 通过不代表 x86_64、Podman 或正式发布通过；不关闭沙箱或提权制造通过。已有审计流程按实际可用工具执行，缺失工具如实记录。默认中文、先结果、少打扰。
 ```
