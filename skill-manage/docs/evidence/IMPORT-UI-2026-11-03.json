@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-03",
+  "version": "0.3.2.dev7",
+  "schemaVersion": 4,
+  "environment": {
+    "browser": "Ego Lite / Chromium",
+    "testInstance": "isolated synthetic fixture; no model configured",
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": [
+      390,
+      844
+    ]
+  },
+  "sourceFiles": {
+    "src/skill_mng/static/app.js": "d46c80f6a8990c5699af23d9f90c33e994d699d50c3089d7bc08dbe4fc034d0b",
+    "src/skill_mng/static/index.html": "9684084afcb0d5681e04c489b5bf079ef6067ed15536e901db2d19c196042238",
+    "src/skill_mng/static/style.css": "feb378a7cbb9ecdb83c45fff37f90fde1e9a6f16e90f97592608e3ac8b7c1505",
+    "src/skill_mng/__init__.py": "12da3dc476133778fd0305af7a9ee9ae89b4ff9355afad1e46219c6d9b210d87",
+    "pyproject.toml": "4ab6459eb0fbc293ae5e00cc1caf2925a6ab4b77e22caf4ca1071391154f83ee",
+    "uv.lock": "8275f5f3bab2f373a0c50eeb220fec605e78aac939707a8b7e6c0760bcb73014"
+  },
+  "checks": [
+    {
+      "name": "directory-selection-autostarts-upload",
+      "result": "pass",
+      "evidence": "Selecting complete directory registered ui-folder-complete without a second submit."
+    },
+    {
+      "name": "zip-selection-autostarts-upload",
+      "result": "pass",
+      "evidence": "Selecting valid ZIP registered ui-zip-complete without a second submit."
+    },
+    {
+      "name": "missing-version-draft-and-completion",
+      "result": "pass",
+      "evidence": "File selection opened required version field; completion registered 1.0.0 and kept SKILL.md bytes without a version field."
+    },
+    {
+      "name": "custom-required-validation",
+      "result": "pass",
+      "evidence": "Empty version showed inline Chinese error, aria-invalid, and focus in the themed import dialog."
+    },
+    {
+      "name": "invalid-directory-preflight",
+      "result": "pass",
+      "evidence": "Missing root SKILL.md was rejected before a request and submit disabled."
+    },
+    {
+      "name": "invalid-zip-and-reselect",
+      "result": "pass",
+      "evidence": "Real server rejected malformed ZIP; valid ZIP could then be selected and imported."
+    },
+    {
+      "name": "upload-busy-and-duplicate-submit",
+      "result": "pass",
+      "evidence": "With actual fetch deliberately held, all controls disabled, aria-busy true, Escape retained dialog, repeated requestSubmit produced exactly one request; releasing gate reused original version."
+    },
+    {
+      "name": "timeout-and-retry",
+      "result": "pass",
+      "evidence": "Transport and 120000 ms callback simulated: abort showed uncertain completion warning, restored controls; subsequent actual server retry reused original version."
+    },
+    {
+      "name": "preflight-boundaries",
+      "result": "pass",
+      "evidence": "Empty, 501 files, file >4 MiB, directory >32 MiB, ZIP >16 MiB and nested-only SKILL rejected; root SKILL accepted. Boundary objects simulated sizes; no large file was transferred."
+    },
+    {
+      "name": "themed-confirm-cancel-and-confirm",
+      "result": "pass",
+      "evidence": "Synthetic maintainer: Escape and Cancel preserved active status; confirm disabled account through real API."
+    },
+    {
+      "name": "responsive-layout",
+      "result": "pass",
+      "evidence": "390 px body width equals viewport; dialog x=16..374 and y=62..782 within 390x844. Desktop and mobile screenshots inspected."
+    },
+    {
+      "name": "registration-idempotency",
+      "result": "pass",
+      "evidence": "Three synthetic skills each remained at one version after retries and repeated identical selection."
+    }
+  ],
+  "limitations": [
+    "Directory chooser/security confirmation remains browser owned and cannot be themed or bypassed by the application. File selection was exercised through the documented setInputFiles API, not through an automated native permission prompt.",
+    "No new real model calls, deployment, package publication or cross-machine HTTPS acceptance.",
+    "179 existing Python tests passed; browser checks above cover new UI behavior and are not claimed as new CI unit tests."
+  ],
+  "screenshots": {
+    "import-metadata-desktop-2026-11-03.png": "7290d34a67318c1cce537c2b46dca73005ae83c26d5d9f37a9be80182b987f1e",
+    "import-metadata-mobile-2026-11-03.png": "43da2147e1bf7bd6c1205e5070493842c86d7101b1db395c280f8e6b784a222d",
+    "import-confirm-desktop-2026-11-03.png": "a8fe21fb240168b0c8f7196a0355307533a5c9075d82973f3c4a5ba91ca278af"
+  }
+}

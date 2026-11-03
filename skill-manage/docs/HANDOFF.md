@@ -1,8 +1,10 @@
 # Open Skill Manager 项目交接与复盘
 
-## 当前进展与阶段总结 · 2026-10-25
+## 当前进展与阶段总结 · 2026-11-03
 
-当前开发版 **0.3.2.dev6**，SQLite schema **4**。已直接进入 `main`，代码基线为 `db1f421`，PR #6 已合并；该提交的 [main CI](https://github.com/Songhonglei/lume-skill/actions/runs/40202445879) 四个环境均成功，见 [主干冻结回执](evidence/MAIN-CI-2026-10-25.json)。后续纯文档提交不改变这一代码基线的验收事实。
+当前开发版 **0.3.2.dev7**，SQLite schema **4**。2026-11-03 按页面验收反馈修复目录选择后无后续反馈的问题：ZIP/目录自动上传、清单与处理状态、补填元数据和错误重试；应用校验与操作确认使用工作台样式。浏览器自身的目录访问确认无法替换。验证与截图见 [导入反馈与应用弹窗](IMPORT-UI.md)。T06 尚未启动。
+
+此前代码基线 `db1f421` 已直接进入 `main`，PR #6 已合并；该提交的 [main CI](https://github.com/Songhonglei/lume-skill/actions/runs/40202445879) 四个环境均成功，见 [主干冻结回执](evidence/MAIN-CI-2026-10-25.json)。历史 CI 回执不代表 dev7 新提交的托管检查结果。
 
 | 工作项 | 当前状态 | 已交付与验证 |
 | --- | --- | --- |

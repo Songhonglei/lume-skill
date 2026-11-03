@@ -16,7 +16,7 @@
       <a class="brand" href="#skills"><img src="/static/icon.svg" width="28" height="28" alt=""><strong>Skill 工作台</strong></a>
       <span class="divider"></span>
       <nav aria-label="主导航"><a href="#skills" data-nav="skills">Skill 库</a><a href="#tasks" data-nav="tasks">任务</a><a href="#settings" data-nav="settings">设置</a></nav>
-      <div class="spacer"></div><span class="release">本地部署 · v0.3.2.dev6</span>
+      <div class="spacer"></div><span class="release">本地部署 · v0.3.2.dev7</span>
       <span id="account"></span><button id="logout" class="text-button">退出</button>
     </header>
     <main id="main"></main>
@@ -31,6 +31,8 @@
         <button type="button" data-mode="url" role="tab" aria-selected="false">下载链接</button>
       </div>
       <div id="import-input"></div>
+      <div id="import-selection" class="import-selection" hidden></div>
+      <p id="import-status" class="import-status" role="status" aria-live="polite"></p>
       <div id="metadata-fields" hidden>
         <p class="hint">包中缺少以下信息，补充后即可导入。</p>
         <label>名称<input name="name" placeholder="例如 hello-skill" maxlength="80"></label>

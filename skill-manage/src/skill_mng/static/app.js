@@ -5,6 +5,35 @@ const fmtDate = value => new Date(value).toLocaleString('zh-CN', {hour12:false})
 const state = {user:null, skills:[], detail:null, version:null, mode:'upload', pending:null};
 let noticeTimer;
 function notice(message) { $('#notice').textContent = message; $('#notice').hidden = false; clearTimeout(noticeTimer); noticeTimer = setTimeout(() => $('#notice').hidden = true, 4500); }
+// Keep application validation inside the themed form, without native browser bubbles.
+document.addEventListener('invalid', event => {
+  event.preventDefault();
+  const input = event.target, form = input.form;
+  if (!form) return;
+  let error = $('.error', form);
+  if (!error) { error=document.createElement('p');error.className='error';error.setAttribute('role','alert');form.append(error); }
+  const first = [...form.elements].find(field => field.willValidate && !field.validity.valid);
+  if (input !== first) return;
+  const label = input.getAttribute('aria-label') || input.closest('label')?.firstChild.textContent.trim() || '此项';
+  error.textContent = input.validity.valueMissing ? '请填写或选择'+label : input.validity.typeMismatch ? '请填写有效的'+label : input.validity.tooShort ? label+'至少需要 '+input.minLength+' 个字符' : input.validity.patternMismatch ? label+'格式不正确' : '请检查'+label+'的内容';
+  input.setAttribute('aria-invalid','true');
+  queueMicrotask(()=>input.focus());
+}, true);
+document.addEventListener('input', event => event.target.removeAttribute('aria-invalid'));
+document.addEventListener('submit', event => { const error=$('.error',event.target);if(error)error.textContent=''; }, true);
+let messageId=0;
+function confirmAction(title, message, accept='确认') {
+  return new Promise(resolve=>{
+    const dialog=document.createElement('dialog'), id='message-'+(++messageId);
+    dialog.className='message-dialog';dialog.setAttribute('aria-labelledby',id);dialog.setAttribute('aria-describedby',id+'-body');
+    dialog.innerHTML=`<form method="dialog"><div class="dialog-head"><h2 id="${id}">${escapeHTML(title)}</h2><button type="button" class="icon-button" aria-label="关闭">×</button></div><p id="${id}-body" class="dialog-message">${escapeHTML(message)}</p><div class="dialog-foot"><button type="button" data-dismiss autofocus>取消</button><button type="submit" class="primary">${escapeHTML(accept)}</button></div></form>`;
+    let confirmed=false;
+    $('form',dialog).onsubmit=event=>{event.preventDefault();confirmed=true;dialog.close();};
+    dialog.querySelectorAll('button[type=button]').forEach(button=>button.onclick=()=>dialog.close());
+    dialog.onclose=()=>{dialog.remove();resolve(confirmed);};
+    document.body.append(dialog);dialog.showModal();
+  });
+}
 async function api(path, options = {}) {
   const headers = {...options.headers};
   if (state.user?.csrf) headers['X-CSRF-Token'] = state.user.csrf;
@@ -149,8 +178,8 @@ async function openRepair() {
   const increment=value=>value.replace(/(\d+)$/,n=>(BigInt(n)+1n).toString());
   let next=increment(original);if(next===original)next=original+'.repair1';
   while(skill.versions.some(v=>v.version===next))next=increment(next);
-  const dialog=document.createElement('dialog');
-  dialog.innerHTML=`<form><div class="dialog-head"><h2>授权修复与复审</h2><button type="button" class="icon-button" aria-label="关闭">×</button></div><p>${selected.length} 个已选问题 · ${escapeHTML(skill.name)}</p><p class="info-line">只修改候选副本，原版本保留。允许修改：${files.map(escapeHTML).join('、')}；版本信息在复审前统一调整。</p><label>新版本<input name="target_version" value="${escapeHTML(next===original?original+'.repair1':next)}" required maxlength="80"></label><label class="check-row"><input type="checkbox" name="publish_after_review" checked>复审通过后登记新版本</label><label class="check-row"><input type="checkbox" name="make_current">登记后设为当前版本</label><details><summary>更多设置</summary><label>最多修复轮数<select name="max_rounds"><option value="3">3 轮</option><option value="2">2 轮</option><option value="1">1 轮</option></select></label><label>额外允许修改的文件<textarea name="allowed_paths" rows="3" placeholder="可留空；每行一个包内相对路径"></textarea></label></details><p class="hint">每轮使用新会话全量复审。遇到范围不清、额外缺陷或预算耗尽会转为待处理。未勾选的问题不加入修复授权。</p><p class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">开始修复与复审</button></div></form>`;
+  const dialog=document.createElement('dialog');dialog.setAttribute('aria-labelledby','repair-title');
+  dialog.innerHTML=`<form><div class="dialog-head"><h2 id="repair-title">授权修复与复审</h2><button type="button" class="icon-button" aria-label="关闭">×</button></div><p>${selected.length} 个已选问题 · ${escapeHTML(skill.name)}</p><p class="info-line">只修改候选副本，原版本保留。允许修改：${files.map(escapeHTML).join('、')}；版本信息在复审前统一调整。</p><label>新版本<input name="target_version" value="${escapeHTML(next===original?original+'.repair1':next)}" required maxlength="80"></label><label class="check-row"><input type="checkbox" name="publish_after_review" checked>复审通过后登记新版本</label><label class="check-row"><input type="checkbox" name="make_current">登记后设为当前版本</label><details><summary>更多设置</summary><label>最多修复轮数<select name="max_rounds"><option value="3">3 轮</option><option value="2">2 轮</option><option value="1">1 轮</option></select></label><label>额外允许修改的文件<textarea name="allowed_paths" rows="3" placeholder="可留空；每行一个包内相对路径"></textarea></label></details><p class="hint">每轮使用新会话全量复审。遇到范围不清、额外缺陷或预算耗尽会转为待处理。未勾选的问题不加入修复授权。</p><p class="error" role="alert"></p><div class="dialog-foot"><button type="submit" class="primary">开始修复与复审</button></div></form>`;
   document.body.append(dialog);dialog.showModal();dialog.onclose=()=>dialog.remove();$('button[type=button]',dialog).onclick=()=>dialog.close();
   const key=crypto.randomUUID();
   $('form',dialog).onsubmit=event=>{event.preventDefault();busy($('button[type=submit]',dialog),async()=>{try{const form=new FormData(event.target);const body={audit_run_id:audit.id,selected_ids:selected,target_version:form.get('target_version').trim(),allowed_paths:form.get('allowed_paths').split('\n').map(p=>p.trim()).filter(Boolean),max_rounds:Number(form.get('max_rounds')),publish_after_review:form.has('publish_after_review'),make_current:form.has('make_current'),idempotency_key:key};const created=await api('/repairs',{method:'POST',body});dialog.close();location.hash='#task/'+created.task_id;}catch(e){$('.error',dialog).textContent=e.message;}});};
@@ -163,8 +192,8 @@ async function repairTaskDetail(task) {
   await taskEvents(task);
 }
 async function openAudit() {
-  const dialog = document.createElement('dialog');
-  dialog.innerHTML = `<form><div class="dialog-head"><h2>创建审计</h2><button type="button" class="icon-button" aria-label="关闭">×</button></div><p class="muted">${escapeHTML(state.detail.name)} · ${escapeHTML(state.detail.versions.find(v=>v.id===state.version).version)}</p><label>审计深度<select name="depth"><option value="L1">L1 · 包内质量检查</option><option value="L2">L2 · 增加发布与外部依赖检查</option></select></label><label>审计方式<select name="mode"><option value="full">完整审计 · 需要已检测的模型</option><option value="static">静态预检 · 无需模型，不能替代完整审计</option></select></label><p class="hint">模型未就绪时，完整审计将等待配置。原包保持只读。</p><p class="error" role="alert"></p><div class="dialog-foot"><button class="primary" type="submit">创建任务</button></div></form>`;
+  const dialog = document.createElement('dialog');dialog.setAttribute('aria-labelledby','audit-title');
+  dialog.innerHTML = `<form><div class="dialog-head"><h2 id="audit-title">创建审计</h2><button type="button" class="icon-button" aria-label="关闭">×</button></div><p class="muted">${escapeHTML(state.detail.name)} · ${escapeHTML(state.detail.versions.find(v=>v.id===state.version).version)}</p><label>审计深度<select name="depth"><option value="L1">L1 · 包内质量检查</option><option value="L2">L2 · 增加发布与外部依赖检查</option></select></label><label>审计方式<select name="mode"><option value="full">完整审计 · 需要已检测的模型</option><option value="static">静态预检 · 无需模型，不能替代完整审计</option></select></label><p class="hint">模型未就绪时，完整审计将等待配置。原包保持只读。</p><p class="error" role="alert"></p><div class="dialog-foot"><button class="primary" type="submit">创建任务</button></div></form>`;
   document.body.append(dialog);dialog.showModal();dialog.onclose=()=>dialog.remove();$('button[type=button]',dialog).onclick=()=>dialog.close();
   const key = crypto.randomUUID(), version = state.version;
   $('form',dialog).onsubmit = event=>{event.preventDefault();busy($('button[type=submit]',dialog),async()=>{try{const data=Object.fromEntries(new FormData(event.target));const result=await api('/audits',{method:'POST',body:{...data,version_id:version,idempotency_key:key}});dialog.close();location.hash='#task/'+result.task_id;}catch(e){$('.error',dialog).textContent=e.message;}});};
@@ -192,48 +221,99 @@ async function renderUsers() {
   const users = await api('/users');
   $('#users').innerHTML = `<div class="table-wrap"><table><thead><tr><th>账号</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>${users.map(u => `<tr><td>${escapeHTML(u.username)}</td><td>${u.role === 'admin' ? '管理员' : '维护者'}</td><td><span class="badge ${u.active ? 'success' : 'neutral'}">${u.active ? '可用' : '已停用'}</span></td><td>${u.id===state.user.id ? '<span class="muted">当前账号</span>' : `<button class="text-button" data-user="${u.id}" data-active="${u.active ? '0' : '1'}">${u.active ? '停用' : '启用'}</button>`}</td></tr>`).join('')}</tbody></table></div>`;
 }
+function importStatus(message, busy=false) {
+  $('#import-status').textContent=message;
+  $('#import-status').classList.toggle('is-busy',busy);
+}
+function updateImportButton() {
+  const button=$('#import-form button[type=submit]');
+  button.disabled=!!state.importBusy;
+  button.textContent=state.importBusy?'正在上传并检查…':state.pending?'完成导入':state.mode==='url'?'下载并导入':'重新上传并导入';
+  if(!state.importBusy&&!state.pending&&state.mode!=='url'&&!$('#import-input input')?.files.length){button.disabled=true;button.textContent='请先选择'+(state.mode==='directory'?'目录':'ZIP 文件');}
+}
+function validateImportFiles(files, mode) {
+  if(!files.length)return '请先选择'+(mode==='directory'?'目录':'ZIP 文件');
+  const total=files.reduce((sum,file)=>sum+file.size,0);
+  if(mode!=='directory')return total>16*1024*1024?'ZIP 不能超过 16 MiB':'';
+  if(files.length>500)return '目录文件数不能超过 500';
+  if(files.some(file=>file.size>4*1024*1024))return '单文件不能超过 4 MiB';
+  if(total>32*1024*1024)return '目录内容不能超过 32 MiB';
+  const hasRootSkill=files.some(file=>{const path=file.webkitRelativePath||file.name;return path==='SKILL.md'||path.split('/').length===2&&path.endsWith('/SKILL.md');});
+  return hasRootSkill?'':'所选目录根部需要有 SKILL.md，请选择 Skill 所在目录';
+}
 function setMode(mode) {
+  if(state.importBusy)return;
   state.mode = mode; state.pending = null; $('#metadata-fields').hidden = true; $('#import-error').textContent = '';
-  document.querySelectorAll('#metadata-fields input').forEach(input => { input.required = false; input.value = ''; input.closest('label').hidden = false; });
+  $('#import-selection').hidden=true;$('#import-selection').replaceChildren();$('#import-dialog').classList.remove('has-selection');importStatus('');
+  document.querySelectorAll('#metadata-fields input').forEach(input => { input.required = false; input.value = ''; input.removeAttribute('aria-invalid'); input.closest('label').hidden = false; });
   document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
-  $('#import-input').innerHTML = mode === 'url' ? '<label>公开 ZIP 下载链接<input name="url" type="url" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">仅支持公开下载包，普通网页和内网链接无法导入。</p>' : `<div class="upload-zone"><h3>${mode === 'directory' ? '选择含 SKILL.md 的目录' : '选择 Skill ZIP 包'}</h3><input type="file" name="${mode === 'directory' ? 'files' : 'file'}" ${mode === 'directory' ? 'webkitdirectory multiple' : 'accept=".zip,application/zip"'} required aria-label="${mode === 'directory' ? '选择目录' : '选择 ZIP 文件'}"><p>ZIP 最多 16 MiB · 单文件最多 4 MiB · 最多 500 个文件</p></div>`;
+  $('#import-input').innerHTML = mode === 'url' ? '<label>公开 ZIP 下载链接<input name="url" type="url" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">仅支持公开下载包，普通网页和内网链接无法导入。</p>' : `<div class="upload-zone"><div class="upload-symbol" aria-hidden="true">↑</div><h3>${mode === 'directory' ? '选择含 SKILL.md 的目录' : '选择 Skill ZIP 包'}</h3><p>选择后自动上传并检查，无需再点一次导入。</p><label class="file-picker"><span class="file-picker-button">${mode==='directory'?'选择本地目录':'选择 ZIP 文件'}</span><input type="file" name="${mode === 'directory' ? 'files' : 'file'}" ${mode === 'directory' ? 'webkitdirectory multiple' : 'accept=".zip,application/zip"'} required aria-label="${mode === 'directory' ? '选择目录' : '选择 ZIP 文件'}"></label><p>ZIP 最多 16 MiB · 单文件最多 4 MiB · 最多 500 个文件</p>${mode==='directory'?'<p class="hint">浏览器会要求确认目录文件访问，确认后即开始上传。</p>':''}</div>`;
+  if(mode!=='url')$('#import-input input').onchange=()=>{
+    const files=[...$('#import-input input').files];
+    $('#import-error').textContent='';
+    $('#import-selection').hidden=!files.length;$('#import-dialog').classList.toggle('has-selection',!!files.length);
+    const total=files.reduce((sum,file)=>sum+file.size,0);
+    $('#import-selection').innerHTML=files.length?`<strong>已选择 ${files.length} 个文件 · ${(total/1024).toFixed(1)} KiB</strong><details><summary>查看文件清单</summary><ul>${files.slice(0,20).map(file=>`<li>${escapeHTML(file.webkitRelativePath||file.name)}</li>`).join('')}${files.length>20?`<li class="muted">还有 ${files.length-20} 个文件</li>`:''}</ul></details>`:'';
+    updateImportButton();
+    if(!files.length){importStatus('未选择文件，请重新选择。');return;}
+    const failure=validateImportFiles(files,mode);
+    if(failure){$('#import-error').textContent=failure;$('#import-form button[type=submit]').disabled=true;importStatus('尚未上传，请重新选择。');return;}
+    $('#import-form').requestSubmit();
+  };
+  updateImportButton();
 }
 function openImport(existing = false) {
   $('#import-form').reset(); setMode('upload'); state.importSkill = existing ? state.detail : null;
   $('#import-title').textContent = existing ? '导入新版本 · ' + state.detail.name : '导入 Skill';
   $('#import-dialog').showModal();
 }
+$('#import-dialog').addEventListener('cancel',event=>{if(state.importBusy)event.preventDefault();});
 $('#import-form').onsubmit = async event => {
-  event.preventDefault(); const button = $('button[type=submit]',event.target); button.disabled = true; $('#import-error').textContent = '';
+  event.preventDefault();
+  if(state.importBusy)return;
+  const form = new FormData(event.target); if (state.importSkill) form.set('name',state.importSkill.slug);
+  if (!state.pending && state.mode === 'directory') { form.delete('files'); for (const file of $('#import-input input').files) form.append('files', file, file.webkitRelativePath || file.name); }
+  state.importBusy=true;$('#import-error').textContent = '';
+  const controls=[...event.target.elements], disabled=controls.map(control=>control.disabled);
+  controls.forEach(control=>control.disabled=true);
+  $('#import-form').setAttribute('aria-busy','true');
+  importStatus(state.pending?'正在登记版本…':state.mode==='url'?'正在下载并检查包…':'正在上传并检查，请稍候…',true);updateImportButton();
+  const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),120000);
   try {
-    const form = new FormData(event.target); if (state.importSkill) form.set('name',state.importSkill.slug);
-    if (!state.pending && state.mode === 'directory') { form.delete('files'); for (const file of $('#import-input input').files) form.append('files', file, file.webkitRelativePath || file.name); }
-    const result = state.pending ? await api('/import/complete', {method:'POST',body:{import_token:state.pending, name:form.get('name') || '',version:form.get('version') || ''}}) : state.mode === 'url' ? await api('/import/url', {method:'POST',body:Object.fromEntries(form)}) : await api('/import/' + state.mode, {method:'POST',body:form});
+    const result = state.pending ? await api('/import/complete', {method:'POST',signal:controller.signal,body:{import_token:state.pending, name:form.get('name') || '',version:form.get('version') || ''}}) : state.mode === 'url' ? await api('/import/url', {method:'POST',signal:controller.signal,body:Object.fromEntries(form)}) : await api('/import/' + state.mode, {method:'POST',signal:controller.signal,body:form});
     if (result.needs_metadata) {
       state.pending = result.import_token;
-      $('#import-input input').disabled = true;
       $('#metadata-fields').hidden = false;
       for (const key of ['name','version']) { const input = $(`[name="${key}"]`, $('#metadata-fields')); input.required = result.needs_metadata.includes(key); input.closest('label').hidden = !input.required; }
-      $(`[name="${result.needs_metadata[0]}"]`, $('#metadata-fields')).focus(); return;
+      importStatus('文件已上传并检查，请补填'+result.needs_metadata.map(key=>key==='name'?'名称':'版本').join('和')+'，再点击“完成导入”。');
+      return;
     }
     $('#import-dialog').close(); notice(result.reused ? '相同内容已登记，已打开原版本' : '导入成功');
     if (location.hash === '#skill/' + result.skill_id) await detail(result.skill_id,result.version_id); else location.hash = '#skill/' + result.skill_id;
-  } catch(error) { $('#import-error').textContent = error.message; } finally { button.disabled = false; }
+  } catch(error) { $('#import-error').textContent = controller.signal.aborted?'等待导入超时，请先在 Skill 库确认是否已登记，再重试。':error.message;importStatus('导入未完成，请检查提示后重试。'); }
+  finally {
+    clearTimeout(timeout);
+    state.importBusy=false;controls.forEach((control,index)=>control.disabled=disabled[index]);
+    // Metadata inputs were enabled before the upload; lock the acquired file, not the draft fields.
+    if(state.pending)$('#import-input input').disabled=true;
+    $('#import-form').removeAttribute('aria-busy');$('#import-status').classList.remove('is-busy');updateImportButton();
+    if(state.pending&&!$('#metadata-fields').hidden)$('input:required', $('#metadata-fields'))?.focus();
+  }
 };
 document.addEventListener('click', event => {
   const button = event.target.closest('button'); if (!button) return;
   if (button.dataset.mode) return setMode(button.dataset.mode);
   if (button.dataset.file) return showFile(button.dataset.file);
-  if (button.dataset.user) return busy(button, async()=>{await api('/users/'+button.dataset.user,{method:'PATCH',body:{active:button.dataset.active==='1'}});await renderUsers();});
+  if (button.dataset.user) return busy(button, async()=>{if(button.dataset.active==='0'&&!await confirmAction('停用账号','停用后，该账号将无法登录，已有会话也会失效。','停用账号'))return;await api('/users/'+button.dataset.user,{method:'PATCH',body:{active:button.dataset.active==='1'}});await renderUsers();});
   const action = button.dataset.action;
   if (action === 'import' || action === 'import-version') openImport(action === 'import-version');
   if (action === 'audit') openAudit();
   if (action === 'repair') openRepair();
   if(button.dataset.publishRepair)busy(button,async()=>{await api('/repairs/'+button.dataset.publishRepair+'/publish',{method:'POST'});await route();notice('新版本已登记');});
   if (action === 'refresh') busy(button,route);
-  if (button.dataset.cancelTask) busy(button,async()=>{await api('/tasks/'+button.dataset.cancelTask+'/cancel',{method:'POST'});await route();});
-  if (button.dataset.revokeWorker) busy(button,async()=>{await api('/workers/'+button.dataset.revokeWorker,{method:'DELETE'});await renderWorkers();notice('接入已撤销');});
-  if (button.dataset.revokeCode) busy(button,async()=>{await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
+  if (button.dataset.cancelTask) busy(button,async()=>{if(!await confirmAction('停止任务','停止本地执行并拒收迟到结果。已发送给模型服务的请求可能仍会继续处理。','停止任务'))return;await api('/tasks/'+button.dataset.cancelTask+'/cancel',{method:'POST'});await route();});
+  if (button.dataset.revokeWorker) busy(button,async()=>{if(!await confirmAction('撤销机器接入','撤销后，这台机器将无法领取任务或提交结果。重新使用需要新的接入码。','撤销接入'))return;await api('/workers/'+button.dataset.revokeWorker,{method:'DELETE'});await renderWorkers();notice('接入已撤销');});
+  if (button.dataset.revokeCode) busy(button,async()=>{if(!await confirmAction('撤销接入码','此接入码将立即失效，需要重新生成才能接入机器。','撤销接入码'))return;await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
   if (action === 'probe-model') busy(button,async()=>{const m=await api('/model/probe',{method:'POST'});await settings();notice(m.ready?'模型能力检测通过':'检测未通过：'+m.failure_code);});
   if (['history-next','history-prev','history-refresh','history-clear'].includes(action)) busy(button,async()=>{const h=state.taskHistory;if(action==='history-next'&&h.nextCursor){h.previous.push(h.cursor);h.cursor=h.nextCursor;}else if(action==='history-prev'&&h.previous.length){h.cursor=h.previous.pop();}else if(action==='history-refresh'||action==='history-clear'){h.cursor=null;h.previous=[];if(action==='history-clear')h.filters={limit:'25'};}await taskList();window.scrollTo(0,0);});
   if (action === 'events-more') busy(button,()=>taskEvents(state.eventsTask,true));
