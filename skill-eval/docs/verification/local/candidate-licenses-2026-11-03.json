@@ -1,0 +1,366 @@
+{
+  "python": [
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.19",
+      "environment": "center-current-venv",
+      "license_expression": null,
+      "license": "MPL-2.0",
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "environment": "center-current-venv",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "fastapi",
+      "version": "0.161.1",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "environment": "center-current-venv",
+      "license_expression": null,
+      "license": "MIT",
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "environment": "center-current-venv",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "environment": "center-current-venv",
+      "license_expression": null,
+      "license": "BSD-3-Clause",
+      "license_files": []
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "environment": "center-current-venv",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.1",
+      "environment": "center-current-venv",
+      "license_expression": "Apache-2.0",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "psycopg",
+      "version": "3.3.6",
+      "environment": "center-current-venv",
+      "license_expression": "LGPL-3.0-only",
+      "license": null,
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "psycopg-binary",
+      "version": "3.3.6",
+      "environment": "center-current-venv",
+      "license_expression": "LGPL-3.0-only",
+      "license": null,
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "psycopg-pool",
+      "version": "3.3.3",
+      "environment": "center-current-venv",
+      "license_expression": "LGPL-3.0-only",
+      "license": null,
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.50.1",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "pydantic-settings",
+      "version": "2.16.1",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.4",
+      "environment": "center-current-venv",
+      "license_expression": null,
+      "license": "BSD-3-Clause",
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "environment": "center-current-venv",
+      "license_expression": "Apache-2.0",
+      "license": null,
+      "license_files": [
+        "LICENSE.txt"
+      ]
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "environment": "center-current-venv",
+      "license_expression": null,
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "starlette",
+      "version": "1.9.0",
+      "environment": "center-current-venv",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "environment": "center-current-venv",
+      "license_expression": "PSF-2.0",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "environment": "center-current-venv",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "environment": "center-current-venv",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.23",
+      "license_expression": null,
+      "license": "MPL-2.0",
+      "license_files": [
+        "LICENSE"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "pip",
+      "version": "25.0.1",
+      "license_expression": null,
+      "license": "MIT",
+      "license_files": [
+        "LICENSE.txt",
+        "AUTHORS.txt"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "license_expression": null,
+      "license": "MIT",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "license_expression": null,
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "license_expression": null,
+      "license": "BSD-3-Clause",
+      "license_files": [],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "license_expression": "PSF-2.0",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "license_expression": "MIT",
+      "license": null,
+      "license_files": [
+        "LICENSE"
+      ],
+      "environment": "candidate-macos-worker"
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "license_expression": "BSD-3-Clause",
+      "license": null,
+      "license_files": [
+        "LICENSE.md"
+      ],
+      "environment": "candidate-macos-worker"
+    }
+  ],
+  "non_applicable_center_requirements": [
+    {
+      "name": "tzdata",
+      "marker": "sys_platform == \"win32\""
+    }
+  ],
+  "frontend_runtime": [
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "license": "MIT"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.1",
+      "license": "MIT"
+    },
+    {
+      "name": "yaml",
+      "version": "2.9.1",
+      "license": "ISC"
+    },
+    {
+      "name": "react",
+      "version": "19.3.1",
+      "license": "MIT"
+    }
+  ],
+  "codex": {
+    "name": "@openai/codex",
+    "version": "0.162.1",
+    "license": "Apache-2.0"
+  },
+  "scope": "Installed metadata for applicable host requirements, with retained license files; not an external legal audit",
+  "source_commit": "21240ea3632fdddafb3f579b5527eb4444be3915"
+}

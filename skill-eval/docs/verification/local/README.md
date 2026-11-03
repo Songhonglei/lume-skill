@@ -1,5 +1,7 @@
 # 本机验收记录
 
+2026-11-03：[候选实物、安装与边界补验](release-candidate-2026-11-03.md)，含固定源码/Worker 包摘要、57/23 项检查、当前 Mac ZIP 真实 1/1、Docker 两脚本/附件组合手动重试后 2/2及原始失败、受控失效登录/恢复和中心不可达。
+
 2026-10-31：[案例明确性与审查验证](case-review-2026-10-31.md)。保留生成歧义与失败，通过非阻塞清单、完整判分源码入口和更明确的编写指令改善审查；49 项后端 / 23 项前端检查通过。
 
 更新日期：2026-11-03（Asia/Shanghai）。最新功能已合 main b606150（PR #8），[CI 41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469) 成功。本次仅整理和核对记录，本地 Docker 保持关闭。阶段总结和后续计划见 [实现进度](../../IMPLEMENTATION-STATUS.md)，逐项覆盖见 [验收矩阵](acceptance.md)。

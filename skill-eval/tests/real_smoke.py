@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from worker.engine import assemble_eval, check_versions, evaluate, isolated_environment
-from worker.results import summarize
+from worker.results import evaluation_report_path, summarize
 
 
 def main():
@@ -49,8 +49,10 @@ def main():
         frozen = frozen[:1]
     print("Starting", options.scenario, "with", len(frozen), "frozen cases", flush=True)
     code = evaluate(options.skill_up.resolve(), root / "assembled", root / "report", env, 1800)
-    files = list((root / "report").rglob("result.json"))
-    raw = json.loads(files[0].read_text()) if len(files) == 1 else None
+    reports = {path.relative_to(root / "report").as_posix(): path
+               for path in (root / "report").rglob("result.json")}
+    report_path = evaluation_report_path(reports)
+    raw = json.loads(reports[report_path].read_text()) if report_path else None
     result = summarize(raw, frozen, code)
     public = {"scenario": options.scenario, "versions": versions, "exit_code": code,
               "execution_state": result["execution_state"], "verdict": result["verdict"],

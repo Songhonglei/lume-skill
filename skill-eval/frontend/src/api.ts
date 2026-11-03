@@ -13,7 +13,13 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     const csrf = document.cookie.split('; ').find(value => value.startsWith('ose_csrf='))?.split('=')[1]
     if (csrf) headers.set('X-CSRF-Token', decodeURIComponent(csrf))
   }
-  const response = await fetch(path, { ...options, headers, credentials: 'same-origin' })
+  let response: Response
+  try {
+    response = await fetch(path, { ...options, headers, credentials: 'same-origin' })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error
+    throw new Error('无法连接评测中心，请检查中心服务和网络，恢复后重试。')
+  }
   const data = await response.json().catch(() => ({ detail: '服务暂时没有响应，请稍后重试' }))
   if (!response.ok) {
     if (response.status === 401) window.dispatchEvent(new Event('ose-auth-expired'))

@@ -15,6 +15,12 @@ from pathlib import Path
 from install_tools import install
 
 
+def create_environment(directory: Path):
+    # Standalone macOS Python resolves libpython relative to its executable.
+    # Copying that executable into a venv breaks the relative library path.
+    venv.EnvBuilder(with_pip=True, symlinks=True).create(directory)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True, help='New application directory')
@@ -48,7 +54,7 @@ def main():
         shutil.copyfile(source / 'backend' / filename, target / 'backend' / filename)
     for filename in ('worker-requirements.txt', 'toolchain.json', 'install_tools.py', 'worker-seccomp.json', 'worker-seccomp.SOURCE.json'):
         shutil.copyfile(source / 'deploy' / filename, target / 'deploy' / filename)
-    venv.EnvBuilder(with_pip=True).create(target / 'venv')
+    create_environment(target / 'venv')
     executable = target / 'venv/bin/python3'
     subprocess.run([str(executable), '-m', 'pip', 'install', '--require-hashes', '-r', str(target / 'deploy/worker-requirements.txt')], check=True)
     install(target / 'bin')
