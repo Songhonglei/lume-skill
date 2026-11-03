@@ -2,13 +2,14 @@
 
 2026-10-31：[案例明确性与审查验证](case-review-2026-10-31.md)。保留生成歧义与失败，通过非阻塞清单、完整判分源码入口和更明确的编写指令改善审查；49 项后端 / 23 项前端检查通过。
 
-更新日期：2026-10-28（Asia/Shanghai）。当前功能已合并并推送 main（78e4527 / bca9c23），CI 40203314300 成功。阶段总结和后续计划见 [实现进度](../../IMPLEMENTATION-STATUS.md)，逐项覆盖见 [验收矩阵](acceptance.md)。
+更新日期：2026-11-03（Asia/Shanghai）。最新功能已合 main b606150（PR #8），[CI 41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469) 成功。本次仅整理和核对记录，本地 Docker 保持关闭。阶段总结和后续计划见 [实现进度](../../IMPLEMENTATION-STATUS.md)，逐项覆盖见 [验收矩阵](acceptance.md)。
 
 10/28 新增 [浏览器边界、运行快照与恢复](browser-boundaries-2026-10-28.md)：三个缺陷修复、46 后端 / 23 前端测试，三个单案例真实任务与完整冻结/复用/旧报告验证；原生 x86_64 暂缓不变。下列 10/25 记录作为对应基线保留。
 
 | 当前检查点 | 结论与证据 |
 | --- | --- |
-| 源码与 main CI | [main 整合](main-integration-2026-10-25.md)、[CI 收据](main-ci-2026-10-25.json)：45 项后端、19 项前端与无模型 Docker 构建/引导/重建检查通过 |
+| 源码与 main CI | 最新功能基线 b606150，CI 41213636469 成功；10/31 本机 49 项后端、23 项前端；[10/25 整合](main-integration-2026-10-25.md)与[旧 CI 收据](main-ci-2026-10-25.json)保留为历史检查点 |
+| 案例审查 | [10/31 明确性与审查](case-review-2026-10-31.md)：六任务各一个 attempt；原始歧义/2/3 保留、旧集错误变体 0/3、最终生成两案例原样启用后 2/2 |
 | 案例编辑器 | [continuation](continuation-2026-10-25.md)：异常 YAML、附件字节、替换确认、异步保护、旧快照与只读版本 |
 | Docker 与 Worker | [docker-worker](docker-worker-2026-10-25.md)：有限沙箱、引导重启；amd64 模拟独立 ZIP 安装接入与撤销；该轮 0 次模型调用 |
 | Harness 历史连接 | [harness-gateway](harness-gateway-2026-10-25.md)：最小文本成功、Codex 通道受限；不再是当前 Pro 路径的阻断 |
