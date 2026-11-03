@@ -1,10 +1,12 @@
 # 验收矩阵
 
-更新日期：2026-10-28（Asia/Shanghai）。10/25 功能基线已合入 main（78e4527 / bca9c23），[CI 40203314300](https://github.com/Songhonglei/lume-skill/actions/runs/40203314300) 成功。当前阶段和后续计划见 [实现进度](../../IMPLEMENTATION-STATUS.md)。
+更新日期：2026-11-03（Asia/Shanghai）。最新功能基线 main `b606150`（PR #8），[CI 41213636469](https://github.com/Songhonglei/lume-skill/actions/runs/41213636469) 成功；本次仅核对状态与文档，不启动本地 Docker 或重跑模型。阶段总结和后续计划见[实现进度](../../IMPLEMENTATION-STATUS.md)。
 
 [编辑器实测](continuation-2026-10-25.md)、[Docker 安装/沙箱](docker-worker-2026-10-25.md)、[Pro Docker 模型/恢复](pro-docker-e2e-2026-10-25.md) 分别证明对应子范围。原生 ARM64 Docker 的模型链路已补齐；原生成案例 2/3 的复跑保留，明确输入后新版本两次 3/3。
 
 10/28 新证据：[浏览器边界与运行快照](browser-boundaries-2026-10-28.md)。典型附件取消/失败/异步保护、管理员会话恢复、离线引导/重连、端口占用及 AC-12 本机浏览器路径已补齐；后端 46 / 前端 23 项通过。管理员会话失效不等于模型凭据自然过期。
+
+10/31 新证据：[案例明确性与人工审查](case-review-2026-10-31.md)。49 项后端 / 23 项前端测试通过；生成与结构校验不等于质量通过。初次 2/3、错误 Skill 在旧三案例集 0/3 均保留；最终生成两案例原样保存后 2/2。本次没有将任何 PARTIAL 提升为 PASS。
 
 用户已暂缓原生 Linux x86_64 验证，维持 NOT_RUN/PARTIAL。PASS 仅针对已列环境与场景；暂缓、源码合并和无模型 CI 不代表全平台或正式发布验收通过。依据 [完整验收标准](../../ACCEPTANCE-CRITERIA.md)。原始收据的历史结论不改写。
 
@@ -41,6 +43,6 @@
 | AC-29 | PARTIAL | 10/28 验证离线队列提示/重连、端口冲突不影响原服务、管理员会话 401 重登保留草稿；历史缺登录等证据保留；模型 OAuth 到期、中心不可达等完整操作路径仍待补齐 |
 | AC-30 | PASS（已验证平台） | 原生 restore.json、Podman 历史恢复、本轮 ARM64 Docker 新项目/空卷配套恢复分别记录；后者 7 任务、报告摘要、会话、Worker 身份、模型登录和新心跳保持 |
 | AC-31 | PARTIAL（正式发布） | 历史 UGLIC/Skill 审计有收据；本轮来源、许可、固定 seccomp 摘要、人工复核和公开扫描通过；此机缺少外部审计工具，未冒充重跑，正式发布复核仍待完成 |
-| AC-32 | PARTIAL | 本轮功能 78e4527 已合 main，整合基线 bca9c23 的 CI 40203314300 成功；正式 Release、GHCR 及公开发布资产全新重装仍 NOT_RUN |
+| AC-32 | PARTIAL | 最新功能 PR #8 已合 main b606150，CI 41213636469 成功；正式 Release、GHCR 及公开发布资产全新重装仍 NOT_RUN |
 
 记录不会因前端出现、单测通过或候选 Dockerfile 存在而把未测项提升为 PASS。正式版本/镜像发布仍受 AC-27、28、31、32 及上述分支约束；源码已公开并合 main。当前交接与 CI 链接见 [AGENT-HANDOFF.md](../../AGENT-HANDOFF.md)。
