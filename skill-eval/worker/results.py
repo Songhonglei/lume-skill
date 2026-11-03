@@ -1,6 +1,15 @@
 """Map real 0.14.0 reports without confusing execution status and evaluation verdict."""
+import re
 from collections import Counter
+from collections.abc import Iterable
 from typing import Any
+
+
+def evaluation_report_path(names: Iterable[str]) -> str | None:
+    """Only engine report roots count; case workspace JSON is user output."""
+    reports = [name for name in names if name == "result.json" or
+               re.fullmatch(r"iteration-[1-9][0-9]*/result\.json", name)]
+    return reports[0] if len(reports) == 1 else None
 
 
 def summarize(raw: dict[str, Any] | None, frozen_ids: list[str], exit_code: int | None) -> dict:

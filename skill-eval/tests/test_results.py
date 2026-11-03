@@ -1,6 +1,6 @@
 import pytest
 
-from worker.results import summarize
+from worker.results import evaluation_report_path, summarize
 
 
 def row(case_id="a", status="PASS"):
@@ -26,3 +26,15 @@ def test_requested_model_is_not_actual_model():
     result = summarize({"case_results": [row()], "requested_configuration": {"model": "requested"}}, ["a"], 0)
     assert result["verdict"] == "PASSED"
     assert result["actual_model"] is None
+
+
+@pytest.mark.parametrize("paths,expected", [
+    (["iteration-1/result.json", "iteration-1/a/with_skill/outputs/workspace/result.json"],
+     "iteration-1/result.json"),
+    (["result.json"], "result.json"),
+    (["iteration-1/a/with_skill/outputs/workspace/result.json"], None),
+    (["result.json", "iteration-1/result.json"], None),
+    (["iteration-1/result.json", "iteration-2/result.json"], None),
+])
+def test_only_one_standard_report_root_is_accepted(paths, expected):
+    assert evaluation_report_path(paths) == expected

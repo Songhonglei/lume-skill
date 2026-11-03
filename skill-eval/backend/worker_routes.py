@@ -19,7 +19,7 @@ from backend.security import get_admin
 from backend.storage import unpack_zip
 from backend.validation import validate_suite
 from worker.engine import CODEX_VERSION
-from worker.results import summarize
+from worker.results import evaluation_report_path, summarize
 
 router = APIRouter(prefix="/api", tags=["workers"])
 
@@ -228,12 +228,13 @@ def complete(attempt_id: UUID, request: Request, file: Annotated[UploadFile, Fil
     cancelled = body.cancelled or task["state"] == "CANCEL_REQUESTED"
     summary, verdict = {}, None
     if task["kind"] == "evaluate":
-        reports = [value for name, value in files.items() if name == "result.json" or name.endswith("/result.json")]
+        report_path = evaluation_report_path(files)
         try:
-            raw = json.loads(reports[0].data) if len(reports) == 1 else None
+            raw = json.loads(files[report_path].data) if report_path else None
         except ValueError:
             raw = None
         summary = summarize(raw, [case["id"] for case in task["input"]["cases"]], body.exit_code)
+        summary["report_path"] = report_path
         identity_ok = (isinstance(raw, dict) and raw.get("engine_name") == "codex" and
                        isinstance(raw.get("observed_configuration"), dict) and
                        isinstance(raw.get("requested_configuration"), dict) and

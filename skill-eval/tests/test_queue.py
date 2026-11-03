@@ -4,7 +4,9 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
-from backend.storage import PackageFile, pack_zip
+import pytest
+
+from backend.storage import PackageFile, pack_zip, unpack_zip
 
 CAPABILITIES = {"skill_up_version": "0.14.0", "codex_version": "0.162.1", "login_configured": True,
                 "connection_fingerprint": "a" * 64, "connection_label": "Synthetic protocol fixture"}
@@ -125,6 +127,24 @@ def test_receipt_is_idempotent_and_report_is_sandboxed(admin):
     bundle, metadata = receipt(job)
     metadata["exit_code"] = 1
     assert complete(admin, authorization, job, bundle, metadata).status_code == 409
+
+
+@pytest.mark.parametrize("extra_path,expected", [
+    ("iteration-1/one/with_skill/outputs/workspace/result.json", "PASSED"),
+    ("iteration-2/result.json", "INCOMPLETE"),
+])
+def test_workspace_json_is_not_a_second_evaluation_report(admin, extra_path, expected):
+    _, authorization, uploaded, _ = ready(admin)
+    created = task(admin, uploaded)
+    job = claim(admin, authorization)
+    bundle, metadata = receipt(job)
+    files = unpack_zip(bundle)
+    files[extra_path] = PackageFile(b'{"case_results": [], "workspace_output": true}')
+    response = complete(admin, authorization, job, pack_zip(files), metadata)
+    assert response.status_code == 200, response.text
+    assert response.json()["summary"]["verdict"] == expected
+    detail = admin.get(f"/api/tasks/{created['id']}").json()
+    assert detail["verdict"] == expected
 
 
 def test_expired_attempt_never_overwrites_manual_retry(admin):
