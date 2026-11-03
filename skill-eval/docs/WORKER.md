@@ -18,4 +18,10 @@
 
 原生 Linux Worker 不需要 Docker。若将本包放进自己维护的 Linux 容器，Docker 默认 seccomp 可能阻止 Codex/Bubblewrap 创建命名空间。随包保留 `deploy/worker-seccomp.json`、来源摘要及许可证；在 Docker 客户端所在机器上选择该配置，同时使用 `--cap-drop ALL --security-opt no-new-privileges:true`，保持非 root。不要增加 `SYS_ADMIN`、使用特权容器或关闭 Codex 沙箱。项目 Compose 已配置这些选项。
 
-2026-10-25 的本机证据：Linux x86_64 ZIP 在 Docker Desktop amd64 模拟环境中安装、接入、重连已验证；该模拟路径安装 Codex 自身 seccomp 时返回 EINVAL，真实评测未通过。Docker Desktop 原生 arm64 Worker 的沙箱读写与保护路径检查通过，仍未补真实模型。模拟安装不代表原生 Linux x86_64 或任意 Linux 内核均已验收。完整证据保留在项目源码的验收目录，不随 Worker 安装包分发。
+平台证据分别记录：Linux x86_64 ZIP 曾在 Docker Desktop amd64 模拟环境完成安装、接入、重连，该模拟路径的 Codex seccomp EINVAL 保留；原生 Linux x86_64 的独立安装、沙箱和真实模型验收由用户暂缓。Docker Desktop 原生 arm64 的沙箱、Pro 独立登录、三类裁判、生成、复用和配套恢复已有 2026-10-25 至 10-31 实测，不能推广为此 Linux ZIP 或任意宿主均通过。重新打包仅说明新文件身份，不能沿用旧 ZIP 的安装/模型结论。源码中的 docs/verification/local 保留各检查点，完整收据不随 Worker ZIP 分发。
+
+## 候选包的身份与升级
+
+当前仍为 0.1.0 开发候选，没有正式发布资产。候选清单将源码提交、文件 SHA256 和平台实测分开记录。ZIP 内 platform 标签表示安装器目标，不是该平台验收标志。Linux x86_64 包可离线构建与核对内容，用户暂缓期间不运行其原生安装或模型验收。
+
+使用新的应用目录安装；state-dir 与独立 Codex 登录目录分别持久保存，不要复用其他正在运行的 Worker 的 state-dir。首次运行建议明确传入 --state-dir 和 --codex-home，以免读取默认用户目录。需要私有工具时用 --install-codex，不更换固定版本。

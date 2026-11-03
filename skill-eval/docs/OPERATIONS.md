@@ -1,6 +1,6 @@
 # 配置与运维
 
-当前为 0.1.0 开发候选；本机路径已验证。2026-10-25 新增 Docker Desktop arm64 的空卷引导、重启与沙箱正反检查，以及 amd64 模拟环境中的独立 Worker 安装/接入验证；真实模型与原生 Linux x86_64 仍待验收。历史 Podman 的沙箱失败和恢复证据保留。详见 [Docker 与 Worker 增量](verification/local/docker-worker-2026-10-25.md)。默认仅监听本机，不连接内部服务。
+当前为 0.1.0 开发候选，没有正式 Release/GHCR 发布。macOS 原生历史检查点与 Docker Desktop ARM64 的独立 Pro 登录、三类裁判、生成/复用和配套恢复已有实测；分别见[平台证据索引](verification/local/README.md)。原生 Linux x86_64 按用户决定暂缓，amd64 模拟的 seccomp EINVAL 与 Podman 历史沙箱故障仍保留。默认只监听本机。候选资料与部署范围见[发布候选指南](RELEASE-CANDIDATE.md)。
 
 ## 配置
 

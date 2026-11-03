@@ -12,7 +12,7 @@ Original application code is licensed under the MIT License in LICENSE. The foll
 | yaml | 2.9.1 | ISC; full text under licenses/ and frontend/public/third-party-licenses.txt |
 | Python runtime dependencies | uv.lock, deploy/requirements.txt and deploy/worker-requirements.txt | License metadata inventory in docs/verification/local/dependency-licenses.json; pip-installed distributions retain their license files in the runtime environment |
 | Build/test tools | frontend/package-lock.json and uv.lock | Development dependencies remain separately identified in lockfiles; they are not bundled as a user's installed development environment |
-| Base container images | Dockerfile and compose.yaml | Official Python, Node and PostgreSQL images retain their component licenses; container builds and redistribution are pending acceptance |
+| Base container images | Dockerfile and compose.yaml | Official Python, Node and PostgreSQL images retain their component licenses; local ARM64 builds have verification records; image publication and redistribution acceptance remain pending |
 
 The source Worker ZIP contains the application modules and vendored authoring assets, with their licenses. It does not include a Python/Node runtime or model credentials; the installer downloads dependencies into the private application directory. The installer preserves licenses delivered by those packages.
 
