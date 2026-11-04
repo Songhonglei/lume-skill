@@ -54,15 +54,39 @@ def _page(rows, limit, scope, snapshot):
     return {"items": rows, "hasMore": more, "nextCursor": cursor}
 
 
-def task_history(root, user, *, limit, cursor=None, q="", state=None, skill_id=None, kind=None):
+def _task_view(row):
+    # Drop large frozen bodies as each row is read, before collecting a history page.
+    item = dict(row)
+    raw = item.pop("result_json")
+    result = json.loads(raw) if raw else {}
+    manifest = json.loads(item.pop("manifest_json"))
+    item.update(
+        audit_mode=manifest.get("mode"),
+        score=result.get("score"),
+        max_score=result.get("maxScore"),
+        error_count=result.get("errorCount"),
+        warning_count=result.get("warningCount"),
+        review_required=result.get("reviewRequired", True),
+    )
+    return item
+
+
+def task_history(
+    root, user, *, limit, cursor=None, q="", state=None, skill_id=None, kind=None, version_id=None
+):
     q = q.strip()
-    scope = _scope(user, "tasks", [q, state, skill_id, kind])
+    scope = _scope(user, "tasks", [q, state, skill_id, kind, version_id])
     with transaction(root, write=True) as db:
         recover_expired(db)
         maximum = db.execute("SELECT COALESCE(MAX(rowid),0) FROM tasks").fetchone()[0]
         snapshot, before = _position(cursor, scope, maximum)
         clauses, args = ["t.rowid<=?", "t.rowid<?"], [snapshot, before]
-        for column, value in (("t.state", state), ("v.skill_id", skill_id), ("t.kind", kind)):
+        for column, value in (
+            ("t.state", state),
+            ("v.skill_id", skill_id),
+            ("t.kind", kind),
+            ("v.id", version_id),
+        ):
             if value:
                 clauses.append(column + "=?")
                 args.append(value)
@@ -74,13 +98,32 @@ def task_history(root, user, *, limit, cursor=None, q="", state=None, skill_id=N
                 + ")"
             )
             args.extend([query] * 4)
-        rows = db.execute(
-            "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,v.skill_id,v.version,a.verdict,a.delivery_status,r.state AS repair_state FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id WHERE "
+        joins = (
+            " FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id "
+            "LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id "
+        )
+        # Count the same filtered insertion snapshot, not just this cursor's page.
+        summary = dict(
+            db.execute(
+                "SELECT COUNT(*) AS total,COALESCE(SUM(t.state IN ('queued','running','cancelling')),0) AS active,"
+                "COALESCE(SUM(t.state IN ('failed','waiting_configuration') OR a.verdict IN ('fail','review_required','error') "
+                "OR r.state='needs_attention'),0) AS attention"
+                + joins
+                + "WHERE "
+                + " AND ".join([clauses[0], *clauses[2:]]),
+                [args[0], *args[2:]],
+            ).fetchone()
+        )
+        query = db.execute(
+            "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,v.skill_id,v.version,a.verdict,a.delivery_status,a.depth,a.result_json,t.manifest_json,r.state AS repair_state FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id WHERE "
             + " AND ".join(clauses)
             + " ORDER BY t.rowid DESC LIMIT ?",
             [*args, limit + 1],
-        ).fetchall()
-    return _page(rows, limit, scope, snapshot)
+        )
+        rows = [_task_view(row) for row in query]
+    page = _page(rows, limit, scope, snapshot)
+    page["summary"] = summary
+    return page
 
 
 def event_history(root, user, task_id, *, limit, cursor=None):

@@ -66,6 +66,8 @@ def smoke(executable: Path) -> dict:
             with client.open(base + "/") as response:
                 assert "Skill 工作台" in response.read().decode()
             with client.open(base + "/static/app.js") as response:
+                assert "function route" in response.read().decode()
+            with client.open(base + "/static/workspace.js") as response:
                 assert "function library" in response.read().decode()
             body = json.dumps({"username": "smoke", "password": password}).encode()
             request = urllib.request.Request(

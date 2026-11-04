@@ -102,3 +102,14 @@ GET /api/repairs/{id} 返回授权、状态、轮次、差异和复审；GET ...
 审计先强制读取文本证据，再输出结构化 ruleResults（每个活动规则恰一次 pass/fail/review）；状态与 findings 必须一致。覆盖和完成字段由本地控制代码归一化，不能以模型一句“通过”替代。复审使用全新模型消息，增加 scopeSatisfied/scopeReason；其身份、报告字节/摘要与候选绑定。
 
 repair_rounds 保存 candidate artifact/content、diff、review JSON/digest 和 attempt 身份。最终 Gate 检查完整 PASS、必要项无待复核、所选规则已清、授权范围通过、候选未变、报告已接收、task 成功/未取消、权限与版本基线有效，再在一个 storage.lock + SQLite 写事务内登记 plannedVersionId、最终 audit_run/findings 和 published 状态。失败不产生半登记版本。
+
+
+## dev8 工作台只读摘要
+
+- `GET /api/skills` 保留原字段，增加 `can_write`、`updated_at`、`latest_audit`。审计摘要仅来自 `current_version_id`，按审计插入顺序选择最新 run；摘要包含任务/版本身份、模式、执行状态、结论、分数/问题数及报告交付状态，不包含报告原文、模型配置或凭据。读取使用两次批量查询，不按行请求详情。
+- `GET /api/skills/{id}` 的每个版本增加对应 `latest_audit`；历史版本报告不得显示成当前版本结果。最新记录可能仍在执行、只有静态预检或待复核，不能仅凭高分显示完整 PASS。
+- `GET /api/task-history` 增加可选 `version_id`（最长 128），与其他筛选一起绑定分页游标。响应增加 `summary.total/active/attention`，统计同一插入快照的全部匹配记录，不受当前页位置影响；活动为 queued/running/cancelling，需要关注为失败、等待配置、审计 fail/review_required/error 或修复 needs_attention，统计不要求互斥。
+- 历史 item 增加审计模式、深度、分数和问题数，只返回摘要。旧的数组 `/api/tasks` 契约保持。游标作用域增加版本维度，旧作用域游标需刷新获取。
+- 页面轮询仅提供更新提示；主动刷新后获取新记录。页面显示层不改写原文、原报告摘要或审计结论；Markdown 不执行目标 HTML、脚本或远程图片，执行式 URL 不渲染。
+
+`GET /api/audits/{id}` 增加 `skill_id/registered_version/mode` 只读身份字段，原有结果与下载契约保持。复审登记的新版本可能没有单独 audit task；工作台可通过 `#audit/{id}` 直接阅读其冻结报告，不借用原版本任务或重新创建审计。

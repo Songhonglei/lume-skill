@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-04",
+  "version": "0.3.2.dev8",
+  "environment": "isolated local demo",
+  "status": "passed",
+  "checks": {
+    "drawerEvidence": true,
+    "selectionAcrossFilters": true,
+    "drawerFocusRestored": true,
+    "candidateOnlyDisablesCurrentPointer": true,
+    "versionBoundLineLink": true,
+    "mainAuditActionVisible": true,
+    "externalModelCalls": 0,
+    "versionSwitchAndCurrentSeparation": true,
+    "libraryFilterRestored": true,
+    "autoUploadAndMissingMetadata": true,
+    "importChangeResetsDraft": true,
+    "settingsGroups": true,
+    "unsavedModelDraftRetained": true,
+    "taskFilterApplied": true,
+    "backgroundUpdatePreservesFocus": true,
+    "backgroundUpdateDoesNotReplaceRows": true,
+    "explicitUpdateKeepsFilter": true,
+    "mobileFilterToggle": true,
+    "mobileDocumentWidth": 390,
+    "invalidArchiveRetry": true,
+    "metadataServerValidationRetry": true,
+    "realImportCompleted": true,
+    "syntheticZIPDropCompleted": true,
+    "importKeyboardTabs": true,
+    "standaloneFrozenReportReadable": true,
+    "readingSourceToggle": true,
+    "mobileTOCToggle": true,
+    "missingFileDoesNotShowWrongEvidence": true
+  },
+  "notes": [
+    "ZIP drop used a synthetic event with real archive bytes; native OS drag was not claimed.",
+    "No external model calls or real cross-machine HTTPS acceptance.",
+    "Standalone report route checked against an existing frozen report; no new semantic review was fabricated."
+  ]
+}

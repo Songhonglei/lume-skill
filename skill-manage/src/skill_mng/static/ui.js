@@ -1,0 +1,183 @@
+'use strict';
+
+// Shared presentation state stays separate from immutable server records.
+const view = {
+  library: {q: '', mine: false, verdict: ''},
+  positions: new Map(), versions: new Map(), readers: new Map(), selections: new Map(),
+  findingFilters: new Map(), route: '', render: 0, pollBusy: false,
+};
+
+function clearSessionView() {
+  view.modelDraft=null;view.settingsTab=null;view.selections.clear();view.positions.clear();view.versions.clear();view.findingFilters.clear();view.library={q:'',mine:false,verdict:''};++view.render;
+}
+
+function statusTone(value) {
+  if (['pass', 'published', 'online', 'saved'].includes(value)) return 'success';
+  if (['fail', 'failed', 'error', 'revoked'].includes(value)) return 'danger';
+  if (['review_required', 'needs_attention', 'waiting_configuration', 'ready'].includes(value)) return 'warning';
+  if (['running', 'editing', 'reauditing', 'cancelling', 'queued'].includes(value)) return 'active';
+  return 'neutral';
+}
+function badge(value, text) {
+  return `<span class="badge ${statusTone(value)}"><span class="status-dot" aria-hidden="true"></span>${escapeHTML(text ?? labels[value] ?? value ?? '未审计')}</span>`;
+}
+function auditBadge(audit) {
+  if (!audit) return badge('neutral', '未审计');
+  if (!['succeeded', 'failed', 'cancelled'].includes(audit.state) && audit.state) return badge(audit.state);
+  if (audit.state === 'failed' || audit.state === 'cancelled') return badge(audit.state);
+  if (audit.verdict === 'error') return badge('error');
+  // A static score must never acquire the visual meaning of a complete PASS.
+  if (audit.mode === 'static') return badge(audit.verdict === 'fail' ? 'fail' : 'review_required', audit.verdict === 'fail' ? '预检不通过' : '预检待复核');
+  return badge(audit.verdict, audit.verdict === 'pass' ? '审计通过' : undefined);
+}
+function fmtShortDate(value) {
+  return value ? new Date(value).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false}) : '—';
+}
+function liveUpdate() {
+  return '<div id="live-update" class="live-update" role="status" hidden><span>有新的执行进展，更新后查看。</span><button data-ui="apply-update">更新记录</button></div>';
+}
+function emptyState(title, message, action = '') {
+  return `<div class="empty"><img src="/static/icon.svg" width="38" height="38" alt=""><h2>${escapeHTML(title)}</h2><p>${escapeHTML(message)}</p>${action}</div>`;
+}
+function pageHeading(title, subtitle, actions = '') {
+  return `<div class="page-head"><div><h1>${escapeHTML(title)}</h1><p class="subtitle">${escapeHTML(subtitle)}</p></div><div class="actions">${actions}</div></div>${liveUpdate()}`;
+}
+function openPanel(title, content, {drawer = false, subtitle = '', className = ''} = {}) {
+  const dialog = document.createElement('dialog');
+  const opener = document.activeElement;
+  const id = 'panel-' + crypto.randomUUID();
+  dialog.className = `${drawer ? 'drawer' : 'workspace-dialog'} ${className}`;
+  dialog.setAttribute('aria-labelledby', id);
+  dialog.innerHTML = `<div class="dialog-head"><div><h2 id="${id}">${escapeHTML(title)}</h2>${subtitle ? `<p class="subtitle">${escapeHTML(subtitle)}</p>` : ''}</div><button type="button" class="icon-button" aria-label="关闭">×</button></div><div class="dialog-body">${content}</div>`;
+  $('.icon-button', dialog).onclick = () => dialog.close();
+  dialog.addEventListener('click', event => { if (event.target === dialog && event.clientX < dialog.getBoundingClientRect().left) dialog.close(); });
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    if (opener?.isConnected) opener.focus({preventScroll:true});
+  }, {once:true});
+  document.body.append(dialog);
+  dialog.showModal();
+  return dialog;
+}
+function safeMarkdownURL(raw) {
+  if (/[\u0000-\u0020\u007f]/.test(raw)) return null;
+  if (raw.startsWith('#')) return raw;
+  if (!/^https?:\/\//i.test(raw)) return null;
+  try { const url = new URL(raw); return ['https:', 'http:'].includes(url.protocol) ? url.href : null; }
+  catch { return null; }
+}
+function inlineMarkdown(text) {
+  const tokens = /`([^`\n]+)`|!\[([^\]]*)\]\(([^)]*)\)|\[([^\]]+)\]\(([^)]*)\)|\*\*([^*\n]+)\*\*/g;
+  let html = '', cursor = 0;
+  for (const match of text.matchAll(tokens)) {
+    html += escapeHTML(text.slice(cursor, match.index));
+    if (match[1] !== undefined) html += `<code>${escapeHTML(match[1])}</code>`;
+    else if (match[2] !== undefined) html += `<span class="muted">[图片：${escapeHTML(match[2] || '未显示')}，点击原文查看地址]</span>`;
+    else if (match[4] !== undefined) {
+      const url = safeMarkdownURL(match[5]);
+      html += url ? url.startsWith('#') ? `<button type="button" class="inline-anchor" data-md-anchor="${escapeHTML(url.slice(1))}">${escapeHTML(match[4])}</button>` : `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(match[4])}</a>` : escapeHTML(match[4]);
+    } else html += `<strong>${escapeHTML(match[6])}</strong>`;
+    cursor = match.index + match[0].length;
+  }
+  return html + escapeHTML(text.slice(cursor));
+}
+function renderMarkdown(source, prefix = 'document') {
+  // Render a bounded reading view. Raw HTML, remote images and executable URLs stay inert.
+  const limited = source.length > 250000;
+  const lines = source.slice(0, 250000).replace(/\r\n/g, '\n').split('\n');
+  const toc = [], out = [];
+  let i = 0;
+  if (lines[0] === '---') {
+    const end = lines.indexOf('---', 1);
+    if (end > 0 && end < 80) {
+      out.push(`<details class="frontmatter"><summary>文件元数据</summary><pre>${escapeHTML(lines.slice(1, end).join('\n'))}</pre></details>`);
+      i = end + 1;
+    }
+  }
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) { i++; continue; }
+    if (/^\s*(```|~~~)/.test(line)) {
+      const marker = line.trim().slice(0, 3), code = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith(marker)) code.push(lines[i++]);
+      out.push(`<pre><code>${escapeHTML(code.join('\n'))}</code></pre>`); i++; continue;
+    }
+    const heading = line.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      const id = `${prefix}-h-${toc.length}`, depth = heading[1].length;
+      toc.push({id, depth, title:heading[2]});
+      out.push(`<h${depth} id="${id}">${inlineMarkdown(heading[2])}</h${depth}>`); i++; continue;
+    }
+    if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) { out.push('<hr>'); i++; continue; }
+    if (i + 1 < lines.length && line.includes('|') && /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[i+1])) {
+      const cells = row => row.trim().replace(/^\||\|$/g, '').split('|').map(cell => cell.trim());
+      out.push('<div class="table-wrap"><table><thead><tr>' + cells(line).map(cell => `<th>${inlineMarkdown(cell)}</th>`).join('') + '</tr></thead><tbody>');
+      i += 2;
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim()) out.push('<tr>' + cells(lines[i++]).map(cell => `<td>${inlineMarkdown(cell)}</td>`).join('') + '</tr>');
+      out.push('</tbody></table></div>'); continue;
+    }
+    if (/^\s*[-*+]\s+/.test(line) || /^\s*\d+[.)]\s+/.test(line)) {
+      const ordered = /^\s*\d/.test(line), pattern = ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*+]\s+/;
+      const tag = ordered ? 'ol' : 'ul'; out.push(`<${tag}>`);
+      while (i < lines.length && pattern.test(lines[i])) out.push(`<li>${inlineMarkdown(lines[i++].replace(pattern, ''))}</li>`);
+      out.push(`</${tag}>`); continue;
+    }
+    if (/^>\s?/.test(line)) { out.push(`<blockquote>${inlineMarkdown(line.replace(/^>\s?/, ''))}</blockquote>`); i++; continue; }
+    const paragraph = [line]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|```|~~~|>\s|\s*[-*+]\s|\s*\d+[.)]\s)/.test(lines[i])) paragraph.push(lines[i++]);
+    out.push(`<p>${inlineMarkdown(paragraph.join('\n')).replace(/\n/g, '<br>')}</p>`);
+  }
+  if (limited) out.push('<p class="info-line">阅读视图展示前 250,000 个字符，完整内容请切换原文或下载文件。</p>');
+  return {html:out.join(''), toc};
+}
+function sourceLines(source, selected = 0, start = 1) {
+  return `<ol class="source-lines" start="${start}">${source.split('\n').map((line, index) => `<li value="${start+index}" ${start+index === selected ? 'class="highlight-line" tabindex="-1"' : ''}><code>${escapeHTML(line) || ' '}</code></li>`).join('')}</ol>`;
+}
+function mountReader(host, source, {markdown = true, line = 0, title = '文档', rawId = ''} = {}) {
+  host.classList.add('document-reader');
+  const prefix = 'reader-' + crypto.randomUUID();
+  const result = markdown ? renderMarkdown(source, prefix) : {toc:[], html:''};
+  host.innerHTML = `<div class="reader-toolbar"><span>${escapeHTML(title)}</span><div class="actions">${result.toc.length?'<button type="button" class="reader-toc-toggle" data-reader-toc aria-expanded="false">目录</button>':''}<div class="segmented" role="group" aria-label="文档显示方式">${markdown ? '<button type="button" data-reader="read" aria-pressed="true">阅读</button>' : ''}<button type="button" data-reader="source" aria-pressed="${!markdown}">原文</button></div></div></div><div class="reader-layout ${!result.toc.length ? 'no-toc' : ''}"><nav class="document-toc" aria-label="文档目录" ${!result.toc.length ? 'hidden' : ''}>${result.toc.map(item => `<button type="button" data-toc="${item.id}" class="depth-${Math.min(item.depth,3)}">${escapeHTML(item.title)}</button>`).join('')}</nav><article class="markdown" ${!markdown ? 'hidden' : ''}>${result.html}</article></div><div class="raw-document" ${rawId ? `id="${rawId}"` : ''} ${markdown ? 'hidden' : ''}>${sourceLines(source, Number(line))}</div>`;
+  const tocToggle=$('[data-reader-toc]',host);
+  if (tocToggle) tocToggle.onclick=()=>{const open=host.classList.toggle('toc-open');tocToggle.setAttribute('aria-expanded',String(open));};
+  const toggle = mode => {
+    $('.reader-layout', host).hidden = mode === 'source';
+    $('.raw-document', host).hidden = mode !== 'source';
+    host.querySelectorAll('[data-reader]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.reader === mode)));
+  };
+  host.querySelectorAll('[data-reader]').forEach(button => button.onclick = () => toggle(button.dataset.reader));
+  host.querySelectorAll('[data-toc]').forEach(button => button.onclick = () => {document.getElementById(button.dataset.toc)?.scrollIntoView({behavior:'auto',block:'start'});host.classList.remove('toc-open');tocToggle?.setAttribute('aria-expanded','false');});
+  host.querySelectorAll('[data-md-anchor]').forEach(button=>button.onclick=()=>{
+    const slug=text=>text.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu,'').trim().replace(/\s+/g,'-');
+    let target=button.dataset.mdAnchor;
+    try {target=decodeURIComponent(target);} catch {return;}
+    const heading=result.toc.find(item=>slug(item.title)===slug(target));
+    if (heading) document.getElementById(heading.id)?.scrollIntoView({block:'start'});
+  });
+  if (line) { toggle('source'); requestAnimationFrame(() => $('.highlight-line',host)?.scrollIntoView({block:'center'})); }
+}
+
+document.addEventListener('keydown',event=>{
+  const tab=event.target.closest('[role=tab]');
+  if (!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+  const tabs=[...tab.closest('[role=tablist]').querySelectorAll('[role=tab]')];
+  const current=tabs.indexOf(tab), index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(current+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+  event.preventDefault();tabs[index].focus();tabs[index].click();
+});
+document.addEventListener('click',event=>{
+  if (event.target.closest('.skip-link')) {event.preventDefault();$('#main').focus();}
+  if (!event.target.closest('.more-menu')) document.querySelectorAll('.more-menu[open]').forEach(menu=>menu.open=false);
+});
+document.addEventListener('toggle',event=>{
+  const menu=event.target;
+  if (!menu.matches('.more-menu[open]')) return;
+  document.querySelectorAll('.more-menu[open]').forEach(other=>{if(other!==menu)other.open=false;});
+  const popup=$('div',menu), rect=$('summary',menu).getBoundingClientRect();
+  popup.style.left=Math.max(12,Math.min(window.innerWidth-popup.offsetWidth-12,rect.right-popup.offsetWidth))+'px';
+  popup.style.top=Math.min(window.innerHeight-popup.offsetHeight-12,rect.bottom+6)+'px';
+},true);
+
+function closeFloatingMenus() { document.querySelectorAll('.more-menu[open]').forEach(menu=>menu.open=false); }
+window.addEventListener('scroll',closeFloatingMenus,{passive:true,capture:true});
+window.addEventListener('resize',closeFloatingMenus,{passive:true});

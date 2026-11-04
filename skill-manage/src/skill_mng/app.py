@@ -280,14 +280,9 @@ def create_app(root: Path | str | None = None) -> FastAPI:
     @app.get("/api/skills")
     def skills(user=Depends(authenticated)):
         with transaction(root) as db:
-            return [
-                dict(row)
-                for row in db.execute(
-                    "SELECT s.*,u.username AS owner,v.version AS current_version,"
-                    "(SELECT count(*) FROM versions x WHERE x.skill_id=s.id) AS version_count "
-                    "FROM skills s JOIN users u ON u.id=s.owner_id LEFT JOIN versions v ON v.id=s.current_version_id ORDER BY s.created_at DESC"
-                )
-            ]
+            from .workspace import skill_list
+
+            return skill_list(db, user)
 
     @app.get("/api/skills/{skill_id}")
     def skill_detail(skill_id: str, user=Depends(authenticated)):
@@ -300,6 +295,9 @@ def create_app(root: Path | str | None = None) -> FastAPI:
                 raise HTTPException(404, "Skill 不存在")
             result = dict(row)
             result["can_write"] = may_write(user, row)
+            from .workspace import latest_audits
+
+            audits = latest_audits(db, skill_id)
             result["versions"] = [
                 dict(v)
                 for v in db.execute(
@@ -308,6 +306,8 @@ def create_app(root: Path | str | None = None) -> FastAPI:
                     (skill_id,),
                 )
             ]
+            for version in result["versions"]:
+                version["latest_audit"] = audits.get(version["id"])
             return result
 
     @app.post("/api/import/upload")
