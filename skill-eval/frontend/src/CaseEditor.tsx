@@ -1,3 +1,4 @@
+import { ChoiceSelect } from './ChoiceSelect'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { parseDocument, stringify } from 'yaml'
 import { api, message, post } from './api'
@@ -148,12 +149,12 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
         <label className="field"><span>案例名称</span><input disabled={readonly} value={String(item.title || '')} onChange={event => setValue(['title'], event.target.value)} /></label>
         <label className="field"><span>实际输入与任务</span><textarea rows={5} disabled={readonly} value={String(item.input?.prompt || '')} onChange={event => setValue(['input', 'prompt'], event.target.value)} /><small className="muted">写清输入和边界；空字符串请明确标注。</small></label>
         <label className="field"><span>前置条件：输出需包含 <small>每行一条，选填</small></span>{simpleLines(must) ? <textarea rows={2} disabled={readonly} value={must.join('\n')} onChange={event => setValue(['expect', 'must_contain'], lines(event.target.value))} placeholder="输入必须出现在结果中的文字" /> : <span className="small-note">复杂断言请在源码中编辑。</span>}</label>
-        <div className="form-section"><h3>判分方式</h3><button className="text-button" onClick={() => { openSource(localJudge ? selected : 'evals/eval.yaml') }}>判分源码</button>{!localJudge ? <div className="callout">使用评测集裁判。<Button variant="link" disabled={readonly} onClick={() => setValue(['judge'], judge)}>单独设置</Button></div> : <><label className="field"><span>裁判</span><select disabled={readonly} value={judge.type || 'rule_based'} onChange={event => mutate(selected, document => {
+        <div className="form-section"><h3>判分方式</h3><button className="text-button" onClick={() => { openSource(localJudge ? selected : 'evals/eval.yaml') }}>判分源码</button>{!localJudge ? <div className="callout">使用评测集裁判。<Button variant="link" disabled={readonly} onClick={() => setValue(['judge'], judge)}>单独设置</Button></div> : <><div className="field"><span>裁判</span><ChoiceSelect aria-label="裁判" disabled={readonly} value={judge.type || 'rule_based'} onValueChange={value => mutate(selected, document => {
           for (const key of ['criteria', 'model', 'pass_threshold', 'script_path', 'success', 'failure']) document.deleteIn(['judge', key])
-          document.setIn(['judge', 'type'], event.target.value)
-          if (event.target.value === 'agent_judge') { document.setIn(['judge', 'model'], '__SELECT_MODEL__'); document.setIn(['judge', 'criteria'], []) }
-          if (event.target.value === 'rule_based') document.setIn(['judge', 'success'], [{ output_contains: { all: [] } }])
-        })}><option value="rule_based">规则判分</option><option value="script">脚本判分</option><option value="agent_judge">Agent 语义裁判</option></select></label>
+          document.setIn(['judge', 'type'], value)
+          if (value === 'agent_judge') { document.setIn(['judge', 'model'], '__SELECT_MODEL__'); document.setIn(['judge', 'criteria'], []) }
+          if (value === 'rule_based') document.setIn(['judge', 'success'], [{ output_contains: { all: [] } }])
+        })}><option value="rule_based">规则判分</option><option value="script">脚本判分</option><option value="agent_judge">Agent 语义裁判</option></ChoiceSelect></div>
           {judge.type === 'rule_based' && <label className="field"><span>{ruleIndex < 0 && rules.length ? '补充包含规则' : '成功条件：输出需包含'} <small>每行一条</small></span>{simpleLines(ruleValues) ? <textarea rows={3} disabled={readonly} value={ruleValues.join('\n')} onChange={event => updateRules(event.target.value)} /> : <span className="small-note">复杂规则请使用源码编辑。</span>}<small className="muted">{ruleIndex < 0 && rules.length ? '已有正则或其他判分规则未显示在此输入框；留空不会删除，请查看完整判分源码。' : '其他已有规则会保留，可在源码中查看。'}</small></label>}
           {judge.type === 'agent_judge' && <label className="field"><span>评判标准 <small>每行一条</small></span>{simpleLines(judge.criteria || []) ? <textarea rows={4} disabled={readonly} value={(judge.criteria || []).join('\n')} onChange={event => setValue(['judge', 'criteria'], lines(event.target.value))} /> : <span className="small-note">多行标准请使用源码编辑。</span>}<small className="muted">使用任务选定模型的独立会话。</small></label>}
           {judge.type === 'script' && <label className="field"><span>脚本路径</span><input disabled={readonly} value={judge.script_path || ''} onChange={event => setValue(['judge', 'script_path'], event.target.value)} placeholder="evals/fixtures/scripts/check.py" /><small className="muted">在“源码与附件”中添加脚本；退出码 0 表示通过。</small></label>}
