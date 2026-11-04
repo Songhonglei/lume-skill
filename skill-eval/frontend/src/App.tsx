@@ -74,7 +74,7 @@ export default function App() {
   const online = workers.data.filter(worker => worker.online && !worker.revoked).length
   if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
     {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button variant="link" onClick={() => location.reload()}>重试</Button>}</div> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
-  </div><p className="auth-foot">本地资源 · Codex 执行 · 可维护的评测案例</p></div>
+  </div></div>
   return <div className="app-shell"><a className="skip-link" href="#workspace-content" onClick={event => { event.preventDefault(); reveal(document.querySelector('main'), true) }}>跳到主要内容</a><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
       if (editingBusy) return
       if (dirty && !await confirm({ title: '退出工作台？', description: '当前草稿还有未保存的修改。退出后，这些修改不会保留。', confirmLabel: '放弃修改并退出' })) return

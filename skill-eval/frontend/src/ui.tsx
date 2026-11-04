@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { api, message } from './api'
 import type { ConfirmOptions, Validation } from './types'
+import { statusOf } from './presentation'
 
 export function useData<T>(path: string | null, initial: T, revision = 0, poll = 0) {
   const [state, setState] = useState({ path, data: initial, loading: !!path, error: '' })
@@ -66,10 +67,9 @@ export function Icon({ name }: { name: string }) {
   return <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{paths[name] || paths.skills}</svg>
 }
 
-const labels: Record<string, string> = { QUEUED: '等待执行', RUNNING: '执行中', CANCEL_REQUESTED: '正在取消', SUCCEEDED: '已完成', FAILED: '未通过', CANCELLED: '已取消', INTERRUPTED: '已中断', PASSED: '全部通过', INCOMPLETE: '未完整完成', DRAFT: '草稿', SAVED: '已保存', ACTIVE: '执行中', COMPLETED: '已完成', EXPIRED: '已中断' }
-export function Badge({ value, children }: { value?: string; children?: ReactNode }) {
-  const tone = value === 'PASSED' || value === 'SUCCEEDED' ? 'good' : ['FAILED', 'INTERRUPTED'].includes(value || '') ? 'bad' : ['RUNNING', 'ACTIVE', 'QUEUED', 'CANCEL_REQUESTED', 'INCOMPLETE', 'DRAFT'].includes(value || '') ? 'warm' : 'muted'
-  return <span className={`badge ${tone}`}>{children || labels[value || ''] || value || '—'}</span>
+export function Badge({ value, children, context }: { value?: string; children?: ReactNode; context?: 'execution' }) {
+  const status = statusOf(value, context)
+  return <span className={`badge ${status.tone}`}>{children || status.label}</span>
 }
 
 export function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
@@ -121,8 +121,8 @@ export function Empty({ title, description, children }: { title: string; descrip
 
 export function ValidationView({ validation, onSelectPath }: { validation?: Validation; onSelectPath?: (path: string) => void }) {
   if (!validation || validation.valid === undefined) return <p className="muted">修改后请重新校验。</p>
-  return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `结构校验通过 · ${validation.cases?.length || 0} 个案例` : '结构校验需要修复'}</Badge></div>
-    <p className="muted">仅检查格式、配置和文件引用，不执行模型或判分脚本；案例含义与断言仍需人工审查。</p>
+  return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `结构校验通过 · ${validation.cases?.length || 0} 个案例` : '结构有误'}</Badge></div>
+    <p className="muted">仅检查格式、配置和文件引用；不运行模型或脚本。案例与断言需人工审查。</p>
     {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" title="查看源码" onClick={() => onSelectPath(item.path)}><code>{item.path}</code></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul>}
     {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" title="查看源码" onClick={() => onSelectPath(item.path)}><code>{item.path}</code></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul></details>}
   </div>
