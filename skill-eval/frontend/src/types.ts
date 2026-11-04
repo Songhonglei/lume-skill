@@ -1,5 +1,5 @@
 export type Page = 'skills' | 'sets' | 'tasks' | 'settings'
-export type Selection = { skillId?: string; versionId?: string; setId?: string; taskId?: string; action?: 'import' }
+export type Selection = { skillId?: string; versionId?: string; setId?: string; setVersionId?: string; setsView?: 'history'; taskId?: string; action?: 'import' }
 export type EditorFile = { encoding: 'utf-8' | 'base64'; content: string; mode: number }
 export type EditorView = { selected: string; mode: 'form' | 'source'; sourceFile: string; scrollY: number; anchorTop?: number }
 export type Files = Record<string, EditorFile>
@@ -24,4 +24,4 @@ export type Attempt = { id: string; number: number; worker_name: string; state: 
 export type Artifact = { id: string; attempt_id: string; kind: string; html_available?: boolean; created_at: string }
 export type TaskDetail = Task & { attempts: Attempt[]; artifacts: Artifact[] }
 export type ConfirmOptions = { title: string; description: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }
-export type Common = { executionError: string; workersLoading: boolean; settingsLoading: boolean; skillsLoading: boolean; skillsError: string; confirm: (options: ConfirmOptions) => Promise<boolean>; skills: Skill[]; settings?: Settings; workers: Worker[]; selection: Selection; navigate: (page: Page, selection?: Selection) => void; refresh: () => void; revision: number; notify: (message: string, error?: boolean) => void; setDirty: (dirty: boolean) => void; setEditingBusy: (busy: boolean) => void }
+export type Common = { executionError: string; workersLoading: boolean; settingsLoading: boolean; skillsLoading: boolean; skillsError: string; confirm: (options: ConfirmOptions) => Promise<boolean>; skills: Skill[]; settings?: Settings; workers: Worker[]; selection: Selection; navigate: (page: Page, selection?: Selection, options?: { saved: true }) => void; refresh: () => void; revision: number; notify: (message: string, error?: boolean) => void; setDirty: (dirty: boolean) => void; setEditingBusy: (busy: boolean) => void }

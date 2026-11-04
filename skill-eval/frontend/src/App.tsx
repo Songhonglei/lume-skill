@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { api, message, post } from './api'
-import { Button, Dialog, Icon, useConfirm, useData } from './ui'
-import type { Common, Page, Selection, Settings, Skill, Worker } from './types'
+import { Button, Dialog, Icon, useConfirm, useData, reveal } from './ui'
+import type { Common, Page, Settings, Skill, Worker } from './types'
 import { SkillsPage } from './SkillsPage'
 import { SetsPage } from './SetsPage'
 import { TasksPage } from './TasksPage'
 import { SettingsPage } from './SettingsPage'
+import { useWorkspaceNavigation } from './useWorkspaceNavigation'
 
 const navigation: [Page, string][] = [['skills', 'Skills'], ['sets', '评测集管理'], ['tasks', '评测记录'], ['settings', '系统配置']]
 
@@ -39,8 +40,6 @@ export default function App() {
   const [expired, setExpired] = useState(false)
   const [initialError, setInitialError] = useState('')
   const [revision, setRevision] = useState(0)
-  const [tab, setTab] = useState<Page>(() => navigation.some(([page]) => page === location.hash.slice(1)) ? location.hash.slice(1) as Page : 'skills')
-  const [selection, setSelection] = useState<Selection>({})
   const [notice, setNotice] = useState<{ message: string; error: boolean } | null>(null)
   const [dirty, setDirty] = useState(false)
   const [editingBusy, setEditingBusy] = useState(false)
@@ -67,12 +66,7 @@ export default function App() {
     window.addEventListener('beforeunload', listener)
     return () => window.removeEventListener('beforeunload', listener)
   }, [dirty, editingBusy])
-  const navigate = async (page: Page, values?: Selection) => {
-    if (editingBusy) return
-    if (dirty && !await confirm({ title: '离开当前草稿？', description: '还有未保存的修改。离开后，这些修改不会保留。' })) return
-    setDirty(false); setTab(page); location.hash = page; refresh()
-    if (values) setSelection(previous => ({ ...previous, ...values }))
-  }
+  const { page: tab, selection, navigate } = useWorkspaceNavigation({ dirty, busy: editingBusy, confirm, notify, refresh, clearDirty: () => setDirty(false) })
   const skills = useData<Skill[]>(phase === 'ready' ? '/api/skills' : null, [], revision)
   const settings = useData<Settings | undefined>(phase === 'ready' ? '/api/settings' : null, undefined, revision)
   const workers = useData<Worker[]>(phase === 'ready' ? '/api/workers' : null, [], revision, phase === 'ready' ? 10000 : 0)
@@ -81,7 +75,7 @@ export default function App() {
   if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
     {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button onClick={() => location.reload()}>重新连接</Button>}</div> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
   </div><p className="auth-foot">本地资源 · Codex 执行 · 可维护的评测案例</p></div>
-  return <div className="app-shell"><a className="skip-link" href="#workspace-content">跳到主要内容</a><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
+  return <div className="app-shell"><a className="skip-link" href="#workspace-content" onClick={event => { event.preventDefault(); reveal(document.querySelector('main'), true) }}>跳到主要内容</a><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
       if (editingBusy) return
       if (dirty && !await confirm({ title: '退出工作台？', description: '当前草稿还有未保存的修改。退出后，这些修改不会保留。', confirmLabel: '放弃修改并退出' })) return
       try { await api('/api/session', { method: 'DELETE' }); setDirty(false); setPhase('login') } catch (error) { notify(message(error), true) }

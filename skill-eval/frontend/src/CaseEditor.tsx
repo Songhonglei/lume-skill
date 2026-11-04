@@ -22,12 +22,13 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
   const [validation, setValidation] = useState<Validation>(initial.validation)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [validationOpen, setValidationOpen] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const [newFile, setNewFile] = useState('')
   const [pendingAttachments, setPendingAttachments] = useState<File[] | null>(null)
   const fixture = useRef<HTMLInputElement>(null)
   const editorRoot = useRef<HTMLDivElement>(null)
   const sourcePanel = useRef<HTMLDivElement>(null)
-  const validationPanel = useRef<HTMLDivElement>(null)
   const sourceEditor = useRef<HTMLTextAreaElement>(null)
   const view = (): EditorView => ({ selected, mode, sourceFile, scrollY: window.scrollY, anchorTop: editorRoot.current?.querySelector(mode === 'form' ? '.case-form' : '.source-editor')?.getBoundingClientRect().top })
   useLayoutEffect(() => {
@@ -38,11 +39,11 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     editorRoot.current?.focus({ preventScroll: true })
   }, [])
   const focusSource = useRef(false)
-  useLayoutEffect(() => { if (mode === 'source' && focusSource.current) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false } }, [mode, sourceFile])
+  useLayoutEffect(() => { if (mode === 'source' && focusSource.current) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false } }, [mode, sourceFile, validationOpen])
   const openSource = (path: string) => {
     const target = Object.keys(files).sort((a, b) => b.length - a.length).find(file => path === file || path.startsWith(file + ':') || path.startsWith(file + '.')) || 'evals/eval.yaml'
     focusSource.current = true; setSourceFile(target); setMode('source')
-    if (mode === 'source' && sourceFile === target) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false }
+    if (!validationOpen && mode === 'source' && sourceFile === target) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false }
   }
   const readonly = version.kind !== 'DRAFT' || version.archived
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
@@ -127,13 +128,12 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     setFiles(previous => ({ ...previous, ...additions }))
     setSourceFile(Object.keys(additions)[0] || sourceFile); setDirty(true); setValidation({})
   })
-  return <div ref={editorRoot} className="case-editor" tabIndex={-1} aria-label="评测集编辑"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <span className="subtle-chip blue">当前启用</span>}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}<button className={`text-button validation-status ${validation.valid === false ? 'danger' : ''}`} onClick={() => reveal(validationPanel.current, true)}>{validation.valid === undefined ? '待校验' : validation.valid ? '结构通过' : '校验有问题'} · 查看</button></div><div className="actions wrap">
-    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const savedView = view(); const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id, savedView) })}>创建草稿后编辑</Button>{!active && !version.archived && <Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={() => action('activate', async () => { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }); common.refresh(); common.notify('这个版本已启用。') })}>启用这个版本</Button>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh() })}>校验</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
-    <MoreActions>{!readonly && <Button busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>仅保存版本</Button>}<a className="button" href={`/api/set-versions/${version.id}/export`}>{dirty ? '导出上次保存的内容' : '导出评测集'}</a>{dirty && <p className="menu-note">未保存的修改不会包含在导出中。</p>}</MoreActions>
+  return <div ref={editorRoot} className="case-editor" tabIndex={-1} aria-label="评测集编辑"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <span className="subtle-chip blue">当前启用</span>}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}<button className={`text-button validation-status ${validation.valid === false ? 'danger' : ''}`} onClick={() => setValidationOpen(true)}>{validation.valid === undefined ? '待校验' : validation.valid ? '结构通过' : '校验有问题'} · 查看</button></div><div className="actions wrap">
+    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const savedView = view(); const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id, savedView) })}>创建草稿后编辑</Button>{!active && !version.archived && <Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={() => action('activate', async () => { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }); common.refresh(); common.notify('这个版本已启用。') })}>启用这个版本</Button>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh(); if (!result.valid) setValidationOpen(true); else common.notify('结构校验通过，案例含义与判分依据仍需人工核对。') })}>校验</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
+    <MoreActions><Button onClick={() => setReviewOpen(true)}>启用前核对</Button>{!readonly && <Button busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>仅保存版本</Button>}<a className="button" href={`/api/set-versions/${version.id}/export`}>{dirty ? '导出上次保存的内容' : '导出评测集'}</a>{dirty && <p className="menu-note">未保存的修改不会包含在导出中。</p>}</MoreActions>
   </div></div>
     {error && <p className="error-text" role="alert">{error}</p>}
     {busy === 'attachment' && <p className="small-note" role="status">正在读取附件，请稍候…</p>}
-    <CaseReview />
     {readonly && <div className="readonly-banner">这是不可变的版本快照。需要调整时，请先创建草稿，历史任务不会改变。</div>}
     <fieldset className="editor-content" aria-label="案例内容" disabled={!!busy}>
     <div className="segmented"><button aria-pressed={mode === 'form'} className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button aria-pressed={mode === 'source'} className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
@@ -173,6 +173,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
       <ul>{conflictingAttachmentNames(pendingAttachments, files).map(name => <li key={name}>{name}</li>)}</ul>
       <div className="dialog-actions"><Button data-initial-focus="true" onClick={() => setPendingAttachments(null)}>取消</Button><Button variant="primary" onClick={() => { const selected = pendingAttachments; setPendingAttachments(null); void uploadAttachments(selected) }}>替换附件</Button></div>
     </Dialog>}
-    <div ref={validationPanel} className="editor-validation" tabIndex={-1} aria-label="校验结果"><h3>校验结果</h3><ValidationView validation={validation} onSelectPath={openSource} /></div>
+    {validationOpen && <Dialog title="结构校验结果" onClose={() => setValidationOpen(false)}><ValidationView validation={validation} onSelectPath={path => { setValidationOpen(false); openSource(path) }} /><div className="dialog-actions"><Button data-initial-focus="true" onClick={() => setValidationOpen(false)}>返回案例</Button></div></Dialog>}
+    {reviewOpen && <Dialog title="启用前核对" onClose={() => setReviewOpen(false)}><CaseReview expanded /><div className="dialog-actions"><Button data-initial-focus="true" onClick={() => setReviewOpen(false)}>返回案例</Button></div></Dialog>}
   </div>
 }
