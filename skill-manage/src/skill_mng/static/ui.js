@@ -34,7 +34,7 @@ async function copyText(text, title='内容', opener=document.activeElement) {
     if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
     await navigator.clipboard.writeText(text);notice(title+'已复制');
   } catch {
-    const panel=openPanel('复制'+title,'<p class="hint">浏览器未允许自动复制，请选中后复制。</p><textarea class="copy-fallback" readonly aria-label="待复制内容" rows="10"></textarea><div class="dialog-foot"><button data-copy-select>全选内容</button><button data-copy-close>完成</button></div>',{opener});
+    const panel=openPanel('复制'+title,'<p class="hint">请手动复制下方内容。</p><textarea class="copy-fallback" readonly aria-label="待复制内容" rows="10"></textarea><div class="dialog-foot"><button data-copy-select>全选</button><button data-copy-close>完成</button></div>',{opener});
     const field=$('textarea',panel);field.value=text;
     $('[data-copy-select]',panel).onclick=()=>{field.focus();field.select();};
     $('[data-copy-close]',panel).onclick=()=>panel.close();field.focus();field.select();
@@ -51,26 +51,30 @@ function statusTone(value) {
 function badge(value, text) {
   return `<span class="badge ${statusTone(value)}"><span class="status-dot" aria-hidden="true"></span>${escapeHTML(text ?? labels[value] ?? value ?? '未审计')}</span>`;
 }
+function auditConclusion(audit) {
+  if (audit.verdict === 'error') return {tone:'error',text:labels.error};
+  if (audit.mode === 'static') return audit.verdict === 'fail' ? {tone:'fail',text:'预检不通过'} : {tone:'review_required',text:'预检待复核'};
+  return {tone:audit.verdict,text:audit.verdict === 'pass' ? '审计通过' : labels[audit.verdict] || '待复核'};
+}
 function auditBadge(audit) {
   if (!audit) return badge('neutral', '未审计');
   if (!['succeeded', 'failed', 'cancelled'].includes(audit.state) && audit.state) return badge(audit.state);
   if (audit.state === 'failed' || audit.state === 'cancelled') return badge(audit.state);
-  if (audit.verdict === 'error') return badge('error');
   // A static score must never acquire the visual meaning of a complete PASS.
-  if (audit.mode === 'static') return badge(audit.verdict === 'fail' ? 'fail' : 'review_required', audit.verdict === 'fail' ? '预检不通过' : '预检待复核');
-  return badge(audit.verdict, audit.verdict === 'pass' ? '审计通过' : undefined);
+  const conclusion=auditConclusion(audit);
+  return badge(conclusion.tone,conclusion.text);
 }
 function fmtShortDate(value) {
   return value ? new Date(value).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false}) : '—';
 }
 function liveUpdate() {
-  return '<div id="live-update" class="live-update" role="status" hidden><span>有新的执行进展，更新后查看。</span><button data-ui="apply-update">更新记录</button></div>';
+  return '<div id="live-update" class="live-update" role="status" hidden><span>有新进展</span><button data-ui="apply-update">刷新</button></div>';
 }
 function emptyState(title, message, action = '') {
   return `<div class="empty"><img src="/static/icon.svg" width="38" height="38" alt=""><h2>${escapeHTML(title)}</h2><p>${escapeHTML(message)}</p>${action}</div>`;
 }
-function pageHeading(title, subtitle, actions = '') {
-  return `<div class="page-head"><div><h1>${escapeHTML(title)}</h1><p class="subtitle">${escapeHTML(subtitle)}</p></div><div class="actions">${actions}</div></div>${liveUpdate()}`;
+function pageHeading(title, subtitle = '', actions = '') {
+  return `<div class="page-head"><div><h1>${escapeHTML(title)}</h1>${subtitle ? `<p class="subtitle">${escapeHTML(subtitle)}</p>` : ''}</div><div class="actions">${actions}</div></div>${liveUpdate()}`;
 }
 function openPanel(title, content, {drawer = false, subtitle = '', className = '', opener = document.activeElement} = {}) {
   const dialog = document.createElement('dialog');
@@ -101,7 +105,7 @@ function inlineMarkdown(text) {
   for (const match of text.matchAll(tokens)) {
     html += escapeHTML(text.slice(cursor, match.index));
     if (match[1] !== undefined) html += `<code>${escapeHTML(match[1])}</code>`;
-    else if (match[2] !== undefined) html += `<span class="muted">[图片：${escapeHTML(match[2] || '未显示')}，点击原文查看地址]</span>`;
+    else if (match[2] !== undefined) html += `<span class="muted">[图片：${escapeHTML(match[2] || '未显示')}，地址见原文]</span>`;
     else if (match[4] !== undefined) {
       const url = safeMarkdownURL(match[5]);
       html += url ? url.startsWith('#') ? `<button type="button" class="inline-anchor" data-md-anchor="${escapeHTML(url.slice(1))}">${escapeHTML(match[4])}</button>` : `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(match[4])}</a>` : escapeHTML(match[4]);
@@ -119,7 +123,7 @@ function renderMarkdown(source, prefix = 'document') {
   if (lines[0] === '---') {
     const end = lines.indexOf('---', 1);
     if (end > 0 && end < 80) {
-      out.push(`<details class="frontmatter"><summary>文件元数据</summary><pre>${escapeHTML(lines.slice(1, end).join('\n'))}</pre></details>`);
+      out.push(`<details class="frontmatter"><summary>文件信息</summary><pre>${escapeHTML(lines.slice(1, end).join('\n'))}</pre></details>`);
       i = end + 1;
     }
   }
@@ -157,7 +161,7 @@ function renderMarkdown(source, prefix = 'document') {
     while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|```|~~~|>\s|\s*[-*+]\s|\s*\d+[.)]\s)/.test(lines[i])) paragraph.push(lines[i++]);
     out.push(`<p>${inlineMarkdown(paragraph.join('\n')).replace(/\n/g, '<br>')}</p>`);
   }
-  if (limited) out.push('<p class="info-line">阅读视图展示前 250,000 个字符，完整内容请切换原文或下载文件。</p>');
+  if (limited) out.push('<p class="info-line">仅显示前 250,000 个字符，完整内容见原文或下载文件。</p>');
   return {html:out.join(''), toc};
 }
 function sourceLines(source, selected = 0, start = 1) {

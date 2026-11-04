@@ -1,0 +1,33 @@
+{
+  "version": "0.3.2.dev12",
+  "environment": "isolated local demo",
+  "externalModelCalls": 0,
+  "checks": {
+    "compactLibraryAndTaskHeadings": true,
+    "frequentSkillActionsVisible": true,
+    "importDirectoryAndPublicUrlHints": true,
+    "auditHintsFollowMode": true,
+    "auditKeepsOriginalReadonly": true,
+    "taskAndReportConclusionsAgree": true,
+    "cancelledTaskAndDeliveryCopy": true,
+    "findingsDrawerAndFileEvidence": true,
+    "repairAuthorizationPreserved": true,
+    "largeRepairFileListExpandable": true,
+    "settingsAllFourTabs": true,
+    "modelProbeCostDisclosed": true,
+    "versionActionsFit1024": true,
+    "mobileLibraryNoOverflow": true,
+    "mobileAuditDialogNoOverflow": true,
+    "mobileRepairDialog": true,
+    "mobileSettingsNoOverflow": true,
+    "loginWithoutRedundantSubtitle": true,
+    "readonlyHasNoAudit": true,
+    "readonlyHasNoEmptyMoreMenu": true,
+    "emptySearchRecovery": true
+  },
+  "limits": [
+    "No external model probe, audit or repair submitted.",
+    "Repair task detail reviewed in source; no new real model lifecycle executed.",
+    "Mobile viewport emulated; no real-device or screen-reader certification."
+  ]
+}

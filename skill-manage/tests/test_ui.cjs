@@ -38,6 +38,11 @@ test('static scores never look like completed semantic PASS',()=>{
   assert.ok(!context.auditBadge({mode:'static',state:'succeeded',verdict:'pass'}).includes('success'));
   assert.match(context.auditBadge({mode:'full',state:'succeeded',verdict:'pass'}),/审计通过/);
   assert.match(context.auditBadge({mode:'full',state:'running',verdict:'pass'}),/active/);
+  assert.equal(context.auditConclusion({mode:'static',verdict:'pass'}).tone,'review_required');
+  assert.equal(context.auditConclusion({mode:'static',verdict:'pass'}).text,'预检待复核');
+  assert.equal(context.auditConclusion({mode:'static',verdict:'fail'}).tone,'fail');
+  assert.equal(context.auditConclusion({mode:'static',verdict:'error'}).tone,'error');
+  assert.equal(context.auditConclusion({mode:'full',verdict:'pass'}).tone,'pass');
 });
 test('large reading views are bounded and code line anchors escape target content',()=>{
   const result=render('content '.repeat(40000));

@@ -42,7 +42,7 @@ async function api(path, options = {}) {
   try { response=await fetch('/api'+path,{...options,headers,credentials:'same-origin'}); }
   catch { throw new Error('连接失败，请检查网络后重试'); }
   try { result=await response.json(); }
-  catch { throw new Error('服务响应暂时无法读取，请稍后重试'); }
+  catch { throw new Error('服务响应异常，请稍后重试'); }
   if (!response.ok) { if (response.status === 401 && state.user) { state.user = null; await init(); } throw new Error(typeof result.detail === 'string' ? result.detail : '输入格式不正确，请检查后重试'); }
   return result;
 }
@@ -61,7 +61,7 @@ function showGate(onboard) {
   clearSessionView();state.auditContext=null;state.detail=null;state.version=null;state.skills=[];state.taskHistory=null;state.taskEvents=null;state.enrollmentHistory=null;state.taskHistoryRequest=(state.taskHistoryRequest||0)+1;
   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
   $('#workspace').hidden = true; $('#gate').hidden = false;
-  $('#gate').innerHTML = `<div class="brand"><img src="/static/icon.svg" width="30" height="30" alt=""><strong>Skill 工作台</strong></div><h1>${onboard ? '设置你的工作台' : '登录工作台'}</h1><p class="muted">${onboard ? '创建管理员，开始管理团队的 Skill。' : '集中管理 Skill，保留每一个版本。'}</p><form id="gate-form">${onboard ? '<label>初始化凭据<input name="token" type="password" required autocomplete="off"></label><p class="hint">从服务器数据目录的 <code>run/setup-code</code> 读取。</p>' : ''}<label>账号<input name="username" required maxlength="64" autocomplete="username"></label><label>密码<input name="password" type="password" required ${onboard ? 'minlength="12"' : ''} maxlength="256" autocomplete="${onboard ? 'new-password' : 'current-password'}"></label><p class="error" id="gate-error" role="alert"></p><button class="primary" type="submit">${onboard ? '创建并进入' : '登录'}</button></form>`;
+  $('#gate').innerHTML = `<div class="brand"><img src="/static/icon.svg" width="30" height="30" alt=""><strong>Skill 工作台</strong></div><h1>${onboard ? '设置你的工作台' : '登录工作台'}</h1>${onboard ? '<p class="muted">创建管理员账号。</p>' : ''}<form id="gate-form">${onboard ? '<label>初始化码<input name="token" type="password" required autocomplete="off"></label><p class="hint">从服务器数据目录的 <code>run/setup-code</code> 读取。</p>' : ''}<label>账号<input name="username" required maxlength="64" autocomplete="username"></label><label>密码<input name="password" type="password" required ${onboard ? 'minlength="12"' : ''} maxlength="256" autocomplete="${onboard ? 'new-password' : 'current-password'}"></label><p class="error" id="gate-error" role="alert"></p><button class="primary" type="submit">${onboard ? '创建并进入' : '登录'}</button></form>`;
   $('#gate-form').onsubmit = async event => {
     event.preventDefault(); const button = $('button[type=submit]', event.target); button.disabled = true;
     try { const body = Object.fromEntries(new FormData(event.target)); if (onboard) await api('/onboard', {method:'POST',body}); state.user = await api('/login', {method:'POST',body:{username:body.username,password:body.password}}); await init(); }
@@ -128,7 +128,7 @@ function validateImportFiles(files, mode) {
   if(files.some(file=>file.size>4*1024*1024))return '单文件不能超过 4 MiB';
   if(total>32*1024*1024)return '目录内容不能超过 32 MiB';
   const hasRootSkill=files.some(file=>{const path=file.webkitRelativePath||file.name;return path==='SKILL.md'||path.split('/').length===2&&path.endsWith('/SKILL.md');});
-  return hasRootSkill?'':'所选目录根部需要有 SKILL.md，请选择 Skill 所在目录';
+  return hasRootSkill?'':'请选择根目录含 SKILL.md 的目录';
 }
 function setMode(mode) {
   if (state.importBusy) return;
@@ -139,7 +139,7 @@ function setMode(mode) {
   document.querySelectorAll('#metadata-fields input').forEach(input=>{input.required=false;input.value='';input.removeAttribute('aria-invalid');input.closest('label').hidden=false;});
   document.querySelectorAll('[data-mode]').forEach(button=>{const active=button.dataset.mode===mode;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
   $('#import-input').setAttribute('aria-labelledby','import-tab-'+mode);
-  $('#import-input').innerHTML=mode==='url'?'<label>公开 ZIP 下载链接<input name="url" type="url" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">粘贴可直接下载的公开 ZIP 地址；普通网页和内网地址无法导入。</p>':`<div class="upload-zone"><h3>${mode==='directory'?'选择 Skill 所在目录':'选择或拖入 Skill ZIP 包'}</h3><p>${mode==='directory'?'目录根部需包含 SKILL.md。':'包根部需包含 SKILL.md。'}选择后自动上传并检查。</p><label class="file-picker"><span class="file-picker-button">${mode==='directory'?'选择本地目录':'选择 ZIP 文件'}</span><input type="file" name="${mode==='directory'?'files':'file'}" ${mode==='directory'?'webkitdirectory multiple':'accept=".zip,application/zip"'} required aria-label="${mode==='directory'?'选择目录':'选择 ZIP 文件'}"></label><p>${mode==='directory'?'总计不超过 32 MiB':'ZIP 不超过 16 MiB'} · 最多 500 个文件</p></div>`;
+  $('#import-input').innerHTML=mode==='url'?'<label>ZIP 下载链接<input name="url" type="url" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">仅支持公开 ZIP 直链，不支持网页或内网地址。</p>':`<div class="upload-zone"><h3>${mode==='directory'?'选择 Skill 目录':'拖入 ZIP 包'}</h3><p>${mode==='directory'?'根目录需包含 SKILL.md。':'包内根目录需包含 SKILL.md。'}选择后自动导入。</p><label class="file-picker"><span class="file-picker-button">${mode==='directory'?'选择本地目录':'选择 ZIP 文件'}</span><input type="file" name="${mode==='directory'?'files':'file'}" ${mode==='directory'?'webkitdirectory multiple':'accept=".zip,application/zip"'} required aria-label="${mode==='directory'?'选择目录':'选择 ZIP 文件'}"></label><p>${mode==='directory'?'总计不超过 32 MiB':'ZIP 不超过 16 MiB'} · 最多 500 个文件</p></div>`;
   if (mode!=='url') {
     const input=$('#import-input input');
     input.onchange=()=>acceptImportSelection([...input.files],mode);
@@ -180,7 +180,7 @@ $('#import-form').onsubmit = async event => {
   const controls=[...event.target.elements], disabled=controls.map(control=>control.disabled);
   controls.forEach(control=>control.disabled=true);
   $('#import-form').setAttribute('aria-busy','true');
-  importStatus(state.pending?'正在登记版本…':state.mode==='url'?'正在下载并检查包…':'正在上传并检查，请稍候…',true);updateImportButton();
+  importStatus(state.pending?'正在登记版本…':state.mode==='url'?'正在下载并检查包…':'正在上传并检查…',true);updateImportButton();
   const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),120000);
   try {
     const result = state.pending ? await api('/import/complete', {method:'POST',signal:controller.signal,body:{import_token:state.pending, name:form.get('name') || '',version:form.get('version') || ''}}) : state.mode === 'url' ? await api('/import/url', {method:'POST',signal:controller.signal,body:Object.fromEntries(form)}) : await api('/import/' + state.mode, {method:'POST',signal:controller.signal,body:form});
@@ -193,7 +193,7 @@ $('#import-form').onsubmit = async event => {
     }
     $('#import-dialog').close(); notice(result.reused ? '相同内容已登记，已打开原版本' : '导入成功');
     if (location.hash === '#skill/' + result.skill_id) await detail(result.skill_id,result.version_id); else location.hash = '#skill/' + result.skill_id;
-  } catch(error) { $('#import-error').textContent = controller.signal.aborted?'等待导入超时，请先在 Skill 库确认是否已登记，再重试。':error.message;importStatus('导入未完成，请检查提示后重试。'); }
+  } catch(error) { $('#import-error').textContent = controller.signal.aborted?'等待导入超时，请先在 Skill 库确认是否已登记，再重试。':error.message;importStatus('导入未完成。'); }
   finally {
     clearTimeout(timeout);
     state.importBusy=false;controls.forEach((control,index)=>control.disabled=disabled[index]);
@@ -207,22 +207,22 @@ document.addEventListener('click', event => {
   const button = event.target.closest('button'); if (!button) return;
   if (button.dataset.mode) return setMode(button.dataset.mode);
   if (button.dataset.file) return showFile(button.dataset.file);
-  if (button.dataset.user) return busy(button, async()=>{if(button.dataset.active==='0'&&!await confirmAction('停用账号','停用后，该账号将无法登录，已有会话也会失效。','停用账号'))return;await api('/users/'+button.dataset.user,{method:'PATCH',body:{active:button.dataset.active==='1'}});await renderUsers();});
+  if (button.dataset.user) return busy(button, async()=>{if(button.dataset.active==='0'&&!await confirmAction('停用账号','停用后无法登录，已有会话也会失效。','停用账号'))return;await api('/users/'+button.dataset.user,{method:'PATCH',body:{active:button.dataset.active==='1'}});await renderUsers();});
   const action = button.dataset.action;
   if (action === 'import' || action === 'import-version') openImport(action === 'import-version');
   if (action === 'audit') openAudit();
   if (action === 'repair') openRepair();
   if(button.dataset.publishRepair)busy(button,async()=>{await api('/repairs/'+button.dataset.publishRepair+'/publish',{method:'POST'});await route();notice('新版本已登记');});
   if (action === 'refresh') busy(button,route);
-  if (button.dataset.cancelTask) busy(button,async()=>{if(!await confirmAction('停止任务','停止本地执行并拒收迟到结果。已发送给模型服务的请求可能仍会继续处理。','停止任务'))return;await api('/tasks/'+button.dataset.cancelTask+'/cancel',{method:'POST'});await route();});
+  if (button.dataset.cancelTask) busy(button,async()=>{if(!await confirmAction('停止任务','停止任务后不再接收结果，已发出的模型请求可能仍在处理。','停止任务'))return;await api('/tasks/'+button.dataset.cancelTask+'/cancel',{method:'POST'});await route();});
   if (button.dataset.revokeWorker) busy(button,async()=>{if(!await confirmAction('撤销机器接入','撤销后，这台机器将无法领取任务或提交结果。重新使用需要新的接入码。','撤销接入'))return;await api('/workers/'+button.dataset.revokeWorker,{method:'DELETE'});await renderWorkers();notice('接入已撤销');});
-  if (button.dataset.revokeCode) busy(button,async()=>{if(!await confirmAction('撤销接入码','此接入码将立即失效，需要重新生成才能接入机器。','撤销接入码'))return;await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
+  if (button.dataset.revokeCode) busy(button,async()=>{if(!await confirmAction('撤销接入码','撤销后立即失效，接入机器需重新生成。','撤销接入码'))return;await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
   if (action === 'probe-model') busy(button,async()=>{if(view.modelDraft){notice('请先保存配置，再检测能力');return;}const m=await api('/model/probe',{method:'POST'});await settings();notice(m.ready?'模型能力检测通过':'检测未通过：'+m.failure_code);});
   if (['history-next','history-prev','history-refresh','history-clear'].includes(action)) busy(button,async()=>{const h=state.taskHistory;if(action==='history-next'&&h.nextCursor){h.previous.push(h.cursor);h.cursor=h.nextCursor;}else if(action==='history-prev'&&h.previous.length){h.cursor=h.previous.pop();}else if(action==='history-refresh'||action==='history-clear'){h.cursor=null;h.previous=[];if(action==='history-clear')h.filters={limit:'25'};}await taskList();window.scrollTo(0,0);});
   if (action === 'events-more') busy(button,()=>taskEvents(state.eventsTask,true));
   if (action === 'events-refresh') busy(button,async()=>{const task=await api('/tasks/'+encodeURIComponent(state.eventsTask.id));state.taskEvents=null;await taskEvents(task);});
   if (action === 'enrollments-more') busy(button,()=>renderWorkers(true));
-  if (action === 'enroll-worker') busy(button,async()=>{const code=await api('/worker-enrollments',{method:'POST'});$('#enrollment').hidden=false;$('#enrollment').innerHTML='<p>接入码仅显示这一次，10 分钟有效。</p><pre id="one-time-code" class="code"></pre><p class="hint">在另一台机器运行下方命令，再隐藏输入接入码。</p><pre id="join-command" class="code"></pre>';$('#one-time-code').textContent=code.code;$('#join-command').textContent='skill-mng worker join --server '+location.origin+'\n'+'skill-mng worker start';await renderWorkers();});
+  if (action === 'enroll-worker') busy(button,async()=>{const code=await api('/worker-enrollments',{method:'POST'});$('#enrollment').hidden=false;$('#enrollment').innerHTML='<p>接入码仅显示这一次，10 分钟有效。</p><pre id="one-time-code" class="code"></pre><p class="hint">在目标机器运行下方命令，按提示输入接入码（输入时不可见）。</p><pre id="join-command" class="code"></pre>';$('#one-time-code').textContent=code.code;$('#join-command').textContent='skill-mng worker join --server '+location.origin+'\n'+'skill-mng worker start';await renderWorkers();});
   if (action === 'close-import') $('#import-dialog').close();
   if (action === 'set-current') busy(button, async()=>{await api('/skills/'+state.detail.id+'/current',{method:'PUT',body:{version_id:state.version}});await detail(state.detail.id,state.version);notice('当前版本已切换');});
   if (action === 'set-owner') busy(button, async()=>{await api('/skills/'+state.detail.id+'/owner',{method:'PUT',body:{owner_id:$('#owner-select').value}});await detail(state.detail.id,state.version);notice('维护者已更新');});
