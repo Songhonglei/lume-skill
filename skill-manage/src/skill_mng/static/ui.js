@@ -4,11 +4,41 @@
 const view = {
   library: {q: '', mine: false, verdict: ''},
   positions: new Map(), versions: new Map(), readers: new Map(), selections: new Map(),
-  findingFilters: new Map(), route: '', render: 0, pollBusy: false,
+  findingFilters: new Map(), findingQueries: new Map(), findingPages: new Map(), route: '', render: 0, navigation: 0, pollBusy: false,
 };
 
 function clearSessionView() {
-  view.modelDraft=null;view.settingsTab=null;view.selections.clear();view.positions.clear();view.versions.clear();view.findingFilters.clear();view.library={q:'',mine:false,verdict:''};++view.render;
+  view.modelDraft=null;view.settingsTab=null;view.selections.clear();view.positions.clear();view.versions.clear();view.findingFilters.clear();view.findingQueries.clear();view.findingPages.clear();++view.navigation;view.library={q:'',mine:false,verdict:''};++view.render;
+}
+
+function libraryStatus(audit) {
+  if (!audit) return 'none';
+  if (['queued','running','cancelling'].includes(audit.state)) return 'active';
+  if (['failed','waiting_configuration','cancelled'].includes(audit.state)) return 'attention';
+  if (audit.mode==='static' && audit.verdict!=='fail' && audit.verdict!=='error') return 'review_required';
+  return audit.verdict||'review_required';
+}
+function matchesAuditStatus(audit, filter) {
+  const value=libraryStatus(audit);
+  return !filter || (filter==='attention'?['attention','fail','error','review_required'].includes(value):value===filter);
+}
+function filteredFindings(findings, filter='all', query='') {
+  const q=query.trim().toLocaleLowerCase();
+  return findings.filter(finding=>(filter==='all'||(filter==='review'?finding.reviewRequired:finding.severity===filter))&&(!q||[finding.ruleId,finding.file,finding.message,finding.suggestion,finding.verification].join(' ').toLocaleLowerCase().includes(q)));
+}
+function selectFindings(selected, findings) {
+  findings.filter(finding=>!finding.reviewRequired).forEach(finding=>selected.add(finding.id));
+}
+async function copyText(text, title='内容', opener=document.activeElement) {
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+    await navigator.clipboard.writeText(text);notice(title+'已复制');
+  } catch {
+    const panel=openPanel('复制'+title,'<p class="hint">浏览器未允许自动复制，请选中后复制。</p><textarea class="copy-fallback" readonly aria-label="待复制内容" rows="10"></textarea><div class="dialog-foot"><button data-copy-select>全选内容</button><button data-copy-close>完成</button></div>',{opener});
+    const field=$('textarea',panel);field.value=text;
+    $('[data-copy-select]',panel).onclick=()=>{field.focus();field.select();};
+    $('[data-copy-close]',panel).onclick=()=>panel.close();field.focus();field.select();
+  }
 }
 
 function statusTone(value) {
@@ -42,9 +72,8 @@ function emptyState(title, message, action = '') {
 function pageHeading(title, subtitle, actions = '') {
   return `<div class="page-head"><div><h1>${escapeHTML(title)}</h1><p class="subtitle">${escapeHTML(subtitle)}</p></div><div class="actions">${actions}</div></div>${liveUpdate()}`;
 }
-function openPanel(title, content, {drawer = false, subtitle = '', className = ''} = {}) {
+function openPanel(title, content, {drawer = false, subtitle = '', className = '', opener = document.activeElement} = {}) {
   const dialog = document.createElement('dialog');
-  const opener = document.activeElement;
   const id = 'panel-' + crypto.randomUUID();
   dialog.className = `${drawer ? 'drawer' : 'workspace-dialog'} ${className}`;
   dialog.setAttribute('aria-labelledby', id);
@@ -138,7 +167,8 @@ function mountReader(host, source, {markdown = true, line = 0, title = '文档',
   host.classList.add('document-reader');
   const prefix = 'reader-' + crypto.randomUUID();
   const result = markdown ? renderMarkdown(source, prefix) : {toc:[], html:''};
-  host.innerHTML = `<div class="reader-toolbar"><span>${escapeHTML(title)}</span><div class="actions">${result.toc.length?'<button type="button" class="reader-toc-toggle" data-reader-toc aria-expanded="false">目录</button>':''}<div class="segmented" role="group" aria-label="文档显示方式">${markdown ? '<button type="button" data-reader="read" aria-pressed="true">阅读</button>' : ''}<button type="button" data-reader="source" aria-pressed="${!markdown}">原文</button></div></div></div><div class="reader-layout ${!result.toc.length ? 'no-toc' : ''}"><nav class="document-toc" aria-label="文档目录" ${!result.toc.length ? 'hidden' : ''}>${result.toc.map(item => `<button type="button" data-toc="${item.id}" class="depth-${Math.min(item.depth,3)}">${escapeHTML(item.title)}</button>`).join('')}</nav><article class="markdown" ${!markdown ? 'hidden' : ''}>${result.html}</article></div><div class="raw-document" ${rawId ? `id="${rawId}"` : ''} ${markdown ? 'hidden' : ''}>${sourceLines(source, Number(line))}</div>`;
+  host.innerHTML = `<div class="reader-toolbar"><span>${escapeHTML(title)}</span><div class="actions"><button type="button" data-reader-copy>复制原文</button>${result.toc.length?'<button type="button" class="reader-toc-toggle" data-reader-toc aria-expanded="false">目录</button>':''}<div class="segmented" role="group" aria-label="文档显示方式">${markdown ? '<button type="button" data-reader="read" aria-pressed="true">阅读</button>' : ''}<button type="button" data-reader="source" aria-pressed="${!markdown}">原文</button></div></div></div><div class="reader-layout ${!result.toc.length ? 'no-toc' : ''}"><nav class="document-toc" aria-label="文档目录" ${!result.toc.length ? 'hidden' : ''}>${result.toc.map(item => `<button type="button" data-toc="${item.id}" class="depth-${Math.min(item.depth,3)}">${escapeHTML(item.title)}</button>`).join('')}</nav><article class="markdown" ${!markdown ? 'hidden' : ''}>${result.html}</article></div><div class="raw-document" ${rawId ? `id="${rawId}"` : ''} ${markdown ? 'hidden' : ''}>${sourceLines(source, Number(line))}</div>`;
+  const copyButton=$('[data-reader-copy]',host);copyButton.onclick=()=>busy(copyButton,()=>copyText(source,'原文',copyButton));
   const tocToggle=$('[data-reader-toc]',host);
   if (tocToggle) tocToggle.onclick=()=>{const open=host.classList.toggle('toc-open');tocToggle.setAttribute('aria-expanded',String(open));};
   const toggle = mode => {
