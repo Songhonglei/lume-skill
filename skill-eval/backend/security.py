@@ -42,7 +42,7 @@ def session_digest(request: Request, token: str) -> str:
     return hmac.new(request.app.state.instance_key.encode(), token.encode(), "sha256").hexdigest()
 
 
-def get_admin(request: Request, connection=Depends(db_connection)):
+def get_admin(request: Request, connection=Depends(db_connection, scope="function")):
     token = request.cookies.get("ose_session", "")
     row = connection.execute("SELECT * FROM sessions WHERE token_hash=%s AND expires_at>now()",
                              (session_digest(request, token),)).fetchone() if token else None

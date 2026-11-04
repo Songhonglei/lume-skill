@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -43,7 +44,7 @@ def annotate_queue_waiting(connection, rows):
 
 @router.post("/tasks")
 def create_task(body: TaskInput, request: Request,
-                idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection)):
+                idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection, scope="function")):
     key, request_hash = idempotency(idempotency_key), digest(canonical(body.model_dump()))
     existing = connection.execute("SELECT * FROM tasks WHERE idempotency_key=%s", (key,)).fetchone()
     if existing:
@@ -102,22 +103,33 @@ def create_task(body: TaskInput, request: Request,
 
 
 @router.get("/tasks")
-def list_tasks(connection=Depends(db_connection), limit: int = 100,
+def list_tasks(connection=Depends(db_connection, scope="function"), limit: int = 100,
                offset: Annotated[int, Query(ge=0, le=1_000_000)] = 0,
                kind: Literal["evaluate", "generate"] | None = None,
-               query: Annotated[str, Query(max_length=200)] = ""):
+               query: Annotated[str, Query(max_length=200)] = "",
+               state: Literal["QUEUED", "RUNNING", "CANCEL_REQUESTED", "SUCCEEDED", "FAILED", "CANCELLED", "INTERRUPTED"] | None = None,
+               verdict: Literal["PASSED", "FAILED", "INCOMPLETE"] | None = None,
+               skill_id: UUID | None = None, since: datetime | None = None, until: datetime | None = None):
+    if any(value is not None and value.tzinfo is None for value in (since, until)):
+        raise HTTPException(422, "筛选时间需要包含时区")
+    if since and until and since >= until:
+        raise HTTPException(422, "结束时间需要晚于开始时间")
     expire_leases(connection)
     rows = connection.execute(
         """SELECT * FROM tasks WHERE (%s::text IS NULL OR kind=%s)
            AND (%s='' OR input->>'skill_name' ILIKE %s OR id::text ILIKE %s)
+           AND (%s::text IS NULL OR state=%s) AND (%s::text IS NULL OR verdict=%s)
+           AND (%s::uuid IS NULL OR skill_id=%s)
+           AND (%s::timestamptz IS NULL OR created_at>=%s) AND (%s::timestamptz IS NULL OR created_at<%s)
            ORDER BY created_at DESC,id DESC LIMIT %s OFFSET %s""",
-        (kind, kind, query, "%" + query + "%", "%" + query + "%", min(max(limit, 1), 200), offset)).fetchall()
+        (kind, kind, query, "%" + query + "%", "%" + query + "%", state, state, verdict, verdict,
+         skill_id, skill_id, since, since, until, until, min(max(limit, 1), 200), offset)).fetchall()
     annotate_queue_waiting(connection, rows)
     return rows
 
 
 @router.get("/tasks/{task_id}")
-def task_detail(task_id: UUID, connection=Depends(db_connection)):
+def task_detail(task_id: UUID, connection=Depends(db_connection, scope="function")):
     expire_leases(connection)
     task = required(connection.execute("SELECT * FROM tasks WHERE id=%s", (task_id,)).fetchone())
     annotate_queue_waiting(connection, [task])
@@ -127,13 +139,13 @@ def task_detail(task_id: UUID, connection=Depends(db_connection)):
 
 
 @router.get("/tasks/{task_id}/events")
-def task_events(task_id: UUID, after: int = 0, connection=Depends(db_connection)):
+def task_events(task_id: UUID, after: int = 0, connection=Depends(db_connection, scope="function")):
     required(connection.execute("SELECT id FROM tasks WHERE id=%s", (task_id,)).fetchone())
     return connection.execute("SELECT e.attempt_id,e.sequence,e.payload,e.created_at FROM events e JOIN attempts a ON a.id=e.attempt_id WHERE a.task_id=%s AND e.sequence>%s ORDER BY e.created_at,e.sequence LIMIT 500", (task_id, after)).fetchall()
 
 
 @router.post("/tasks/{task_id}/cancel")
-def cancel_task(task_id: UUID, connection=Depends(db_connection)):
+def cancel_task(task_id: UUID, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM tasks WHERE id=%s FOR UPDATE", (task_id,)).fetchone())
     if row["state"] in TERMINAL:
         return row
@@ -143,7 +155,7 @@ def cancel_task(task_id: UUID, connection=Depends(db_connection)):
 
 
 @router.post("/tasks/{task_id}/retry")
-def retry_task(task_id: UUID, idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection)):
+def retry_task(task_id: UUID, idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection, scope="function")):
     key = idempotency(idempotency_key)
     row = required(connection.execute("SELECT * FROM tasks WHERE id=%s FOR UPDATE", (task_id,)).fetchone())
     prior = connection.execute("SELECT task_id FROM task_retries WHERE idempotency_key=%s", (key,)).fetchone()
@@ -163,14 +175,14 @@ def retry_task(task_id: UUID, idempotency_key: Annotated[str | None, Header()] =
 
 
 @router.get("/artifacts/{artifact_id}/download")
-def download_artifact(artifact_id: UUID, request: Request, connection=Depends(db_connection)):
+def download_artifact(artifact_id: UUID, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM artifacts WHERE id=%s", (artifact_id,)).fetchone())
     return Response(request.app.state.store.get(row["blob"]), media_type="application/zip",
                     headers={"Content-Disposition": 'attachment; filename="task-artifacts.zip"'})
 
 
 @router.get("/artifacts/{artifact_id}/report")
-def preview_report(artifact_id: UUID, request: Request, connection=Depends(db_connection)):
+def preview_report(artifact_id: UUID, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM artifacts WHERE id=%s", (artifact_id,)).fetchone())
     files = unpack_zip(request.app.state.store.get(row["blob"]))
     reports = [file.data for name, file in files.items() if name.endswith("/report.html") or name == "report.html"]

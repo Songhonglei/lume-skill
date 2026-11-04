@@ -1,6 +1,6 @@
-export function CaseReview({ saved = false }: { saved?: boolean }) {
-  return <details className="case-review" open={!saved}>
-    <summary>启用前审查 · 输入、断言与附件</summary>
+export function CaseReview() {
+  return <details className="case-review">
+    <summary>案例审查指南 · 启用前请核对</summary>
     <p className="muted">结构校验只检查格式和引用，不确认案例是否明确、预期是否正确。请逐个检查；以下提示不会修改案例或判分条件。</p>
     <ul>
       <li><strong>输入完整：</strong>明确目标 Skill 名称，包含实际数据，并区分指令与数据。空字符串、缺失输入、空格和换行分别说明。</li>
