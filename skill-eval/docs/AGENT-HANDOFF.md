@@ -1,5 +1,7 @@
 # LumaSkill · Skill Eval 完整交接
 
+**11/04 后续收尾**：[原评审逐项落地对照](UI-IMPROVEMENTS.md#原评审建议落地对照)与[后续验收](verification/local/ui-followup-2026-11-04.md)已补齐，包含保存上下文、校验修复定位、键盘焦点、对比度及四页小屏重排。上一轮范围和历史验收边界保持。
+
 **11/04 界面增量**：蓝白工作台改进、全量记录筛选、统一确认与加载/断连恢复；修复 HTTP 成功早于事务提交。59 项后端 / 23 项前端检查通过，浏览器验证桌面与 390px 小屏。见[改进说明](UI-IMPROVEMENTS.md)及[验收收据](verification/local/ui-refinement-2026-11-04.md)。11/03 候选包及摘要为历史固定实物，不含本次增量；当前源码以 Git main 为准。本轮本地合成预览独立于原 Docker 实例，未调用模型。
 
 更新时间：2026-11-03（Asia/Shanghai）。阶段进展、总结和计划以[实现进度](IMPLEMENTATION-STATUS.md)为当前索引；原始验证收据保留各自检查点。本轮已完成候选实物与限定边界补验：见[候选指南](RELEASE-CANDIDATE.md)和[11/03 收据](verification/local/release-candidate-2026-11-03.md)。候选源码固定为 21240ea，后续只增加收据与索引；本地 Docker 仅临时运行自己的隔离项目，结束后停止。

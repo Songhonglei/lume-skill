@@ -37,6 +37,6 @@ export function TaskDialog({ common, skill, versionId, revision, kind, setId, on
       <label className="field"><span>补充要求 <small>选填</small></span><textarea rows={3} value={requirements} maxLength={8000} disabled={busy || !!submission} onChange={event => setRequirements(event.target.value)} placeholder="例如：覆盖零长度字符串（非缺失输入）和中文；按 Skill 约定核对完整结果，保留大小写与标点。" /><small className="muted">说明具体输入和关注的 Skill 约定。目标数量不足时会提示，生成完成不代表案例质量已确认。</small></label>
     </> : <p className="muted">本次会固定当前 Skill、评测集和模型配置，逐一执行全部案例。</p>}
     {error && <p className="error-text" role="alert">{error}</p>}
-    <div className="dialog-actions">{onImport && <Button onClick={onImport}>上传评测集</Button>}<Button onClick={onClose}>取消</Button><Button variant="primary" busy={busy} disabled={!model || (kind === 'generate' && (count < 1 || count > 30))} onClick={submit}>{!ready && model ? '确认加入队列' : kind === 'generate' ? '确认生成草稿' : '开始评测'}</Button></div>
+    <div className="dialog-actions">{onImport && <Button onClick={onImport}>上传评测集</Button>}<Button data-initial-focus="true" onClick={onClose}>取消</Button><Button variant="primary" busy={busy} disabled={!model || (kind === 'generate' && (count < 1 || count > 30))} onClick={submit}>{!ready && model ? '确认加入队列' : kind === 'generate' ? '确认生成草稿' : '开始评测'}</Button></div>
   </Dialog>
 }

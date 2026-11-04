@@ -1,0 +1,179 @@
+{
+  "date": "2026-11-04",
+  "baseline": "6fa138b32ba4023550a264ee20d1941030f4e843",
+  "scope": "remaining workspace usability refinements; frontend and docs only",
+  "checks": {
+    "frontend_tests": 23,
+    "typescript_vite": "PASS",
+    "backend": "unchanged; full PostgreSQL suite runs in remote CI"
+  },
+  "browser": {
+    "fixtures": "isolated synthetic API/PG resources; no real model calls",
+    "non_first_case_retained_on_save_and_fork": true,
+    "source_mode_and_file_retained_on_fork": true,
+    "save_anchor": {
+      "before": {
+        "anchor": 179.234375,
+        "selected": "空文本边界label-empty.yaml",
+        "y": 493
+      },
+      "after": {
+        "anchor": 179.375,
+        "selected": "空文本边界label-empty.yaml",
+        "version": "版本 8 · 启用中 · 源修订 1",
+        "y": 631
+      }
+    },
+    "validation_repair": "missing script -> issue button -> matching source focused -> correct path -> valid",
+    "delete_cancel": "safe default, Tab stays inside dialog, Escape retains file and returns focus",
+    "more_actions": "Escape closes and returns focus; dirty export is explicitly last-saved content",
+    "task_navigation": "detail and list get focus on explicit navigation",
+    "small_390": [
+      {
+        "documentWidth": 390,
+        "height": 844,
+        "overflow": false,
+        "page": "系统配置",
+        "width": 390
+      },
+      {
+        "documentWidth": 390,
+        "height": 844,
+        "overflow": false,
+        "page": "Skills",
+        "width": 390
+      },
+      {
+        "documentWidth": 390,
+        "height": 844,
+        "overflow": false,
+        "page": "评测集管理",
+        "width": 390
+      },
+      {
+        "documentWidth": 390,
+        "height": 844,
+        "overflow": false,
+        "page": "评测记录",
+        "width": 390
+      }
+    ],
+    "zoom_equivalent_640": [
+      {
+        "documentWidth": 640,
+        "height": 450,
+        "overflow": false,
+        "page": "系统配置",
+        "width": 640
+      },
+      {
+        "documentWidth": 640,
+        "height": 450,
+        "overflow": false,
+        "page": "Skills",
+        "width": 640
+      },
+      {
+        "documentWidth": 640,
+        "height": 450,
+        "overflow": false,
+        "page": "评测集管理",
+        "width": 640
+      },
+      {
+        "documentWidth": 640,
+        "height": 450,
+        "overflow": false,
+        "page": "评测记录",
+        "width": 640
+      }
+    ],
+    "contrast_samples": [
+      {
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.27,
+        "sample": "每页 25 条"
+      },
+      {
+        "background": "rgb(248, 250, 252)",
+        "color": "rgb(23, 84, 216)",
+        "ratio": 6.09,
+        "sample": "清除筛选"
+      },
+      {
+        "background": "rgb(248, 250, 252)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.04,
+        "sample": "按创建时间排序 · 自动更新"
+      },
+      {
+        "background": "rgb(248, 250, 253)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.04,
+        "sample": "任务 / Skill"
+      },
+      {
+        "background": "rgb(244, 248, 255)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 4.95,
+        "sample": "f8750709 · 修订 1"
+      },
+      {
+        "background": "rgb(237, 248, 243)",
+        "color": "rgb(39, 118, 84)",
+        "ratio": 5.08,
+        "sample": "已完成"
+      },
+      {
+        "background": "rgb(255, 240, 241)",
+        "color": "rgb(185, 56, 70)",
+        "ratio": 5.11,
+        "sample": "未通过"
+      },
+      {
+        "background": "rgb(244, 248, 255)",
+        "color": "rgb(23, 84, 216)",
+        "ratio": 5.98,
+        "sample": "详情 →"
+      },
+      {
+        "background": "rgb(255, 255, 255)",
+        "color": "rgb(23, 84, 216)",
+        "ratio": 6.37,
+        "sample": "详情 →"
+      },
+      {
+        "background": "rgb(250, 251, 253)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.09,
+        "sample": "标准评测 · 全部案例"
+      },
+      {
+        "background": "rgb(251, 252, 255)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.14,
+        "sample": "f8750709-8ad1-4907-af71-"
+      },
+      {
+        "background": "rgb(240, 243, 247)",
+        "color": "rgb(89, 103, 123)",
+        "ratio": 5.17,
+        "sample": "已完成"
+      },
+      {
+        "background": "rgb(252, 253, 255)",
+        "color": "rgb(94, 109, 130)",
+        "ratio": 5.18,
+        "sample": "one · rule_based"
+      }
+    ]
+  },
+  "screenshot_sha256": "e62e5b9f3e77dba646da135308683740b9b2acac96604a7bd7dae557ebd5c7fb",
+  "limits": [
+    "640 CSS px tests equivalent reflow of 1280 at 200%; not an actual browser zoom certification",
+    "No complete screen-reader or WCAG conformance certification",
+    "No real model calls or old Docker deployment update",
+    "No formal Release or GHCR publication"
+  ]
+}

@@ -1,6 +1,7 @@
 export type Page = 'skills' | 'sets' | 'tasks' | 'settings'
 export type Selection = { skillId?: string; versionId?: string; setId?: string; taskId?: string; action?: 'import' }
 export type EditorFile = { encoding: 'utf-8' | 'base64'; content: string; mode: number }
+export type EditorView = { selected: string; mode: 'form' | 'source'; sourceFile: string; scrollY: number; anchorTop?: number }
 export type Files = Record<string, EditorFile>
 export type Issue = { path: string; message: string }
 export type CaseInfo = { id: string; file: string; title: string; prompt: string; judge: string; timeout_seconds: number }
