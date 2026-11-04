@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Self-hosted Skill evaluation with Codex and skill-up"
 requires-python = ">=3.11"
 dependencies = [
-  "fastapi>=0.115,<1",
+  "fastapi>=0.161.1,<1",
   "uvicorn>=0.34,<1",
   "psycopg[binary,pool]>=3.2,<4",
   "pydantic-settings>=2.7,<3",

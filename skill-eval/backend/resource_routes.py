@@ -103,7 +103,7 @@ def import_skill(files, original, request, connection, *, skill_id=None, indepen
 def upload_skill(request: Request, file: Annotated[UploadFile, File()],
                  skill_id: Annotated[UUID | None, Form()] = None,
                  independent: Annotated[bool, Form()] = False,
-                 root: Annotated[str | None, Form()] = None, connection=Depends(db_connection)):
+                 root: Annotated[str | None, Form()] = None, connection=Depends(db_connection, scope="function")):
     data = read_upload(file)
     return import_skill(unpack_zip(data), data, request, connection,
                         skill_id=skill_id, independent=independent, selected_root=root)
@@ -113,7 +113,7 @@ def upload_skill(request: Request, file: Annotated[UploadFile, File()],
 def upload_directory(request: Request, files: Annotated[list[UploadFile], File()],
                      paths: Annotated[str, Form()], skill_id: Annotated[UUID | None, Form()] = None,
                      independent: Annotated[bool, Form()] = False,
-                     root: Annotated[str | None, Form()] = None, connection=Depends(db_connection)):
+                     root: Annotated[str | None, Form()] = None, connection=Depends(db_connection, scope="function")):
     try:
         names = json.loads(paths)
     except ValueError as error:
@@ -126,7 +126,7 @@ def upload_directory(request: Request, files: Annotated[list[UploadFile], File()
 
 
 @router.get("/skills")
-def list_skills(connection=Depends(db_connection)):
+def list_skills(connection=Depends(db_connection, scope="function")):
     return connection.execute(
         """SELECT s.*,v.id AS latest_version_id,v.revision AS latest_revision,v.declared_version,
                   e.name AS default_set_name,e.active_version_id,sv.validation AS active_validation,
@@ -150,7 +150,7 @@ def example_package():
 
 
 @router.get("/skills/{skill_id}")
-def skill_detail(skill_id: UUID, connection=Depends(db_connection)):
+def skill_detail(skill_id: UUID, connection=Depends(db_connection, scope="function")):
     skill = required(connection.execute("SELECT * FROM skills WHERE id=%s", (skill_id,)).fetchone())
     versions = connection.execute("SELECT * FROM skill_versions WHERE skill_id=%s ORDER BY revision DESC", (skill_id,)).fetchall()
     sets = connection.execute("SELECT e.*,v.validation AS active_validation,v.source_skill_version_id AS active_source_skill_version_id FROM evaluation_sets e LEFT JOIN set_versions v ON v.id=e.active_version_id WHERE e.skill_id=%s AND NOT e.archived ORDER BY e.created_at", (skill_id,)).fetchall()
@@ -158,14 +158,14 @@ def skill_detail(skill_id: UUID, connection=Depends(db_connection)):
 
 
 @router.get("/skill-versions/{version_id}/download")
-def download_skill(version_id: UUID, request: Request, original: bool = False, connection=Depends(db_connection)):
+def download_skill(version_id: UUID, request: Request, original: bool = False, connection=Depends(db_connection, scope="function")):
     version = required(connection.execute("SELECT * FROM skill_versions WHERE id=%s", (version_id,)).fetchone())
     return Response(request.app.state.store.get(version["original_blob" if original else "blob"]),
                     media_type="application/zip", headers={"Content-Disposition": 'attachment; filename="skill.zip"'})
 
 
 @router.post("/sets/preview-import")
-def preview_suite(request: Request, file: Annotated[UploadFile, File()], connection=Depends(db_connection)):
+def preview_suite(request: Request, file: Annotated[UploadFile, File()], connection=Depends(db_connection, scope="function")):
     data = read_upload(file)
     files = {"evals.json": PackageFile(data)} if (file.filename or "").endswith(".json") else unpack_zip(data)
     normalized, notes = normalize_suite(files)
@@ -175,7 +175,7 @@ def preview_suite(request: Request, file: Annotated[UploadFile, File()], connect
 
 @router.post("/sets/preview-import-directory")
 def preview_suite_directory(request: Request, files: Annotated[list[UploadFile], File()],
-                            paths: Annotated[str, Form()], connection=Depends(db_connection)):
+                            paths: Annotated[str, Form()], connection=Depends(db_connection, scope="function")):
     try:
         names = json.loads(paths)
     except ValueError as error:
@@ -202,7 +202,7 @@ class NewSet(BaseModel):
 
 
 @router.post("/skills/{skill_id}/sets")
-def new_set(skill_id: UUID, body: NewSet, request: Request, connection=Depends(db_connection)):
+def new_set(skill_id: UUID, body: NewSet, request: Request, connection=Depends(db_connection, scope="function")):
     skill = required(connection.execute("SELECT * FROM skills WHERE id=%s FOR UPDATE", (skill_id,)).fetchone())
     required(connection.execute("SELECT id FROM skill_versions WHERE id=%s AND skill_id=%s", (body.source_skill_version_id, skill_id)).fetchone(), "来源版本不属于当前 Skill")
     if body.original_blob:
@@ -218,7 +218,7 @@ def new_set(skill_id: UUID, body: NewSet, request: Request, connection=Depends(d
 
 
 @router.get("/sets")
-def list_sets(skill_id: UUID | None = None, connection=Depends(db_connection)):
+def list_sets(skill_id: UUID | None = None, connection=Depends(db_connection, scope="function")):
     return connection.execute(
         """SELECT e.*,s.name AS skill_name,s.default_set_id=e.id AS is_default,v.revision AS active_revision,
                   v.validation AS active_validation,
@@ -229,14 +229,14 @@ def list_sets(skill_id: UUID | None = None, connection=Depends(db_connection)):
 
 
 @router.get("/sets/{set_id}")
-def set_detail(set_id: UUID, connection=Depends(db_connection)):
+def set_detail(set_id: UUID, connection=Depends(db_connection, scope="function")):
     item = required(connection.execute("SELECT e.*,s.name AS skill_name FROM evaluation_sets e JOIN skills s ON s.id=e.skill_id WHERE e.id=%s", (set_id,)).fetchone())
     versions = connection.execute("SELECT v.*,s.revision AS source_skill_revision FROM set_versions v JOIN skill_versions s ON s.id=v.source_skill_version_id WHERE set_id=%s ORDER BY v.revision DESC", (set_id,)).fetchall()
     return {**item, "versions": versions}
 
 
 @router.get("/set-versions/{version_id}")
-def version_detail(version_id: UUID, request: Request, connection=Depends(db_connection)):
+def version_detail(version_id: UUID, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM set_versions WHERE id=%s", (version_id,)).fetchone())
     return {**row, "files": editor_files(unpack_zip(request.app.state.store.get(row["blob"])))}
 
@@ -246,7 +246,7 @@ class DraftSource(BaseModel):
 
 
 @router.post("/sets/{set_id}/import")
-def import_into_set(set_id: UUID, body: NewSet, request: Request, connection=Depends(db_connection)):
+def import_into_set(set_id: UUID, body: NewSet, request: Request, connection=Depends(db_connection, scope="function")):
     item = required(connection.execute("SELECT * FROM evaluation_sets WHERE id=%s AND NOT archived FOR UPDATE", (set_id,)).fetchone())
     required(connection.execute("SELECT id FROM skill_versions WHERE id=%s AND skill_id=%s", (body.source_skill_version_id, item["skill_id"])).fetchone())
     if body.original_blob:
@@ -257,7 +257,7 @@ def import_into_set(set_id: UUID, body: NewSet, request: Request, connection=Dep
 
 
 @router.post("/sets/{set_id}/drafts")
-def fork_draft(set_id: UUID, body: DraftSource, request: Request, connection=Depends(db_connection)):
+def fork_draft(set_id: UUID, body: DraftSource, request: Request, connection=Depends(db_connection, scope="function")):
     item = required(connection.execute("SELECT * FROM evaluation_sets WHERE id=%s FOR UPDATE", (set_id,)).fetchone())
     source = required(connection.execute("SELECT * FROM set_versions WHERE id=%s AND set_id=%s", (body.source_version_id or item["active_version_id"], set_id)).fetchone(), "请先选择需要编辑的版本")
     files = unpack_zip(request.app.state.store.get(source["blob"]))
@@ -271,7 +271,7 @@ class DraftUpdate(BaseModel):
 
 
 @router.put("/set-versions/{version_id}")
-def update_draft(version_id: UUID, body: DraftUpdate, request: Request, connection=Depends(db_connection)):
+def update_draft(version_id: UUID, body: DraftUpdate, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM set_versions WHERE id=%s FOR UPDATE", (version_id,)).fetchone())
     if row["kind"] != "DRAFT" or row["archived"]:
         raise HTTPException(409, "已保存版本不可修改，请先创建草稿")
@@ -284,7 +284,7 @@ def update_draft(version_id: UUID, body: DraftUpdate, request: Request, connecti
 
 
 @router.post("/set-versions/{version_id}/validate")
-def validate_version(version_id: UUID, request: Request, connection=Depends(db_connection)):
+def validate_version(version_id: UUID, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM set_versions WHERE id=%s FOR UPDATE", (version_id,)).fetchone())
     validation = validate_suite(unpack_zip(request.app.state.store.get(row["blob"])), request.app.state.settings.skill_up)
     connection.execute("UPDATE set_versions SET validation=%s WHERE id=%s", (jsonb(validation), version_id))
@@ -296,7 +296,7 @@ class RevisionInput(BaseModel):
 
 
 @router.post("/set-versions/{version_id}/save")
-def save_version(version_id: UUID, body: RevisionInput, request: Request, connection=Depends(db_connection)):
+def save_version(version_id: UUID, body: RevisionInput, request: Request, connection=Depends(db_connection, scope="function")):
     # Always lock the set before its versions, matching fork and activation operations.
     hint = required(connection.execute("SELECT set_id FROM set_versions WHERE id=%s", (version_id,)).fetchone())
     connection.execute("SELECT id FROM evaluation_sets WHERE id=%s FOR UPDATE", (hint["set_id"],))
@@ -320,7 +320,7 @@ class VersionInput(BaseModel):
 
 
 @router.post("/sets/{set_id}/activate")
-def activate(set_id: UUID, body: VersionInput, request: Request, connection=Depends(db_connection)):
+def activate(set_id: UUID, body: VersionInput, request: Request, connection=Depends(db_connection, scope="function")):
     required(connection.execute("SELECT id FROM evaluation_sets WHERE id=%s AND NOT archived FOR UPDATE", (set_id,)).fetchone())
     row = required(connection.execute("SELECT * FROM set_versions WHERE id=%s AND set_id=%s AND NOT archived AND kind='SAVED'", (body.version_id, set_id)).fetchone())
     validation = validate_suite(unpack_zip(request.app.state.store.get(row["blob"])), request.app.state.settings.skill_up)
@@ -335,14 +335,14 @@ class SetInput(BaseModel):
 
 
 @router.post("/skills/{skill_id}/default-set")
-def default_set(skill_id: UUID, body: SetInput, connection=Depends(db_connection)):
+def default_set(skill_id: UUID, body: SetInput, connection=Depends(db_connection, scope="function")):
     required(connection.execute("SELECT id FROM evaluation_sets WHERE id=%s AND skill_id=%s AND NOT archived", (body.set_id, skill_id)).fetchone())
     connection.execute("UPDATE skills SET default_set_id=%s WHERE id=%s", (body.set_id, skill_id))
     return {"default_set_id": body.set_id}
 
 
 @router.get("/set-versions/{version_id}/export")
-def export_version(version_id: UUID, request: Request, connection=Depends(db_connection)):
+def export_version(version_id: UUID, request: Request, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT blob FROM set_versions WHERE id=%s", (version_id,)).fetchone())
     # Repack only suite material; no runtime, logs, credentials or center settings.
     files = unpack_zip(request.app.state.store.get(row["blob"]))
@@ -351,7 +351,7 @@ def export_version(version_id: UUID, request: Request, connection=Depends(db_con
 
 
 @router.delete("/set-versions/{version_id}")
-def archive_version(version_id: UUID, connection=Depends(db_connection)):
+def archive_version(version_id: UUID, connection=Depends(db_connection, scope="function")):
     row = required(connection.execute("SELECT * FROM set_versions WHERE id=%s FOR UPDATE", (version_id,)).fetchone())
     active = connection.execute("SELECT 1 FROM evaluation_sets WHERE active_version_id=%s", (version_id,)).fetchone()
     if active:

@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api", tags=["settings"], dependencies=[Depends(get_a
 
 
 @router.get("/settings")
-def read_settings(request: Request, connection=Depends(db_connection)):
+def read_settings(request: Request, connection=Depends(db_connection, scope="function")):
     return {"model": setting(connection, "model"), "public_url": request.app.state.settings.public_url,
             "required_versions": {"skill_up": SKILL_UP_VERSION, "codex": CODEX_VERSION},
             "storage": {"database": "PostgreSQL", "files": "本机持久化文件库"},
@@ -31,7 +31,7 @@ class ModelInput(BaseModel):
 
 
 @router.put("/settings/model")
-def save_model(body: ModelInput, connection=Depends(db_connection)):
+def save_model(body: ModelInput, connection=Depends(db_connection, scope="function")):
     worker = required(connection.execute("SELECT * FROM workers WHERE id=%s AND NOT revoked", (body.worker_id,)).fetchone())
     capabilities = worker["capabilities"]
     if not capabilities.get("connection_fingerprint"):
@@ -46,12 +46,12 @@ def save_model(body: ModelInput, connection=Depends(db_connection)):
 
 
 @router.get("/workers")
-def list_workers(connection=Depends(db_connection)):
+def list_workers(connection=Depends(db_connection, scope="function")):
     return connection.execute("SELECT id,name,capabilities,revoked,builtin,last_seen,created_at,probe_request,probe_result,last_seen>now()-interval '30 seconds' AS online FROM workers ORDER BY created_at").fetchall()
 
 
 @router.post("/workers/{worker_id}/probe")
-def probe(worker_id: UUID, idempotency_key: str = Header(), connection=Depends(db_connection)):
+def probe(worker_id: UUID, idempotency_key: str = Header(), connection=Depends(db_connection, scope="function")):
     if not idempotency_key or len(idempotency_key) > 160:
         raise HTTPException(422, "需要有效的请求标识")
     row = required(connection.execute("SELECT * FROM workers WHERE id=%s AND NOT revoked FOR UPDATE", (worker_id,)).fetchone())
@@ -70,7 +70,7 @@ def probe(worker_id: UUID, idempotency_key: str = Header(), connection=Depends(d
 
 
 @router.post("/workers/{worker_id}/revoke")
-def revoke_worker(worker_id: UUID, connection=Depends(db_connection)):
+def revoke_worker(worker_id: UUID, connection=Depends(db_connection, scope="function")):
     required(connection.execute("SELECT id FROM workers WHERE id=%s FOR UPDATE", (worker_id,)).fetchone())
     connection.execute("UPDATE workers SET revoked=true WHERE id=%s", (worker_id,))
     rows = connection.execute("SELECT t.* FROM tasks t JOIN attempts a ON a.id=t.current_attempt_id WHERE a.worker_id=%s AND a.state='ACTIVE' FOR UPDATE OF t", (worker_id,)).fetchall()

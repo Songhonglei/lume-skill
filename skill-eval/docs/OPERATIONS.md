@@ -145,3 +145,23 @@ OSE_PORT=8770 OSE_PUBLIC_URL=http://127.0.0.1:8770 docker compose up -d
 ```
 
 随后用新地址访问；使用外部地址的独立 Worker 需同步其中心地址，Compose 内置 Worker 的服务间地址不随宿主端口改变。新建独立测试部署时使用自己的 Compose 项目名和卷，保留已有实例数据。10/28 本机对自身测试端口的冲突启动返回 125，原 API 仍健康，见 [浏览器边界收据](verification/local/browser-boundaries-2026-10-28.md)。
+
+
+## 评测记录筛选
+
+页面支持任务类型、名称或任务 ID 搜索、Skill、执行状态；结论与日期放在“更多筛选”。改变筛选或翻页时重新选择相应记录，空结果可清除筛选。执行完成 `SUCCEEDED` 与评测通过 `PASSED` 分别判断；取消但尚未执行的任务显示未完整完成。
+
+已登录管理员可调用 `GET /api/tasks`；所有条件组合后，在排序与分页之前执行。省略条件表示不限制，返回数组结构不变。
+
+| 参数 | 取值与语义 |
+| --- | --- |
+| `limit` / `offset` | 每页数量，默认 100、限制 1–200；偏移默认 0、范围 0–1000000。页面每页 25 条 |
+| `kind` | `evaluate` 或 `generate` |
+| `query` | 最多 200 字符，匹配 Skill 名称或任务 ID；默认空字符串 |
+| `skill_id` | Skill UUID，精确匹配 |
+| `state` | `QUEUED`、`RUNNING`、`CANCEL_REQUESTED`、`SUCCEEDED`、`FAILED`、`CANCELLED`、`INTERRUPTED` |
+| `verdict` | `PASSED`、`FAILED` 或 `INCOMPLETE`；匹配评测结论，与执行状态独立 |
+| `since` | 带时区 ISO 8601 时间，创建时间大于或等于此值 |
+| `until` | 带时区 ISO 8601 时间，创建时间小于此值；同时指定时必须晚于 since |
+
+非法枚举、UUID、无时区时间或无效时间区间返回 422。页面日期按浏览器本地时区解释，开始日零点包含、结束日次日零点排除，转换成 UTC 后提交；包含用户选中的结束日。接口保持 `created_at DESC, id DESC` 排序。

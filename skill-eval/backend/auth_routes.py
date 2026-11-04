@@ -16,14 +16,14 @@ class PasswordInput(BaseModel):
 
 
 @router.get("/setup")
-def setup_status(request: Request, connection=Depends(db_connection)):
+def setup_status(request: Request, connection=Depends(db_connection, scope="function")):
     initialized = connection.execute("SELECT 1 FROM administrator").fetchone() is not None
     remote = urlsplit(request.app.state.settings.public_url).hostname not in {"localhost", "127.0.0.1", "::1"}
     return {"initialized": initialized, "requires_setup_token": remote}
 
 
 @router.post("/setup", dependencies=[Depends(require_origin)])
-def setup(body: PasswordInput, request: Request, response: Response, connection=Depends(db_connection)):
+def setup(body: PasswordInput, request: Request, response: Response, connection=Depends(db_connection, scope="function")):
     # Serialize the first administrator even when two first-use requests race.
     connection.execute("SELECT pg_advisory_xact_lock(684913291)")
     if connection.execute("SELECT 1 FROM administrator").fetchone():
@@ -39,7 +39,7 @@ def setup(body: PasswordInput, request: Request, response: Response, connection=
 
 
 @router.post("/session", dependencies=[Depends(require_origin)])
-def login(body: PasswordInput, request: Request, response: Response, connection=Depends(db_connection)):
+def login(body: PasswordInput, request: Request, response: Response, connection=Depends(db_connection, scope="function")):
     identity = request.client.host if request.client else "local"
     connection.execute("INSERT INTO login_limits(identity,failures,window_start) VALUES(%s,0,now()) ON CONFLICT DO NOTHING",
                        (identity,))
@@ -67,7 +67,7 @@ def session(request: Request, admin=Depends(get_admin)):
 
 
 @router.delete("/session")
-def logout(response: Response, admin=Depends(get_admin), connection=Depends(db_connection)):
+def logout(response: Response, admin=Depends(get_admin), connection=Depends(db_connection, scope="function")):
     connection.execute("DELETE FROM sessions WHERE token_hash=%s", (admin["token_hash"],))
     response.delete_cookie("ose_session")
     response.delete_cookie("ose_csrf")
@@ -76,7 +76,7 @@ def logout(response: Response, admin=Depends(get_admin), connection=Depends(db_c
 
 @router.post("/settings/password")
 def change_password(body: PasswordInput, request: Request, response: Response,
-                    admin=Depends(get_admin), connection=Depends(db_connection)):
+                    admin=Depends(get_admin), connection=Depends(db_connection, scope="function")):
     connection.execute("UPDATE administrator SET password_hash=%s", (hash_password(body.password),))
     connection.execute("DELETE FROM sessions")
     return create_session(request, response, connection)

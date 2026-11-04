@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-04",
+  "baseline": "37cc002",
+  "scope": "skill-eval only; blue-white workspace refinement",
+  "checks": {
+    "backend_postgresql": {
+      "passed": 59,
+      "failed": 0,
+      "skipped": 0
+    },
+    "frontend": {
+      "passed": 23,
+      "failed": 0
+    },
+    "ruff": "PASS",
+    "typescript_vite": "PASS",
+    "uv_lock_offline_check": "PASS"
+  },
+  "browser": {
+    "mode": "isolated native API, PostgreSQL, production frontend; synthetic data; no real Worker or model calls",
+    "unsaved_navigation_cancel": "PASS",
+    "save_draft_and_activate_immutable_version": "PASS",
+    "fork_draft_keeps_active_version": "PASS",
+    "global_state_and_verdict_filters": "PASS",
+    "date_empty_and_clear": "PASS",
+    "filter_detail_selection_consistency": "PASS",
+    "cancel_dialog_default_retains_task": "PASS",
+    "confirmed_queue_cancel": "PASS",
+    "offline_records_retained": 10,
+    "recovery_without_reload": "PASS",
+    "small_layout": {
+      "caseColumns": "356px",
+      "caseListMaxHeight": "190px",
+      "documentWidth": 390,
+      "height": 844,
+      "overflow": false,
+      "toolbarPosition": "sticky",
+      "width": 390
+    }
+  },
+  "regression": {
+    "response_before_commit": "reproduced failing test before fix; passed after function-scoped dependencies"
+  },
+  "skill_audits": {
+    "vendor": {
+      "errors": 0,
+      "machine_warns": 18,
+      "exact_baseline_match": true
+    },
+    "example": {
+      "errors": 0,
+      "machine_warns": 3,
+      "exact_baseline_match": true
+    }
+  },
+  "screenshots_sha256": {
+    "editor.jpg": "79f578d3764bcffdd49d177bcf3d7ef00c12b86d9ac2577dff13dd3b51146d91",
+    "records.jpg": "d53fdc9445e8b509fe09bcf207c49db71bb70cfa5a9abcecf5cd5b719fd5c4bc"
+  },
+  "boundaries": [
+    "No real model calls this iteration",
+    "No changes to skill-manage",
+    "No formal Release or GHCR image publication",
+    "Existing candidate ZIPs remain historical; rebuild for new source",
+    "Native Linux x86_64 model acceptance remains deferred"
+  ]
+}

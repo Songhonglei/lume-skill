@@ -48,7 +48,7 @@ def register(connection, body, builtin=False):
 
 
 @router.post("/worker-enrollment-codes", dependencies=[Depends(get_admin)])
-def enrollment_code(request: Request, connection=Depends(db_connection)):
+def enrollment_code(request: Request, connection=Depends(db_connection, scope="function")):
     secret = secrets.token_urlsafe(32)
     connection.execute("INSERT INTO enrollment_codes(token_hash,expires_at) VALUES(%s,now()+interval '10 minutes')", (digest(secret),))
     payload = canonical({"url": request.app.state.settings.public_url, "code": secret}).encode()
@@ -56,7 +56,7 @@ def enrollment_code(request: Request, connection=Depends(db_connection)):
 
 
 @router.post("/worker/enroll")
-def enroll(body: Enrollment, connection=Depends(db_connection)):
+def enroll(body: Enrollment, connection=Depends(db_connection, scope="function")):
     row = connection.execute("SELECT *,expires_at>now() AS valid FROM enrollment_codes WHERE token_hash=%s FOR UPDATE", (digest(body.code),)).fetchone()
     if row is None or row["used_at"] is not None or not row["valid"]:
         raise HTTPException(401, "接入码已使用、过期或无效，请在工作台重新生成")
@@ -66,7 +66,7 @@ def enroll(body: Enrollment, connection=Depends(db_connection)):
 
 
 @router.post("/worker/builtin-enroll")
-def builtin_enroll(body: Enrollment, request: Request, connection=Depends(db_connection)):
+def builtin_enroll(body: Enrollment, request: Request, connection=Depends(db_connection, scope="function")):
     file = request.app.state.settings.builtin_secret_file
     if not file or not hmac.compare_digest(body.code, file.read_text().strip()):
         raise HTTPException(401, "内置 Worker 接入凭据无效")
@@ -89,7 +89,7 @@ class WorkerHello(BaseModel):
 
 
 @router.post("/worker/claim")
-def claim_task(body: WorkerHello, request: Request, authorization: str | None = Header(default=None), connection=Depends(db_connection)):
+def claim_task(body: WorkerHello, request: Request, authorization: str | None = Header(default=None), connection=Depends(db_connection, scope="function")):
     worker = authenticate_worker(connection, authorization, lock=True)
     capabilities = body.capabilities.model_dump()
     connection.execute("UPDATE workers SET capabilities=%s,last_seen=now() WHERE id=%s", (jsonb(capabilities), worker["id"]))
@@ -117,7 +117,7 @@ class Heartbeat(WorkerHello):
 
 
 @router.post("/worker/heartbeat")
-def heartbeat(body: Heartbeat, request: Request, authorization: str | None = Header(default=None), connection=Depends(db_connection)):
+def heartbeat(body: Heartbeat, request: Request, authorization: str | None = Header(default=None), connection=Depends(db_connection, scope="function")):
     worker = authenticate_worker(connection, authorization, lock=True)
     capabilities = body.capabilities.model_dump()
     connection.execute("UPDATE workers SET capabilities=%s,last_seen=now() WHERE id=%s", (jsonb(capabilities), worker["id"]))
@@ -142,7 +142,7 @@ def owned_lease(connection, authorization, attempt_id, lease_token, *, lock=Fals
 
 @router.get("/worker/attempts/{attempt_id}/input/{kind}")
 def task_input(attempt_id: UUID, kind: str, request: Request,
-               authorization: str | None = Header(default=None), x_lease_token: str | None = Header(default=None), connection=Depends(db_connection)):
+               authorization: str | None = Header(default=None), x_lease_token: str | None = Header(default=None), connection=Depends(db_connection, scope="function")):
     _, task, _ = owned_lease(connection, authorization, attempt_id, x_lease_token)
     if kind not in {"skill", "suite"} or (kind == "suite" and task["kind"] != "evaluate"):
         raise HTTPException(404, "任务输入不存在")
@@ -169,7 +169,7 @@ def redact(value):
 
 @router.post("/worker/attempts/{attempt_id}/events")
 def upload_events(attempt_id: UUID, body: EventsInput,
-                  authorization: str | None = Header(default=None), x_lease_token: str | None = Header(default=None), connection=Depends(db_connection)):
+                  authorization: str | None = Header(default=None), x_lease_token: str | None = Header(default=None), connection=Depends(db_connection, scope="function")):
     owned_lease(connection, authorization, attempt_id, x_lease_token, lock=True)
     maximum = connection.execute("SELECT coalesce(max(sequence),0) AS n FROM events WHERE attempt_id=%s", (attempt_id,)).fetchone()["n"]
     for event in body.events:
@@ -201,7 +201,7 @@ class Completion(BaseModel):
 @router.post("/worker/attempts/{attempt_id}/complete")
 def complete(attempt_id: UUID, request: Request, file: Annotated[UploadFile, File()],
              metadata: Annotated[str, Form()], authorization: str | None = Header(default=None),
-             x_lease_token: str | None = Header(default=None), connection=Depends(db_connection)):
+             x_lease_token: str | None = Header(default=None), connection=Depends(db_connection, scope="function")):
     worker = authenticate_worker(connection, authorization, lock=True)
     task, attempt = locked_attempt(connection, attempt_id, worker["id"])
     if not x_lease_token or not hmac.compare_digest(digest(x_lease_token), attempt["lease_hash"]):

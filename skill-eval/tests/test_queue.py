@@ -234,3 +234,28 @@ def test_history_pagination_and_server_side_search(admin):
     assert admin.get('/api/tasks?kind=generate').json() == []
     assert admin.get('/api/tasks?query=not-a-synthetic-skill').json() == []
     assert admin.get('/api/tasks?offset=-1').status_code == 422
+
+
+def test_task_filters_apply_before_pagination_and_keep_result_semantics(admin):
+    _, auth, uploaded, _ = ready(admin)
+    completed = task(admin, uploaded)
+    assert complete(admin, auth, claim(admin, auth)).status_code == 200
+    oldest = task(admin, uploaded)
+    assert admin.post(f"/api/tasks/{oldest['id']}/cancel").status_code == 200
+    for _ in range(26):
+        task(admin, uploaded)
+    assert oldest['id'] not in {row['id'] for row in admin.get('/api/tasks?limit=25').json()}
+    filtered = admin.get('/api/tasks', params={"state": "CANCELLED", "skill_id": uploaded['skill']['id'], "limit": 1})
+    assert filtered.status_code == 200
+    assert [row['id'] for row in filtered.json()] == [oldest['id']]
+    passed = admin.get('/api/tasks', params={"state": "SUCCEEDED", "verdict": "PASSED"}).json()
+    assert [row['id'] for row in passed] == [completed['id']]
+    assert admin.get('/api/tasks?state=SUCCEEDED&verdict=FAILED').json() == []
+    assert admin.get('/api/tasks', params={"skill_id": str(uuid4())}).json() == []
+    boundary = completed['created_at']
+    assert admin.get('/api/tasks', params={"verdict": "PASSED", "since": boundary}).json()[0]['id'] == completed['id']
+    assert admin.get('/api/tasks', params={"verdict": "PASSED", "until": boundary}).json() == []
+    assert admin.get('/api/tasks?state=invalid').status_code == 422
+    assert admin.get('/api/tasks?verdict=invalid').status_code == 422
+    assert admin.get('/api/tasks?since=2026-11-04T00:00:00').status_code == 422
+    assert admin.get('/api/tasks', params={"since": boundary, "until": boundary}).status_code == 422

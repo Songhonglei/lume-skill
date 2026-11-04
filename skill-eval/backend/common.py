@@ -23,6 +23,7 @@ def jsonb(value) -> Jsonb:
 
 
 def db_connection(request: Request):
+    """Use function-scoped Depends so commit/rollback finishes before HTTP success."""
     with request.app.state.database.connection() as connection:
         yield connection
 

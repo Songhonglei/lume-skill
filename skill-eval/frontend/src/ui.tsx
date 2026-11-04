@@ -1,30 +1,49 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { api, message } from './api'
-import type { Validation } from './types'
+import type { ConfirmOptions, Validation } from './types'
 
 export function useData<T>(path: string | null, initial: T, revision = 0, poll = 0) {
-  const [data, setData] = useState<T>(initial)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState({ path, data: initial, loading: !!path, error: '' })
   useEffect(() => {
-    let alive = true
+    let alive = true, inFlight = false
     const controller = new AbortController()
     const load = async () => {
-      if (!path) { setLoading(false); return }
+      if (!path || inFlight) return
+      inFlight = true
       try {
-        const result = await api<T>(path, { signal: controller.signal })
-        if (alive) { setData(result); setError('') }
+        const data = await api<T>(path, { signal: controller.signal })
+        if (alive) setState({ path, data, loading: false, error: '' })
       } catch (error) {
-        if (alive) setError(message(error))
-      } finally { if (alive) setLoading(false) }
+        if (alive) setState(previous => ({ path, data: previous.path === path ? previous.data : initial, loading: false, error: message(error) }))
+      } finally { inFlight = false }
     }
-    setLoading(true)
     void load()
-    const timer = poll ? window.setInterval(load, poll) : undefined
+    const timer = path && poll ? window.setInterval(load, poll) : undefined
     return () => { alive = false; controller.abort(); window.clearInterval(timer) }
   }, [path, revision, poll])
-  return { data, loading, error, setData }
+  return { data: state.path === path ? state.data : initial, loading: !!path && (state.path !== path || state.loading), error: state.path === path ? state.error : '' }
+}
+
+export function Loading({ label = '正在读取…' }: { label?: string }) {
+  return <div className="loading-state" role="status"><span className="spinner" aria-hidden="true" />{label}</div>
+}
+
+export function LoadError({ message: text, retry }: { message: string; retry: () => void }) {
+  return <div className="load-error" role="alert"><strong>暂时无法读取</strong><p>{text}</p><Button onClick={retry}>重新加载</Button></div>
+}
+
+export function useConfirm() {
+  const pending = useRef<((accepted: boolean) => void) | null>(null)
+  const [options, setOptions] = useState<ConfirmOptions | null>(null)
+  const confirm = useCallback((value: ConfirmOptions) => new Promise<boolean>(resolve => {
+    pending.current?.(false); pending.current = resolve; setOptions(value)
+  }), [])
+  const settle = (accepted: boolean) => { pending.current?.(accepted); pending.current = null; setOptions(null) }
+  useEffect(() => () => pending.current?.(false), [])
+  return { confirm, confirmation: options && <Dialog title={options.title} onClose={() => settle(false)}>
+    <p className="confirm-description">{options.description}</p><div className="dialog-actions"><Button autoFocus data-initial-focus="true" onClick={() => settle(false)}>{options.cancelLabel || '继续编辑'}</Button><Button variant={options.danger ? 'danger-button' : 'primary'} onClick={() => settle(true)}>{options.confirmLabel || '放弃修改'}</Button></div>
+  </Dialog> }
 }
 
 export function Button({ children, busy, variant = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { busy?: boolean; variant?: string }) {
@@ -54,9 +73,10 @@ export function Badge({ value, children }: { value?: string; children?: ReactNod
 
 export function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => { const element = ref.current; element?.showModal(); return () => element?.close() }, [])
-  return <dialog ref={ref} className={`dialog ${wide ? 'wide' : ''}`} onCancel={event => { event.preventDefault(); onClose() }}>
-    <div className="dialog-head"><h2>{title}</h2><button className="close" onClick={onClose} aria-label="关闭">×</button></div>
+  const titleId = useId()
+  useEffect(() => { const element = ref.current; element?.showModal(); element?.querySelector<HTMLElement>('[data-initial-focus]')?.focus(); return () => element?.close() }, [])
+  return <dialog ref={ref} aria-labelledby={titleId} className={`dialog ${wide ? 'wide' : ''}`} onCancel={event => { event.preventDefault(); onClose() }}>
+    <div className="dialog-head"><h2 id={titleId}>{title}</h2><button className="close" onClick={onClose} aria-label="关闭">×</button></div>
     <div className="dialog-body">{children}</div>
   </dialog>
 }
