@@ -38,3 +38,7 @@ vendor 与示例全量重跑，输出与 [vendor-after.json](vendor-after.json)�
 | U2 | WARN | 安装后再生成授权码，并提供过期恢复 |
 
 无未解决的实际 ERR/WARN，无待确认修复项。[验证范围](../worker-onboarding-2026-11-04.md)不包含新增机器安装或模型验收，远程完整 CI 通过后合 main。
+
+### 通用 Agent 文案增量复核
+
+相对 `11697ef`，安装助手改为任意具备终端执行能力的 Agent，保留其产品、模型和登录配置；Worker 的独立 Codex CLI 依赖仍明确说明。U：页面及复制指令不再限定 Codex 助手；G：TypeScript/Vite 与 diff 检查通过；L：安装命令、授权和到期逻辑未改；I：Worker 文档与 UI 同步；C：没有新增模型、注册、凭据或配置操作。浏览器回读两处通用文案且无接入码。Skill 六模块结果再次与原基线完全一致，原分类及误报依据不变；无新增实际 ERR/WARN。文案变动未增加镜像测试或新机器安装结论。

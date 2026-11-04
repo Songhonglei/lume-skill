@@ -12,7 +12,8 @@ export function centerNotice(url: string) {
   return ''
 }
 export function installationPrompt(versions: Settings['required_versions']) {
-  return `请在当前电脑安装并初始化 LumaSkill 的独立评测 Worker，先不要接入中心或启动领取任务。
+  return `请在当前电脑安装并初始化 LumaSkill 独立评测 Worker，完成后等待接入指令。
+安装助手支持任意具备终端执行能力的 Agent；评测由 Worker 独立安装的 Codex CLI 执行。保留安装助手现有工具、模型和登录配置，安装阶段不启动 Worker。
 
 1. 检查系统：支持 macOS arm64、Linux x86_64；Linux 原生环境仍待验收，不要将安装成功当作模型/沙箱验收。Windows 原生或其他架构请停止并说明。检查 Python 3.11+（含 venv/pip）、Git、Node.js 22+ 和 npm，以及下载依赖的网络。缺少依赖时先说明缺项，不改写系统已有 Python、Codex 或全局 Skill。
 2. 如已有本项目的 start-worker，先核对应用目录、工具版本和连接记录，可复用匹配的安装；不要覆盖已有应用、连接凭据或正在运行的 Worker。否则从公开仓库获取源码，在新的应用目录安装：
