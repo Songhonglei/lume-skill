@@ -1,0 +1,41 @@
+{
+  "version": "0.3.2.dev10",
+  "environment": "isolated local demo",
+  "externalModelCalls": 0,
+  "checks": {
+    "skillCellsOneField": true,
+    "taskCellsOneField": true,
+    "findingCellsOneField": true,
+    "versionHistoryOneField": true,
+    "settingsCellsOneField": true,
+    "onePrimaryRowAction": true,
+    "unreviewedPrimaryAuditExactVersion": true,
+    "moreMenuAudit": true,
+    "overviewFilter": true,
+    "ownerScopeToggle": true,
+    "searchRetainedOnReturn": true,
+    "emptySearchRecovery": true,
+    "issueNumbersOpenFixedVersion": true,
+    "issueSearchAndPageSelection": true,
+    "fullSuggestionAndEvidenceReachable": true,
+    "nestedFocusReturn": true,
+    "readonlySkillActions": true,
+    "readonlyIssueColumns": true,
+    "readonlyEvidence": true,
+    "desktop1440": true,
+    "desktop1024NoOverflow": true,
+    "desktopRowHeight60": true,
+    "longFieldsEllipsisAndFullTitle": true,
+    "waitingConfigurationConclusionEmpty": true,
+    "waitingConfigurationLabelFits1024": true,
+    "mobile390Skill": true,
+    "mobile390Task": true,
+    "mobile390Issues": true,
+    "tablet800NoOverflow": true
+  },
+  "notes": [
+    "Long-name values were temporary display-only fixtures; no database writes.",
+    "The unconfigured full-audit fixture made zero external model calls; it was cancelled and retained, followed by a real static audit.",
+    "Mobile views use emulated metrics and include DOM actions; no real-device or screen-reader certification."
+  ]
+}

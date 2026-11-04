@@ -86,3 +86,43 @@ test('finding pagination clamps on filter changes without selecting hidden rows'
   vm.runInContext("view.findingQueries.set('paged','scripts/60.py')",context);
   const filtered=context.findingPage();assert.equal(filtered.page,0);assert.equal(filtered.items.length,1);assert.equal(filtered.items[0].id,'item-60');
 });
+
+context.fmtDate=value=>String(value);
+test('Skill results show one field per cell and one primary row action',()=>{
+  const skill={id:'skill',name:'Long <Skill>',description:'Details belong in the detail page',current_version:'1.0.0',current_version_id:'version',version_count:12,owner:'Owner',updated_at:'2026-11-04T08:00:00Z',can_write:true,latest_audit:{id:'audit',task_id:'task',mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',error_count:2,warning_count:3}};
+  const html=context.skillRow(skill), visible=html.replace(/<[^>]*>/g,'');
+  assert.equal((html.match(/<td[ >]/g)||[]).length,8);
+  assert.ok(!html.includes('<p')&&!html.includes('<br'));
+  assert.ok(!visible.includes(skill.description)&&!visible.includes('12 个版本'));
+  assert.ok(html.includes('Long &lt;Skill&gt;'));
+  assert.equal((html.match(/class="row-primary"/g)||[]).length,1);
+  assert.match(html,/data-preview-filter="ERR"[^>]*>2<\/button>/);
+  assert.match(html,/data-label="维护者"/);assert.match(html,/data-label="最近活动"/);
+});
+test('task identity, version, type and conclusions remain separate single-line fields',()=>{
+  const html=context.taskRows([{id:'task',skill_id:'skill',skill_name:'Sample',version:'2.0.0',kind:'audit',audit_mode:'static',state:'succeeded',verdict:'pass',delivery_status:'saved',audit_run_id:'audit',error_count:0,warning_count:1,created_at:'2026-11-04T08:00:00Z'}]);
+  assert.equal((html.match(/<th scope="col"/g)||[]).length,9);
+  assert.equal((html.match(/<td[ >]/g)||[]).length,9);
+  assert.ok(!html.includes('<p')&&!html.includes('<br'));
+  assert.match(html,/data-label="版本"/);assert.match(html,/data-label="任务">静态预检/);
+  assert.match(html,/预检待复核/);assert.ok(!html.includes('审计通过'));
+  assert.ok(!html.includes('已保存'));
+});
+test('issue rows leave suggestions in the drawer and preserve safe readonly selection',()=>{
+  const finding={id:'finding',message:'Problem <script>unsafe</script>',severity:'ERR',ruleId:'D1-E1',file:'scripts/long-file.py',line:1,suggestion:'Suggestion only in detail',verification:'Verification only in detail',reviewRequired:true};
+  const html=context.findingTable([finding],true,new Set(['finding']));
+  assert.equal((html.match(/<td[ >]/g)||[]).length,6);
+  assert.ok(!html.includes(finding.suggestion)&&!html.includes(finding.verification));
+  assert.ok(!html.includes('<script>')&&!html.includes('<p'));
+  assert.match(html,/&lt;script&gt;/);assert.match(html,/<input[^>]*disabled/);
+  assert.ok(!/<input[^>]*checked/.test(html));
+  assert.ok(!context.findingTable([finding],false,new Set()).includes('<input'));
+});
+
+test('task conclusions never repeat pending execution or imply an unfinished result',()=>{
+  const html=context.taskRows([{id:'waiting',skill_name:'Sample',version:'1.0.0',kind:'audit',audit_mode:'full',state:'waiting_configuration',verdict:'pass',delivery_status:'pending',created_at:'2026-11-04T08:00:00Z'}]);
+  const verdict=html.match(/<td data-label="检查结论">([\s\S]*?)<\/td>/)[1];
+  assert.match(verdict,/尚无检查结论/);assert.ok(!verdict.includes('pass')&&!verdict.includes('waiting_configuration'));
+  assert.match(context.taskConclusion({kind:'repair',repair_state:'editing'}),/尚无检查结论/);
+  assert.ok(context.taskConclusion({kind:'repair',repair_state:'published'}).includes('success'));
+});
