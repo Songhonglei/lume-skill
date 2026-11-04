@@ -244,7 +244,7 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
 
 .findings-preview #findings-panel { scroll-margin-top:120px; }
 
-/* Clear results: one field per cell, one primary action per record. */
+/* Clear results: one field per information cell, frequent actions visible. */
 .library-toolbar { gap:18px;padding:16px 24px; }.library-toolbar .search-field { max-width:360px; }.library-toolbar .compact-label { margin-left:auto; }
 .scope-toggle { display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:12px;color:var(--body); }.scope-toggle input { width:16px;height:16px; }
 .result-table { table-layout:fixed;width:100%;font-size:13px; }
@@ -264,7 +264,7 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
 .finding-col-check { width:42px; }.finding-col-severity { width:78px; }.finding-col-rule { width:80px; }.finding-col-location { width:26%; }.finding-col-action { width:64px; }
 .finding-table.has-selection th:first-child,.finding-table.has-selection td:first-child { padding:4px 6px; }.finding-table th:last-child,.finding-table td:last-child { padding-right:12px; }
 .selection-target { display:flex;align-items:center;justify-content:center;min-height:44px;width:30px;margin:0;cursor:pointer; }.selection-target input { width:16px;height:16px; }
-.finding-table .row-primary { padding:4px; }.version-table th:first-child { width:20%; }.version-table th:nth-child(2) { width:14%; }.version-table th:nth-child(3) { width:22%; }.version-table th:nth-child(4) { width:22%; }.version-table th:nth-child(5) { width:12%; }.version-table th:last-child { width:10%; }
+.finding-table .row-primary { padding:4px; }.version-table th:first-child { width:18%; }.version-table th:nth-child(2) { width:12%; }.version-table th:nth-child(3) { width:22%; }.version-table th:nth-child(4) { width:20%; }.version-table th:nth-child(5) { width:12%; }.version-table th:last-child { width:16%; }
 .settings-table td:first-child { width:auto; }
 @media(max-width:1100px) and (min-width:901px) {
  .result-table th:first-child,.result-table td:first-child { padding-left:16px; }.result-table th:last-child,.result-table td:last-child { padding-right:12px; }.result-table th,.result-table td { padding-left:8px;padding-right:8px; }.result-table .badge { padding:3px 5px;font-size:11px; }
@@ -299,3 +299,18 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
 .skill-table th:last-child,.task-table th:last-child,.version-table th:last-child { text-align:right; }
 
 @media(max-width:900px) { .result-table .record-actions .row-primary { min-width:44px;min-height:44px; } }
+
+/* Keep short headings compact and long values contained. */
+.dialog-head>div,.context-chip { min-width:0;overflow-wrap:anywhere; }
+.context-chip .version-tag { flex:none; }
+.settings-row>strong { min-width:0;max-width:70%;overflow-wrap:anywhere; }
+.error:empty { display:none; }
+@media(max-width:600px) {
+ .page-head .actions { flex-wrap:wrap; }
+ .settings-row { gap:16px; }
+ .context-chip { flex-wrap:wrap; }
+}
+
+.repair-files>summary { cursor:pointer;color:var(--primary);font-size:13px; }
+.repair-files { margin-top:10px; }
+.repair-files .path-list { max-height:160px;overflow:auto; }
