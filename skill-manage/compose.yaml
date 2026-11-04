@@ -1,7 +1,7 @@
 services:
   web:
     build: .
-    image: open-skill-mng:0.3.2.dev9
+    image: open-skill-mng:0.3.2.dev10
     command: ["skill-mng", "server", "run"]
     environment:
       SKILL_MNG_DATA: /data
@@ -23,7 +23,7 @@ services:
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
   worker:
-    image: open-skill-mng:0.3.2.dev9
+    image: open-skill-mng:0.3.2.dev10
     command: ["skill-mng", "worker", "run"]
     depends_on:
       web:

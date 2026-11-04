@@ -6,18 +6,34 @@ function versionURL(skillId, versionId, extra = {}) {
 }
 function auditURL(audit) { return audit.task_id?'#task/'+audit.task_id:'#audit/'+audit.id; }
 function auditKind(audit) { return audit?.mode === 'static' ? '静态预检' : '完整审计'; }
-function resultCounts(audit, skillId='', taskId='') {
-  if (!audit || audit.error_count == null) return '<span class="muted">等待检查结果</span>';
-  const count=(number,filter,text)=>skillId&&number>0?`<button class="issue-link ${filter==='ERR'?'text-danger':''}" data-preview-audit="${escapeHTML(audit.audit_run_id||audit.id)}" data-preview-skill="${escapeHTML(skillId)}" data-preview-task="${escapeHTML(taskId||audit.task_id||'')}" data-preview-filter="${filter}" aria-label="查看 ${number} 个${text}">${number} ${text}</button>`:`<span class="issue-count ${filter==='ERR'&&number?'text-danger':''}">${number} ${text}</span>`;
-  return count(audit.error_count,'ERR','必修')+'<span class="muted"> / </span>'+count(audit.warning_count??0,'WARN','建议');
+function issueCount(audit, severity, skillId='', taskId='') {
+  const number=severity==='ERR'?audit?.error_count:audit?.warning_count;
+  if (number==null) return '<span class="muted" aria-label="尚无检查结果">—</span>';
+  const text=severity==='ERR'?'必修':'建议';
+  if (!skillId||!number) return `<span class="number ${number&&severity==='ERR'?'text-danger':number?'':'muted'}">${number}</span>`;
+  return `<button class="issue-link number ${severity==='ERR'?'text-danger':''}" data-preview-audit="${escapeHTML(audit.audit_run_id||audit.id)}" data-preview-skill="${escapeHTML(skillId)}" data-preview-task="${escapeHTML(taskId||audit.task_id||'')}" data-preview-filter="${severity}" aria-label="查看 ${number} 个${text}">${number}</button>`;
+}
+function skillRow(skill) {
+  const audit=skill.latest_audit, detail='#skill/'+encodeURIComponent(skill.id);
+  const auditAction=`<button class="text-button" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">创建审计</button>`;
+  const primary=audit?`<a class="row-primary" href="${auditURL(audit)}">${audit.delivery_status==='saved'?'报告':'进展'}</a>`:skill.can_write?`<button class="text-button row-primary" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:`<a class="row-primary" href="${detail}">详情</a>`;
+  return `<tr><td class="record-title"><a class="skill-name cell-text" href="${detail}" title="${escapeHTML(skill.name+(skill.description?' — '+skill.description:''))}">${escapeHTML(skill.name)}</a></td>
+    <td data-label="当前版本"><span class="cell-text mono" title="${escapeHTML(skill.current_version)}">${escapeHTML(skill.current_version)}</span></td>
+    <td data-label="审计状态">${auditBadge(audit)}</td>
+    <td class="numeric-cell" data-label="必修">${issueCount(audit,'ERR',skill.id)}</td>
+    <td class="numeric-cell" data-label="建议">${issueCount(audit,'WARN',skill.id)}</td>
+    <td data-label="维护者"><span class="cell-text" title="${escapeHTML(skill.owner)}">${escapeHTML(skill.owner)}</span></td>
+    <td data-label="最近活动"><time title="${escapeHTML(fmtDate(skill.updated_at))}" datetime="${escapeHTML(skill.updated_at)}">${escapeHTML(fmtShortDate(skill.updated_at))}</time></td>
+    <td class="record-actions"><div class="actions">${primary}<details class="more-menu row-menu"><summary aria-label="${escapeHTML(skill.name)} 的更多操作"><span aria-hidden="true">⋯</span></summary><div>${skill.can_write&&audit?auditAction:''}<a href="${detail}">版本与文件</a><a href="/api/versions/${skill.current_version_id}/download">下载当前包</a></div></details></div></td></tr>`;
 }
 async function library() {
   const key = location.hash, request=++view.render;
   const skills = await api('/skills');
   if (location.hash !== key||request!==view.render||!state.user) return;
   state.skills = skills;
-  $('#main').innerHTML = pageHeading('Skill 库', '版本、质量与下一步，在这里看清楚。', '<button class="primary" data-action="import">导入 Skill</button>') + `<section class="panel"><div id="library-overview" class="library-overview" aria-label="质量快捷筛选"></div><div class="toolbar library-toolbar"><label class="search-field"><span class="sr-only">搜索 Skill</span><input id="search" type="search" placeholder="搜索名称、描述或维护者" aria-label="搜索 Skill" value="${escapeHTML(view.library.q)}"></label><div class="segmented" role="group" aria-label="Skill 范围"><button data-library-mine="false" aria-pressed="${!view.library.mine}">全部 Skill <span>${skills.length}</span></button><button data-library-mine="true" aria-pressed="${view.library.mine}">我维护的</button></div><label class="compact-label"><span class="sr-only">审计结论</span><select id="library-verdict" aria-label="审计结论">${[['','全部审计状态'],['attention','需要处理'],['active','执行中'],['none','未审计'],['pass','审计通过'],['fail','不通过'],['review_required','待复核']].map(([value,text])=>`<option value="${value}" ${view.library.verdict===value?'selected':''}>${text}</option>`).join('')}</select></label><button class="text-button" data-ui="library-refresh">刷新</button></div><div id="skill-results"></div><div class="panel-foot"><span id="library-count"></span><span>审计状态固定到当前版本，历史版本完整保留。</span></div></section>`;
+  $('#main').innerHTML = pageHeading('Skill 库', '版本、质量与下一步，在这里看清楚。', '<button class="primary" data-action="import">导入 Skill</button>') + `<section class="panel"><div id="library-overview" class="library-overview" aria-label="质量快捷筛选"></div><div class="toolbar library-toolbar"><label class="search-field"><span class="sr-only">搜索 Skill</span><input id="search" type="search" placeholder="搜索名称、描述或维护者" aria-label="搜索 Skill" value="${escapeHTML(view.library.q)}"></label><label class="scope-toggle"><input id="library-mine" type="checkbox" ${view.library.mine?'checked':''}>我维护的</label><label class="compact-label"><span class="sr-only">审计状态</span><select id="library-verdict" aria-label="审计状态">${[['','全部审计状态'],['attention','待处理'],['active','执行中'],['none','未审计'],['pass','审计通过'],['fail','不通过'],['review_required','待复核']].map(([value,text])=>`<option value="${value}" ${view.library.verdict===value?'selected':''}>${text}</option>`).join('')}</select></label><button class="text-button" data-ui="library-refresh">刷新</button></div><div id="skill-results"></div><div class="panel-foot"><span id="library-count"></span><span>审计状态固定到当前版本，历史版本完整保留。</span></div></section>`;
   $('#search').oninput = event => { view.library.q = event.target.value; renderRows(); };
+  $('#library-mine').onchange=event=>{view.library.mine=event.target.checked;renderRows();};
   $('#library-verdict').onchange = event => { view.library.verdict = event.target.value; renderRows(); };
   renderRows();
 }
@@ -25,13 +41,9 @@ function renderRows() {
   const filter = view.library, q = filter.q.trim().toLowerCase();
   const scope=state.skills.filter(skill=>(!filter.mine||skill.owner_id===state.user.id)&&`${skill.name} ${skill.slug} ${skill.description} ${skill.owner}`.toLowerCase().includes(q));
   const rows=scope.filter(skill=>matchesAuditStatus(skill.latest_audit,filter.verdict));
-  $('#library-overview').innerHTML=[['','全部 Skill'],['attention','需要处理'],['active','执行中'],['none','未审计']].map(([value,text])=>`<button data-library-status="${value}" aria-pressed="${filter.verdict===value}"><span>${text}</span><strong>${scope.filter(skill=>matchesAuditStatus(skill.latest_audit,value)).length}</strong></button>`).join('')+'<span class="scope-note">当前搜索与维护范围 · 当前版本</span>';
+  $('#library-overview').innerHTML=[['','全部 Skill'],['attention','待处理'],['active','执行中'],['none','未审计']].map(([value,text])=>`<button data-library-status="${value}" aria-pressed="${filter.verdict===value}"><span>${text}</span><strong>${scope.filter(skill=>matchesAuditStatus(skill.latest_audit,value)).length}</strong></button>`).join('');
   $('#library-count').textContent = `${rows.length} / ${state.skills.length} 个 Skill`;
-  $('#skill-results').innerHTML = rows.length ? `<div class="table-wrap"><table class="records-table skill-table"><thead><tr><th>Skill</th><th>当前版本</th><th>当前版本审计</th><th>维护者 / 最近活动</th><th>操作</th></tr></thead><tbody>${rows.map(skill => {
-    const audit = skill.latest_audit;
-    const report = audit ? `<a href="${auditURL(audit)}">${audit.delivery_status==='saved'?'查看报告':'查看进展'}</a>` : `<a href="#skill/${skill.id}">查看详情</a>`;
-    return `<tr><td class="record-title"><a class="skill-name" href="#skill/${skill.id}">${escapeHTML(skill.name)}</a><p class="description" title="${escapeHTML(skill.description)}">${escapeHTML(skill.description || skill.slug)}</p></td><td data-label="当前版本"><span class="version-tag">${escapeHTML(skill.current_version)}</span><p class="muted">${skill.version_count} 个版本</p></td><td data-label="审计结论">${auditBadge(audit)}<p class="record-meta">${resultCounts(audit,skill.id)}</p></td><td data-label="维护者 / 活动"><span>${escapeHTML(skill.owner)}</span><p class="muted" title="${escapeHTML(fmtDate(skill.updated_at))}">${escapeHTML(fmtShortDate(skill.updated_at))}</p></td><td class="record-actions"><div class="actions">${skill.can_write?`<button class="text-button" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:''}${report}<details class="more-menu"><summary aria-label="${escapeHTML(skill.name)} 的更多操作">更多</summary><div><a href="#skill/${skill.id}">版本与文件</a><a href="/api/versions/${skill.current_version_id}/download">下载当前包</a></div></details></div></td></tr>`;
-  }).join('')}</tbody></table></div>` : emptyState(state.skills.length?'没有匹配的 Skill':'导入第一个 Skill', state.skills.length?'调整关键词或清除筛选后再看看。':'选择 ZIP、一个目录，或粘贴公开下载链接。', `<button ${state.skills.length?'data-ui="library-clear"':'class="primary" data-action="import"'}>${state.skills.length?'清除筛选':'导入 Skill'}</button>`);
+  $('#skill-results').innerHTML = rows.length ? `<div class="table-wrap"><table class="records-table result-table skill-table"><caption class="sr-only">Skill 当前版本的审计结果</caption><colgroup><col class="skill-col-name"><col class="skill-col-version"><col class="skill-col-verdict"><col class="count-col"><col class="count-col"><col class="skill-col-owner"><col class="skill-col-time"><col class="skill-col-actions"></colgroup><thead><tr><th scope="col">Skill</th><th scope="col">当前版本</th><th scope="col">审计状态</th><th scope="col" class="numeric-cell">必修</th><th scope="col" class="numeric-cell">建议</th><th scope="col">维护者</th><th scope="col">最近活动</th><th scope="col">操作</th></tr></thead><tbody>${rows.map(skillRow).join('')}</tbody></table></div>` : emptyState(state.skills.length?'没有匹配的 Skill':'导入第一个 Skill', state.skills.length?'调整关键词或清除筛选后再看看。':'选择 ZIP、一个目录，或粘贴公开下载链接。', `<button ${state.skills.length?'data-ui="library-clear"':'class="primary" data-action="import"'}>${state.skills.length?'清除筛选':'导入 Skill'}</button>`);
 }
 async function detail(id, selected, options = {}) {
   const token = ++view.render;
@@ -54,7 +66,7 @@ async function detailTab(tab, options = {}) {
   const host = $('#detail-content'), skill = state.detail, version = state.version;
   host.setAttribute('aria-labelledby','detail-tab-'+tab);
   if (tab === 'versions') {
-    host.innerHTML = `<div class="version-history">${skill.versions.map(item=>`<div class="version-history-row"><div><strong>${escapeHTML(item.version)}</strong> ${item.id===skill.current_version_id?badge('neutral','当前使用'):''}<p class="muted">${escapeHTML(fmtDate(item.created_at))} · ${(item.byte_size/1024).toFixed(1)} KiB</p></div><div class="actions">${auditBadge(item.latest_audit)}<a href="${versionURL(skill.id,item.id)}">查看版本</a><a href="/api/versions/${item.id}/download">下载</a></div></div>`).join('')}</div>`;
+    host.innerHTML=`<div class="table-wrap"><table class="records-table result-table version-table"><thead><tr><th scope="col">版本</th><th scope="col">使用状态</th><th scope="col">审计状态</th><th scope="col">登记时间</th><th scope="col">大小</th><th scope="col">操作</th></tr></thead><tbody>${skill.versions.map(item=>`<tr><td class="record-title"><a class="cell-text mono" title="${escapeHTML(item.version)}" href="${versionURL(skill.id,item.id)}">${escapeHTML(item.version)}</a></td><td data-label="使用状态">${item.id===skill.current_version_id?badge('active','当前'):badge('neutral','历史')}</td><td data-label="审计状态">${item.latest_audit?`<a href="${auditURL(item.latest_audit)}">${auditBadge(item.latest_audit)}</a>`:auditBadge(null)}</td><td data-label="登记时间"><time title="${escapeHTML(fmtDate(item.created_at))}">${escapeHTML(fmtShortDate(item.created_at))}</time></td><td data-label="大小" class="number">${(item.byte_size/1024).toFixed(1)} KiB</td><td class="record-actions"><a class="row-primary" href="/api/versions/${item.id}/download">下载</a></td></tr>`).join('')}</tbody></table></div>`;
     return;
   }
   if (tab === 'activity') {
@@ -87,9 +99,23 @@ async function showFile(path, line = 0) {
     mountReader($('#file-content'),file.content,{markdown:/\.md$/i.test(path),line,title:'只读预览'});
   } catch(error) { if (state.version===version&&view.fileRequest===request&&$('#file-content')) {$('#file-content').innerHTML=emptyState('文件暂时无法读取',error.message,'<button data-retry-file>重试</button>');$('[data-retry-file]').onclick=()=>showFile(path,line);} }
 }
+function taskConclusion(task) {
+  const empty='<span class="muted" aria-label="尚无检查结论">—</span>';
+  if (task.kind==='repair') return ['ready','published','needs_attention','failed'].includes(task.repair_state)?badge(task.repair_state):empty;
+  return task.delivery_status==='saved'?auditBadge({...task,mode:task.audit_mode,state:null}):empty;
+}
 function taskRows(tasks) {
   if (!tasks.length) return emptyState('暂无匹配记录','可以调整筛选条件，或前往 Skill 库创建审计。','<a class="button" href="#skills">前往 Skill 库</a>');
-  return `<div class="table-wrap"><table class="records-table task-table"><thead><tr><th>Skill / 版本</th><th>执行状态</th><th>审计 / 修复结论</th><th>报告与问题</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${tasks.map(task=>`<tr><td class="record-title"><a class="skill-name" href="#task/${task.id}">${escapeHTML(task.skill_name)}</a><p class="record-meta"><span class="version-tag">${escapeHTML(task.version)}</span> · ${task.kind==='repair'?'授权修复':task.audit_mode==='static'?'静态预检':'完整审计'}</p></td><td data-label="执行状态">${badge(task.state)}</td><td data-label="检查结论">${task.kind==='repair'?badge(task.repair_state):auditBadge({...task,mode:task.audit_mode})}</td><td data-label="报告与问题">${task.kind==='repair'?`<span>${task.repair_state==='published'?'版本已登记':'查看轮次结果'}</span>`:`<span>${label(task.delivery_status)}</span><p class="record-meta">${resultCounts(task,task.skill_id,task.id)}</p>`}</td><td data-label="创建时间" class="muted" title="${escapeHTML(fmtDate(task.created_at))}">${escapeHTML(fmtShortDate(task.created_at))}</td><td class="record-actions"><a href="#task/${task.id}">查看${task.delivery_status==='saved'?'报告':'详情'}</a></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap"><table class="records-table result-table task-table"><caption class="sr-only">任务执行与检查结论</caption><colgroup><col class="task-col-name"><col class="task-col-version"><col class="task-col-kind"><col class="task-col-state"><col class="task-col-verdict"><col class="count-col"><col class="count-col"><col class="task-col-time"><col class="task-col-actions"></colgroup><thead><tr><th scope="col">Skill</th><th scope="col">版本</th><th scope="col">任务</th><th scope="col">执行状态</th><th scope="col">检查结论</th><th scope="col" class="numeric-cell">必修</th><th scope="col" class="numeric-cell">建议</th><th scope="col">创建时间</th><th scope="col">操作</th></tr></thead><tbody>${tasks.map(task=>`<tr>
+    <td class="record-title"><a class="skill-name cell-text" href="#task/${task.id}" title="${escapeHTML(task.skill_name)}">${escapeHTML(task.skill_name)}</a></td>
+    <td data-label="版本"><span class="cell-text mono" title="${escapeHTML(task.version)}">${escapeHTML(task.version)}</span></td>
+    <td data-label="任务">${task.kind==='repair'?'修复':task.audit_mode==='static'?'静态预检':'完整审计'}</td>
+    <td data-label="执行状态">${badge(task.state)}</td>
+    <td data-label="检查结论">${taskConclusion(task)}</td>
+    <td class="numeric-cell" data-label="必修">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'ERR',task.skill_id,task.id)}</td>
+    <td class="numeric-cell" data-label="建议">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'WARN',task.skill_id,task.id)}</td>
+    <td data-label="创建时间"><time title="${escapeHTML(fmtDate(task.created_at))}" datetime="${escapeHTML(task.created_at)}">${escapeHTML(fmtShortDate(task.created_at))}</time></td>
+    <td class="record-actions"><a class="row-primary" href="#task/${task.id}">${task.delivery_status==='saved'?'报告':'详情'}</a></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function taskList() {
   const history=state.taskHistory ||= {filters:{limit:'25'},cursor:null,previous:[],expanded:false};
@@ -140,13 +166,21 @@ function findingPage() {
   const page=Math.min(view.findingPages.get(id)||0,pages-1);view.findingPages.set(id,page);
   return {items:rows.slice(page*25,(page+1)*25),total:rows.length,page,pages};
 }
+function findingTable(items, writable, selected) {
+  return `<div class="table-wrap"><table class="records-table result-table finding-table ${writable?'has-selection':''}"><caption class="sr-only">问题摘要，完整建议在详情中查看</caption><colgroup>${writable?'<col class="finding-col-check">':''}<col><col class="finding-col-severity"><col class="finding-col-rule"><col class="finding-col-location"><col class="finding-col-action"></colgroup><thead><tr>${writable?'<th scope="col"><span class="sr-only">选择</span></th>':''}<th scope="col">问题</th><th scope="col">级别</th><th scope="col">规则</th><th scope="col">位置</th><th scope="col">操作</th></tr></thead><tbody>${items.map(finding=>`<tr class="finding-row">${writable?`<td class="selection-cell"><label class="selection-target"><input type="checkbox" data-finding="${escapeHTML(finding.id)}" aria-label="选择 ${escapeHTML(finding.ruleId)} ${escapeHTML(finding.file)} 第 ${finding.line} 行" ${finding.reviewRequired?'disabled':selected.has(finding.id)?'checked':''}></label></td>`:''}
+    <td class="record-title"><button class="finding-title cell-text" data-finding-detail="${escapeHTML(finding.id)}" title="${escapeHTML(finding.message)}">${escapeHTML(finding.message)}</button></td>
+    <td data-label="级别">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}</td>
+    <td data-label="规则"><span class="cell-text mono" title="${escapeHTML(finding.ruleId)}">${escapeHTML(finding.ruleId)}</span></td>
+    <td data-label="位置" class="finding-location"><button class="file-location cell-text" data-finding-detail="${escapeHTML(finding.id)}" title="${escapeHTML(finding.file)}:${finding.line}">${escapeHTML(finding.file)}:${finding.line}</button></td>
+    <td class="record-actions"><button class="text-button row-primary" data-finding-detail="${escapeHTML(finding.id)}">查看</button></td></tr>`).join('')}</tbody></table></div>`;
+}
 function renderFindings() {
   const {audit,result,skill}=state.auditContext, selected=view.selections.get(audit.id), filter=view.findingFilters.get(audit.id)||'all', page=findingPage();
   document.querySelectorAll('[data-finding-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.findingFilter===filter)));
   const search=$('#finding-search');search.value=view.findingQueries.get(audit.id)||'';
   search.oninput=event=>{view.findingQueries.set(audit.id,event.target.value);view.findingPages.set(audit.id,0);renderFindings();};
   $('#finding-match-count').textContent=`匹配 ${page.total} / ${result.findings.length} 项`;
-  $('#findings-list').innerHTML=page.items.length?page.items.map(finding=>`<div class="finding-row">${skill.can_write?`<input type="checkbox" data-finding="${escapeHTML(finding.id)}" aria-label="选择 ${escapeHTML(finding.ruleId)} ${escapeHTML(finding.file)} 第 ${finding.line} 行" ${finding.reviewRequired?'disabled':selected.has(finding.id)?'checked':''}>`:''}<div class="finding-main"><div class="finding-heading">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}<span class="mono">${escapeHTML(finding.ruleId)}</span><button class="file-location" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.file)}:${finding.line}</button></div><button class="finding-title" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.message)}</button><p class="finding-summary">${escapeHTML(finding.suggestion)}</p></div><button class="text-button finding-open" data-finding-detail="${escapeHTML(finding.id)}">查看详情</button></div>`).join(''):emptyState('没有匹配的问题','可调整分类或关键词；其他分类中的选择仍保留。','<button data-finding-reset>清除问题筛选</button>');
+  $('#findings-list').innerHTML=page.items.length?findingTable(page.items,skill.can_write,selected):emptyState('没有匹配的问题','可调整分类或关键词；其他分类中的选择仍保留。','<button data-finding-reset>清除问题筛选</button>');
   $('#findings-pager').innerHTML=page.pages>1?`<span>第 ${page.page+1} / ${page.pages} 页 · 每页 25 项</span><div class="actions"><button data-findings-page="-1" ${page.page?'':'disabled'}>上一页</button><button data-findings-page="1" ${page.page+1<page.pages?'':'disabled'}>下一页</button></div>`:'';
   $('#findings-pager').hidden=page.pages<=1;
   updateSelection();
@@ -284,12 +318,8 @@ document.addEventListener('change',event=>{
   }
 });
 document.addEventListener('click',event=>{
-  const target=event.target.closest('button,[data-library-mine]');
+  const target=event.target.closest('button');
   if (!target) return;
-  if (target.dataset.libraryMine!==undefined) {
-    view.library.mine=target.dataset.libraryMine==='true';
-    document.querySelectorAll('[data-library-mine]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.libraryMine===String(view.library.mine))));renderRows();
-  }
   if (target.dataset.libraryStatus!==undefined) {view.library.verdict=target.dataset.libraryStatus;$('#library-verdict').value=view.library.verdict;renderRows();}
   if (target.dataset.previewAudit) busy(target,()=>findingsPreview(target));
   if (target.hasAttribute('data-finding-select-page')) {selectFindings(view.selections.get(state.auditContext.audit.id),findingPage().items);renderFindings();}
