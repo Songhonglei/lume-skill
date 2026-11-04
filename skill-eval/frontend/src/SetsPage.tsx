@@ -1,82 +1,89 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { message, api, post } from './api'
-import { Badge, Button, Dialog, Empty, Icon, useData, ValidationView, Loading, LoadError } from './ui'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { message, post } from './api'
+import { Badge, Button, date, Dialog, Empty, Icon, useData, Loading, LoadError } from './ui'
 import { CaseEditor } from './CaseEditor'
 import { TaskDialog } from './TaskDialog'
-import type { Common, EditorView, EvalSet, Files, SetDetail, SetVersion, Validation } from './types'
+import { SetImportDialog } from './SetImportDialog'
+import { SkillSearch } from './SkillSearch'
+import { setRows } from './setDirectory'
+import type { Common, EditorView, EvalSet, Files, SetDetail, SetVersion, Skill, Selection } from './types'
 
-type Preview = { files: Files; original_blob: string; notes: { path: string; message: string }[]; validation: Validation }
 export function SetsPage(common: Common) {
-  const [skillId, setSkillId] = useState(common.selection.skillId || '')
-  const [setId, setSetId] = useState(common.selection.setId || '')
-  const [versionId, setVersionId] = useState('')
-  const savedView = useRef<{ id: string; view?: EditorView } | null>(null)
-  const openVersion = (id: string, view?: EditorView) => { savedView.current = { id, view }; setVersionId(id) }
-  const [dirty, setDirty] = useState(false)
-  const [showImport, setShowImport] = useState(common.selection.action === 'import')
-  const [preview, setPreview] = useState<Preview | null>(null)
-  const [name, setName] = useState('默认评测集')
-  const [importInto, setImportInto] = useState('')
-  const [generating, setGenerating] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const setId = common.selection.setId || ''
+  const historyView = common.selection.setsView === 'history'
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(0)
+  const [creating, setCreating] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
+  const [createSkillId, setCreateSkillId] = useState('')
+  const [importSkill, setImportSkill] = useState<Skill | null>(null)
+  const [generateSkill, setGenerateSkill] = useState<Skill | null>(null)
   const [editorBusy, setEditorBusy] = useState(false)
-  const updateEditorBusy = useCallback((value: boolean) => { setEditorBusy(value); common.setEditingBusy(value) }, [common.setEditingBusy])
-  const updateDirty = useCallback((value: boolean) => { setDirty(value); common.setDirty(value) }, [common.setDirty])
-  useEffect(() => () => common.setEditingBusy(false), [common.setEditingBusy])
-  const input = useRef<HTMLInputElement>(null)
-  const directory = useRef<HTMLInputElement>(null)
-  const skill = common.skills.find(item => item.id === skillId)
-  const sets = useData<EvalSet[]>(skillId ? `/api/sets?skill_id=${skillId}` : null, [], common.revision)
+  const [importBusy, setImportBusy] = useState(false)
+  const [defaultBusy, setDefaultBusy] = useState(false)
+  const savedView = useRef<{ id: string; view?: EditorView } | null>(null)
+  const libraryScroll = useRef(0)
+  const handledImport = useRef<Selection | null>(null)
+  const lastVersion = useRef(new Map<string, string>())
+  const search = useRef<HTMLInputElement>(null)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const allSets = useData<EvalSet[]>('/api/sets', [], common.revision)
   const detail = useData<SetDetail | undefined>(setId ? `/api/sets/${setId}` : null, undefined, common.revision)
-  const version = useData<(SetVersion & { files: Files }) | undefined>(versionId ? `/api/set-versions/${versionId}` : null, undefined, common.revision)
-  useEffect(() => { if (!skillId && common.skills.length) setSkillId(common.skills[0].id) }, [common.skills, skillId])
-  useEffect(() => { if (common.selection.skillId) setSkillId(common.selection.skillId); if (common.selection.setId) { setSetId(common.selection.setId); setVersionId('') } }, [common.selection.skillId, common.selection.setId])
+  const item = detail.data?.id === setId ? detail.data : undefined
+  const skill = common.skills.find(value => value.id === item?.skill_id)
+  const versionMismatch = !!item && !!common.selection.setVersionId && !item.versions.some(value => value.id === common.selection.setVersionId)
+  const versionId = common.selection.setVersionId || item?.versions.find(value => value.kind === 'DRAFT' && !value.archived)?.id || item?.active_version_id || item?.versions[0]?.id || ''
+  const version = useData<(SetVersion & { files: Files }) | undefined>(item && !historyView && !versionMismatch && versionId ? `/api/set-versions/${versionId}` : null, undefined, common.revision)
+  const updateEditorBusy = useCallback((value: boolean) => setEditorBusy(value), [])
+  const updateImportBusy = useCallback((value: boolean) => setImportBusy(value), [])
+  const updateDirty = useCallback((value: boolean) => common.setDirty(value), [common.setDirty])
+  useEffect(() => { common.setEditingBusy(editorBusy || importBusy); return () => common.setEditingBusy(false) }, [editorBusy, importBusy, common.setEditingBusy])
   useEffect(() => {
-    if (sets.loading) return
-    if (!sets.data.some(item => item.id === setId)) { setSetId(sets.data.find(item => item.is_default)?.id || sets.data[0]?.id || ''); setVersionId('') }
-  }, [sets.data, sets.loading, setId])
-  useEffect(() => {
-    if (detail.data?.id !== setId) return
-    if (!versionId) setVersionId(detail.data.versions.find(item => item.kind === 'DRAFT' && !item.archived)?.id || detail.data.active_version_id || detail.data.versions[0]?.id || '')
-  }, [detail.data, setId, versionId])
-  const leave = async (action: () => void) => { if (editorBusy) return; if (dirty && !await common.confirm({ title: '切换当前草稿？', description: '还有未保存的修改。切换后，这些修改不会保留。' })) return; setDirty(false); common.setDirty(false); savedView.current = null; action() }
-  const openImport = () => { setImportInto(setId); setPreview(null); setShowImport(true) }
-  const saveImport = async () => {
-    if (!skill || !preview) return
-    setBusy(true)
-    try {
-      const body = { name, source_skill_version_id: skill.latest_version_id, ...preview }
-      if (importInto) { const result = await post<SetVersion>(`/api/sets/${importInto}/import`, body); setSetId(importInto); setVersionId(result.id) }
-      else { const result = await post<{ set_id: string; version: SetVersion }>(`/api/skills/${skill.id}/sets`, body); setSetId(result.set_id); setVersionId(result.version.id) }
-      common.refresh(); setShowImport(false); setPreview(null); common.notify('案例已导入草稿，校验并启用后即可评测。')
-    } catch (error) { common.notify(message(error), true) } finally { setBusy(false) }
+    if (common.selection.action !== 'import' || handledImport.current === common.selection) return
+    const target = common.skills.find(value => value.id === common.selection.skillId)
+    if (target) { handledImport.current = common.selection; setImportSkill(target) }
+  }, [common.selection, common.skills])
+  useLayoutEffect(() => {
+    if (!setId) { window.scrollTo({ top: libraryScroll.current, behavior: 'instant' }); search.current?.focus({ preventScroll: true }) }
+    else { window.scrollTo({ top: 0, behavior: 'instant' }); heading.current?.focus({ preventScroll: true }) }
+  }, [setId, historyView])
+  useEffect(() => { if (setId && !historyView && version.data?.id === versionId) lastVersion.current.set(setId, versionId) }, [setId, historyView, version.data, versionId])
+  const rows = setRows(common.skills, allSets.data, query, status)
+  const pageCount = Math.max(1, Math.ceil(rows.length / 20))
+  const currentPage = Math.min(page, pageCount - 1)
+  const visible = rows.slice(currentPage * 20, currentPage * 20 + 20)
+  const openSet = (id: string, nextVersion?: string) => {
+    if (!setId) libraryScroll.current = window.scrollY
+    savedView.current = null
+    common.navigate('sets', { setId: id, setVersionId: nextVersion })
   }
-  return <><div className="page-heading"><div><h1>评测集管理</h1><p>案例按 Skill 保存，启用版本供后续评测复用。</p></div><div className="actions"><Button disabled={!skill || editorBusy} onClick={() => setGenerating(true)}>生成新草稿</Button><Button variant="primary" disabled={!skill || editorBusy} onClick={openImport}><Icon name="upload" />导入评测集</Button></div></div>
-    <div className="collection-toolbar"><label className="field"><span>Skill</span><select aria-label="选择 Skill" disabled={editorBusy} value={skillId} onChange={event => { const next = event.target.value; void leave(() => { setSkillId(next); setSetId(''); setVersionId('') }) }}>{common.skills.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-      <label className="field"><span>评测集 <small>{sets.loading ? '读取中' : `${sets.data.length} 个`}</small></span><select aria-label="选择评测集" value={setId} disabled={editorBusy || sets.loading || !sets.data.length} onChange={event => { const next = event.target.value; void leave(() => { setSetId(next); setVersionId('') }) }}>{!sets.data.length && <option value="">尚无评测集</option>}{sets.data.map(item => <option key={item.id} value={item.id}>{item.name}{item.is_default ? ' · 默认' : ''}{item.active_version_id ? ` · ${item.active_validation?.cases?.length || 0} 个启用案例` : ' · 待启用'}</option>)}</select></label>
-      <span className="collection-hint">先维护草稿，再保存并启用。已有任务继续使用原版本。</span></div>
-    {common.skillsLoading ? <Loading label="正在读取 Skills…" /> : common.skillsError ? <LoadError message={common.skillsError} retry={common.refresh} /> : !skill ? <section className="panel"><Empty title="先添加一个 Skill" description="案例需要关联到一个具体 Skill。"><Button onClick={() => common.navigate('skills')}>去添加 Skill</Button></Empty></section> : <div className="sets-layout">
-      <section className="panel set-workspace">{sets.loading || (setId && detail.loading) ? <Loading label="正在读取评测集…" /> : sets.error || detail.error ? <LoadError message={sets.error || detail.error} retry={common.refresh} /> : detail.data?.id === setId ? <><div className="panel-head"><div><h2>{detail.data.name}</h2><p className="muted">{detail.data.skill_name} · {detail.data.active_version_id ? '已有启用版本' : '尚未启用'}</p></div><div className="actions"><select aria-label="评测集版本" disabled={editorBusy} value={versionId} onChange={event => { const next = event.target.value; void leave(() => setVersionId(next)) }}>{detail.data.versions.map(item => <option key={item.id} value={item.id}>{item.kind === 'DRAFT' ? '草稿' : '版本'} {item.revision}{item.id === detail.data?.active_version_id ? ' · 启用中' : ''}{item.archived ? ' · 已归档' : ''} · 源修订 {item.source_skill_revision}</option>)}</select>{skill.default_set_id !== setId && <Button variant="small" onClick={async () => { try { await post(`/api/skills/${skill.id}/default-set`, { set_id: setId }); common.refresh(); common.notify('默认评测集已更新。') } catch (error) { common.notify(message(error), true) } }}>设为默认</Button>}</div></div>
-        {version.data?.id === versionId ? <CaseEditor key={versionId} version={version.data} common={common} onVersion={openVersion} initialView={savedView.current?.id === versionId ? savedView.current.view : undefined} active={detail.data.active_version_id === versionId} onBusy={updateEditorBusy} onDirty={updateDirty} /> : <>{version.error ? <LoadError message={version.error} retry={common.refresh} /> : <Loading label="正在读取案例…" />}</>}
-      </> : <Empty title="准备一份评测集" description="可以导入原生 ZIP 或 evals.json，也可以让 Codex 生成草稿。"><Button onClick={openImport}>导入案例</Button></Empty>}</section></div>}
-    {sets.error && <p className="error-text">{sets.error}</p>}
-    {showImport && <Dialog title="导入评测集" wide onClose={() => setShowImport(false)}><p className="muted">支持包含 evals/eval.yaml 的 ZIP，或 evals.json。导入后保存为草稿。</p>
-      <div className="form-row"><label className="field"><span>保存位置</span><select value={importInto} onChange={event => setImportInto(event.target.value)}><option value="">创建新评测集</option>{sets.data.map(item => <option key={item.id} value={item.id}>{item.name} · 新草稿</option>)}</select></label>{!importInto && <label className="field"><span>评测集名称</span><input value={name} maxLength={120} onChange={event => setName(event.target.value)} /></label>}</div>
-      <input ref={input} type="file" accept=".zip,.json" aria-label="评测集文件" disabled={busy} onChange={async event => {
-        const file = event.target.files?.[0]; if (!file) return
-        setBusy(true); setPreview(null)
-        try { const body = new FormData(); body.append('file', file); setPreview(await api<Preview>('/api/sets/preview-import', { method: 'POST', body })) }
-        catch (error) { common.notify(message(error), true) } finally { setBusy(false) }
-      }} />
-      <Button disabled={busy} onClick={() => directory.current?.click()}>选择案例目录</Button>
-      <input className="hidden" type="file" multiple ref={element => { directory.current = element; element?.setAttribute('webkitdirectory', '') }} onChange={async event => {
-        const files = Array.from(event.target.files || []); if (!files.length) return
-        setBusy(true); setPreview(null)
-        try { const body = new FormData(); files.forEach(file => body.append('files', file)); body.append('paths', JSON.stringify(files.map(file => file.webkitRelativePath || file.name))); setPreview(await api<Preview>('/api/sets/preview-import-directory', { method: 'POST', body })) }
-        catch (error) { common.notify(message(error), true) } finally { setBusy(false) }
-      }} />
-      {preview && <div className="import-preview"><h3>导入预览 · {Object.keys(preview.files).length} 个文件</h3>{preview.notes.map((note, index) => <p className="small-note" key={index}>{note.path}：{note.message}</p>)}<ValidationView validation={preview.validation} /><details><summary>查看转换后的入口</summary><pre>{preview.files['evals/eval.yaml']?.content}</pre></details><p className="muted">有校验问题也可先存草稿，再继续修复。</p></div>}
-      <div className="dialog-actions"><Button onClick={() => setShowImport(false)}>取消</Button><Button variant="primary" busy={busy} disabled={!preview || !name.trim()} onClick={saveImport}>导入草稿</Button></div></Dialog>}
-    {generating && skill && <TaskDialog common={common} skill={skill} versionId={skill.latest_version_id} revision={skill.latest_revision} kind="generate" setId={setId || undefined} onClose={() => setGenerating(false)} />}
+  const openVersion = (id: string, view?: EditorView) => { savedView.current = { id, view }; common.navigate('sets', { setId, setVersionId: id }, { saved: true }) }
+  const create = (id = '') => { setCreateSkillId(id); setCreating(true) }
+  const selectedCreateSkill = common.skills.find(value => value.id === createSkillId)
+  const listLoading = common.skillsLoading || allSets.loading
+  const listError = common.skillsError || allSets.error
+  return <>
+    {!setId ? <>
+      <div className="page-heading"><div><span className="eyebrow">案例资源库</span><h1>评测集管理</h1><p>先找到 Skill，再进入评测集维护案例。</p></div><Button variant="primary" disabled={common.skillsLoading || !common.skills.length} onClick={() => create(common.selection.skillId)}><Icon name="plus" />添加评测集</Button></div>
+      <section className="set-directory panel" aria-label="评测集目录">
+        <div className="directory-search"><label htmlFor="set-library-search">查找 Skill 或评测集</label><div className="directory-search-box"><Icon name="search" /><input ref={search} id="set-library-search" type="search" value={query} maxLength={200} placeholder="搜索 Skill 名称、描述或评测集名称" onChange={event => { setQuery(event.target.value); setPage(0) }} />{query && <button className="close" aria-label="清除搜索" onClick={() => { setQuery(''); setPage(0); search.current?.focus() }}>×</button>}</div>
+          <div className="directory-filter-row"><div className="filter-chips" aria-label="评测集状态">{[['all', '全部'], ['pending', '待准备'], ['drafts', '有草稿'], ['active', '已启用']].map(([value, label]) => <button key={value} aria-pressed={status === value} className={status === value ? 'active' : ''} onClick={() => { setStatus(value); setPage(0) }}>{label}</button>)}</div><span className="muted directory-count" role="status">{listLoading ? '正在读取…' : listError ? `上次读取 · ${rows.length} 条结果` : `${rows.length} 条结果 · ${new Set(rows.map(row => row.skill.id)).size} 个 Skill`}</span></div>
+        </div>
+        {listError && visible.length > 0 && <div className="notice error" role="alert"><span>当前保留上次读取的目录。{listError}</span><Button onClick={common.refresh}>重新加载</Button></div>}
+        {listLoading ? <Loading label="正在读取评测集目录…" /> : listError && !visible.length ? <LoadError message={listError} retry={common.refresh} /> : visible.length ? <div className="table-scroll"><table className="directory-table"><thead><tr><th>Skill</th><th>评测集</th><th>启用版本</th><th>草稿数</th><th /></tr></thead><tbody>{visible.map(({ key, skill: rowSkill, suite }) => <tr key={key}><td><strong title={rowSkill.name}>{rowSkill.name}</strong></td><td>{suite ? <button className="row-title" title={suite.name} onClick={() => openSet(suite.id)}>{suite.name}</button> : <span className="muted">尚未创建评测集</span>}</td><td>{suite?.active_version_id ? <span>版本 {suite.active_revision}</span> : <span className="muted">未启用</span>}</td><td><span className="draft-count">{Number(suite?.draft_count || 0)}</span></td><td className="align-right"><Button variant="small" onClick={() => suite ? openSet(suite.id) : create(rowSkill.id)} aria-label={suite ? `进入 ${rowSkill.name} 的 ${suite.name}` : `为 ${rowSkill.name} 准备案例`}>{suite ? '进入详情 →' : '准备案例'}</Button></td></tr>)}</tbody></table></div> : <Empty title={query || status !== 'all' ? '没有匹配的评测集' : '先添加一个 Skill'} description={query || status !== 'all' ? '换个关键词，或清除筛选条件。' : '上传 Skill 后，就可以在这里准备案例。'}><Button onClick={() => { if (query || status !== 'all') { setQuery(''); setStatus('all'); setPage(0) } else common.navigate('skills') }}>{query || status !== 'all' ? '清除筛选' : '去添加 Skill'}</Button></Empty>}
+        {rows.length > 20 && <div className="artifact-bar directory-pagination"><span className="muted">第 {currentPage + 1} / {pageCount} 页</span><Button variant="small" disabled={!currentPage} onClick={() => setPage(currentPage - 1)}>上一页</Button><Button variant="small" disabled={currentPage >= pageCount - 1} onClick={() => setPage(currentPage + 1)}>下一页</Button></div>}
+      </section>
+    </> : <>
+      <nav className="detail-breadcrumb" aria-label="评测集位置"><button onClick={() => common.navigate('sets')}>评测集管理</button><span aria-hidden="true">/</span><span>{item?.name || '评测集详情'}</span>{historyView && <><span aria-hidden="true">/</span><span>版本记录</span></>}</nav>
+      <div className="page-heading set-detail-heading"><div><span className="eyebrow">{item?.skill_name || '读取中'}</span><h1 ref={heading} tabIndex={-1}>{historyView ? '版本记录' : item?.name || '评测集详情'}</h1><p>{historyView ? '保存版本不可变，已有任务始终使用原快照。' : '专注维护当前案例，保存并启用后供后续评测使用。'}</p></div><div className="actions wrap">{historyView ? <Button onClick={() => openSet(setId, lastVersion.current.get(setId))}>返回案例</Button> : <Button disabled={editorBusy} onClick={() => common.navigate('sets', { setId, setsView: 'history' })}>版本记录</Button>}{item && <button className="text-button" onClick={() => setShowInfo(true)}>评测集信息</button>}</div></div>
+      {detail.error && item && <div className="notice error" role="alert"><span>当前保留上次读取的详情。{detail.error}</span><Button onClick={common.refresh}>重新加载</Button></div>}
+      {version.error && version.data && <div className="notice error" role="alert"><span>案例暂时无法更新，当前内容已保留。{version.error}</span><Button onClick={common.refresh}>重新加载</Button></div>}
+      {detail.loading ? <section className="panel"><Loading label="正在读取评测集详情…" /></section> : detail.error && !item ? <section className="panel"><LoadError message={detail.error} retry={common.refresh} /><div className="padded"><Button onClick={() => common.navigate('sets')}>返回评测集目录</Button></div></section> : item && historyView ? <section className="panel"><div className="panel-head"><h2>{item.name}</h2><span className="muted">{item.versions.length} 个版本与草稿</span></div><div className="table-scroll"><table><thead><tr><th>版本</th><th>状态</th><th>案例</th><th>来源 Skill</th><th>创建时间</th><th /></tr></thead><tbody>{item.versions.map(value => <tr key={value.id}><td><strong>{value.kind === 'DRAFT' ? '草稿' : '版本'} {value.revision}</strong></td><td>{value.id === item.active_version_id ? <span className="subtle-chip blue">当前启用</span> : value.archived ? <span className="muted">已归档</span> : <Badge value={value.kind} />}</td><td>{value.validation.valid === false ? '待修复' : value.validation.cases?.length ?? '待校验'}</td><td className="muted">修订 {value.source_skill_revision}</td><td className="muted">{date(value.created_at)}</td><td className="align-right"><Button variant="small" onClick={() => openSet(setId, value.id)}>{value.kind === 'DRAFT' && !value.archived ? '继续维护' : '查看版本'}</Button></td></tr>)}</tbody></table></div></section> : item && versionMismatch ? <section className="panel"><Empty title="这个版本不属于当前评测集" description="请从当前评测集的版本记录中选择。"><Button onClick={() => common.navigate('sets', { setId, setsView: 'history' })}>查看版本记录</Button></Empty></section> : item && <section className="panel set-workspace focused-editor" aria-label="评测集详情">{version.data?.id === versionId && version.data.set_id === setId ? <CaseEditor key={versionId} version={version.data} common={common} onVersion={openVersion} initialView={savedView.current?.id === versionId ? savedView.current.view : undefined} active={item.active_version_id === versionId} onBusy={updateEditorBusy} onDirty={updateDirty} /> : version.error ? <LoadError message={version.error} retry={common.refresh} /> : <Loading label="正在读取案例…" />}</section>}
+    </>}
+    {showInfo && item && <Dialog title="评测集信息" onClose={() => setShowInfo(false)}><dl className="set-info-list"><dt>评测集</dt><dd>{item.name}</dd><dt>所属 Skill</dt><dd>{item.skill_name}</dd><dt>Skill 说明</dt><dd>{skill ? skill.description || '暂无说明' : '暂未读取'}</dd><dt>默认评测集</dt><dd>{skill ? skill.default_set_id === setId ? '是' : '否' : '暂未读取'}</dd><dt>启用版本</dt><dd>{item.active_version_id ? `版本 ${item.versions.find(value => value.id === item.active_version_id)?.revision}` : '尚未启用'}</dd><dt>启用案例数</dt><dd>{item.active_version_id ? item.versions.find(value => value.id === item.active_version_id)?.validation.cases?.length ?? '待校验' : '尚未启用'}</dd><dt>草稿数</dt><dd>{item.versions.filter(value => value.kind === 'DRAFT' && !value.archived).length}</dd></dl><div className="dialog-actions">{skill && skill.default_set_id !== setId && <Button busy={defaultBusy} onClick={async () => { setDefaultBusy(true); try { await post(`/api/skills/${skill.id}/default-set`, { set_id: setId }); common.refresh(); common.notify('默认评测集已更新。') } catch (error) { common.notify(message(error), true) } finally { setDefaultBusy(false) } }}>设为默认评测集</Button>}<Button data-initial-focus="true" onClick={() => setShowInfo(false)}>返回</Button></div></Dialog>}
+    {creating && <Dialog title="添加评测集" onClose={() => setCreating(false)}><p className="muted">选择所属 Skill，再导入已有案例或生成草稿。</p><SkillSearch skills={common.skills} value={createSkillId} onChange={setCreateSkillId} /><div className="create-set-methods"><Button variant="primary" disabled={!selectedCreateSkill} onClick={() => { setCreating(false); setImportSkill(selectedCreateSkill || null) }}><Icon name="upload" />导入已有案例</Button><Button disabled={!selectedCreateSkill} onClick={() => { setCreating(false); setGenerateSkill(selectedCreateSkill || null) }}>生成案例草稿</Button></div><p className="small-note">生成会在确认后调用模型；导入不调用模型。</p></Dialog>}
+    {importSkill && <SetImportDialog common={common} skill={importSkill} sets={allSets.data.filter(value => value.skill_id === importSkill.id)} onClose={() => setImportSkill(null)} onBusy={updateImportBusy} onImported={(target, nextVersion) => { libraryScroll.current = window.scrollY; savedView.current = null; setImportSkill(null); common.navigate('sets', { setId: target, setVersionId: nextVersion }, { saved: true }) }} />}
+    {generateSkill && <TaskDialog common={common} skill={generateSkill} versionId={generateSkill.latest_version_id} revision={generateSkill.latest_revision} kind="generate" onClose={() => setGenerateSkill(null)} />}
   </>
 }

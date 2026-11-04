@@ -1,5 +1,5 @@
-export function CaseReview() {
-  return <details className="case-review">
+export function CaseReview({ expanded = false }: { expanded?: boolean }) {
+  return <details className="case-review" open={expanded || undefined}>
     <summary>案例审查指南 · 启用前请核对</summary>
     <p className="muted">结构校验只检查格式和引用，不确认案例是否明确、预期是否正确。请逐个检查；以下提示不会修改案例或判分条件。</p>
     <ul>

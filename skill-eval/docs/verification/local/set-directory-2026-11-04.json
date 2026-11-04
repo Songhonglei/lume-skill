@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-04",
+  "baseline": "2d93d9365c33d38d4f6b5115dda9fa286e15a811",
+  "scope": "searchable set directory, dedicated case detail/history routes, focused supporting information",
+  "design": {
+    "stance": "检索优先的蓝白资料台",
+    "dfii": 14,
+    "principles": [
+      "urgent: search and maintain first",
+      "minimal: one-click detail and restore current search on return",
+      "group similar: separate directory, cases, versions, supporting information",
+      "single value per result column"
+    ]
+  },
+  "checks": {
+    "frontend_tests": 27,
+    "typescript_vite": "PASS",
+    "ruff": "PASS",
+    "source_scan": "PASS",
+    "backend": "unchanged; full PG suite in remote CI"
+  },
+  "browser": {
+    "qa_resources": {
+      "skills": 126,
+      "tasks": 0,
+      "workers": 0
+    },
+    "cross_page_skill_search": "PASS: late Skill 001 found among 126 resources, 20 rows per page",
+    "searchable_creation": "PASS: keyboard selection and changing preselected Skill 002 to 125",
+    "native_zip_import": "PASS: five files/three cases; correct owning Skill and direct detail redirect",
+    "draft_save_enable_fork": "PASS; immutable enabled version and independent editable draft",
+    "history": "dedicated URL; no case editor rendered; refreshable",
+    "unsaved_back": "cancel retained content and restored detail URL; confirmed discard returned to original version",
+    "saved_back": "directory restored current search; forward and reload kept same version URL",
+    "cross_set_version_link": "blocked; no editor rendered",
+    "validation": "missing script -> dialog -> matching source focus -> repair -> valid",
+    "review": "on demand; no guide/validation block in normal editor",
+    "single_value_columns": [
+      "Skill",
+      "评测集",
+      "启用版本",
+      "草稿数"
+    ],
+    "secondary_cell_lines": 0,
+    "outage": "loaded row retained, error visible, no false-empty; retry after API restart recovered session/data",
+    "layout_390": [
+      {
+        "documentWidth": 390,
+        "h": 844,
+        "overflow": false,
+        "view": "history",
+        "w": 390
+      },
+      {
+        "columns": "356px",
+        "documentWidth": 390,
+        "h": 844,
+        "overflow": false,
+        "view": "detail",
+        "w": 390
+      },
+      {
+        "documentWidth": 390,
+        "h": 844,
+        "overflow": false,
+        "view": "directory",
+        "w": 390
+      },
+      {
+        "dialogWidth": 356,
+        "documentWidth": 390,
+        "overflow": false,
+        "view": "skill-search-dialog",
+        "w": 390
+      }
+    ]
+  },
+  "skill_audits": {
+    "vendor": {
+      "errors": 0,
+      "machine_warnings": 18,
+      "exact_baseline_match": true
+    },
+    "example": {
+      "errors": 0,
+      "machine_warnings": 3,
+      "exact_baseline_match": true
+    }
+  },
+  "screenshots_sha256": {
+    "directory.jpg": "6332aa263d1aa074bfbe6b737a4e5e4c06737bd2e322578d94c8d1187eb4b192",
+    "detail.jpg": "fb40dcfd95ee00d13d530d5b8a1bb18b12bf7ec50577cde34ffc0339204bc034",
+    "history.jpg": "bedabb7bc57790af561936de4808b709ce2e17ac64c4683fb78b9626b08fdd10"
+  },
+  "boundaries": [
+    "synthetic isolated QA instance; user preview retains its four existing synthetic Skills",
+    "no real model calls or Worker execution",
+    "no original Docker instance update, Release or GHCR publication",
+    "no complete WCAG or screen-reader certification"
+  ]
+}

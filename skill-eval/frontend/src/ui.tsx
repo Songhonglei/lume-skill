@@ -54,6 +54,7 @@ export function Button({ children, busy, variant = '', ...props }: ButtonHTMLAtt
 
 export function Icon({ name }: { name: string }) {
   const paths: Record<string, ReactNode> = {
+    search: <><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6" /></>,
     skills: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
     sets: <><path d="M8 5H4v16h16V5h-4" /><rect x="8" y="2" width="8" height="6" rx="1" /><path d="m8 13 2 2 5-5M8 18h8" /></>,
     tasks: <><path d="M3 12a9 9 0 1 0 3-7M3 3v6h6M12 7v5l3 2" /></>,
