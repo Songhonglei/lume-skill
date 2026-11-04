@@ -21,6 +21,6 @@ export function SkillSearch({ skills, value, onChange }: { skills: Skill[]; valu
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setOpen(false) }
     }} />{value && <button type="button" className="close" aria-label="清除所选 Skill" onClick={() => { onChange(''); setQuery(''); setActive(0); input.current?.focus() }}>×</button>}</div>
     {open && <div className="skill-search-results" ref={list} role="listbox" id={`${id}-results`} aria-label="匹配的 Skills">{visible.length ? visible.map((skill, index) => <div role="option" key={skill.id} id={`${id}-${index}`} aria-selected={index === active} onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActive(index)} onClick={() => choose(skill)}><strong>{skill.name}</strong><small>{skill.description || '暂无描述'}</small></div>) : <p className="padded muted">没有匹配的 Skill，换个关键词试试。</p>}{matches.length > visible.length && <p className="search-limit">还有 {matches.length - visible.length} 个匹配，继续输入可缩小范围。</p>}</div>}
-    <small className="muted">{selected ? `已选择 ${selected.name}` : '按名称查找，使用 ↑ ↓ 和 Enter 选择。'}</small>
+    <small className="muted">{selected ? `已选择 ${selected.name}` : '输入名称，用方向键和 Enter 选择。'}</small>
   </div>
 }
