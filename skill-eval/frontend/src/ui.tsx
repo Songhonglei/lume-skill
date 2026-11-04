@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { api, message } from './api'
 import type { ConfirmOptions, Validation } from './types'
@@ -74,23 +74,56 @@ export function Badge({ value, children }: { value?: string; children?: ReactNod
 export function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
-  useEffect(() => { const element = ref.current; element?.showModal(); element?.querySelector<HTMLElement>('[data-initial-focus]')?.focus(); return () => element?.close() }, [])
+  useLayoutEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const element = ref.current
+    element?.showModal()
+    element?.querySelector<HTMLElement>('[data-initial-focus]')?.focus()
+    return () => {
+      element?.close()
+      if (previous?.isConnected) previous.focus({ preventScroll: true })
+      else document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true })
+    }
+  }, [])
   return <dialog ref={ref} aria-labelledby={titleId} className={`dialog ${wide ? 'wide' : ''}`} onCancel={event => { event.preventDefault(); onClose() }}>
     <div className="dialog-head"><h2 id={titleId}>{title}</h2><button className="close" onClick={onClose} aria-label="关闭">×</button></div>
     <div className="dialog-body">{children}</div>
   </dialog>
 }
 
+export function reveal(element: HTMLElement | null, focus = false) {
+  element?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+  if (focus) element?.focus({ preventScroll: true })
+}
+
+export function MoreActions({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => { if (event.target instanceof Node && !ref.current?.contains(event.target)) ref.current?.removeAttribute('open') }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || !ref.current?.open) return
+      event.preventDefault(); event.stopPropagation(); ref.current.open = false
+      ref.current.querySelector('summary')?.focus()
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('pointerdown', closeOutside); document.removeEventListener('keydown', escape) }
+  }, [])
+  return <details ref={ref} className="more-actions"><summary>更多操作</summary><div className="more-menu" onClick={event => {
+    if (event.target instanceof Element && event.target.closest('button,a') && ref.current) { ref.current.open = false; ref.current.querySelector('summary')?.focus({ preventScroll: true }) }
+  }}>{children}</div></details>
+}
+
 export function Empty({ title, description, children }: { title: string; description?: string; children?: ReactNode }) {
   return <div className="empty"><span className="empty-icon"><Icon name="skills" /></span><strong>{title}</strong>{description && <p>{description}</p>}{children}</div>
 }
 
-export function ValidationView({ validation }: { validation?: Validation }) {
+export function ValidationView({ validation, onSelectPath }: { validation?: Validation; onSelectPath?: (path: string) => void }) {
   if (!validation || validation.valid === undefined) return <p className="muted">修改后请重新校验。</p>
   return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `结构校验通过 · ${validation.cases?.length || 0} 个案例` : '结构校验需要修复'}</Badge></div>
     <p className="muted">仅检查格式、配置和文件引用，不执行模型或判分脚本；案例含义与断言仍需人工审查。</p>
-    {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}><code>{item.path}</code><span>{item.message}</span></li>)}</ul>}
-    {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}><code>{item.path}</code><span>{item.message}</span></li>)}</ul></details>}
+    {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" onClick={() => onSelectPath(item.path)}><code>{item.path}</code><span>查看源码 →</span></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul>}
+    {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" onClick={() => onSelectPath(item.path)}><code>{item.path}</code><span>查看源码 →</span></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul></details>}
   </div>
 }
 

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { parseDocument, stringify } from 'yaml'
 import { api, message, post } from './api'
-import { Badge, Button, Dialog, ValidationView } from './ui'
-import type { Common, EditorFile, Files, SetVersion, Validation } from './types'
+import { Badge, Button, Dialog, MoreActions, reveal, ValidationView } from './ui'
+import type { Common, EditorFile, EditorView, Files, SetVersion, Validation } from './types'
 import { browserFile, conflictingAttachmentNames } from './editorFiles'
 import { canEditCase, formDocument, mapping } from './editorYaml'
 import { shouldSyncVersion } from './editorState'
@@ -10,21 +10,40 @@ import { CaseReview } from './CaseReview'
 
 const textFile = (content: string): EditorFile => ({ encoding: 'utf-8', content, mode: 0o644 })
 
-export function CaseEditor({ version: initial, common, onVersion, active, onDirty, onBusy }: {
-  version: SetVersion & { files: Files }; common: Common; onVersion: (id: string) => void; active: boolean; onDirty: (value: boolean) => void; onBusy: (value: boolean) => void
+export function CaseEditor({ version: initial, common, onVersion, active, onDirty, onBusy, initialView }: {
+  version: SetVersion & { files: Files }; common: Common; onVersion: (id: string, view?: EditorView) => void; initialView?: EditorView; active: boolean; onDirty: (value: boolean) => void; onBusy: (value: boolean) => void
 }) {
   const [version, setVersion] = useState(initial)
   const [files, setFiles] = useState<Files>(initial.files)
   const [dirty, setDirty] = useState(false)
-  const [mode, setMode] = useState<'form' | 'source'>('form')
-  const [selected, setSelected] = useState('')
-  const [sourceFile, setSourceFile] = useState('evals/eval.yaml')
+  const [mode, setMode] = useState<'form' | 'source'>(initialView?.mode || 'form')
+  const [selected, setSelected] = useState(initialView?.selected || '')
+  const [sourceFile, setSourceFile] = useState(initialView?.sourceFile || 'evals/eval.yaml')
   const [validation, setValidation] = useState<Validation>(initial.validation)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [newFile, setNewFile] = useState('')
   const [pendingAttachments, setPendingAttachments] = useState<File[] | null>(null)
   const fixture = useRef<HTMLInputElement>(null)
+  const editorRoot = useRef<HTMLDivElement>(null)
+  const sourcePanel = useRef<HTMLDivElement>(null)
+  const validationPanel = useRef<HTMLDivElement>(null)
+  const sourceEditor = useRef<HTMLTextAreaElement>(null)
+  const view = (): EditorView => ({ selected, mode, sourceFile, scrollY: window.scrollY, anchorTop: editorRoot.current?.querySelector(mode === 'form' ? '.case-form' : '.source-editor')?.getBoundingClientRect().top })
+  useLayoutEffect(() => {
+    if (!initialView) return
+    const anchor = editorRoot.current?.querySelector(initialView.mode === 'form' ? '.case-form' : '.source-editor')
+    const top = anchor && initialView.anchorTop !== undefined ? window.scrollY + anchor.getBoundingClientRect().top - initialView.anchorTop : initialView.scrollY
+    window.scrollTo({ top, behavior: 'instant' })
+    editorRoot.current?.focus({ preventScroll: true })
+  }, [])
+  const focusSource = useRef(false)
+  useLayoutEffect(() => { if (mode === 'source' && focusSource.current) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false } }, [mode, sourceFile])
+  const openSource = (path: string) => {
+    const target = Object.keys(files).sort((a, b) => b.length - a.length).find(file => path === file || path.startsWith(file + ':') || path.startsWith(file + '.')) || 'evals/eval.yaml'
+    focusSource.current = true; setSourceFile(target); setMode('source')
+    if (mode === 'source' && sourceFile === target) { reveal(sourceEditor.current || sourcePanel.current, true); focusSource.current = false }
+  }
   const readonly = version.kind !== 'DRAFT' || version.archived
   useEffect(() => { onDirty(dirty); return () => onDirty(false) }, [dirty, onDirty])
   useEffect(() => () => onBusy(false), [onBusy])
@@ -69,10 +88,11 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     finally { setBusy(''); onBusy(false) }
   }
   const saveVersion = (enable: boolean) => action(enable ? 'enable' : 'version', async () => {
+    const savedView = view()
     const current = await saveDraft()
     const saved = await post<SetVersion>(`/api/set-versions/${current.id}/save`, { expected_edit_number: current.edit_number })
     if (enable) await post(`/api/sets/${current.set_id}/activate`, { version_id: saved.id })
-    common.notify(enable ? '新版本已保存并启用。' : '新版本已保存，可以随时启用。'); common.refresh(); onVersion(saved.id)
+    common.notify(enable ? '新版本已保存并启用。' : '新版本已保存，可以随时启用。'); common.refresh(); onVersion(saved.id, savedView)
   })
   const addCase = () => {
     let index = 1
@@ -107,26 +127,26 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     setFiles(previous => ({ ...previous, ...additions }))
     setSourceFile(Object.keys(additions)[0] || sourceFile); setDirty(true); setValidation({})
   })
-  return <div className="case-editor"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <span className="subtle-chip blue">当前启用</span>}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}</div><div className="actions wrap">
-    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id) })}>创建草稿后编辑</Button>{!active && !version.archived && <Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={() => action('activate', async () => { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }); common.refresh(); common.notify('这个版本已启用。') })}>启用这个版本</Button>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh() })}>校验</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
-    <details className="more-actions"><summary>更多操作</summary><div className="more-menu">{!readonly && <Button busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>仅保存版本</Button>}<a className="button" href={`/api/set-versions/${version.id}/export`}>导出评测集</a></div></details>
+  return <div ref={editorRoot} className="case-editor" tabIndex={-1} aria-label="评测集编辑"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <span className="subtle-chip blue">当前启用</span>}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}<button className={`text-button validation-status ${validation.valid === false ? 'danger' : ''}`} onClick={() => reveal(validationPanel.current, true)}>{validation.valid === undefined ? '待校验' : validation.valid ? '结构通过' : '校验有问题'} · 查看</button></div><div className="actions wrap">
+    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const savedView = view(); const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id, savedView) })}>创建草稿后编辑</Button>{!active && !version.archived && <Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={() => action('activate', async () => { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }); common.refresh(); common.notify('这个版本已启用。') })}>启用这个版本</Button>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh() })}>校验</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
+    <MoreActions>{!readonly && <Button busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>仅保存版本</Button>}<a className="button" href={`/api/set-versions/${version.id}/export`}>{dirty ? '导出上次保存的内容' : '导出评测集'}</a>{dirty && <p className="menu-note">未保存的修改不会包含在导出中。</p>}</MoreActions>
   </div></div>
     {error && <p className="error-text" role="alert">{error}</p>}
     {busy === 'attachment' && <p className="small-note" role="status">正在读取附件，请稍候…</p>}
     <CaseReview />
     {readonly && <div className="readonly-banner">这是不可变的版本快照。需要调整时，请先创建草稿，历史任务不会改变。</div>}
     <fieldset className="editor-content" aria-label="案例内容" disabled={!!busy}>
-    <div className="segmented"><button className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
+    <div className="segmented"><button aria-pressed={mode === 'form'} className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button aria-pressed={mode === 'source'} className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
     {mode === 'form' ? <div className="case-layout"><aside className="case-list"><div className="case-list-head"><span>入口案例 · {entries.length}</span>{!readonly && <button className="text-button" onClick={addCase}>＋ 添加</button>}</div>{entries.map(path => {
       let title = path.split('/').pop() || path
       try { title = mapping(parseDocument(files[path]?.content || '').toJS()).title || title } catch { /* Invalid source remains editable. */ }
-      return <button key={path} className={selected === path ? 'active' : ''} onClick={() => setSelected(path)}><strong>{String(title)}</strong><small>{path.split('/').pop()}</small></button>
+      return <button key={path} aria-current={selected === path ? 'true' : undefined} className={selected === path ? 'active' : ''} onClick={() => setSelected(path)}><strong>{String(title)}</strong><small>{path.split('/').pop()}</small></button>
     })}{!entries.length && <p className="muted padded">还没有入口案例，可以添加或在源码中修复。</p>}</aside><div className="case-form">
-      {!canForm ? <div className="callout">当前 YAML 无法安全映射到表单，请在“源码与附件”中编辑。</div> : <><div className="form-top"><div><span className="eyebrow">当前案例</span><h3>{String(item.title || '未命名案例')}</h3><code>{String(item.id || selected.split('/').pop())}</code></div>{!readonly && <div className="actions"><button className="text-button muted" disabled={entries.indexOf(selected) === 0} onClick={() => moveCase(-1)}>上移</button><button className="text-button muted" disabled={entries.indexOf(selected) === entries.length - 1} onClick={() => moveCase(1)}>下移</button><button className="text-button danger" onClick={async () => { if (await common.confirm({ title: '移除这个案例？', description: `将从当前草稿移除“${String(item.title || item.id || selected)}”，保存前可通过放弃修改恢复；已保存版本不受影响。`, confirmLabel: '移除案例', cancelLabel: '保留案例', danger: true })) removeCase() }}>移除案例</button></div>}</div>
+      {!canForm ? <div className="callout">当前 YAML 无法安全映射到表单，原内容已保留。<Button onClick={() => openSource(selected)}>打开源码修复</Button></div> : <><div className="form-top"><div><span className="eyebrow">当前案例</span><h3>{String(item.title || '未命名案例')}</h3><code>{String(item.id || selected.split('/').pop())}</code></div>{!readonly && <div className="actions"><button className="text-button muted" disabled={entries.indexOf(selected) === 0} onClick={() => moveCase(-1)}>上移</button><button className="text-button muted" disabled={entries.indexOf(selected) === entries.length - 1} onClick={() => moveCase(1)}>下移</button><button className="text-button danger" onClick={async () => { if (await common.confirm({ title: '移除这个案例？', description: `将从当前草稿移除“${String(item.title || item.id || selected)}”，保存前可通过放弃修改恢复；已保存版本不受影响。`, confirmLabel: '移除案例', cancelLabel: '保留案例', danger: true })) removeCase() }}>移除案例</button></div>}</div>
         <label className="field"><span>案例名称</span><input disabled={readonly} value={String(item.title || '')} onChange={event => setValue(['title'], event.target.value)} /></label>
         <label className="field"><span>实际输入与任务</span><textarea rows={5} disabled={readonly} value={String(item.input?.prompt || '')} onChange={event => setValue(['input', 'prompt'], event.target.value)} /><small className="muted">写出实际输入及边界；零长度字符串请明确说明，避免被理解为等待补充输入。</small></label>
         <label className="field"><span>前置条件：输出需包含 <small>每行一条，选填</small></span>{simpleLines(must) ? <textarea rows={2} disabled={readonly} value={must.join('\n')} onChange={event => setValue(['expect', 'must_contain'], lines(event.target.value))} placeholder="输入必须出现在结果中的文字" /> : <span className="small-note">包含复杂或多行断言，请使用源码编辑，原条件仍会保留。</span>}</label>
-        <div className="form-section"><h3>判分方式</h3><button className="text-button" onClick={() => { setSourceFile(localJudge ? selected : 'evals/eval.yaml'); setMode('source') }}>查看完整判分源码 →</button>{!localJudge ? <div className="callout">这个案例继承入口的裁判。<Button disabled={readonly} onClick={() => setValue(['judge'], judge)}>为此案例单独设置</Button></div> : <><label className="field"><span>裁判</span><select disabled={readonly} value={judge.type || 'rule_based'} onChange={event => mutate(selected, document => {
+        <div className="form-section"><h3>判分方式</h3><button className="text-button" onClick={() => { openSource(localJudge ? selected : 'evals/eval.yaml') }}>查看完整判分源码 →</button>{!localJudge ? <div className="callout">这个案例继承入口的裁判。<Button disabled={readonly} onClick={() => setValue(['judge'], judge)}>为此案例单独设置</Button></div> : <><label className="field"><span>裁判</span><select disabled={readonly} value={judge.type || 'rule_based'} onChange={event => mutate(selected, document => {
           for (const key of ['criteria', 'model', 'pass_threshold', 'script_path', 'success', 'failure']) document.deleteIn(['judge', key])
           document.setIn(['judge', 'type'], event.target.value)
           if (event.target.value === 'agent_judge') { document.setIn(['judge', 'model'], '__SELECT_MODEL__'); document.setIn(['judge', 'criteria'], []) }
@@ -137,8 +157,8 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
           {judge.type === 'script' && <label className="field"><span>脚本路径</span><input disabled={readonly} value={judge.script_path || ''} onChange={event => setValue(['judge', 'script_path'], event.target.value)} placeholder="evals/fixtures/scripts/check.py" /><small className="muted">在“源码与附件”中添加脚本；退出码 0 表示通过。</small></label>}
         </>}</div>
       </>}
-    </div></div> : <div className="source-layout"><aside className="file-list"><div className="case-list-head">文件 · {Object.keys(files).length}</div>{Object.keys(files).sort().map(path => <button key={path} className={path === sourceFile ? 'active' : ''} onClick={() => setSourceFile(path)} title={path}>{path.replace(/^evals\//, '')}</button>)}{!readonly && <div className="padded"><input aria-label="新文件路径" value={newFile} onChange={event => setNewFile(event.target.value)} placeholder="evals/fixtures/check.py" /><Button variant="small" disabled={!newFile || !!files[newFile]} onClick={() => { setFiles(previous => ({ ...previous, [newFile]: textFile('') })); setSourceFile(newFile); setNewFile(''); setDirty(true); setValidation({}) }}>新建文件</Button><Button variant="small" onClick={() => fixture.current?.click()}>上传附件</Button></div>}</aside>
-      <div className="source-editor"><div className="source-head"><code>{sourceFile}</code>{!readonly && files[sourceFile] && <button className="text-button danger" onClick={() => { setFiles(previous => { const result = { ...previous }; delete result[sourceFile]; return result }); setSourceFile('evals/eval.yaml'); setDirty(true); setValidation({}) }}>删除文件</button>}</div>{!files[sourceFile] ? <p className="muted">从左侧选择文件。</p> : files[sourceFile].encoding === 'utf-8' ? <textarea className="code-editor" spellCheck={false} aria-label="文件源码" readOnly={readonly} value={files[sourceFile].content} onChange={event => { setFiles(previous => ({ ...previous, [sourceFile]: { ...previous[sourceFile], content: event.target.value } })); setDirty(true); setValidation({}) }} /> : <div className="binary-file"><strong>二进制附件</strong><p className="muted">原始字节已保留，可以导出整个评测集后查看。</p></div>}</div>
+    </div></div> : <div className="source-layout"><aside className="file-list"><div className="case-list-head">文件 · {Object.keys(files).length}</div>{Object.keys(files).sort().map(path => <button key={path} aria-current={path === sourceFile ? 'true' : undefined} className={path === sourceFile ? 'active' : ''} onClick={() => setSourceFile(path)} title={path}>{path.replace(/^evals\//, '')}</button>)}{!readonly && <div className="padded"><input aria-label="新文件路径" value={newFile} onChange={event => setNewFile(event.target.value)} placeholder="evals/fixtures/check.py" /><Button variant="small" disabled={!newFile || !!files[newFile]} onClick={() => { setFiles(previous => ({ ...previous, [newFile]: textFile('') })); setSourceFile(newFile); setNewFile(''); setDirty(true); setValidation({}) }}>新建文件</Button><Button variant="small" onClick={() => fixture.current?.click()}>上传附件</Button></div>}</aside>
+      <div ref={sourcePanel} className="source-editor" tabIndex={-1} aria-label="文件内容"><div className="source-head"><code>{sourceFile}</code>{!readonly && files[sourceFile] && <button className="text-button danger" onClick={async () => { if (!await common.confirm({ title: '删除这个文件？', description: `将从当前草稿移除 ${sourceFile}，引用它的案例可能无法通过校验。保存前可通过放弃修改恢复。`, confirmLabel: '删除文件', cancelLabel: '保留文件', danger: true })) return; setFiles(previous => { const result = { ...previous }; delete result[sourceFile]; return result }); setSourceFile('evals/eval.yaml'); setDirty(true); setValidation({}) }}>删除文件</button>}</div>{!files[sourceFile] ? <p className="muted">从左侧选择文件。</p> : files[sourceFile].encoding === 'utf-8' ? <textarea ref={sourceEditor} className="code-editor" spellCheck={false} aria-label="文件源码" readOnly={readonly} value={files[sourceFile].content} onChange={event => { setFiles(previous => ({ ...previous, [sourceFile]: { ...previous[sourceFile], content: event.target.value } })); setDirty(true); setValidation({}) }} /> : <div className="binary-file"><strong>二进制附件</strong><p className="muted">原始字节已保留，可以导出整个评测集后查看。</p></div>}</div>
     </div>}
     <input className="hidden" ref={fixture} type="file" multiple onChange={event => {
       const selected = Array.from(event.target.files || [])
@@ -151,8 +171,8 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     {pendingAttachments && <Dialog title="替换同名附件" onClose={() => setPendingAttachments(null)}>
       <p>以下文件名重复，确认后将使用本次最后选择的文件内容：</p>
       <ul>{conflictingAttachmentNames(pendingAttachments, files).map(name => <li key={name}>{name}</li>)}</ul>
-      <div className="dialog-actions"><Button onClick={() => setPendingAttachments(null)}>取消</Button><Button variant="primary" onClick={() => { const selected = pendingAttachments; setPendingAttachments(null); void uploadAttachments(selected) }}>替换附件</Button></div>
+      <div className="dialog-actions"><Button data-initial-focus="true" onClick={() => setPendingAttachments(null)}>取消</Button><Button variant="primary" onClick={() => { const selected = pendingAttachments; setPendingAttachments(null); void uploadAttachments(selected) }}>替换附件</Button></div>
     </Dialog>}
-    <div className="editor-validation"><h3>校验结果</h3><ValidationView validation={validation} /></div>
+    <div ref={validationPanel} className="editor-validation" tabIndex={-1} aria-label="校验结果"><h3>校验结果</h3><ValidationView validation={validation} onSelectPath={openSource} /></div>
   </div>
 }
