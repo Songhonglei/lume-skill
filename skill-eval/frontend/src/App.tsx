@@ -73,7 +73,7 @@ export default function App() {
   const common: Common = { executionError: settings.error || workers.error, workersLoading: workers.loading, settingsLoading: settings.loading, confirm, skillsLoading: skills.loading, skillsError: skills.error, skills: skills.data, settings: settings.data, workers: workers.data, selection, navigate, refresh, revision, notify, setDirty, setEditingBusy }
   const online = workers.data.filter(worker => worker.online && !worker.revoked).length
   if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
-    {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button onClick={() => location.reload()}>重新连接</Button>}</div> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
+    {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button variant="link" onClick={() => location.reload()}>重试</Button>}</div> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
   </div><p className="auth-foot">本地资源 · Codex 执行 · 可维护的评测案例</p></div>
   return <div className="app-shell"><a className="skip-link" href="#workspace-content" onClick={event => { event.preventDefault(); reveal(document.querySelector('main'), true) }}>跳到主要内容</a><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
       if (editingBusy) return
@@ -82,7 +82,7 @@ export default function App() {
     }}>退出</button></div></header>
     <nav className="workspace-tabs" aria-label="主要导航">{navigation.map(([page, label]) => <button key={page} disabled={editingBusy} title={editingBusy ? '正在保存或读取附件，请稍候' : undefined} aria-current={tab === page ? 'page' : undefined} className={tab === page ? 'active' : ''} onClick={() => navigate(page)}><Icon name={page} />{label}</button>)}</nav>
     <main id="workspace-content" tabIndex={-1}>{notice && <div className={`notice ${notice.error ? 'error' : ''}`} role={notice.error ? 'alert' : 'status'}><span>{notice.message}</span><button className="close" onClick={() => setNotice(null)} aria-label="关闭提示">×</button></div>}
-      {(settings.error || workers.error) && <div className="notice error" role="alert"><span>执行配置暂时无法读取：{settings.error || workers.error}</span><Button onClick={refresh}>重新加载</Button></div>}
+      {(settings.error || workers.error) && <div className="notice error" role="alert"><span>执行配置暂时无法读取：{settings.error || workers.error}</span><Button variant="link" onClick={refresh}>重试</Button></div>}
       {skills.error && skills.data.length > 0 && <p className="error-text">{skills.error} 当前保留上次读取的资源。</p>}
       {tab === 'skills' && <SkillsPage {...common} />}{tab === 'sets' && <SetsPage {...common} />}{tab === 'tasks' && <TasksPage {...common} />}{tab === 'settings' && <SettingsPage {...common} />}
     </main>

@@ -30,7 +30,7 @@ export function Loading({ label = '正在读取…' }: { label?: string }) {
 }
 
 export function LoadError({ message: text, retry }: { message: string; retry: () => void }) {
-  return <div className="load-error" role="alert"><strong>暂时无法读取</strong><p>{text}</p><Button onClick={retry}>重新加载</Button></div>
+  return <div className="load-error" role="alert"><strong>暂时无法读取</strong><p>{text}</p><Button variant="link" onClick={retry}>重试</Button></div>
 }
 
 export function useConfirm() {
@@ -110,7 +110,7 @@ export function MoreActions({ children }: { children: ReactNode }) {
     document.addEventListener('keydown', escape)
     return () => { document.removeEventListener('pointerdown', closeOutside); document.removeEventListener('keydown', escape) }
   }, [])
-  return <details ref={ref} className="more-actions"><summary>更多操作</summary><div className="more-menu" onClick={event => {
+  return <details ref={ref} className="more-actions"><summary>更多</summary><div className="more-menu" onClick={event => {
     if (event.target instanceof Element && event.target.closest('button,a') && ref.current) { ref.current.open = false; ref.current.querySelector('summary')?.focus({ preventScroll: true }) }
   }}>{children}</div></details>
 }
@@ -123,8 +123,8 @@ export function ValidationView({ validation, onSelectPath }: { validation?: Vali
   if (!validation || validation.valid === undefined) return <p className="muted">修改后请重新校验。</p>
   return <div className="validation"><div className="inline"><Badge value={validation.valid ? 'PASSED' : 'INCOMPLETE'}>{validation.valid ? `结构校验通过 · ${validation.cases?.length || 0} 个案例` : '结构校验需要修复'}</Badge></div>
     <p className="muted">仅检查格式、配置和文件引用，不执行模型或判分脚本；案例含义与断言仍需人工审查。</p>
-    {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" onClick={() => onSelectPath(item.path)}><code>{item.path}</code><span>查看源码 →</span></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul>}
-    {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" onClick={() => onSelectPath(item.path)}><code>{item.path}</code><span>查看源码 →</span></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul></details>}
+    {!!validation.issues?.length && <ul className="issues">{validation.issues.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" title="查看源码" onClick={() => onSelectPath(item.path)}><code>{item.path}</code></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul>}
+    {!!validation.warnings?.length && <details><summary>{validation.warnings.length} 条提示</summary><ul className="issues muted">{validation.warnings.map((item, index) => <li key={index}>{onSelectPath ? <button className="issue-path" title="查看源码" onClick={() => onSelectPath(item.path)}><code>{item.path}</code></button> : <code>{item.path}</code>}<span>{item.message}</span></li>)}</ul></details>}
   </div>
 }
 

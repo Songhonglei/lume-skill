@@ -34,13 +34,13 @@ export function SetImportDialog({ common, skill, sets, onClose, onImported, onBu
         try { const body = new FormData(); body.append('file', file); setPreview(await api<Preview>('/api/sets/preview-import', { method: 'POST', body })) }
         catch (error) { common.notify(message(error), true) } finally { setBusy(false) }
       }} />
-      <Button disabled={busy} onClick={() => directory.current?.click()}>选择案例目录</Button>
+      <Button variant="link" disabled={busy} onClick={() => directory.current?.click()}>导入目录</Button>
       <input className="hidden" type="file" multiple ref={element => { directory.current = element; element?.setAttribute('webkitdirectory', '') }} onChange={async event => {
         const files = Array.from(event.target.files || []); if (!files.length) return
         setBusy(true); setPreview(null)
         try { const body = new FormData(); files.forEach(file => body.append('files', file)); body.append('paths', JSON.stringify(files.map(file => file.webkitRelativePath || file.name))); setPreview(await api<Preview>('/api/sets/preview-import-directory', { method: 'POST', body })) }
         catch (error) { common.notify(message(error), true) } finally { setBusy(false) }
       }} />
-      {preview && <div className="import-preview"><h3>导入预览 · {Object.keys(preview.files).length} 个文件</h3>{preview.notes.map((note, index) => <p className="small-note" key={index}>{note.path}：{note.message}</p>)}<ValidationView validation={preview.validation} /><details><summary>查看转换后的入口</summary><pre>{preview.files['evals/eval.yaml']?.content}</pre></details><p className="muted">有校验问题也可先存草稿，再继续修复。</p></div>}
-      <div className="dialog-actions"><Button disabled={busy} data-initial-focus="true" onClick={onClose}>取消</Button><Button variant="primary" busy={busy} disabled={!preview || !name.trim()} onClick={saveImport}>导入草稿</Button></div></Dialog>
+      {preview && <div className="import-preview"><h3>导入预览 · {Object.keys(preview.files).length} 个文件</h3>{preview.notes.map((note, index) => <p className="small-note" key={index}>{note.path}：{note.message}</p>)}<ValidationView validation={preview.validation} /><details><summary>转换结果</summary><pre>{preview.files['evals/eval.yaml']?.content}</pre></details><p className="muted">有校验问题也可先存草稿，再继续修复。</p></div>}
+      <div className="dialog-actions"><Button variant="link" disabled={busy} data-initial-focus="true" onClick={onClose}>取消</Button><Button variant="primary" busy={busy} disabled={!preview || !name.trim()} onClick={saveImport}>导入草稿</Button></div></Dialog>
 }

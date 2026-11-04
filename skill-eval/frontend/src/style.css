@@ -306,7 +306,6 @@ input::placeholder,textarea::placeholder{color:var(--muted)}
 .more-actions{position:relative;font-size:13px;white-space:nowrap}
 .more-actions>summary{list-style:none;border:1px solid #dce2eb;border-radius:6px;min-height:38px;padding:8px 12px;color:#43526b;background:#fff}
 .more-actions>summary::-webkit-details-marker{display:none}
-.more-actions>summary::after{content:'⌄';margin-left:8px}
 .more-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;min-width:170px;padding:6px;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px #20304d15;background:var(--surface);display:grid;gap:4px}
 .more-menu .button{border:0;justify-content:flex-start;font-size:13px}
 .case-review{margin:16px 20px;background:var(--light);border-radius:6px;padding:12px 14px;font-size:13px}
@@ -393,7 +392,6 @@ main:focus,.task-list:focus,.task-detail:focus{outline-offset:4px}
 .more-menu{max-width:calc(100vw - 56px)}
 .issue-path{border:0;background:transparent;color:var(--blue);padding:2px 0;text-align:left;min-width:150px;max-width:100%;overflow-wrap:anywhere;display:flex;flex-direction:column;align-items:flex-start}
 .issue-path code{font-size:12px;min-width:0}
-.issue-path span{font-size:12px;margin-top:3px}
 .issues li>span{min-width:0}
 .code-editor{scroll-margin-top:120px}
 .task-detail{overflow:visible}
@@ -476,3 +474,18 @@ main:focus,.task-list:focus,.task-detail:focus{outline-offset:4px}
 .set-info-list dt{color:var(--muted)}
 .set-info-list dd{margin:0;overflow-wrap:anywhere}
 @media(max-width:720px){.set-info-list{grid-template-columns:88px minmax(0,1fr);gap:14px}}
+
+/* One action-link treatment; primary submit actions remain buttons. */
+.text-button,.text-button.muted,.text-link,.button.link,.more-actions>summary{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;
+  padding:4px 2px;border:0;border-radius:2px;background:transparent;box-shadow:none;
+  color:var(--blue);font-size:14px;font-weight:400;line-height:1.5;text-decoration:none;vertical-align:middle;
+}
+.button.link:hover:enabled,.text-button:hover:enabled,a.text-link:hover,.more-actions>summary:hover{
+  border:0;background:transparent;text-decoration:underline;text-underline-offset:3px;
+}
+.text-button.danger{color:var(--danger)}
+.more-menu .button.link,.more-menu .text-link{width:100%;justify-content:flex-start;padding:6px 12px}
+.more-menu .button.link:hover:enabled,.more-menu .text-link:hover{background:var(--light)}
+.issue-path:hover:enabled{text-decoration:underline;text-underline-offset:3px}
+.editor-toolbar .button.link{font-size:14px;padding:4px 2px}
