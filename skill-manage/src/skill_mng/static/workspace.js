@@ -6,32 +6,31 @@ function versionURL(skillId, versionId, extra = {}) {
 }
 function auditURL(audit) { return audit.task_id?'#task/'+audit.task_id:'#audit/'+audit.id; }
 function auditKind(audit) { return audit?.mode === 'static' ? '静态预检' : '完整审计'; }
-function resultCounts(audit) {
+function resultCounts(audit, skillId='', taskId='') {
   if (!audit || audit.error_count == null) return '<span class="muted">等待检查结果</span>';
-  return `<span class="issue-count ${audit.error_count ? 'text-danger' : ''}">${audit.error_count} 必修</span><span class="muted"> / </span><span class="issue-count">${audit.warning_count ?? 0} 建议</span>`;
+  const count=(number,filter,text)=>skillId&&number>0?`<button class="issue-link ${filter==='ERR'?'text-danger':''}" data-preview-audit="${escapeHTML(audit.audit_run_id||audit.id)}" data-preview-skill="${escapeHTML(skillId)}" data-preview-task="${escapeHTML(taskId||audit.task_id||'')}" data-preview-filter="${filter}" aria-label="查看 ${number} 个${text}">${number} ${text}</button>`:`<span class="issue-count ${filter==='ERR'&&number?'text-danger':''}">${number} ${text}</span>`;
+  return count(audit.error_count,'ERR','必修')+'<span class="muted"> / </span>'+count(audit.warning_count??0,'WARN','建议');
 }
 async function library() {
-  const key = location.hash;
+  const key = location.hash, request=++view.render;
   const skills = await api('/skills');
-  if (location.hash !== key) return;
+  if (location.hash !== key||request!==view.render||!state.user) return;
   state.skills = skills;
-  $('#main').innerHTML = pageHeading('Skill 库', '版本、质量与下一步，在这里看清楚。', '<button class="primary" data-action="import">导入 Skill</button>') + `<section class="panel"><div class="toolbar library-toolbar"><label class="search-field"><span class="sr-only">搜索 Skill</span><input id="search" type="search" placeholder="搜索名称、描述或维护者" aria-label="搜索 Skill" value="${escapeHTML(view.library.q)}"></label><div class="segmented" role="group" aria-label="Skill 范围"><button data-library-mine="false" aria-pressed="${!view.library.mine}">全部 Skill <span>${skills.length}</span></button><button data-library-mine="true" aria-pressed="${view.library.mine}">我维护的</button></div><label class="compact-label"><span class="sr-only">审计结论</span><select id="library-verdict" aria-label="审计结论">${[['','全部审计状态'],['none','未审计'],['pass','审计通过'],['fail','不通过'],['review_required','待复核']].map(([value,text])=>`<option value="${value}" ${view.library.verdict===value?'selected':''}>${text}</option>`).join('')}</select></label><button class="text-button" data-ui="library-refresh">刷新</button></div><div id="skill-results"></div><div class="panel-foot"><span id="library-count"></span><span>审计状态固定到当前版本，历史版本完整保留。</span></div></section>`;
+  $('#main').innerHTML = pageHeading('Skill 库', '版本、质量与下一步，在这里看清楚。', '<button class="primary" data-action="import">导入 Skill</button>') + `<section class="panel"><div id="library-overview" class="library-overview" aria-label="质量快捷筛选"></div><div class="toolbar library-toolbar"><label class="search-field"><span class="sr-only">搜索 Skill</span><input id="search" type="search" placeholder="搜索名称、描述或维护者" aria-label="搜索 Skill" value="${escapeHTML(view.library.q)}"></label><div class="segmented" role="group" aria-label="Skill 范围"><button data-library-mine="false" aria-pressed="${!view.library.mine}">全部 Skill <span>${skills.length}</span></button><button data-library-mine="true" aria-pressed="${view.library.mine}">我维护的</button></div><label class="compact-label"><span class="sr-only">审计结论</span><select id="library-verdict" aria-label="审计结论">${[['','全部审计状态'],['attention','需要处理'],['active','执行中'],['none','未审计'],['pass','审计通过'],['fail','不通过'],['review_required','待复核']].map(([value,text])=>`<option value="${value}" ${view.library.verdict===value?'selected':''}>${text}</option>`).join('')}</select></label><button class="text-button" data-ui="library-refresh">刷新</button></div><div id="skill-results"></div><div class="panel-foot"><span id="library-count"></span><span>审计状态固定到当前版本，历史版本完整保留。</span></div></section>`;
   $('#search').oninput = event => { view.library.q = event.target.value; renderRows(); };
   $('#library-verdict').onchange = event => { view.library.verdict = event.target.value; renderRows(); };
   renderRows();
 }
 function renderRows() {
   const filter = view.library, q = filter.q.trim().toLowerCase();
-  const rows = state.skills.filter(skill => {
-    const audit = skill.latest_audit;
-    const verdict = !audit ? 'none' : audit.mode === 'static' && audit.verdict !== 'fail' ? 'review_required' : audit.verdict;
-    return (!filter.mine || skill.owner_id === state.user.id) && (!filter.verdict || verdict === filter.verdict) && `${skill.name} ${skill.slug} ${skill.description} ${skill.owner}`.toLowerCase().includes(q);
-  });
+  const scope=state.skills.filter(skill=>(!filter.mine||skill.owner_id===state.user.id)&&`${skill.name} ${skill.slug} ${skill.description} ${skill.owner}`.toLowerCase().includes(q));
+  const rows=scope.filter(skill=>matchesAuditStatus(skill.latest_audit,filter.verdict));
+  $('#library-overview').innerHTML=[['','全部 Skill'],['attention','需要处理'],['active','执行中'],['none','未审计']].map(([value,text])=>`<button data-library-status="${value}" aria-pressed="${filter.verdict===value}"><span>${text}</span><strong>${scope.filter(skill=>matchesAuditStatus(skill.latest_audit,value)).length}</strong></button>`).join('')+'<span class="scope-note">当前搜索与维护范围 · 当前版本</span>';
   $('#library-count').textContent = `${rows.length} / ${state.skills.length} 个 Skill`;
   $('#skill-results').innerHTML = rows.length ? `<div class="table-wrap"><table class="records-table skill-table"><thead><tr><th>Skill</th><th>当前版本</th><th>当前版本审计</th><th>维护者 / 最近活动</th><th>操作</th></tr></thead><tbody>${rows.map(skill => {
     const audit = skill.latest_audit;
     const report = audit ? `<a href="${auditURL(audit)}">${audit.delivery_status==='saved'?'查看报告':'查看进展'}</a>` : `<a href="#skill/${skill.id}">查看详情</a>`;
-    return `<tr><td class="record-title"><a class="skill-name" href="#skill/${skill.id}">${escapeHTML(skill.name)}</a><p class="description" title="${escapeHTML(skill.description)}">${escapeHTML(skill.description || skill.slug)}</p></td><td data-label="当前版本"><span class="version-tag">${escapeHTML(skill.current_version)}</span><p class="muted">${skill.version_count} 个版本</p></td><td data-label="审计结论">${auditBadge(audit)}<p class="record-meta">${resultCounts(audit)}</p></td><td data-label="维护者 / 活动"><span>${escapeHTML(skill.owner)}</span><p class="muted" title="${escapeHTML(fmtDate(skill.updated_at))}">${escapeHTML(fmtShortDate(skill.updated_at))}</p></td><td class="record-actions"><div class="actions">${skill.can_write?`<button class="text-button" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:''}${report}<details class="more-menu"><summary aria-label="${escapeHTML(skill.name)} 的更多操作">更多</summary><div><a href="#skill/${skill.id}">版本与文件</a><a href="/api/versions/${skill.current_version_id}/download">下载当前包</a></div></details></div></td></tr>`;
+    return `<tr><td class="record-title"><a class="skill-name" href="#skill/${skill.id}">${escapeHTML(skill.name)}</a><p class="description" title="${escapeHTML(skill.description)}">${escapeHTML(skill.description || skill.slug)}</p></td><td data-label="当前版本"><span class="version-tag">${escapeHTML(skill.current_version)}</span><p class="muted">${skill.version_count} 个版本</p></td><td data-label="审计结论">${auditBadge(audit)}<p class="record-meta">${resultCounts(audit,skill.id)}</p></td><td data-label="维护者 / 活动"><span>${escapeHTML(skill.owner)}</span><p class="muted" title="${escapeHTML(fmtDate(skill.updated_at))}">${escapeHTML(fmtShortDate(skill.updated_at))}</p></td><td class="record-actions"><div class="actions">${skill.can_write?`<button class="text-button" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:''}${report}<details class="more-menu"><summary aria-label="${escapeHTML(skill.name)} 的更多操作">更多</summary><div><a href="#skill/${skill.id}">版本与文件</a><a href="/api/versions/${skill.current_version_id}/download">下载当前包</a></div></details></div></td></tr>`;
   }).join('')}</tbody></table></div>` : emptyState(state.skills.length?'没有匹配的 Skill':'导入第一个 Skill', state.skills.length?'调整关键词或清除筛选后再看看。':'选择 ZIP、一个目录，或粘贴公开下载链接。', `<button ${state.skills.length?'data-ui="library-clear"':'class="primary" data-action="import"'}>${state.skills.length?'清除筛选':'导入 Skill'}</button>`);
 }
 async function detail(id, selected, options = {}) {
@@ -70,33 +69,36 @@ async function detailTab(tab, options = {}) {
   const files = await api('/versions/'+version+'/files');
   if (location.hash!==routeKey || state.version!==version || state.detailTab!==tab) return;
   state.files=files;
-  host.innerHTML=`<div class="file-layout"><nav class="file-list" aria-label="文件列表"><p class="file-list-heading">包内文件 <span>${files.length}</span></p>${files.map(file=>`<button data-file="${escapeHTML(file.path)}" title="${escapeHTML(file.path)}">${escapeHTML(file.path)}</button>`).join('')}</nav><div class="file-preview"><div id="file-title" class="file-title"></div><div id="file-content"></div></div></div>`;
+  host.innerHTML=`<div class="file-layout"><nav class="file-list" aria-label="文件列表"><p class="file-list-heading">包内文件 <span>${files.length}</span></p><label class="file-search"><span class="sr-only">查找包内文件</span><input id="file-search" type="search" placeholder="查找文件" aria-label="查找包内文件"></label><p id="file-filter-empty" class="hint" hidden>没有匹配文件</p>${files.map(file=>`<button data-file="${escapeHTML(file.path)}" title="${escapeHTML(file.path)}">${escapeHTML(file.path)}</button>`).join('')}</nav><div class="file-preview"><div id="file-title" class="file-title"></div><div id="file-content"></div></div></div>`;
+  $('#file-search').oninput=event=>{const q=event.target.value.trim().toLocaleLowerCase();let found=0;document.querySelectorAll('[data-file]').forEach(button=>{button.hidden=!button.dataset.file.toLocaleLowerCase().includes(q);if(!button.hidden)found++;});$('#file-filter-empty').hidden=found>0;};
   if (options.file&&!files.some(file=>file.path===options.file)) {$('#file-title').textContent=options.file;$('#file-content').innerHTML='<div class="alert warning" role="alert">所选版本不包含此文件，请从文件列表选择。</div>';return;}
   await showFile(options.file||files.find(file=>file.path==='SKILL.md')?.path||files[0]?.path, options.line);
 }
 async function showFile(path, line = 0) {
   if (!path) return;
-  const version=state.version;
+  const version=state.version, request=view.fileRequest=(view.fileRequest||0)+1;
   document.querySelectorAll('[data-file]').forEach(button=>{button.classList.toggle('active',button.dataset.file===path);button.setAttribute('aria-current',String(button.dataset.file===path));});
-  $('#file-title').textContent=path;
+  $('#file-title').innerHTML=`<span>${escapeHTML(path)}</span><button class="text-button" data-copy-path aria-label="复制文件路径">复制路径</button>`;
+  const copyPath=$('[data-copy-path]');copyPath.onclick=()=>busy(copyPath,()=>copyText(path,'文件路径',copyPath));
   $('#file-content').innerHTML='<div class="loading-state" role="status">正在读取文件…</div>';
   try {
     const file=await api('/versions/'+version+'/file?path='+encodeURIComponent(path));
-    if (state.version!==version || $('#file-title')?.textContent!==path) return;
+    if (state.version!==version||view.fileRequest!==request||!$('#file-content')) return;
     mountReader($('#file-content'),file.content,{markdown:/\.md$/i.test(path),line,title:'只读预览'});
-  } catch(error) { if ($('#file-content')) $('#file-content').textContent=error.message; }
+  } catch(error) { if (state.version===version&&view.fileRequest===request&&$('#file-content')) {$('#file-content').innerHTML=emptyState('文件暂时无法读取',error.message,'<button data-retry-file>重试</button>');$('[data-retry-file]').onclick=()=>showFile(path,line);} }
 }
 function taskRows(tasks) {
   if (!tasks.length) return emptyState('暂无匹配记录','可以调整筛选条件，或前往 Skill 库创建审计。','<a class="button" href="#skills">前往 Skill 库</a>');
-  return `<div class="table-wrap"><table class="records-table task-table"><thead><tr><th>Skill / 版本</th><th>执行状态</th><th>审计 / 修复结论</th><th>报告与问题</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${tasks.map(task=>`<tr><td class="record-title"><a class="skill-name" href="#task/${task.id}">${escapeHTML(task.skill_name)}</a><p class="record-meta"><span class="version-tag">${escapeHTML(task.version)}</span> · ${task.kind==='repair'?'授权修复':task.audit_mode==='static'?'静态预检':'完整审计'}</p></td><td data-label="执行状态">${badge(task.state)}</td><td data-label="检查结论">${task.kind==='repair'?badge(task.repair_state):auditBadge({...task,mode:task.audit_mode})}</td><td data-label="报告与问题">${task.kind==='repair'?`<span>${task.repair_state==='published'?'版本已登记':'查看轮次结果'}</span>`:`<span>${label(task.delivery_status)}</span><p class="record-meta">${resultCounts(task)}</p>`}</td><td data-label="创建时间" class="muted" title="${escapeHTML(fmtDate(task.created_at))}">${escapeHTML(fmtShortDate(task.created_at))}</td><td class="record-actions"><a href="#task/${task.id}">查看${task.delivery_status==='saved'?'报告':'详情'}</a></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap"><table class="records-table task-table"><thead><tr><th>Skill / 版本</th><th>执行状态</th><th>审计 / 修复结论</th><th>报告与问题</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${tasks.map(task=>`<tr><td class="record-title"><a class="skill-name" href="#task/${task.id}">${escapeHTML(task.skill_name)}</a><p class="record-meta"><span class="version-tag">${escapeHTML(task.version)}</span> · ${task.kind==='repair'?'授权修复':task.audit_mode==='static'?'静态预检':'完整审计'}</p></td><td data-label="执行状态">${badge(task.state)}</td><td data-label="检查结论">${task.kind==='repair'?badge(task.repair_state):auditBadge({...task,mode:task.audit_mode})}</td><td data-label="报告与问题">${task.kind==='repair'?`<span>${task.repair_state==='published'?'版本已登记':'查看轮次结果'}</span>`:`<span>${label(task.delivery_status)}</span><p class="record-meta">${resultCounts(task,task.skill_id,task.id)}</p>`}</td><td data-label="创建时间" class="muted" title="${escapeHTML(fmtDate(task.created_at))}">${escapeHTML(fmtShortDate(task.created_at))}</td><td class="record-actions"><a href="#task/${task.id}">查看${task.delivery_status==='saved'?'报告':'详情'}</a></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function taskList() {
   const history=state.taskHistory ||= {filters:{limit:'25'},cursor:null,previous:[],expanded:false};
+  const render=++view.render;
   const request=state.taskHistoryRequest=(state.taskHistoryRequest||0)+1;
   const params=new URLSearchParams(history.filters);
   if (history.cursor) params.set('cursor',history.cursor);
   const [page,skills]=await Promise.all([api('/task-history?'+params),api('/skills')]);
-  if (request!==state.taskHistoryRequest || location.hash!=='#tasks') return;
+  if (request!==state.taskHistoryRequest||render!==view.render||!state.user||location.hash!=='#tasks') return;
   history.nextCursor=page.nextCursor; history.fingerprint=JSON.stringify(page);
   const filters=history.filters, summary=page.summary;
   const options=(items,selected)=>items.map(([value,text])=>`<option value="${escapeHTML(value)}" ${value===(selected||'')?'selected':''}>${escapeHTML(text)}</option>`).join('');
@@ -127,37 +129,73 @@ async function taskEvents(task, more=false) {
   state.eventsTask=task;
 }
 function findingsSection(result, writable) {
-  return `<section class="panel" id="findings-panel"><div class="section-title"><div><h2>问题与建议</h2><p class="muted">点击问题查看详情与证据，勾选需要修复的内容。</p></div><div class="segmented finding-filters" role="group" aria-label="问题类型">${[['all','全部'],['ERR','必修'],['WARN','建议'],['review','待复核']].map(([value,text])=>`<button data-finding-filter="${value}" aria-pressed="${value==='all'}">${text}${value==='ERR'?' '+result.errorCount:value==='WARN'?' '+result.warningCount:''}</button>`).join('')}</div></div><div id="findings-list"></div>${writable?'<div class="selection-bar"><span id="selection-count" aria-live="polite"></span><button class="primary" data-action="repair">修复所选问题</button></div>':''}</section>`;
+  return `<section class="panel" id="findings-panel"><div class="section-title"><div><h2>问题与建议</h2><p class="muted">查看问题与固定版本证据，选择确认需要修复的内容。</p></div><div class="segmented finding-filters" role="group" aria-label="问题类型">${[['all','全部'],['ERR','必修'],['WARN','建议'],['review','待复核']].map(([value,text])=>`<button data-finding-filter="${value}" aria-pressed="${value==='all'}">${text} ${value==='ERR'?result.errorCount:value==='WARN'?result.warningCount:value==='review'?result.findings.filter(item=>item.reviewRequired).length:result.findings.length}</button>`).join('')}</div></div><div class="finding-toolbar"><label><span class="sr-only">搜索问题</span><input id="finding-search" type="search" placeholder="搜索问题、规则或文件" aria-label="搜索问题"></label><span id="finding-match-count" class="muted" aria-live="polite"></span>${writable?'<div class="actions"><button class="text-button" data-finding-select-page>选择本页</button><button class="text-button" data-finding-clear>清空已选</button></div>':''}</div><div id="findings-list"></div><div id="findings-pager" class="finding-pager"></div>${writable?'<div class="selection-bar"><span id="selection-count" aria-live="polite"></span><button class="primary" data-action="repair">修复所选问题</button></div>':''}</section>`;
+}
+function findingRows() {
+  const {audit,result}=state.auditContext;
+  return filteredFindings(result.findings,view.findingFilters.get(audit.id)||'all',view.findingQueries.get(audit.id)||'');
+}
+function findingPage() {
+  const rows=findingRows(), id=state.auditContext.audit.id, pages=Math.max(1,Math.ceil(rows.length/25));
+  const page=Math.min(view.findingPages.get(id)||0,pages-1);view.findingPages.set(id,page);
+  return {items:rows.slice(page*25,(page+1)*25),total:rows.length,page,pages};
 }
 function renderFindings() {
-  const {audit,result,skill}=state.auditContext, selected=view.selections.get(audit.id), filter=view.findingFilters.get(audit.id)||'all';
-  const rows=result.findings.filter(finding=>filter==='all'||(filter==='review'?finding.reviewRequired:finding.severity===filter));
+  const {audit,result,skill}=state.auditContext, selected=view.selections.get(audit.id), filter=view.findingFilters.get(audit.id)||'all', page=findingPage();
   document.querySelectorAll('[data-finding-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.findingFilter===filter)));
-  $('#findings-list').innerHTML=rows.length?rows.map(finding=>`<div class="finding-row">${skill.can_write?`<input type="checkbox" data-finding="${escapeHTML(finding.id)}" aria-label="选择 ${escapeHTML(finding.ruleId)} ${escapeHTML(finding.file)} 第 ${finding.line} 行" ${finding.reviewRequired?'disabled':selected.has(finding.id)?'checked':''}>`:''}<div class="finding-main"><div class="finding-heading">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}<span class="mono">${escapeHTML(finding.ruleId)}</span><button class="file-location" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.file)}:${finding.line}</button></div><button class="finding-title" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.message)}</button><p class="finding-summary">${escapeHTML(finding.suggestion)}</p></div><button class="text-button finding-open" data-finding-detail="${escapeHTML(finding.id)}">查看详情</button></div>`).join(''):emptyState('此分类暂无问题','请同时查看总体结论与必要检查是否完成。');
+  const search=$('#finding-search');search.value=view.findingQueries.get(audit.id)||'';
+  search.oninput=event=>{view.findingQueries.set(audit.id,event.target.value);view.findingPages.set(audit.id,0);renderFindings();};
+  $('#finding-match-count').textContent=`匹配 ${page.total} / ${result.findings.length} 项`;
+  $('#findings-list').innerHTML=page.items.length?page.items.map(finding=>`<div class="finding-row">${skill.can_write?`<input type="checkbox" data-finding="${escapeHTML(finding.id)}" aria-label="选择 ${escapeHTML(finding.ruleId)} ${escapeHTML(finding.file)} 第 ${finding.line} 行" ${finding.reviewRequired?'disabled':selected.has(finding.id)?'checked':''}>`:''}<div class="finding-main"><div class="finding-heading">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}<span class="mono">${escapeHTML(finding.ruleId)}</span><button class="file-location" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.file)}:${finding.line}</button></div><button class="finding-title" data-finding-detail="${escapeHTML(finding.id)}">${escapeHTML(finding.message)}</button><p class="finding-summary">${escapeHTML(finding.suggestion)}</p></div><button class="text-button finding-open" data-finding-detail="${escapeHTML(finding.id)}">查看详情</button></div>`).join(''):emptyState('没有匹配的问题','可调整分类或关键词；其他分类中的选择仍保留。','<button data-finding-reset>清除问题筛选</button>');
+  $('#findings-pager').innerHTML=page.pages>1?`<span>第 ${page.page+1} / ${page.pages} 页 · 每页 25 项</span><div class="actions"><button data-findings-page="-1" ${page.page?'':'disabled'}>上一页</button><button data-findings-page="1" ${page.page+1<page.pages?'':'disabled'}>下一页</button></div>`:'';
+  $('#findings-pager').hidden=page.pages<=1;
   updateSelection();
 }
 function updateSelection() {
   const context=state.auditContext;
   if (!context||!$('#selection-count')) return;
   const count=view.selections.get(context.audit.id)?.size||0;
-  $('#selection-count').textContent=count?`已选择 ${count} 个问题 · 只修改授权范围`:'勾选已确认的问题后，可授权修复';
+  $('#selection-count').textContent=count?`已选择 ${count} 个问题 · 跨筛选保留`:'先选择已确认的问题，再授权修复';
   $('.selection-bar button').disabled=!count;
+  const eligible=findingPage().items.filter(item=>!item.reviewRequired);
+  $('[data-finding-select-page]').disabled=!eligible.some(item=>!view.selections.get(context.audit.id).has(item.id));
+  $('[data-finding-clear]').disabled=!count;
+}
+async function findingsPreview(button) {
+  const hash=location.hash, request=view.render;
+  const [audit,skill]=await Promise.all([api('/audits/'+encodeURIComponent(button.dataset.previewAudit)),api('/skills/'+encodeURIComponent(button.dataset.previewSkill))]);
+  if (location.hash!==hash||request!==view.render||!state.user) return;
+  if (audit.skill_id!==skill.id||!audit.result) throw new Error('此版本的报告尚未保存，请查看任务进展');
+  const previous=state.auditContext, context={audit,result:audit.result,skill,task:null};
+  state.auditContext=context;
+  if (!view.selections.has(audit.id)) view.selections.set(audit.id,new Set(audit.result.findings.filter(item=>item.severity==='ERR'&&!item.reviewRequired).map(item=>item.id)));
+  view.findingFilters.set(audit.id,button.dataset.previewFilter||'all');view.findingPages.set(audit.id,0);
+  const panel=openPanel('版本问题',`<div class="preview-summary">${auditBadge({...audit,state:null})}<a href="${auditURL({id:audit.id,task_id:button.dataset.previewTask})}">打开完整报告</a></div>${findingsSection(audit.result,skill.can_write)}`,{drawer:true,subtitle:`${skill.name} · ${audit.registered_version} · ${audit.mode==='static'?'静态预检':'完整审计'}`,className:'findings-preview',opener:button});
+  panel.addEventListener('close',()=>{if(state.auditContext===context)state.auditContext=previous;},{once:true});
+  renderFindings();
 }
 async function findingDetail(id) {
-  const {audit,result,skill}=state.auditContext;
-  const finding=result.findings.find(item=>item.id===id);
-  if (!finding) return;
+  const context=state.auditContext, {audit,result,skill}=context, rows=findingRows();
+  let index=rows.findIndex(item=>item.id===id);if(index<0)return;
   const version=skill.versions.find(item=>item.id===audit.version_id);
-  const panel=openPanel('问题详情',`<div class="finding-heading">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}<span class="mono">${escapeHTML(finding.ruleId)}</span></div><h3 class="drawer-finding-title">${escapeHTML(finding.message)}</h3><div class="suggestion-block"><h3>修改建议</h3><p>${escapeHTML(finding.suggestion)}</p></div><div class="drawer-section"><h3>如何验证</h3><p>${escapeHTML(finding.verification)}</p></div><div class="drawer-section"><h3>文件证据</h3><p class="mono">${escapeHTML(finding.file)}:${finding.line}</p><div id="finding-evidence" class="evidence-code" role="status">正在读取所审版本…</div><a class="button" href="${versionURL(skill.id,audit.version_id,{file:finding.file,line:String(finding.line)})}" data-close-drawer>在文件中打开</a></div>${skill.can_write?`<div class="drawer-footer">${finding.reviewRequired?'<p class="hint">此项尚待复核，不能直接加入自动修复。</p>':`<button class="primary" data-toggle-finding="${escapeHTML(finding.id)}">${view.selections.get(audit.id).has(id)?'取消选择':'选择此问题'}</button>`}<button data-close-panel>返回问题列表</button></div>`:''}`,{drawer:true,subtitle:`${skill.name} · ${version?.version||'固定版本'}`});
-  panel.querySelectorAll('[data-close-panel],[data-close-drawer]').forEach(button=>button.onclick=()=>panel.close());
-  const choose=$('[data-toggle-finding]',panel);
-  if (choose) choose.onclick=()=>{const selected=view.selections.get(audit.id);selected.has(id)?selected.delete(id):selected.add(id);document.querySelectorAll('[data-finding]').forEach(input=>input.checked=selected.has(input.dataset.finding));updateSelection();choose.textContent=selected.has(id)?'取消选择':'选择此问题';};
-  try {
-    const file=await api('/versions/'+audit.version_id+'/file?path='+encodeURIComponent(finding.file));
-    if (!panel.isConnected) return;
-    const lines=file.content.split('\n'), number=Math.max(1,Number(finding.line)||1), start=Math.max(1,number-4), end=Math.min(lines.length,number+5);
-    $('#finding-evidence',panel).innerHTML=sourceLines(lines.slice(start-1,end).join('\n'),number,start);
-  } catch(error) {if (panel.isConnected) $('#finding-evidence',panel).textContent='证据暂不可读：'+error.message;}
+  const panel=openPanel('问题详情','',{drawer:true,subtitle:`${skill.name} · ${version?.version||'固定版本'}`});
+  let generation=0;
+  async function paint(step) {
+    const finding=rows[index], current=++generation;
+    $('.dialog-body',panel).innerHTML=`<div class="finding-navigation"><button data-finding-step="-1" ${index?'':'disabled'}>上一条</button><span role="status">${index+1} / ${rows.length}</span><button data-finding-step="1" ${index+1<rows.length?'':'disabled'}>下一条</button></div><div class="finding-heading">${badge(finding.reviewRequired?'review_required':finding.severity==='ERR'?'fail':'warning',finding.reviewRequired?'待复核':finding.severity==='ERR'?'必修':'建议')}<span class="mono">${escapeHTML(finding.ruleId)}</span></div><h3 class="drawer-finding-title">${escapeHTML(finding.message)}</h3><div class="suggestion-block"><h3>修改建议</h3><p>${escapeHTML(finding.suggestion)}</p></div><div class="drawer-section"><h3>如何验证</h3><p>${escapeHTML(finding.verification)}</p></div><div class="drawer-section"><h3>文件证据</h3><p class="mono">${escapeHTML(finding.file)}:${finding.line}</p><div id="finding-evidence" class="evidence-code" role="status">正在读取所审版本…</div><a class="button" href="${versionURL(skill.id,audit.version_id,{file:finding.file,line:String(finding.line)})}" data-close-drawer>在文件中打开</a></div><div class="drawer-footer">${skill.can_write?(finding.reviewRequired?'<p class="hint">此项尚待复核，不能直接加入自动修复。</p>':`<button class="primary" data-toggle-finding aria-pressed="${view.selections.get(audit.id).has(finding.id)}">${view.selections.get(audit.id).has(finding.id)?'取消选择':'选择此问题'}</button>`):''}<button data-close-panel>返回问题列表</button></div>`;
+    panel.querySelectorAll('[data-close-panel],[data-close-drawer]').forEach(button=>button.onclick=()=>panel.close());
+    panel.querySelectorAll('[data-finding-step]').forEach(button=>button.onclick=()=>{index+=Number(button.dataset.findingStep);paint(button.dataset.findingStep);});
+    if (step) {const target=$(`[data-finding-step="${step}"]`,panel);(target.disabled?$(`[data-finding-step="${-Number(step)}"]`,panel):target).focus({preventScroll:true});panel.scrollTop=0;}
+    const choose=$('[data-toggle-finding]',panel);
+    if (choose) choose.onclick=()=>{const selected=view.selections.get(audit.id);selected.has(finding.id)?selected.delete(finding.id):selected.add(finding.id);document.querySelectorAll('[data-finding]').forEach(input=>input.checked=selected.has(input.dataset.finding));updateSelection();choose.textContent=selected.has(finding.id)?'取消选择':'选择此问题';choose.setAttribute('aria-pressed',String(selected.has(finding.id)));};
+    try {
+      const file=await api('/versions/'+audit.version_id+'/file?path='+encodeURIComponent(finding.file));
+      if (!panel.isConnected||!panel.open||generation!==current) return;
+      const lines=file.content.split('\n'),number=Math.max(1,Number(finding.line)||1),start=Math.max(1,number-4),end=Math.min(lines.length,number+5);
+      $('#finding-evidence',panel).innerHTML=sourceLines(lines.slice(start-1,end).join('\n'),number,start);
+    } catch(error) {if (panel.isConnected&&generation===current)$('#finding-evidence',panel).textContent='证据暂不可读：'+error.message;}
+  }
+  await paint();
 }
 async function taskDetail(id) {
   const request=++view.render;
@@ -177,9 +215,9 @@ async function taskDetail(id) {
   if (result) {renderFindings();mountReader($('#audit-report-reader'),result.reportMarkdown,{title:'冻结报告',rawId:'report-source'});}
   await taskEvents(task);
 }
-async function openAudit() {
+async function openAudit(opener=document.activeElement) {
   const skill=state.detail, version=state.version, current=skill.versions.find(item=>item.id===version);
-  const dialog=openPanel('创建审计',`<form id="audit-create"><div class="context-chip">${escapeHTML(skill.name)}<span class="version-tag">${escapeHTML(current.version)}</span></div><label>审计深度<select name="depth"><option value="L1">L1 · 包内质量检查</option><option value="L2">L2 · 增加发布与外部依赖检查</option></select></label><label>审计方式<select name="mode"><option value="full">完整审计 · 使用已配置的模型</option><option value="static">静态预检 · 无需模型</option></select></label><div class="info-line">完整审计需要已通过能力检测的模型；未就绪时任务等待配置。静态预检不代表完整通过。原版本保持只读。</div><p class="error" role="alert"></p><div class="dialog-foot"><button type="button" data-dismiss>取消</button><button type="submit" class="primary">创建任务</button></div></form>`,{subtitle:'检查固定版本，报告与版本一起留存。'});
+  const dialog=openPanel('创建审计',`<form id="audit-create"><div class="context-chip">${escapeHTML(skill.name)}<span class="version-tag">${escapeHTML(current.version)}</span></div><label>审计深度<select name="depth"><option value="L1">L1 · 包内质量检查</option><option value="L2">L2 · 增加发布与外部依赖检查</option></select></label><label>审计方式<select name="mode"><option value="full">完整审计 · 使用已配置的模型</option><option value="static">静态预检 · 无需模型</option></select></label><div class="info-line">完整审计需要已通过能力检测的模型；未就绪时任务等待配置。静态预检不代表完整通过。原版本保持只读。</div><p class="error" role="alert"></p><div class="dialog-foot"><button type="button" data-dismiss>取消</button><button type="submit" class="primary">创建任务</button></div></form>`,{subtitle:'检查固定版本，报告与版本一起留存。',opener});
   $('[data-dismiss]',dialog).onclick=()=>dialog.close();
   const key=crypto.randomUUID();
   $('form',dialog).onsubmit=event=>{event.preventDefault();busy($('button[type=submit]',dialog),async()=>{try {const data=Object.fromEntries(new FormData(event.target));const created=await api('/audits',{method:'POST',body:{...data,version_id:version,idempotency_key:key}});dialog.close();location.hash='#task/'+created.task_id;}catch(error){$('.error',dialog).textContent=error.message;}});};
@@ -232,8 +270,8 @@ async function pollWorkspace() {
       changed=JSON.stringify(task)!==state.taskFingerprint;
     }
     // Polling never replaces DOM, focus, selection, scroll or an open dialog.
-    if (location.hash===hash&&changed&&$('#live-update')) $('#live-update').hidden=false;
-  } catch { /* Keep the last usable page. Explicit refresh surfaces request failures. */ }
+    if (location.hash===hash&&$('#live-update')) {const banner=$('#live-update');if(changed){$('span',banner).textContent='有新的执行进展，更新后查看。';$('button',banner).textContent='更新记录';banner.hidden=false;}else if(banner.dataset.connectionError){banner.hidden=true;}delete banner.dataset.connectionError;}
+  } catch { if(location.hash===hash&&$('#live-update')) {const banner=$('#live-update');banner.dataset.connectionError='true';$('span',banner).textContent='连接暂时中断，已保留当前记录；可点击重试。';$('button',banner).textContent='重试连接';banner.hidden=false;} }
   finally {view.pollBusy=false;}
 }
 
@@ -252,24 +290,31 @@ document.addEventListener('click',event=>{
     view.library.mine=target.dataset.libraryMine==='true';
     document.querySelectorAll('[data-library-mine]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.libraryMine===String(view.library.mine))));renderRows();
   }
+  if (target.dataset.libraryStatus!==undefined) {view.library.verdict=target.dataset.libraryStatus;$('#library-verdict').value=view.library.verdict;renderRows();}
+  if (target.dataset.previewAudit) busy(target,()=>findingsPreview(target));
+  if (target.hasAttribute('data-finding-select-page')) {selectFindings(view.selections.get(state.auditContext.audit.id),findingPage().items);renderFindings();}
+  if (target.hasAttribute('data-finding-clear')) {view.selections.get(state.auditContext.audit.id).clear();renderFindings();}
+  if (target.hasAttribute('data-finding-reset')) {const id=state.auditContext.audit.id;view.findingFilters.set(id,'all');view.findingQueries.set(id,'');view.findingPages.set(id,0);renderFindings();}
+  if (target.dataset.findingsPage) {const id=state.auditContext.audit.id;view.findingPages.set(id,findingPage().page+Number(target.dataset.findingsPage));renderFindings();$('#findings-panel').scrollIntoView({block:'start'});const button=$(`[data-findings-page="${target.dataset.findingsPage}"]`);(button&&!button.disabled?button:$('#finding-search')).focus({preventScroll:true});}
   if (target.dataset.detailTab) detailTab(target.dataset.detailTab).catch(error=>notice(error.message));
-  if (target.dataset.findingFilter) {view.findingFilters.set(state.auditContext.audit.id,target.dataset.findingFilter);renderFindings();}
+  if (target.dataset.findingFilter) {view.findingFilters.set(state.auditContext.audit.id,target.dataset.findingFilter);view.findingPages.set(state.auditContext.audit.id,0);renderFindings();}
   if (target.dataset.findingDetail) findingDetail(target.dataset.findingDetail).catch(error=>notice(error.message));
-  if (target.dataset.auditSkill) busy(target,async()=>{if(view.openingAudit)return;view.openingAudit=true;const hash=location.hash;try{const skill=await api('/skills/'+target.dataset.auditSkill);if(location.hash!==hash||!state.user)return;state.detail=skill;state.version=target.dataset.versionId;await openAudit();}finally{view.openingAudit=false;}});
+  if (target.dataset.auditSkill) busy(target,async()=>{if(view.openingAudit)return;view.openingAudit=true;const hash=location.hash;try{const skill=await api('/skills/'+target.dataset.auditSkill);if(location.hash!==hash||!state.user)return;state.detail=skill;state.version=target.dataset.versionId;await openAudit(target);}finally{view.openingAudit=false;}});
   const action=target.dataset.ui;
+  if (action==='retry-route') busy(target,route);
   if (action==='library-clear') {view.library={q:'',mine:false,verdict:''};library().catch(error=>notice(error.message));}
   if (action==='library-refresh') busy(target,library);
-  if (action==='apply-update') busy(target,async()=>{const scroll=window.scrollY;await route();window.scrollTo(0,scroll);});
+  if (action==='apply-update') busy(target,async()=>{if($('#live-update')?.dataset.connectionError){await pollWorkspace();return;}const scroll=window.scrollY;await route();window.scrollTo(0,scroll);});
   if (action==='toggle-filters') {const history=state.taskHistory;history.expanded=!history.expanded;$('#task-filters').classList.toggle('expanded',history.expanded);target.setAttribute('aria-expanded',String(history.expanded));}
   if (action==='activity-more') detailTab('activity',{cursor:state.versionActivity.nextCursor}).catch(error=>notice(error.message));
   if (action==='activity-first') detailTab('activity').catch(error=>notice(error.message));
   if (action==='edit-owner') busy(target,async()=>{
     const users=await api('/users'), skill=state.detail;
-    const panel=openPanel('调整维护者',`<form><p class="hint">维护者或管理员可为此 Skill 登记版本。</p><label>维护者<select id="owner-select" aria-label="调整维护者">${users.filter(user=>user.active).map(user=>`<option value="${user.id}" ${user.id===skill.owner_id?'selected':''}>${escapeHTML(user.username)}</option>`).join('')}</select></label><p class="error" role="alert"></p><div class="dialog-foot"><button type="button" data-dismiss>取消</button><button type="submit" class="primary">保存归属</button></div></form>`);
+    const panel=openPanel('调整维护者',`<form><p class="hint">维护者或管理员可为此 Skill 登记版本。</p><label>维护者<select id="owner-select" aria-label="调整维护者">${users.filter(user=>user.active).map(user=>`<option value="${user.id}" ${user.id===skill.owner_id?'selected':''}>${escapeHTML(user.username)}</option>`).join('')}</select></label><p class="error" role="alert"></p><div class="dialog-foot"><button type="button" data-dismiss>取消</button><button type="submit" class="primary">保存归属</button></div></form>`,{opener:target});
     $('[data-dismiss]',panel).onclick=()=>panel.close();
     $('form',panel).onsubmit=event=>{event.preventDefault();busy($('button[type=submit]',panel),async()=>{try {await api('/skills/'+skill.id+'/owner',{method:'PUT',body:{owner_id:$('#owner-select',panel).value}});panel.close();await detail(skill.id,state.version);notice('维护者已更新');}catch(error){$('.error',panel).textContent=error.message;}});};
   });
-  if (action==='copy-repair') busy(target,async()=>{await navigator.clipboard.writeText(state.auditContext.result.repairPrompt);notice('修复提示已复制');});
+  if (action==='copy-repair') busy(target,async()=>{await copyText(state.auditContext.result.repairPrompt,'修复提示',target);});
   if (action==='download-result') {
     const {audit,result}=state.auditContext;
     const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:'application/json'}));

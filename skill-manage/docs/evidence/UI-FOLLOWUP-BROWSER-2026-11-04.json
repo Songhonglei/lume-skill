@@ -1,0 +1,40 @@
+{
+  "version": "0.3.2.dev9",
+  "environment": "isolated local demo",
+  "staticFixtureFindings": 31,
+  "externalModelCalls": 0,
+  "checks": {
+    "libraryIssuePreview": true,
+    "taskIssuePreview": true,
+    "versionActivityIssuePreview": true,
+    "exactVersionEvidence": true,
+    "pages25And6": true,
+    "selectionAcrossPagesAndSearch": true,
+    "reviewOnlySelectionExcludedByUnitTest": true,
+    "nestedDrawerFocus": true,
+    "asyncOpenerFocus": true,
+    "drawerPreviousNext": true,
+    "paginationFocus": true,
+    "originalRepairAuthorization": true,
+    "scopedOverviewCounts": true,
+    "fileSearch": true,
+    "pathCopy": true,
+    "deniedClipboardFallback": true,
+    "clipboardFallbackFocus": true,
+    "pageFailureRetry": true,
+    "readableNetworkError": true,
+    "offlineRetryPreservesDOM": true,
+    "reconnectionRecovery": true,
+    "readerCannotSelectOrRepair": true,
+    "expiredSessionClearsDraftHistoryAndQueries": true,
+    "mobile390Library": true,
+    "mobile390Preview": true,
+    "mobile390NestedEvidence": true,
+    "reflow720": true
+  },
+  "notes": [
+    "Mobile checks use an emulated viewport and include DOM clicks to keep the viewport stable.",
+    "No real-device, actual 200-percent browser zoom or screen-reader certification.",
+    "No semantic model or paid repair request was executed."
+  ]
+}

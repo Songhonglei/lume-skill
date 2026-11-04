@@ -1,5 +1,11 @@
 # 开发接续与历史验收记录
 
+## 2026-11-04 / 0.3.2.dev9 / 工作台交互补齐
+
+补齐列表问题直开、快捷质量过滤、问题搜索/25 项分页/本页选择、抽屉连续查看、文件查找与复制回退、加载重试、连接恢复和会话清理。8 项 Node 测试、全部 JS 语法及 Ruff/差异检查通过；隔离浏览器使用 31 个真实静态问题验证，不调用外部模型。逐项验收与限制见 [UI-FOLLOWUP.md](UI-FOLLOWUP.md)。
+
+dev8 的 [PR #11](https://github.com/Songhonglei/lume-skill/pull/11) 和 [main 37cc002 的 CI](https://github.com/Songhonglei/lume-skill/actions/runs/41784548791) 已分别完成四环境检查；这些结果保留为 dev8 历史证据。dev9 的托管结果按本次提交单独读取。
+
 ## 2026-11-04 / 0.3.2.dev8 / 工作台页面与交互
 
 蓝色主题保持，完成版本审计摘要、详情顶部动作、问题抽屉与文件证据、报告阅读和原文、导入恢复、任务更新提示/焦点保持、手机卡片与设置分组。schema 4 和既有权限/复审门禁保持。实现及独立验收范围见 [UI-IMPROVEMENTS.md](UI-IMPROVEMENTS.md)。

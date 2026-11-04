@@ -38,8 +38,11 @@ async function api(path, options = {}) {
   const headers = {...options.headers};
   if (state.user?.csrf) headers['X-CSRF-Token'] = state.user.csrf;
   if (options.body && !(options.body instanceof FormData)) { headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(options.body); }
-  const response = await fetch('/api' + path, {...options, headers, credentials:'same-origin'});
-  const result = await response.json();
+  let response, result;
+  try { response=await fetch('/api'+path,{...options,headers,credentials:'same-origin'}); }
+  catch { throw new Error('连接失败，请检查网络后重试'); }
+  try { result=await response.json(); }
+  catch { throw new Error('服务响应暂时无法读取，请稍后重试'); }
   if (!response.ok) { if (response.status === 401 && state.user) { state.user = null; await init(); } throw new Error(typeof result.detail === 'string' ? result.detail : '输入格式不正确，请检查后重试'); }
   return result;
 }
@@ -55,7 +58,8 @@ async function init() {
   } catch (error) { $('#gate').textContent = '连接失败：' + error.message; }
 }
 function showGate(onboard) {
-  clearSessionView();
+  clearSessionView();state.auditContext=null;state.detail=null;state.version=null;state.skills=[];state.taskHistory=null;state.taskEvents=null;state.enrollmentHistory=null;state.taskHistoryRequest=(state.taskHistoryRequest||0)+1;
+  document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
   $('#workspace').hidden = true; $('#gate').hidden = false;
   $('#gate').innerHTML = `<div class="brand"><img src="/static/icon.svg" width="30" height="30" alt=""><strong>Skill 工作台</strong></div><h1>${onboard ? '设置你的工作台' : '登录工作台'}</h1><p class="muted">${onboard ? '创建管理员，开始管理团队的 Skill。' : '集中管理 Skill，保留每一个版本。'}</p><form id="gate-form">${onboard ? '<label>初始化凭据<input name="token" type="password" required autocomplete="off"></label><p class="hint">从服务器数据目录的 <code>run/setup-code</code> 读取。</p>' : ''}<label>账号<input name="username" required maxlength="64" autocomplete="username"></label><label>密码<input name="password" type="password" required ${onboard ? 'minlength="12"' : ''} maxlength="256" autocomplete="${onboard ? 'new-password' : 'current-password'}"></label><p class="error" id="gate-error" role="alert"></p><button class="primary" type="submit">${onboard ? '创建并进入' : '登录'}</button></form>`;
   $('#gate-form').onsubmit = async event => {
@@ -70,6 +74,7 @@ async function route() {
   const [path, rawQuery] = hash.slice(1).split('?');
   const params = new URLSearchParams(rawQuery || '');
   ++view.render;
+  const navigation=++view.navigation;
   view.route = hash;
   document.querySelectorAll('[data-nav]').forEach(link => {
     const active = link.dataset.nav === 'skills' ? path === 'skills' || path.startsWith('skill/') : link.dataset.nav === 'tasks' ? path === 'tasks' || path.startsWith('task/') || path.startsWith('audit/') : path === 'settings';
@@ -77,6 +82,7 @@ async function route() {
     if (active) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');
   });
   $('#main').setAttribute('aria-busy','true');
+  $('#main').innerHTML='<div class="route-loading" role="status"><span class="loading-dot" aria-hidden="true"></span>正在读取页面…</div>';
   try {
     if (path.startsWith('skill/')) await detail(decodeURIComponent(path.slice(6)), params.get('version'), {file:params.get('file'),line:Math.min(1000000,Math.max(0,Number(params.get('line'))||0))});
     else if (path.startsWith('task/')) await taskDetail(decodeURIComponent(path.slice(5)));
@@ -85,8 +91,8 @@ async function route() {
     else if (path === 'settings') await settings();
     else await library();
     document.title = ($('#main h1')?.textContent || 'Skill') + ' · Skill 工作台';
-  } catch (error) { notice(error.message); }
-  finally { $('#main').removeAttribute('aria-busy'); }
+  } catch (error) { if(navigation===view.navigation&&state.user) $('#main').innerHTML=emptyState('页面暂时无法打开',error.message,'<button class="primary" data-ui="retry-route">重试</button><a class="button" href="#skills">返回 Skill 库</a>'); }
+  finally { if(navigation===view.navigation) $('#main').removeAttribute('aria-busy'); }
 }
 const labels = {queued:'排队中',running:'执行中',waiting_configuration:'等待模型配置',cancelling:'正在停止',cancelled:'已停止',succeeded:'已完成',failed:'执行失败',pass:'通过',fail:'不通过',review_required:'待复核',error:'执行异常',saved:'已保存',pending:'待完成',online:'在线',offline:'离线',registered:'等待上线',revoked:'已撤销',editing:'修复中',reauditing:'独立复审中',ready:'候选已就绪',published:'已登记新版本',needs_attention:'待处理'};
 const label = value => escapeHTML(labels[value] || value || '—');
