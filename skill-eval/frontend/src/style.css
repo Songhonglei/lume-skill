@@ -529,3 +529,13 @@ main:focus,.task-list:focus,.task-detail:focus{outline-offset:4px}
 .case-list-search{padding:10px 14px;border-bottom:1px solid var(--border)}
 .case-list-search input{width:100%;font-size:13px}
 @media(max-width:720px){.case-results-toolbar{gap:10px}.case-results-controls .search{flex:1;width:auto;min-width:140px}.worker-list-options{padding:12px 16px}.list-pagination{padding:12px 16px;gap:12px}.snapshot-grid{grid-template-columns:1fr 1fr}.task-status-note{margin:16px}.case-results{padding:0 16px 16px}.task-detail>.panel-head>.actions{width:100%;justify-content:flex-start}.form-top{flex-wrap:wrap}}
+
+/* Install before generating the short-lived enrollment credential. */
+.onboarding-steps{display:flex;gap:24px;list-style:none;padding:0 0 14px;margin:0 0 16px;border-bottom:1px solid var(--border);color:var(--muted)}
+.onboarding-steps [aria-current="step"]{color:var(--blue);font-weight:600}
+.onboarding-prompt{margin-top:18px}
+.onboarding-prompt textarea{font-size:13px;line-height:1.7;min-height:240px;max-height:45vh;resize:vertical}
+.onboarding-address{margin-top:16px}
+.onboarding-address>span{display:block;margin-top:4px}
+.onboarding-actions{flex-wrap:wrap}
+@media(max-width:720px){.onboarding-actions{justify-content:flex-start}.onboarding-actions>.button{white-space:normal;text-align:left}.onboarding-prompt textarea{min-height:200px;max-height:40vh}}
