@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
 const context = vm.createContext({
-  URL, console,
+  URL, URLSearchParams, console,
   document:{addEventListener(){}}, window:{addEventListener(){}},
   escapeHTML:value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
   labels:{pass:'通过',fail:'不通过',review_required:'待复核',succeeded:'已完成',failed:'执行失败'},
@@ -88,14 +88,16 @@ test('finding pagination clamps on filter changes without selecting hidden rows'
 });
 
 context.fmtDate=value=>String(value);
-test('Skill results show one field per cell and one primary row action',()=>{
+test('Skill results show one field per information cell and visible frequent actions',()=>{
   const skill={id:'skill',name:'Long <Skill>',description:'Details belong in the detail page',current_version:'1.0.0',current_version_id:'version',version_count:12,owner:'Owner',updated_at:'2026-11-04T08:00:00Z',can_write:true,latest_audit:{id:'audit',task_id:'task',mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',error_count:2,warning_count:3}};
   const html=context.skillRow(skill), visible=html.replace(/<[^>]*>/g,'');
   assert.equal((html.match(/<td[ >]/g)||[]).length,8);
   assert.ok(!html.includes('<p')&&!html.includes('<br'));
   assert.ok(!visible.includes(skill.description)&&!visible.includes('12 个版本'));
   assert.ok(html.includes('Long &lt;Skill&gt;'));
-  assert.equal((html.match(/class="row-primary"/g)||[]).length,1);
+  assert.equal((html.match(/row-primary/g)||[]).length,4);
+  assert.ok(!html.includes('more-menu'));
+  for(const action of ['审计','报告','详情','下载']) assert.ok(visible.includes(action));
   assert.match(html,/data-preview-filter="ERR"[^>]*>2<\/button>/);
   assert.match(html,/data-label="维护者"/);assert.match(html,/data-label="最近活动"/);
 });
@@ -125,4 +127,13 @@ test('task conclusions never repeat pending execution or imply an unfinished res
   assert.match(verdict,/尚无检查结论/);assert.ok(!verdict.includes('pass')&&!verdict.includes('waiting_configuration'));
   assert.match(context.taskConclusion({kind:'repair',repair_state:'editing'}),/尚无检查结论/);
   assert.ok(context.taskConclusion({kind:'repair',repair_state:'published'}).includes('success'));
+});
+
+
+test('frequent actions respect permissions and link to the task exact version',()=>{
+  const base={id:'skill',name:'Sample',current_version:'1.0.0',current_version_id:'version',owner:'Owner',updated_at:'2026-11-04T08:00:00Z',can_write:false,latest_audit:{id:'audit',task_id:'task',mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',error_count:1,warning_count:0}};
+  const reader=context.skillRow(base);assert.ok(!reader.includes('data-audit-skill'));for(const action of ['报告','详情','下载'])assert.ok(reader.includes('>'+action+'</a>'));
+  const unaudited=context.skillRow({...base,can_write:true,latest_audit:null});assert.ok(unaudited.includes('>审计</button>')&&unaudited.includes('>详情</a>')&&unaudited.includes('>下载</a>'));
+  const task=context.taskRows([{id:'task',skill_id:'skill',version_id:'fixed-version',skill_name:'Sample',version:'old',kind:'audit',audit_mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',created_at:'2026-11-04T08:00:00Z'}]);
+  assert.ok(task.includes('href="#skill/skill?version=fixed-version">版本</a>'));
 });

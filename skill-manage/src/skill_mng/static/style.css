@@ -256,10 +256,8 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
 .result-table .numeric-cell { text-align:center; }.number { font-variant-numeric:tabular-nums; }.result-table .number { font:13px/1.6 var(--mono); }
 .result-table .issue-link { display:inline-flex;min-width:30px;padding:4px 3px;min-height:32px;font-weight:500; }
 .result-table .record-actions .actions { gap:4px;flex-wrap:nowrap; }.row-primary { display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px;color:var(--primary);font-size:13px; }
-.row-menu>summary { width:30px;min-height:32px;padding:0;border-color:transparent;background:transparent;font-size:23px;line-height:1; }
-.row-menu>summary:hover { background:var(--primary-light); }.row-menu[open]>summary { background:var(--primary-light);color:var(--primary); }
-.skill-col-name { width:27%; }.skill-col-version { width:10%; }.skill-col-verdict { width:16%; }.count-col { width:6%; }.skill-col-owner { width:12%; }.skill-col-time { width:13%; }.skill-col-actions { width:10%; }
-.task-col-name { width:21%; }.task-col-version { width:9%; }.task-col-kind { width:10%; }.task-col-state { width:12%; }.task-col-verdict { width:14%; }.task-col-time { width:12%; }.task-col-actions { width:10%; }
+.skill-col-name { width:22%; }.skill-col-version { width:9%; }.skill-col-verdict { width:14%; }.count-col { width:5%; }.skill-col-owner { width:10%; }.skill-col-time { width:13%; }.skill-col-actions { width:22%; }
+.task-col-name { width:20%; }.task-col-version { width:9%; }.task-col-kind { width:10%; }.task-col-state { width:12%; }.task-col-verdict { width:14%; }.task-col-time { width:12%; }.task-col-actions { width:13%; }
 .result-table.finding-table .finding-row { display:table-row;border:0;padding:0; }
 .finding-table td { height:56px; }.finding-table .finding-title { display:block;max-width:100%;min-height:30px;white-space:nowrap;line-height:1.6;font-size:13px;font-weight:500; }
 .finding-table .file-location { display:block;max-width:100%;white-space:nowrap;line-height:1.6;font-size:11px; }
@@ -280,7 +278,7 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
  .result-table td.record-title { grid-column:1/-1; }.result-table .record-title .cell-text { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden;line-height:1.65; }
  .result-table .skill-name { font-size:15px; }.result-table .numeric-cell { text-align:left; }.result-table .issue-link { justify-content:flex-start;min-height:32px;min-width:32px;padding-left:0; }
  .result-table td.record-actions { grid-column:1/-1;padding-top:10px;border-top:1px solid var(--light-border);text-align:right; }.result-table .record-actions .actions { justify-content:flex-end;gap:12px; }
- .row-primary,.row-menu>summary { min-height:44px; }.row-menu>summary { width:44px; }.result-table .record-actions>a { display:inline-flex;min-height:44px; }
+ .row-primary { min-height:44px; }.result-table .record-actions>a { display:inline-flex;min-height:44px; }
  .result-table.finding-table .finding-row { position:relative;padding:18px 16px; }.result-table.finding-table.has-selection .finding-row { padding-left:48px; }.result-table.finding-table .selection-cell { position:absolute;top:12px;left:8px; }.finding-table .selection-target { width:32px; }
  .result-table.finding-table .finding-location { grid-column:1/-1; }.finding-table .finding-title { min-height:0; }.finding-table .file-location { min-height:32px; }.finding-table .record-actions button { min-height:44px; }
 }
@@ -295,3 +293,9 @@ footer { max-width:1600px; margin:auto; padding:0 32px 20px; display:flex; justi
 @media(max-width:900px) {
  .finding-table td[data-label] { display:flex;align-items:center;gap:8px; }.finding-table td[data-label]:before { display:inline;flex:none;margin:0; }.finding-table .finding-location .file-location { flex:1;min-width:0; }.finding-table .record-actions { display:none!important; }
 }
+
+/* Frequent actions stay visible; information cells retain one field each. */
+.skill-table .record-actions .actions,.task-table .record-actions .actions,.version-table .record-actions .actions { justify-content:flex-end;gap:8px; }
+.skill-table th:last-child,.task-table th:last-child,.version-table th:last-child { text-align:right; }
+
+@media(max-width:900px) { .result-table .record-actions .row-primary { min-width:44px;min-height:44px; } }

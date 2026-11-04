@@ -1,0 +1,26 @@
+{
+  "version": "0.3.2.dev11",
+  "environment": "isolated local demo",
+  "externalModelCalls": 0,
+  "checks": {
+    "fourFrequentSkillActionsVisible": true,
+    "unauditedSkillHasAuditDetailsDownload": true,
+    "auditDialogDirect": true,
+    "reportDirect": true,
+    "detailsDirect": true,
+    "downloadDirectOriginalDigestMatch": true,
+    "taskExactVersionDirect": true,
+    "versionHistoryViewAndDownloadVisible": true,
+    "desktop1024FitsSingleRow60": true,
+    "desktop1440": true,
+    "mobile390NoOverflow": true,
+    "mobileTargets44": true,
+    "readerHasNoAuditAction": true,
+    "readerReportDetailsDownloadVisible": true
+  },
+  "notes": [
+    "Audit form opened and cancelled; no model task created.",
+    "Original ZIP downloaded and SHA-256 checked against registered artifact.",
+    "Mobile viewport emulated; no real-device certification."
+  ]
+}

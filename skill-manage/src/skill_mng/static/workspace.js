@@ -15,8 +15,7 @@ function issueCount(audit, severity, skillId='', taskId='') {
 }
 function skillRow(skill) {
   const audit=skill.latest_audit, detail='#skill/'+encodeURIComponent(skill.id);
-  const auditAction=`<button class="text-button" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">创建审计</button>`;
-  const primary=audit?`<a class="row-primary" href="${auditURL(audit)}">${audit.delivery_status==='saved'?'报告':'进展'}</a>`:skill.can_write?`<button class="text-button row-primary" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:`<a class="row-primary" href="${detail}">详情</a>`;
+  const actions=`${skill.can_write?`<button class="text-button row-primary" data-audit-skill="${skill.id}" data-version-id="${skill.current_version_id}">审计</button>`:''}${audit?`<a class="row-primary" href="${auditURL(audit)}">${audit.delivery_status==='saved'?'报告':'进展'}</a>`:''}<a class="row-primary" href="${detail}">详情</a><a class="row-primary" href="/api/versions/${skill.current_version_id}/download">下载</a>`;
   return `<tr><td class="record-title"><a class="skill-name cell-text" href="${detail}" title="${escapeHTML(skill.name+(skill.description?' — '+skill.description:''))}">${escapeHTML(skill.name)}</a></td>
     <td data-label="当前版本"><span class="cell-text mono" title="${escapeHTML(skill.current_version)}">${escapeHTML(skill.current_version)}</span></td>
     <td data-label="审计状态">${auditBadge(audit)}</td>
@@ -24,7 +23,7 @@ function skillRow(skill) {
     <td class="numeric-cell" data-label="建议">${issueCount(audit,'WARN',skill.id)}</td>
     <td data-label="维护者"><span class="cell-text" title="${escapeHTML(skill.owner)}">${escapeHTML(skill.owner)}</span></td>
     <td data-label="最近活动"><time title="${escapeHTML(fmtDate(skill.updated_at))}" datetime="${escapeHTML(skill.updated_at)}">${escapeHTML(fmtShortDate(skill.updated_at))}</time></td>
-    <td class="record-actions"><div class="actions">${primary}<details class="more-menu row-menu"><summary aria-label="${escapeHTML(skill.name)} 的更多操作"><span aria-hidden="true">⋯</span></summary><div>${skill.can_write&&audit?auditAction:''}<a href="${detail}">版本与文件</a><a href="/api/versions/${skill.current_version_id}/download">下载当前包</a></div></details></div></td></tr>`;
+    <td class="record-actions"><div class="actions">${actions}</div></td></tr>`;
 }
 async function library() {
   const key = location.hash, request=++view.render;
@@ -66,7 +65,7 @@ async function detailTab(tab, options = {}) {
   const host = $('#detail-content'), skill = state.detail, version = state.version;
   host.setAttribute('aria-labelledby','detail-tab-'+tab);
   if (tab === 'versions') {
-    host.innerHTML=`<div class="table-wrap"><table class="records-table result-table version-table"><thead><tr><th scope="col">版本</th><th scope="col">使用状态</th><th scope="col">审计状态</th><th scope="col">登记时间</th><th scope="col">大小</th><th scope="col">操作</th></tr></thead><tbody>${skill.versions.map(item=>`<tr><td class="record-title"><a class="cell-text mono" title="${escapeHTML(item.version)}" href="${versionURL(skill.id,item.id)}">${escapeHTML(item.version)}</a></td><td data-label="使用状态">${item.id===skill.current_version_id?badge('active','当前'):badge('neutral','历史')}</td><td data-label="审计状态">${item.latest_audit?`<a href="${auditURL(item.latest_audit)}">${auditBadge(item.latest_audit)}</a>`:auditBadge(null)}</td><td data-label="登记时间"><time title="${escapeHTML(fmtDate(item.created_at))}">${escapeHTML(fmtShortDate(item.created_at))}</time></td><td data-label="大小" class="number">${(item.byte_size/1024).toFixed(1)} KiB</td><td class="record-actions"><a class="row-primary" href="/api/versions/${item.id}/download">下载</a></td></tr>`).join('')}</tbody></table></div>`;
+    host.innerHTML=`<div class="table-wrap"><table class="records-table result-table version-table"><thead><tr><th scope="col">版本</th><th scope="col">使用状态</th><th scope="col">审计状态</th><th scope="col">登记时间</th><th scope="col">大小</th><th scope="col">操作</th></tr></thead><tbody>${skill.versions.map(item=>`<tr><td class="record-title"><a class="cell-text mono" title="${escapeHTML(item.version)}" href="${versionURL(skill.id,item.id)}">${escapeHTML(item.version)}</a></td><td data-label="使用状态">${item.id===skill.current_version_id?badge('active','当前'):badge('neutral','历史')}</td><td data-label="审计状态">${item.latest_audit?`<a href="${auditURL(item.latest_audit)}">${auditBadge(item.latest_audit)}</a>`:auditBadge(null)}</td><td data-label="登记时间"><time title="${escapeHTML(fmtDate(item.created_at))}">${escapeHTML(fmtShortDate(item.created_at))}</time></td><td data-label="大小" class="number">${(item.byte_size/1024).toFixed(1)} KiB</td><td class="record-actions"><div class="actions"><a class="row-primary" href="${versionURL(skill.id,item.id)}">查看</a><a class="row-primary" href="/api/versions/${item.id}/download">下载</a></div></td></tr>`).join('')}</tbody></table></div>`;
     return;
   }
   if (tab === 'activity') {
@@ -115,7 +114,7 @@ function taskRows(tasks) {
     <td class="numeric-cell" data-label="必修">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'ERR',task.skill_id,task.id)}</td>
     <td class="numeric-cell" data-label="建议">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'WARN',task.skill_id,task.id)}</td>
     <td data-label="创建时间"><time title="${escapeHTML(fmtDate(task.created_at))}" datetime="${escapeHTML(task.created_at)}">${escapeHTML(fmtShortDate(task.created_at))}</time></td>
-    <td class="record-actions"><a class="row-primary" href="#task/${task.id}">${task.delivery_status==='saved'?'报告':'详情'}</a></td></tr>`).join('')}</tbody></table></div>`;
+    <td class="record-actions"><div class="actions"><a class="row-primary" href="#task/${task.id}">${task.delivery_status==='saved'?'报告':'详情'}</a>${task.skill_id&&task.version_id?`<a class="row-primary" href="${versionURL(task.skill_id,task.version_id)}">版本</a>`:''}</div></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function taskList() {
   const history=state.taskHistory ||= {filters:{limit:'25'},cursor:null,previous:[],expanded:false};
