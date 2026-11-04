@@ -35,12 +35,12 @@ def save_model(body: ModelInput, connection=Depends(db_connection, scope="functi
     worker = required(connection.execute("SELECT * FROM workers WHERE id=%s AND NOT revoked", (body.worker_id,)).fetchone())
     capabilities = worker["capabilities"]
     if not capabilities.get("connection_fingerprint"):
-        raise HTTPException(409, "该 Worker 尚未检测到可选的 Codex 连接")
+        raise HTTPException(409, "该 Worker 尚未检测到可选的 Agent 连接")
     previous = setting(connection, "model")
     if previous and previous["name"] == body.name and previous["connection_fingerprint"] == capabilities["connection_fingerprint"]:
         return previous
     model = {"id": new_id(), "name": body.name, "connection_fingerprint": capabilities["connection_fingerprint"],
-             "connection_label": capabilities.get("connection_label", "Codex 登录")}
+             "connection_label": capabilities.get("connection_label", "Agent 登录")}
     set_setting(connection, "model", model)
     return model
 

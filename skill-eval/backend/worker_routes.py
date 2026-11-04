@@ -29,7 +29,7 @@ class Capabilities(BaseModel):
     codex_version: str = Field(default="", max_length=100)
     login_configured: bool = False
     connection_fingerprint: str = Field(default="", max_length=64, pattern=r"^(?:[a-f0-9]{64})?$")
-    connection_label: str = Field(default="Codex", max_length=100)
+    connection_label: str = Field(default="Agent", max_length=100)
     platform: str = Field(default="", max_length=100)
     diagnostic: str = Field(default="", max_length=1000)
 
