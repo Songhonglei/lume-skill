@@ -55,9 +55,9 @@ def _validate_suite(files: dict[str, PackageFile], skill_up: Path | None = None)
             issue(field, "引擎配置必须是对象")
             return
         if value.get("name", "codex") != "codex":
-            issue(field + ".name", "一期只支持 Codex")
+            issue(field + ".name", "执行引擎请填写 codex")
         if value.get("version") and str(value["version"]) != CODEX_VERSION:
-            issue(field + ".version", f"当前固定 Codex {CODEX_VERSION}")
+            issue(field + ".version", f"当前固定 Agent CLI {CODEX_VERSION}")
         for key in ("custom", "entry", "kwargs"):
             if value.get(key):
                 issue(field + "." + key, "不支持自定义引擎入口或沙箱覆盖参数")
@@ -84,7 +84,7 @@ def _validate_suite(files: dict[str, PackageFile], skill_up: Path | None = None)
         if value.get("script_path"):
             reference(value["script_path"], field + ".script_path", prefix="evals/fixtures/")
         if value.get("type") == "agent_judge":
-            warnings.append({"path": field + ".model", "message": "语义裁判使用统一模型的独立 Codex 会话"})
+            warnings.append({"path": field + ".model", "message": "语义裁判使用统一模型的独立 Agent 会话"})
             if "timeout_seconds" in value and (not isinstance(value["timeout_seconds"], int) or isinstance(value["timeout_seconds"], bool) or not 1 <= value["timeout_seconds"] <= 86400):
                 issue(field + ".timeout_seconds", "语义裁判时限需要为 1–86400 秒")
         for rule in (value.get("success") or []) + (value.get("failure") or []):

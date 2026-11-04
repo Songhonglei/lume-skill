@@ -55,7 +55,7 @@ def isolated_environment(home: Path, codex_source: Path, model: str) -> dict[str
            if key in os.environ}
     if provider != "openai":
         if not provider_config:
-            raise EngineError("Selected Codex provider configuration is missing")
+            raise EngineError("Selected Agent provider configuration is missing")
         lines.append(f"model_provider = {json.dumps(provider)}")
         lines.append(f"[model_providers.{json.dumps(provider)}]")
         for key in ("name", "base_url", "wire_api", "env_key", "requires_openai_auth"):
@@ -184,7 +184,7 @@ def check_sandbox(output: Path, env: dict[str, str],
                         'printf sandbox-ready > probe && test "$(cat probe)" = sandbox-ready && rm probe'],
                        workspace, env, output / "sandbox.log", 15, should_stop, lease_file)
     if code:
-        raise EngineError("Codex 沙箱自检失败，尚未调用模型；请查看 sandbox.log 并使用兼容的 Worker 环境，不会绕过沙箱")
+        raise EngineError("Agent 沙箱自检失败，尚未调用模型；请查看 sandbox.log 并使用兼容的 Worker 环境，不会绕过沙箱")
 
 
 def assemble_eval(skill: Path, suite: Path, destination: Path, model: str) -> list[str]:

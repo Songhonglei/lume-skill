@@ -54,6 +54,6 @@ def generate(source: Path, candidate: Path, assets: Path, model: str, count: int
     if tree_digest(target) != before:
         raise EngineError("Generation changed the read-only Skill snapshot")
     if code:
-        raise EngineError("Codex generation failed; candidate files retained for diagnosis")
+        raise EngineError("Agent generation failed; candidate files retained for diagnosis")
     return {"target_count": count, "skill_digest": before,
             "entry_exists": (candidate / "evals/eval.yaml").is_file()}

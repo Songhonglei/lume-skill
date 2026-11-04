@@ -54,7 +54,7 @@ def create_task(body: TaskInput, request: Request,
     source = required(connection.execute("SELECT v.*,s.name,s.default_set_id FROM skill_versions v JOIN skills s ON s.id=v.skill_id WHERE v.id=%s AND NOT s.archived", (body.skill_version_id,)).fetchone())
     model = setting(connection, "model")
     if not model or not model.get("name") or not model.get("connection_fingerprint"):
-        raise HTTPException(409, "请先在系统配置中选择 Codex 连接与模型")
+        raise HTTPException(409, "请先在系统配置中选择 Agent 连接与模型")
     if body.expected_model_id and str(body.expected_model_id) != model.get("id"):
         raise HTTPException(409, "模型配置已改变，请关闭确认窗口后重新选择")
     snapshot = {"skill_version_id": str(source["id"]), "skill_id": str(source["skill_id"]),
@@ -82,7 +82,7 @@ def create_task(body: TaskInput, request: Request,
                                                for case in validation["cases"])
     else:
         if not body.confirmed:
-            raise HTTPException(409, "需要明确确认后才能调用 Codex 生成案例")
+            raise HTTPException(409, "需要明确确认后才能调用 Agent 生成案例")
         if body.set_id:
             required(connection.execute("SELECT id FROM evaluation_sets WHERE id=%s AND skill_id=%s AND NOT archived", (body.set_id, source["skill_id"])).fetchone())
             snapshot["set_id"] = str(body.set_id)

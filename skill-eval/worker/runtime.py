@@ -304,7 +304,7 @@ class Worker:
 
     def probe(self, command):
         root = Path(tempfile.mkdtemp(prefix="open-skill-eval-probe-"))
-        started, success, message = time.monotonic(), False, "模型请求失败，请检查 Worker 的 Codex 登录和模型名称"
+        started, success, message = time.monotonic(), False, "模型请求失败，请检查 Agent 登录状态和模型名称"
         observed_version = ""
         try:
             env = isolated_environment(root / "home", self.codex_home, command["model"])

@@ -40,3 +40,8 @@ export function cancelNotice(state: string) {
   if (state === 'CANCEL_REQUESTED') return '正在停止，已有记录会保留。'
   return `任务${statusOf(state, 'execution').label}。`
 }
+
+// Normalize only legacy system defaults; preserve named provider connections.
+export function agentConnectionLabel(value?: string) {
+  return value && !['Codex', 'Codex 登录'].includes(value) ? value : 'Agent 登录'
+}

@@ -29,14 +29,14 @@ def detect(skill_up: Path, codex_home: Path) -> dict:
         connection = {"provider": provider, **{key: details.get(key) for key in ("name", "base_url", "wire_api", "env_key", "requires_openai_auth")}}
         configured = (codex_home / "auth.json").is_file() or bool(details.get("env_key") and os.environ.get(details["env_key"]))
     except (OSError, ValueError, TypeError):
-        diagnostic = "Codex 连接配置无法读取，请检查所选登录目录"
+        diagnostic = "Agent 连接配置无法读取，请检查所选登录目录"
     if versions["skill_up_version"] != SKILL_UP_VERSION:
         diagnostic = f"需要 skill-up {SKILL_UP_VERSION}；请使用 Worker 随附的安装入口"
     elif versions["codex_version"] != CODEX_VERSION:
-        diagnostic = f"需要 Codex {CODEX_VERSION}；不会自动替换系统安装"
+        diagnostic = f"需要 Agent CLI {CODEX_VERSION}；不会自动替换系统安装"
     elif not configured:
-        diagnostic = "未检测到 Codex 登录，请先在这个 Worker 上运行 codex login"
+        diagnostic = "未检测到 Agent 登录，请在 Worker 本机运行 codex login"
     return {**versions, "login_configured": configured,
             "connection_fingerprint": hashlib.sha256(json.dumps(connection, sort_keys=True).encode()).hexdigest() if connection else "",
-            "connection_label": str(connection.get("name") or connection.get("provider") or "Codex")[:100],
+            "connection_label": str(connection.get("name") or connection.get("provider") or "Agent")[:100],
             "platform": f"{platform.system()} {platform.machine()}", "diagnostic": diagnostic}
