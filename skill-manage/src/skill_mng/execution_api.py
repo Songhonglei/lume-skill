@@ -286,12 +286,21 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
         | None = None,
         skill_id: str | None = Query(default=None, max_length=128),
         kind: Literal["audit", "repair"] | None = None,
+        version_id: str | None = Query(default=None, max_length=128),
         user=Depends(authenticated),
     ):
         from .history import task_history
 
         return task_history(
-            root, user, limit=limit, cursor=cursor, q=q, state=state, skill_id=skill_id, kind=kind
+            root,
+            user,
+            limit=limit,
+            cursor=cursor,
+            q=q,
+            state=state,
+            skill_id=skill_id,
+            kind=kind,
+            version_id=version_id,
         )
 
     @router.get("/tasks/{task_id}/events")
@@ -312,10 +321,17 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
     @router.get("/audits/{run_id}")
     def report(run_id: str, user=Depends(authenticated)):
         with transaction(root) as db:
-            row = db.execute("SELECT * FROM audit_runs WHERE id=?", (run_id,)).fetchone()
+            row = db.execute(
+                "SELECT a.*,v.skill_id,v.version AS registered_version,t.manifest_json AS task_manifest "
+                "FROM audit_runs a JOIN versions v ON v.id=a.version_id "
+                "LEFT JOIN tasks t ON t.audit_run_id=a.id AND t.kind='audit' WHERE a.id=?",
+                (run_id,),
+            ).fetchone()
         if not row:
             raise HTTPException(404, "审计不存在")
         result = dict(row)
+        manifest = result.pop("task_manifest")
+        result["mode"] = json.loads(manifest).get("mode", "full") if manifest else "full"
         raw = result.pop("result_json")
         result["result"] = json.loads(raw) if raw else None
         return result
