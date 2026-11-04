@@ -34,7 +34,7 @@ export function WorkerOnboarding({ settings, onClose, notify }: { settings: Sett
   }
   return <Dialog title="接入 Worker" wide onClose={onClose}>
     <ol className="onboarding-steps" aria-label="接入步骤"><li aria-current={phase === 'install' ? 'step' : undefined}>1 安装</li><li aria-current={phase === 'connect' ? 'step' : undefined}>2 接入</li></ol>
-    <p>{phase === 'install' ? '在执行电脑打开 Codex 等 Agent，把安装指令发给它。安装完成后再生成接入码。' : '把接入指令发给刚完成安装的 Agent。启动后会自动领取匹配任务，可能产生模型费用。'}</p>
+    <p>{phase === 'install' ? '在执行电脑打开支持终端操作的 Agent，把安装指令发给它。安装完成后再生成接入码。' : '把接入指令发给刚完成安装的 Agent。启动后会自动领取匹配任务，可能产生模型费用。'}</p>
     {centerNotice(settings.public_url) && <div className="callout onboarding-address">{centerNotice(settings.public_url)}<span className="wrap-text">{settings.public_url}</span></div>}
     <label className="field onboarding-prompt"><span>{phase === 'install' ? '安装指令' : '接入指令'}</span><textarea readOnly rows={13} value={text} aria-label={phase === 'install' ? 'Worker 安装指令' : 'Worker 接入指令'} /></label>
     {phase === 'connect' && <p className={expired ? 'error-text' : 'muted'} role="status">{expired ? '接入码已过期，请重新生成。' : `接入码剩余 ${Math.max(1, Math.ceil((expiresAt - now) / 60000))} 分钟，仅可使用一次。`}</p>}
