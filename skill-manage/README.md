@@ -1,12 +1,12 @@
 # Open Skill Manager
 
-自托管 Skill 工作台。当前开发版本 **0.3.2.dev10**，历史验收基线 **0.3.1**：注册与不可变版本、独立 worker、真实模型审计、授权修复、独立复审、新版本登记与任务中心。Python 3.11+，SQLite + 本地文件，无内部平台依赖。
+自托管 Skill 工作台。当前开发版本 **0.3.2.dev11**，历史验收基线 **0.3.1**：注册与不可变版本、独立 worker、真实模型审计、授权修复、独立复审、新版本登记与任务中心。Python 3.11+，SQLite + 本地文件，无内部平台依赖。
 
 注册 → 审计 → 选择问题并授权修复 → 独立全量复审 → 登记新版本 → 下载已接通。原版本保持不变；静态预检不会冒充完整 PASS。
 
 ## 工作台体验
 
-蓝色主题下的清爽结果列表：名称、版本、状态、问题数、维护者与时间各自成列；桌面单行显示，每行一个主要下一步，完整描述、建议和诊断在详情或抽屉查看。设计与验收见 [列表重新设计](docs/UI-REDESIGN.md)。
+蓝色主题下的清爽结果列表：名称、版本、状态、问题数、维护者与时间各自成列；桌面单行显示，高频操作直接展示，完整描述、建议和诊断在详情或抽屉查看。设计与验收见 [列表重新设计](docs/UI-REDESIGN.md)。
 
 报告支持安全阅读、目录与原文；ZIP/目录自动上传，缺项补填；任务保留筛选与焦点，连接失败可重试；设置按模型、机器、成员和运行信息分组。此前实现记录：[页面与交互](docs/UI-IMPROVEMENTS.md)、[交互补齐](docs/UI-FOLLOWUP.md)。
 
@@ -45,7 +45,7 @@ skill-mng --data-dir /absolute/path/to/data setup
 skill-mng --data-dir /absolute/path/to/data start
 ```
 
-安装 wheel：`uv tool install /absolute/path/open_skill_mng-0.3.2.dev10-py3-none-any.whl`。开发：`uv sync --extra dev`，`uv run pytest`。发行物构建：`uv build`。
+安装 wheel：`uv tool install /absolute/path/open_skill_mng-0.3.2.dev11-py3-none-any.whl`。开发：`uv sync --extra dev`，`uv run pytest`。发行物构建：`uv build`。
 
 ## Docker Compose
 
