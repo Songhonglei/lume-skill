@@ -1,5 +1,7 @@
+import { Toast } from './Toast'
+import type { Notice } from './Toast'
 import { useEffect, useState } from 'react'
-import { api, message, post } from './api'
+import { api, message, post, validationIssue, ApiError } from './api'
 import { Button, Dialog, Icon, useConfirm, useData, reveal } from './ui'
 import type { Common, Page, Settings, Skill, Worker } from './types'
 import { SkillsPage } from './SkillsPage'
@@ -10,21 +12,26 @@ import { useWorkspaceNavigation } from './useWorkspaceNavigation'
 
 const navigation: [Page, string][] = [['skills', 'Skills'], ['sets', '评测集管理'], ['tasks', '评测记录'], ['settings', '系统配置']]
 
-function Login({ setup, remote, onSuccess }: { setup?: boolean; remote?: boolean; onSuccess: () => void }) {
+function Login({ setup, remote, onSuccess, notify }: { setup?: boolean; remote?: boolean; onSuccess: () => void; notify: Common['notify'] }) {
   const [password, setPassword] = useState('')
   const [token, setToken] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [errorField, setErrorField] = useState('password')
   return <form className="login-form" onSubmit={async event => {
     event.preventDefault(); setBusy(true); setError('')
     try { await post(setup ? '/api/setup' : '/api/session', { password, setup_token: token }); onSuccess() }
-    catch (error) { setError(message(error)) }
+    catch (error) {
+      const issue = validationIssue(error)
+      if (issue || (error instanceof ApiError && (error.status === 401 || (setup && error.status === 403)))) {
+        setError(message(error)); setErrorField(issue?.field || (setup && error instanceof ApiError && error.status === 403 ? 'setup_token' : 'password'))
+      } else notify(message(error), true)
+    }
     finally { setBusy(false) }
   }}><h1>{setup ? '创建你的评测工作台' : '登录工作台'}</h1>
     <p className="muted">{setup ? '设置一个管理员密码，即可管理本地 Skill 和评测案例。' : '输入管理员密码继续。'}</p>
-    <label className="field"><span>{setup ? '管理员密码' : '密码'}</span><input autoFocus required type="password" minLength={setup ? 10 : undefined} value={password} onChange={event => setPassword(event.target.value)} autoComplete={setup ? 'new-password' : 'current-password'} placeholder={setup ? '至少 10 个字符' : '输入密码'} /></label>
-    {setup && remote && <label className="field"><span>初始化口令</span><input required type="password" value={token} onChange={event => setToken(event.target.value)} placeholder="部署时设置的一次性口令" /></label>}
-    {error && <p role="alert" className="error-text">{error}</p>}
+    <label className="field"><span>{setup ? '管理员密码' : '密码'}</span><input autoFocus required type="password" minLength={setup ? 10 : undefined} value={password} onChange={event => setPassword(event.target.value)} autoComplete={setup ? 'new-password' : 'current-password'} placeholder={setup ? '至少 10 个字符' : '输入密码'} />{error && errorField !== 'setup_token' && <span className="field-error" role="alert">{error}</span>}</label>
+    {setup && remote && <label className="field"><span>初始化口令</span><input required type="password" value={token} onChange={event => setToken(event.target.value)} placeholder="部署时设置的一次性口令" />{error && errorField === 'setup_token' && <span className="field-error" role="alert">{error}</span>}</label>}
     <Button type="submit" busy={busy} variant="primary">{setup ? '进入工作台' : '登录'}</Button>
   </form>
 }
@@ -40,12 +47,12 @@ export default function App() {
   const [expired, setExpired] = useState(false)
   const [initialError, setInitialError] = useState('')
   const [revision, setRevision] = useState(0)
-  const [notice, setNotice] = useState<{ message: string; error: boolean } | null>(null)
+  const [notice, setNotice] = useState<Notice | null>(null)
   const [dirty, setDirty] = useState(false)
   const [editingBusy, setEditingBusy] = useState(false)
   const refresh = () => setRevision(value => value + 1)
-  const notify = (text: string, error = false) => setNotice({ message: text, error })
-  useEffect(() => { if (notice && !notice.error) { const timer = setTimeout(() => setNotice(null), 6000); return () => clearTimeout(timer) } }, [notice])
+  const notify = (text: string, error = false) => setNotice({ id: crypto.randomUUID(), message: text, error })
+  useEffect(() => { if (notice) { const timer = setTimeout(() => setNotice(current => current?.id === notice.id ? null : current), 3000); return () => clearTimeout(timer) } }, [notice])
   useEffect(() => {
     let alive = true
     api<{ initialized: boolean; requires_setup_token: boolean }>('/api/setup').then(async status => {
@@ -72,21 +79,22 @@ export default function App() {
   const workers = useData<Worker[]>(phase === 'ready' ? '/api/workers' : null, [], revision, phase === 'ready' ? 10000 : 0)
   const common: Common = { executionError: settings.error || workers.error, workersLoading: workers.loading, settingsLoading: settings.loading, confirm, skillsLoading: skills.loading, skillsError: skills.error, skills: skills.data, settings: settings.data, workers: workers.data, selection, navigate, refresh, revision, notify, setDirty, setEditingBusy }
   const online = workers.data.filter(worker => worker.online && !worker.revoked).length
-  if (phase !== 'ready') return <div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
-    {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button variant="link" onClick={() => location.reload()}>重试</Button>}</div> : <Login setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
-  </div></div>
+  if (phase !== 'ready') return <><div className="auth-page"><div className="auth-brand"><Brand /></div><div className="auth-card">
+    {phase === 'loading' ? <div><p>{initialError || '正在连接工作台…'}</p>{initialError && <Button variant="link" onClick={() => location.reload()}>重试</Button>}</div> : <Login notify={notify} setup={phase === 'setup'} remote={remote} onSuccess={() => { setPhase('ready'); refresh() }} />}
+  </div></div>{notice && <Toast notice={notice} onDismiss={() => setNotice(null)} />}</>
   return <div className="app-shell"><a className="skip-link" href="#workspace-content" onClick={event => { event.preventDefault(); reveal(document.querySelector('main'), true) }}>跳到主要内容</a><header className="topbar"><Brand /><span className="topbar-note">Skill 评测中心</span><div className="topbar-right"><span className={`signal ${online ? 'online' : ''}`} /><span>{online ? `${online} 个 Worker 在线` : 'Worker 待连接'}</span><span className="divider" /><span>管理员</span><button className="text-button muted" disabled={editingBusy} onClick={async () => {
       if (editingBusy) return
       if (dirty && !await confirm({ title: '退出工作台？', description: '当前草稿还有未保存的修改。退出后，这些修改不会保留。', confirmLabel: '放弃修改并退出' })) return
       try { await api('/api/session', { method: 'DELETE' }); setDirty(false); setPhase('login') } catch (error) { notify(message(error), true) }
     }}>退出</button></div></header>
     <nav className="workspace-tabs" aria-label="主要导航">{navigation.map(([page, label]) => <button key={page} disabled={editingBusy} title={editingBusy ? '正在保存或读取附件，请稍候' : undefined} aria-current={tab === page ? 'page' : undefined} className={tab === page ? 'active' : ''} onClick={() => navigate(page)}><Icon name={page} />{label}</button>)}</nav>
-    <main id="workspace-content" tabIndex={-1}>{notice && <div className={`notice ${notice.error ? 'error' : ''}`} role={notice.error ? 'alert' : 'status'}><span>{notice.message}</span><button className="close" onClick={() => setNotice(null)} aria-label="关闭提示">×</button></div>}
+    <main id="workspace-content" tabIndex={-1}>
       {(settings.error || workers.error) && <div className="notice error" role="alert"><span>执行配置暂时无法读取：{settings.error || workers.error}</span><Button variant="link" onClick={refresh}>重试</Button></div>}
       {skills.error && skills.data.length > 0 && <p className="error-text">{skills.error} 当前保留上次读取的资源。</p>}
       {tab === 'skills' && <SkillsPage {...common} />}{tab === 'sets' && <SetsPage {...common} />}{tab === 'tasks' && <TasksPage {...common} />}{tab === 'settings' && <SettingsPage {...common} />}
     </main>
     {confirmation}
-    {expired && <Dialog title="登录已过期" onClose={() => undefined}><Login onSuccess={() => { setExpired(false); refresh() }} /></Dialog>}
+    {notice && <Toast notice={notice} onDismiss={() => setNotice(null)} />}
+    {expired && <Dialog title="登录已过期" onClose={() => undefined}><Login notify={notify} onSuccess={() => { setExpired(false); refresh() }} /></Dialog>}
   </div>
 }

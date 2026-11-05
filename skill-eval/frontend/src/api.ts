@@ -1,7 +1,10 @@
 export class ApiError extends Error {
-  constructor(public status: number, public detail: unknown) {
+  status: number
+  detail: unknown
+  constructor(status: number, detail: unknown) {
     const data = detail as { message?: string }
-    super(typeof detail === 'string' ? detail : data?.message || '操作未完成，请检查填写内容后重试')
+    super(typeof detail === 'string' ? detail : data?.message || validationText(detail) || '操作未完成，请检查填写内容后重试')
+    this.status = status; this.detail = detail
   }
 }
 
@@ -35,4 +38,21 @@ export const post = <T>(path: string, body?: unknown, key?: string) => api<T>(pa
 
 export function message(error: unknown) {
   return error instanceof Error ? error.message : '操作未完成，请稍后重试'
+}
+
+function validationText(detail: unknown): string | undefined {
+  if (!Array.isArray(detail) || !detail[0]) return
+  const { type, ctx = {} } = detail[0]
+  if (type === 'missing') return '请填写此项。'
+  if (type === 'string_too_short') return `至少填写 ${ctx.min_length} 个字符。`
+  if (type === 'string_too_long') return `最多填写 ${ctx.max_length} 个字符。`
+  if (type === 'greater_than_equal') return `不能少于 ${ctx.ge}。`
+  if (type === 'less_than_equal') return `不能超过 ${ctx.le}。`
+  return '请检查此项的格式和取值。'
+}
+
+export function validationIssue(error: unknown): { field: string; message: string } | undefined {
+  if (!(error instanceof ApiError) || error.status !== 422) return
+  const detail = Array.isArray(error.detail) ? error.detail[0] : undefined
+  return { field: Array.isArray(detail?.loc) ? String(detail.loc.at(-1)) : '', message: error.message }
 }
