@@ -1,7 +1,7 @@
 import { Pagination, usePagination } from './Pagination'
 import { ChoiceSelect } from './ChoiceSelect'
 import { useEffect, useState } from 'react'
-import { api, message, post } from './api'
+import { api, message, post, validationIssue } from './api'
 import { Badge, Button, date, Dialog, Empty, Loading } from './ui'
 import type { Common, Model } from './types'
 import { WorkerOnboarding } from './WorkerOnboarding'
@@ -13,6 +13,9 @@ export function SettingsPage(common: Common) {
   const [busy, setBusy] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [password, setPassword] = useState('')
+  const [modelError, setModelError] = useState('')
+  const [modelErrorField, setModelErrorField] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [workerDetailId, setWorkerDetailId] = useState('')
   const [showRevoked, setShowRevoked] = useState(false)
@@ -24,7 +27,14 @@ export function SettingsPage(common: Common) {
   const available = activeWorkers.filter(worker => worker.capabilities.connection_fingerprint)
   useEffect(() => { if (!model && common.settings?.model?.name) setModel(common.settings.model.name) }, [common.settings?.model?.id])
   useEffect(() => { if (!workerId && available.length) setWorkerId(available.find(worker => worker.capabilities.connection_fingerprint === common.settings?.model?.connection_fingerprint)?.id || available[0].id) }, [common.workers, workerId, common.settings?.model?.id])
-  const action = async (name: string, operation: () => Promise<void>) => { setBusy(name); try { await operation() } catch (error) { common.notify(message(error), true) } finally { setBusy('') } }
+  const action = async (name: string, operation: () => Promise<void>) => {
+    setBusy(name); if (name === 'model') setModelError(''); if (name === 'password') setPasswordError('')
+    try { await operation() } catch (error) {
+      if (validationIssue(error) && name === 'model') { setModelError(message(error)); setModelErrorField(validationIssue(error)!.field) }
+      else if (validationIssue(error) && name === 'password') setPasswordError(message(error))
+      else common.notify(message(error), true)
+    } finally { setBusy('') }
+  }
   const configured = common.settings?.model
   const loggedIn = activeWorkers.some(worker => worker.capabilities.login_configured)
   const matched = activeWorkers.find(worker => worker.online && worker.capabilities.connection_fingerprint === configured?.connection_fingerprint)
@@ -45,8 +55,8 @@ export function SettingsPage(common: Common) {
       <Pagination label="Worker 分页" total={filteredWorkers.length} page={paging.page} pageSize={paging.pageSize} onPage={paging.setPage} onPageSize={paging.setPageSize} />
     </section>
     <div className="settings-grid"><section className="panel"><div className="panel-head"><div><h2>模型与连接</h2></div></div><form className="settings-form" onSubmit={event => { event.preventDefault(); void action('model', async () => { await api<Model>('/api/settings/model', { method: 'PUT', body: JSON.stringify({ name: model, worker_id: workerId }) }); common.refresh(); common.notify('模型配置已保存。') }) }}>
-      <div className="field"><span>Agent 连接</span><ChoiceSelect aria-label="Agent 连接" required disabled={!available.length} value={workerId} onValueChange={value => setWorkerId(value)}><option value="" disabled>选择已接入的 Worker 连接</option>{available.map(worker => <option key={worker.id} value={worker.id}>{worker.name} · {agentConnectionLabel(worker.capabilities.connection_label)}{worker.online ? '' : ' · 离线'}</option>)}</ChoiceSelect><small className="muted">{available.length ? '登录过期时，在该 Worker 所在电脑重新登录即可。' : '先接入 Worker，并在该电脑登录 Agent；检测到连接后即可选择。'}</small></div>
-      <label className="field"><span>模型名称</span><input required maxLength={200} value={model} onChange={event => setModel(event.target.value)} placeholder="输入当前连接可用的模型名称" /></label>
+      <div className="field"><span>Agent 连接</span><ChoiceSelect aria-label="Agent 连接" required disabled={!available.length} value={workerId} onValueChange={value => setWorkerId(value)}><option value="" disabled>选择已接入的 Worker 连接</option>{available.map(worker => <option key={worker.id} value={worker.id}>{worker.name} · {agentConnectionLabel(worker.capabilities.connection_label)}{worker.online ? '' : ' · 离线'}</option>)}</ChoiceSelect>{modelError && modelErrorField === 'worker_id' && <span className="field-error" role="alert">{modelError}</span>}<small className="muted">{available.length ? '登录过期时，在该 Worker 所在电脑重新登录即可。' : '先接入 Worker，并在该电脑登录 Agent；检测到连接后即可选择。'}</small></div>
+      <label className="field"><span>模型名称</span><input required maxLength={200} value={model} onChange={event => setModel(event.target.value)} placeholder="输入当前连接可用的模型名称" />{modelError && modelErrorField !== 'worker_id' && <span className="field-error" role="alert">{modelError}</span>}</label>
       <div className="actions"><Button type="submit" variant="primary" busy={busy === 'model'} disabled={!workerId || !model.trim() || !!busy}>保存</Button>{configured && <span className="muted">当前：{configured.name}</span>}</div>
       <p className="muted">生成、评测和语义裁判共用此配置。登录保存在 Worker 本机，保存配置不调用模型。</p>
     </form></section>
@@ -54,6 +64,6 @@ export function SettingsPage(common: Common) {
     <details className="panel environment-panel"><summary>运行环境与账号</summary><dl className="config-list"><dt>执行引擎</dt><dd>Agent CLI {common.settings?.required_versions.codex}</dd><dt>评测工具</dt><dd>skill-up {common.settings?.required_versions.skill_up}</dd><dt>执行方式</dt><dd>标准评测 · 全部案例 · 单裁判</dd><dt>数据存储</dt><dd>PostgreSQL + 本机文件库</dd><dt>中心地址</dt><dd className="wrap-text">{common.settings?.public_url}</dd></dl><div className="settings-foot"><span>单管理员密码登录</span><button className="text-button" onClick={() => setShowPassword(true)}>修改密码</button></div></details>
     {showOnboarding && common.settings && <WorkerOnboarding settings={common.settings} onClose={() => setShowOnboarding(false)} notify={common.notify} />}
     {workerDetail && <Dialog drawer="regular" title="Worker 详情" onClose={() => setWorkerDetailId('')}><dl className="set-info-list"><dt>名称</dt><dd>{workerDetail.name}</dd><dt>平台</dt><dd>{workerDetail.builtin ? '内置 Worker' : workerDetail.capabilities.platform || '独立 Worker'}</dd><dt>Agent CLI</dt><dd>{workerDetail.capabilities.codex_version || '未检测到'}</dd><dt>skill-up</dt><dd>{workerDetail.capabilities.skill_up_version || '未检测到'}</dd><dt>检查模型</dt><dd>{workerDetail.probe_result?.model || '未检查'}</dd></dl>{workerDetail.probe_result?.message && <><h3 className="detail-section-title">检查详情</h3><pre>{workerDetail.probe_result.message}</pre></>}{workerDetail.capabilities.diagnostic && <><h3 className="detail-section-title">诊断</h3><pre>{workerDetail.capabilities.diagnostic}</pre></>}<div className="dialog-actions"><Button variant="link" onClick={() => setWorkerDetailId('')}>关闭</Button></div></Dialog>}
-    {showPassword && <Dialog title="修改管理员密码" onClose={() => setShowPassword(false)}><form onSubmit={event => { event.preventDefault(); void action('password', async () => { await post('/api/settings/password', { password }); setPassword(''); setShowPassword(false); common.notify('密码已更新，其他登录会话已退出。') }) }}><label className="field"><span>新密码</span><input type="password" required minLength={10} maxLength={200} autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="至少 10 个字符" /></label><div className="dialog-actions"><Button variant="link" onClick={() => setShowPassword(false)}>取消</Button><Button variant="primary" type="submit" busy={busy === 'password'}>保存</Button></div></form></Dialog>}
+    {showPassword && <Dialog title="修改管理员密码" onClose={() => setShowPassword(false)}><form onSubmit={event => { event.preventDefault(); void action('password', async () => { await post('/api/settings/password', { password }); setPassword(''); setShowPassword(false); common.notify('密码已更新，其他登录会话已退出。') }) }}><label className="field"><span>新密码</span><input type="password" required minLength={10} maxLength={200} autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="至少 10 个字符" />{passwordError && <span className="field-error" role="alert">{passwordError}</span>}</label><div className="dialog-actions"><Button variant="link" onClick={() => setShowPassword(false)}>取消</Button><Button variant="primary" type="submit" busy={busy === 'password'}>保存</Button></div></form></Dialog>}
   </>
 }

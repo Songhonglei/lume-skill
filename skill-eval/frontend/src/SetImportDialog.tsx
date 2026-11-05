@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, message, post } from './api'
+import { api, message, post, validationIssue } from './api'
 import { Button, Dialog, ValidationView } from './ui'
 import { ChoiceSelect } from './ChoiceSelect'
 import type { Common, EvalSet, Files, SetVersion, Skill, Validation } from './types'
@@ -32,7 +32,7 @@ export function SetImportDialog({ common, skill, sets, onClose, onImported, onBu
       if (folder) { files.forEach(file => body.append('files', file)); body.append('paths', JSON.stringify(files.map(file => file.webkitRelativePath || file.name))) }
       else body.append('file', files[0])
       setPreview(await api<Preview>(`/api/sets/preview-import${folder ? '-directory' : ''}`, { method: 'POST', body }))
-    } catch (error) { setError(message(error)) }
+    } catch (error) { if (validationIssue(error)) setError(message(error)); else common.notify(message(error), true) }
     finally { setBusy(false); if (input.current) input.current.value = ''; if (directory.current) directory.current.value = '' }
   }
   const saveImport = async () => {
@@ -44,7 +44,7 @@ export function SetImportDialog({ common, skill, sets, onClose, onImported, onBu
       if (existing) { targetId = importInto; version = await post<SetVersion>(`/api/sets/${importInto}/import`, body) }
       else { const result = await post<{ set_id: string; version: SetVersion }>(`/api/skills/${skill.id}/sets`, body); targetId = result.set_id; version = result.version }
       common.refresh(); common.notify('案例已导入草稿，校验并启用后即可评测。'); onImported(targetId, version.id)
-    } catch (error) { setError(message(error)) } finally { setBusy(false) }
+    } catch (error) { if (validationIssue(error)) setError(message(error)); else common.notify(message(error), true) } finally { setBusy(false) }
   }
   return <Dialog title={`导入评测集 · ${skill.name}`} wide onClose={() => { if (!busy) onClose() }}>
     <p className="muted">导入后保存为草稿，不切换已启用版本。</p>

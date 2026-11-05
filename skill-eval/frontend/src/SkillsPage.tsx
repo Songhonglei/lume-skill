@@ -2,7 +2,7 @@ import { Pagination, usePagination } from './Pagination'
 import { routeHash } from './workspaceRoute'
 import { ChoiceSelect } from './ChoiceSelect'
 import { useEffect, useRef, useState } from 'react'
-import { ApiError, api, message } from './api'
+import { ApiError, api, message, validationIssue } from './api'
 import { Badge, Button, Empty, Icon, Dialog, useData, Loading, LoadError } from './ui'
 import { TaskDialog } from './TaskDialog'
 import type { Common, Skill, SkillDetail, SkillVersion } from './types'
@@ -16,6 +16,7 @@ export function SkillsPage(common: Common) {
   const [versionId, setVersionId] = useState(common.selection.versionId || '')
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [uploadTarget, setUploadTarget] = useState<string | undefined>()
   const [collision, setCollision] = useState<{ upload: Upload; matches: { id: string; name: string }[] } | null>(null)
   const [collisionTarget, setCollisionTarget] = useState('')
@@ -36,7 +37,7 @@ export function SkillsPage(common: Common) {
   const selectedSkill: Skill | undefined = current && suite ? { ...current, default_set_id: suite.id, default_set_name: suite.name, active_version_id: suite.active_version_id, active_validation: suite.active_validation } : current
 
   const upload = async (value: Upload, independent = false) => {
-    setBusy(true)
+    setBusy(true); setUploadError('')
     const form = new FormData()
     if (value.directory) {
       value.files.forEach(file => form.append('files', file))
@@ -51,6 +52,7 @@ export function SkillsPage(common: Common) {
     } catch (error) {
       const detail = error instanceof ApiError ? error.detail as { matches?: { id: string; name: string }[] } : null
       if (detail?.matches?.length) { setCollision({ upload: value, matches: detail.matches }); setCollisionTarget(detail.matches[0].id) }
+      else if (validationIssue(error)) setUploadError(message(error))
       else common.notify(message(error), true)
     } finally { setBusy(false); if (zip.current) zip.current.value = ''; if (directory.current) directory.current.value = '' }
   }
@@ -66,6 +68,7 @@ export function SkillsPage(common: Common) {
   const { page: currentPage, setPage, pageSize } = paging
   const ready = common.workers.some(worker => worker.online && !worker.revoked && worker.capabilities.login_configured && worker.capabilities.connection_fingerprint === common.settings?.model?.connection_fingerprint)
   return <><div className="page-heading"><div><h1>Skills</h1></div><div className="actions"><Button disabled={busy} onClick={() => { setUploadTarget(undefined); directory.current?.click() }}>上传目录</Button><Button variant="primary" busy={busy} onClick={() => { setUploadTarget(undefined); zip.current?.click() }}><Icon name="upload" />上传 Skill</Button></div></div>
+    {uploadError && !uploadTarget && <p id="skill-upload-error" className="field-error upload-error" role="alert">{uploadError}</p>}
     <input className="hidden" type="file" accept=".zip" ref={zip} onChange={event => { if (event.target.files?.length) void upload({ files: Array.from(event.target.files), directory: false, skillId: uploadTarget }) }} />
     <input className="hidden" type="file" multiple ref={element => { directory.current = element; element?.setAttribute('webkitdirectory', '') }} onChange={event => { if (event.target.files?.length) void upload({ files: Array.from(event.target.files), directory: true, skillId: uploadTarget }) }} />
     <div className="workspace-summary" aria-label="资源概况"><div><span>本地 Skills</span><strong>{common.skillsLoading || (common.skillsError && !common.skills.length) ? '—' : common.skills.length}</strong></div><div><span>已备好案例</span><strong>{common.skillsLoading || (common.skillsError && !common.skills.length) ? '—' : common.skills.filter(item => item.active_version_id).length}<small> 个 Skill</small></strong></div><div><span>待处理草稿</span><strong>{common.skillsLoading || (common.skillsError && !common.skills.length) ? '—' : common.skills.reduce((sum, item) => sum + Number(item.draft_count || 0), 0)}<small> 份</small></strong></div></div>
@@ -76,7 +79,7 @@ export function SkillsPage(common: Common) {
       }}>添加示例</Button>}</Empty>}
       <Pagination label="Skills 分页" total={common.skillsLoading ? undefined : visible.length} page={currentPage} pageSize={pageSize} onPage={setPage} onPageSize={paging.setPageSize} disabled={common.skillsLoading} />
     </section>
-    {current && <Dialog drawer="regular" title="Skill 详情" onClose={() => setSelected('')}><section className="skill-detail"><div className="panel-head"><div><h2>{current.name}</h2>{current.description && <p className="muted wrap-text">{current.description}</p>}</div><Button variant="link" onClick={() => { setUploadTarget(current.id); zip.current?.click() }}>新增版本</Button></div>
+    {current && <Dialog drawer="regular" title="Skill 详情" onClose={() => { setSelected(''); setUploadError('') }}><section className="skill-detail"><div className="panel-head"><div><h2>{current.name}</h2>{current.description && <p className="muted wrap-text">{current.description}</p>}</div><Button variant="link" onClick={() => { setUploadTarget(current.id); zip.current?.click() }}>新增版本</Button></div>{uploadError && uploadTarget === current.id && <p id="skill-upload-error" className="field-error" role="alert">{uploadError}</p>}
       {detail.loading ? <Loading label="正在读取版本与评测集…" /> : detail.error ? <LoadError message={detail.error} retry={common.refresh} /> : <div className="skill-detail-grid"><div><div className="field"><span>Skill 版本</span><ChoiceSelect aria-label="Skill 版本" value={versionId} onValueChange={value => setVersionId(value)}>{versions.map(version => <option value={version.id} key={version.id}>{version.declared_version || '本地版本'} · 修订 {version.revision}</option>)}</ChoiceSelect></div>{chosen && <a className="text-link" href={`/api/skill-versions/${chosen.id}/download`}>下载</a>}</div>
         <div className="suite-summary"><div className="field"><span>本次评测集</span>{suites.length ? <ChoiceSelect aria-label="本次评测集" value={suite?.id || ''} onValueChange={value => setSuiteId(value)}>{suites.map(item => <option key={item.id} value={item.id}>{item.name}{item.id === current.default_set_id ? ' · 默认' : ''}{item.active_version_id ? '' : ' · 待启用'}</option>)}</ChoiceSelect> : <strong>尚未准备案例</strong>}</div><p className="muted">{selectedSkill?.active_version_id ? `${selectedSkill?.active_validation?.cases?.length || 0} 个启用案例，逐一执行。` : Number(current.set_count) ? '已有草稿或保存版本，启用后即可评测。' : '先生成案例草稿，或上传已有评测集。'}</p>{suite?.id === current.default_set_id && current.active_source_skill_version_id && chosen && current.active_source_skill_version_id !== chosen.id && <p className="small-note">当前案例基于较早的 Skill 版本，可以继续复用。</p>}</div>
         <div className="detail-actions"><Button variant="primary" disabled={!chosen || detail.loading} onClick={() => begin(selectedSkill || current)}><Icon name="play" />{selectedSkill?.active_version_id ? '开始评测' : Number(current.set_count) ? '维护案例' : '准备案例'}</Button>{selectedSkill?.active_version_id && <a className="text-link" target="_blank" rel="noopener noreferrer" href={routeHash('sets', { setId: suite?.id || current.default_set_id })}>案例</a>}</div></div>}
