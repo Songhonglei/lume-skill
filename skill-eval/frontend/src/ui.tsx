@@ -72,21 +72,25 @@ export function Badge({ value, children, context }: { value?: string; children?:
   return <span className={`badge ${status.tone}`}>{children || status.label}</span>
 }
 
-export function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
+export function Dialog({ title, children, onClose, wide = false, drawer }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean; drawer?: 'regular' | 'large' }) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   useLayoutEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const element = ref.current
+    const overflow = document.body.style.overflow
+    if (drawer) document.body.style.overflow = 'hidden'
     element?.showModal()
-    element?.querySelector<HTMLElement>('[data-initial-focus]')?.focus()
+    const focusTarget = element?.querySelector<HTMLElement>('[data-initial-focus]') || element?.querySelector<HTMLElement>('.close')
+    focusTarget?.focus()
     return () => {
       element?.close()
+      if (drawer) document.body.style.overflow = overflow
       if (previous?.isConnected) previous.focus({ preventScroll: true })
       else document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true })
     }
   }, [])
-  return <dialog ref={ref} aria-labelledby={titleId} className={`dialog ${wide ? 'wide' : ''}`} onCancel={event => { event.preventDefault(); onClose() }}>
+  return <dialog ref={ref} aria-labelledby={titleId} className={`dialog ${wide ? 'wide' : ''} ${drawer ? `drawer ${drawer === 'large' ? 'drawer-large' : ''}` : ''}`} onCancel={event => { event.preventDefault(); onClose() }}>
     <div className="dialog-head"><h2 id={titleId}>{title}</h2><button className="close" onClick={onClose} aria-label="关闭">×</button></div>
     <div className="dialog-body">{children}</div>
   </dialog>
