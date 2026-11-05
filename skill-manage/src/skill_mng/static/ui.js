@@ -3,12 +3,12 @@
 // Shared presentation state stays separate from immutable server records.
 const view = {
   library: {q: '', mine: false, verdict: ''},
-  positions: new Map(), versions: new Map(), readers: new Map(), selections: new Map(),
+  lists: new Map(), records: new Map(), positions: new Map(), versions: new Map(), readers: new Map(), selections: new Map(),
   findingFilters: new Map(), findingQueries: new Map(), findingPages: new Map(), route: '', render: 0, navigation: 0, pollBusy: false,
 };
 
 function clearSessionView() {
-  view.modelDraft=null;view.settingsTab=null;view.selections.clear();view.positions.clear();view.versions.clear();view.findingFilters.clear();view.findingQueries.clear();view.findingPages.clear();++view.navigation;view.library={q:'',mine:false,verdict:''};++view.render;
+  view.lists.clear();view.records.clear();if(typeof hideNotice==='function')hideNotice();view.modelDraft=null;view.settingsTab=null;view.selections.clear();view.positions.clear();view.versions.clear();view.findingFilters.clear();view.findingQueries.clear();view.findingPages.clear();++view.navigation;view.library={q:'',mine:false,verdict:''};++view.render;
 }
 
 function libraryStatus(audit) {

@@ -82,12 +82,13 @@ test('issue search treats input literally and selection excludes review-only fin
   const selected=new Set(['existing']);context.selectFindings(selected,rows.slice(0,2));
   assert.deepEqual([...selected],['existing','first']);
 });
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/lists.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/workspace.js'),'utf8'),context);
 test('finding pagination clamps on filter changes without selecting hidden rows',()=>{
   context.state={auditContext:{audit:{id:'paged'},result:{findings:Array.from({length:61},(_,i)=>({id:'item-'+i,severity:'ERR',file:'scripts/'+i+'.py',message:'syntax',reviewRequired:i===0}))}}};
-  vm.runInContext("view.findingFilters.set('paged','all');view.findingQueries.set('paged','');view.findingPages.set('paged',1)",context);
-  const page=context.findingPage();assert.equal(page.items.length,25);assert.equal(page.items[0].id,'item-25');assert.equal(page.total,61);
-  const selected=new Set();context.selectFindings(selected,page.items);assert.equal(selected.size,25);assert.ok(!selected.has('item-0'));
+  vm.runInContext("view.findingFilters.set('paged','all');view.findingQueries.set('paged','');listState('findings:paged').page=1",context);
+  const page=context.findingPage();assert.equal(page.items.length,20);assert.equal(page.items[0].id,'item-20');assert.equal(page.total,61);
+  const selected=new Set();context.selectFindings(selected,page.items);assert.equal(selected.size,20);assert.ok(!selected.has('item-0'));
   vm.runInContext("view.findingQueries.set('paged','scripts/60.py')",context);
   const filtered=context.findingPage();assert.equal(filtered.page,0);assert.equal(filtered.items.length,1);assert.equal(filtered.items[0].id,'item-60');
 });
@@ -137,8 +138,65 @@ test('task conclusions never repeat pending execution or imply an unfinished res
 
 test('frequent actions respect permissions and link to the task exact version',()=>{
   const base={id:'skill',name:'Sample',current_version:'1.0.0',current_version_id:'version',owner:'Owner',updated_at:'2026-11-04T08:00:00Z',can_write:false,latest_audit:{id:'audit',task_id:'task',mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',error_count:1,warning_count:0}};
-  const reader=context.skillRow(base);assert.ok(!reader.includes('data-audit-skill'));for(const action of ['报告','详情','下载'])assert.ok(reader.includes('>'+action+'</a>'));
-  const unaudited=context.skillRow({...base,can_write:true,latest_audit:null});assert.ok(unaudited.includes('>审计</button>')&&unaudited.includes('>详情</a>')&&unaudited.includes('>下载</a>'));
+  const reader=context.skillRow(base);assert.ok(!reader.includes('data-audit-skill'));for(const action of ['报告','详情','下载'])assert.ok(reader.includes('>'+action+'</'));assert.match(reader,/aria-label="审计不可用"/);
+  const unaudited=context.skillRow({...base,can_write:true,latest_audit:null});assert.ok(unaudited.includes('>审计</button>')&&unaudited.includes('>详情</button>')&&unaudited.includes('>下载</a>'));
   const task=context.taskRows([{id:'task',skill_id:'skill',version_id:'fixed-version',skill_name:'Sample',version:'old',kind:'audit',audit_mode:'static',state:'succeeded',verdict:'fail',delivery_status:'saved',created_at:'2026-11-04T08:00:00Z'}]);
-  assert.ok(task.includes('href="#skill/skill?version=fixed-version">版本</a>'));
+  assert.match(task,/href="#skill\/skill\?version=fixed-version" target="_blank" rel="noopener noreferrer">版本<\/a>/);
+});
+
+
+test('all local page sizes cover records without skips and clamp after filtering',()=>{
+  const rows=Array.from({length:235},(_,id)=>({id}));
+  for(const size of [20,30,50,100]) {
+    const state=context.listState('test-page-'+size);state.size=size;
+    const found=[];
+    do {const page=context.localPage('test-page-'+size,rows);found.push(...page.items.map(x=>x.id));if(!page.hasMore)break;state.page++;}while(true);
+    assert.deepEqual(found,rows.map(x=>x.id));
+    const filtered=context.localPage('test-page-'+size,rows.slice(0,2));assert.equal(filtered.page,0);assert.equal(filtered.items.length,2);
+    const html=context.paginationHTML('test-page-'+size,filtered);for(const option of [20,30,50,100])assert.ok(html.includes('value="'+option+'"'));assert.ok(!html.includes('value="25"'));
+  }
+  assert.equal(context.localPage('default',rows).size,20);
+  assert.equal(context.localPage('empty',[]).page,0);
+});
+test('action slots retain order and unavailable actions cannot be clicked',()=>{
+  const base={id:'skill',name:'Sample',current_version:'1',current_version_id:'version',owner:'Owner',updated_at:'2026-11-05T08:00:00Z',can_write:false};
+  const html=context.skillRow(base),slots=[...html.matchAll(/data-action-slot="([^"]+)"/g)].map(x=>x[1]);
+  assert.deepEqual(slots,['审计','报告','详情','下载']);assert.match(html,/aria-label="审计不可用">-<\/span>/);assert.match(html,/aria-label="报告不可用">-<\/span>/);
+  assert.ok(!html.includes('data-audit-skill'));assert.match(html,/data-record-detail="skill"/);assert.match(html,/target="_blank" rel="noopener noreferrer"/);
+});
+test('cursor pages send the chosen size and ignore responses invalidated by a reset',async()=>{
+  const previous=context.api;let resolve;
+  context.api=async url=>{assert.match(url,/limit=30/);return new Promise(done=>{resolve=done;});};
+  context.listState('remote').size=30;const pending=context.cursorPage('remote','/task-history');context.resetList('remote');resolve({items:[{id:'stale'}],nextCursor:'stale',hasMore:true});assert.equal(await pending,null);assert.equal(context.listState('remote').nextCursor,null);
+  context.api=previous;
+});
+
+function feedbackHarness() {
+  const timers=new Map(),events={},message={textContent:''};let serial=0;
+  const body={append(element){element.parentElement=this;}};
+  const toast={hidden:true,parentElement:body,open:false,matches(){return this.open;},showPopover(){this.open=true;},hidePopover(){this.open=false;}};
+  const dialogs=[];
+  const isolated=vm.createContext({document:{getElementById(){return toast;},querySelectorAll(){return dialogs;},body,addEventListener(name,fn){events[name]=fn;}},$(){return message;},setTimeout(fn,delay){const id=++serial;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/feedback.js'),'utf8'),isolated);
+  return {isolated,timers,events,message,toast,dialogs,body};
+}
+test('notices expire after three seconds, replace old timers and allow manual close',()=>{
+  const h=feedbackHarness();h.isolated.notice('first');assert.equal(h.toast.hidden,false);assert.equal(h.timers.size,1);assert.equal([...h.timers.values()][0].delay,3000);
+  h.isolated.notice('second');assert.equal(h.message.textContent,'second');assert.equal(h.timers.size,1);
+  [...h.timers.values()][0].fn();assert.equal(h.toast.hidden,true);assert.equal(h.toast.open,false);
+  h.isolated.notice('close');h.events.click({target:{closest(){return true;}}});assert.equal(h.toast.hidden,true);assert.equal(h.timers.size,0);
+});
+test('notices remain closable in modal dialogs and survive their removal',()=>{
+  const h=feedbackHarness(),dialog={append(element){element.parentElement=this;},contains(element){return element.parentElement===this;}};
+  h.dialogs.push(dialog);h.isolated.notice('in modal');assert.equal(h.toast.parentElement,dialog);assert.equal(h.toast.open,true);
+  h.events.close({target:dialog});assert.equal(h.toast.parentElement,h.body);assert.equal(h.toast.hidden,true);h.dialogs.pop();h.isolated.notice('after modal');assert.equal(h.toast.open,true);assert.equal(h.toast.parentElement,h.body);
+});
+test('known field validation stays inline while other failures use the global notice',()=>{
+  const h=feedbackHarness(),shown=[];let focused=false;
+  const input={name:'base_url',focus(){focused=true;}};
+  h.isolated.showFieldError=(field,message)=>shown.push({field,message});h.isolated.fieldLabel=field=>field.name;
+  h.isolated.formError({elements:[input]},new Error('模型服务地址需为不含凭据和查询参数的 HTTP(S) API Base URL'));
+  assert.equal(shown[0].field,input);assert.equal(focused,true);assert.equal(h.toast.hidden,true);
+  h.isolated.formError({elements:[input]},new Error('服务暂时不可用，请重试'));
+  assert.equal(h.toast.hidden,false);assert.equal(h.message.textContent,'服务暂时不可用，请重试');
 });

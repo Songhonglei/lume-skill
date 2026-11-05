@@ -3,24 +3,6 @@ const $ = (selector, parent = document) => parent.querySelector(selector);
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = value => new Date(value).toLocaleString('zh-CN', {hour12:false});
 const state = {user:null, skills:[], detail:null, version:null, mode:'upload', pending:null};
-let noticeTimer;
-function notice(message) { $('#notice').textContent = message; $('#notice').hidden = false; clearTimeout(noticeTimer); noticeTimer = setTimeout(() => $('#notice').hidden = true, 4500); }
-// Keep application validation inside the themed form, without native browser bubbles.
-document.addEventListener('invalid', event => {
-  event.preventDefault();
-  const input = event.target, form = input.form;
-  if (!form) return;
-  let error = $('.error', form);
-  if (!error) { error=document.createElement('p');error.className='error';error.setAttribute('role','alert');form.append(error); }
-  const first = [...form.elements].find(field => field.willValidate && !field.validity.valid);
-  if (input !== first) return;
-  const label = input.getAttribute('aria-label') || input.closest('label')?.firstChild.textContent.trim() || '此项';
-  error.textContent = input.validity.valueMissing ? '请填写或选择'+label : input.validity.typeMismatch ? '请填写有效的'+label : input.validity.tooShort ? label+'至少需要 '+input.minLength+' 个字符' : input.validity.patternMismatch ? label+'格式不正确' : '请检查'+label+'的内容';
-  input.setAttribute('aria-invalid','true');
-  queueMicrotask(()=>input.focus());
-}, true);
-document.addEventListener('input', event => event.target.removeAttribute('aria-invalid'));
-document.addEventListener('submit', event => { const error=$('.error',event.target);if(error)error.textContent=''; }, true);
 let messageId=0;
 function confirmAction(title, message, accept='确认') {
   return new Promise(resolve=>{
@@ -43,7 +25,7 @@ async function api(path, options = {}) {
   catch { throw new Error('连接失败，请检查网络后重试'); }
   try { result=await response.json(); }
   catch { throw new Error('服务响应异常，请稍后重试'); }
-  if (!response.ok) { if (response.status === 401 && state.user) { state.user = null; await init(); } throw new Error(typeof result.detail === 'string' ? result.detail : '输入格式不正确，请检查后重试'); }
+  if (!response.ok) { if (response.status === 401 && state.user) { state.user = null; await init(); } const error=new Error(typeof result.detail === 'string' ? result.detail : '输入格式不正确，请检查后重试');if(response.status===422&&Array.isArray(result.detail))error.fields=result.detail;throw error; }
   return result;
 }
 async function busy(button, action) { button.disabled = true; try { await action(); } catch (error) { notice(error.message); } finally { button.disabled = false; } }
@@ -65,7 +47,7 @@ function showGate(onboard) {
   $('#gate-form').onsubmit = async event => {
     event.preventDefault(); const button = $('button[type=submit]', event.target); button.disabled = true;
     try { const body = Object.fromEntries(new FormData(event.target)); if (onboard) await api('/onboard', {method:'POST',body}); state.user = await api('/login', {method:'POST',body:{username:body.username,password:body.password}}); await init(); }
-    catch(error) { $('#gate-error').textContent = error.message; } finally { button.disabled = false; }
+    catch(error) { formError(event.target,error); } finally { button.disabled = false; }
   };
 }
 async function route() {
@@ -114,7 +96,7 @@ function importStatus(message, busy=false) {
 }
 function updateImportButton() {
   const button=$('#import-form button[type=submit]');
-  const error=!!$('#import-error').textContent;
+  const error=!!state.importFailed;
   button.hidden=state.mode!=='url'&&!state.pending&&!error;
   button.disabled=!!state.importBusy;
   button.textContent=state.importBusy?'处理中…':state.pending?'完成导入':state.mode==='url'?'下载并导入':'重试导入';
@@ -132,14 +114,14 @@ function validateImportFiles(files, mode) {
 }
 function setMode(mode) {
   if (state.importBusy) return;
-  state.mode=mode;state.pending=null;
+  state.mode=mode;state.pending=null;state.importFailed=false;document.querySelectorAll('#import-form [data-field-error]').forEach(clearFieldError);
   $('#metadata-fields').hidden=true;$('#import-error').textContent='';
   $('#import-selection').hidden=true;$('#import-selection').replaceChildren();
   $('#import-dialog').classList.remove('has-selection');importStatus('');
   document.querySelectorAll('#metadata-fields input').forEach(input=>{input.required=false;input.value='';input.removeAttribute('aria-invalid');input.closest('label').hidden=false;});
   document.querySelectorAll('[data-mode]').forEach(button=>{const active=button.dataset.mode===mode;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
   $('#import-input').setAttribute('aria-labelledby','import-tab-'+mode);
-  $('#import-input').innerHTML=mode==='url'?'<label>ZIP 下载链接<input name="url" type="url" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">仅支持公开 ZIP 直链，不支持网页或内网地址。</p>':`<div class="upload-zone"><h3>${mode==='directory'?'选择 Skill 目录':'拖入 ZIP 包'}</h3><p>${mode==='directory'?'根目录需包含 SKILL.md。':'包内根目录需包含 SKILL.md。'}选择后自动导入。</p><label class="file-picker"><span class="file-picker-button">${mode==='directory'?'选择本地目录':'选择 ZIP 文件'}</span><input type="file" name="${mode==='directory'?'files':'file'}" ${mode==='directory'?'webkitdirectory multiple':'accept=".zip,application/zip"'} required aria-label="${mode==='directory'?'选择目录':'选择 ZIP 文件'}"></label><p>${mode==='directory'?'总计不超过 32 MiB':'ZIP 不超过 16 MiB'} · 最多 500 个文件</p></div>`;
+  $('#import-input').innerHTML=mode==='url'?'<label>ZIP 下载链接<input name="url" type="url" pattern="https?://.+" required placeholder="https://example.com/skill.zip" maxlength="2048"></label><p class="hint">仅支持公开 ZIP 直链，不支持网页或内网地址。</p>':`<div class="upload-zone"><h3>${mode==='directory'?'选择 Skill 目录':'拖入 ZIP 包'}</h3><p>${mode==='directory'?'根目录需包含 SKILL.md。':'包内根目录需包含 SKILL.md。'}选择后自动导入。</p><label class="file-picker"><span class="file-picker-button">${mode==='directory'?'选择本地目录':'选择 ZIP 文件'}</span><input type="file" name="${mode==='directory'?'files':'file'}" ${mode==='directory'?'webkitdirectory multiple':'accept=".zip,application/zip"'} required aria-label="${mode==='directory'?'选择目录':'选择 ZIP 文件'}"></label><p>${mode==='directory'?'总计不超过 32 MiB':'ZIP 不超过 16 MiB'} · 最多 500 个文件</p></div>`;
   if (mode!=='url') {
     const input=$('#import-input input');
     input.onchange=()=>acceptImportSelection([...input.files],mode);
@@ -147,7 +129,7 @@ function setMode(mode) {
       const zone=$('.upload-zone');
       zone.ondragover=event=>{event.preventDefault();if(!state.importBusy)zone.classList.add('dragover');};
       zone.ondragleave=()=>zone.classList.remove('dragover');
-      zone.ondrop=event=>{event.preventDefault();zone.classList.remove('dragover');if(state.importBusy)return;const files=[...event.dataTransfer.files];if(files.length!==1){$('#import-error').textContent='每次请选择一个 ZIP 包';updateImportButton();return;}const transfer=new DataTransfer();transfer.items.add(files[0]);input.files=transfer.files;acceptImportSelection(files,mode);};
+      zone.ondrop=event=>{event.preventDefault();zone.classList.remove('dragover');if(state.importBusy)return;const files=[...event.dataTransfer.files];if(files.length!==1){showFieldError(input,'每次请选择一个 ZIP 包');updateImportButton();return;}const transfer=new DataTransfer();transfer.items.add(files[0]);input.files=transfer.files;acceptImportSelection(files,mode);};
     }
   }
   updateImportButton();
@@ -162,7 +144,7 @@ function acceptImportSelection(files, mode) {
   updateImportButton();
   if (!files.length) return;
   const failure=validateImportFiles(files,mode);
-  if (failure) {$('#import-error').textContent=failure;importStatus('尚未上传，请重新选择。');updateImportButton();$('#import-form button[type=submit]').disabled=true;return;}
+  if (failure) {showFieldError($('#import-input input'),failure);importStatus('');updateImportButton();$('#import-form button[type=submit]').disabled=true;return;}
   $('#import-form').requestSubmit();
 }
 function openImport(existing = false) {
@@ -176,7 +158,7 @@ $('#import-form').onsubmit = async event => {
   if(state.importBusy)return;
   const form = new FormData(event.target); if (state.importSkill) form.set('name',state.importSkill.slug);
   if (!state.pending && state.mode === 'directory') { form.delete('files'); for (const file of $('#import-input input').files) form.append('files', file, file.webkitRelativePath || file.name); }
-  state.importBusy=true;$('#import-error').textContent = '';
+  state.importBusy=true;state.importFailed=false;$('#import-error').textContent = '';
   const controls=[...event.target.elements], disabled=controls.map(control=>control.disabled);
   controls.forEach(control=>control.disabled=true);
   $('#import-form').setAttribute('aria-busy','true');
@@ -193,7 +175,7 @@ $('#import-form').onsubmit = async event => {
     }
     $('#import-dialog').close(); notice(result.reused ? '相同内容已登记，已打开原版本' : '导入成功');
     if (location.hash === '#skill/' + result.skill_id) await detail(result.skill_id,result.version_id); else location.hash = '#skill/' + result.skill_id;
-  } catch(error) { $('#import-error').textContent = controller.signal.aborted?'等待导入超时，请先在 Skill 库确认是否已登记，再重试。':error.message;importStatus('导入未完成。'); }
+  } catch(error) { state.importFailed=true;formError(event.target,controller.signal.aborted?new Error('导入超时，请先到 Skill 库确认是否已导入，再重试。'):error);importStatus(''); }
   finally {
     clearTimeout(timeout);
     state.importBusy=false;controls.forEach((control,index)=>control.disabled=disabled[index]);
@@ -218,10 +200,8 @@ document.addEventListener('click', event => {
   if (button.dataset.revokeWorker) busy(button,async()=>{if(!await confirmAction('撤销机器接入','撤销后，这台机器将无法领取任务或提交结果。重新使用需要新的接入码。','撤销接入'))return;await api('/workers/'+button.dataset.revokeWorker,{method:'DELETE'});await renderWorkers();notice('接入已撤销');});
   if (button.dataset.revokeCode) busy(button,async()=>{if(!await confirmAction('撤销接入码','撤销后立即失效，接入机器需重新生成。','撤销接入码'))return;await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
   if (action === 'probe-model') busy(button,async()=>{if(view.modelDraft){notice('请先保存配置，再检测能力');return;}const m=await api('/model/probe',{method:'POST'});await settings();notice(m.ready?'模型能力检测通过':'检测未通过：'+m.failure_code);});
-  if (['history-next','history-prev','history-refresh','history-clear'].includes(action)) busy(button,async()=>{const h=state.taskHistory;if(action==='history-next'&&h.nextCursor){h.previous.push(h.cursor);h.cursor=h.nextCursor;}else if(action==='history-prev'&&h.previous.length){h.cursor=h.previous.pop();}else if(action==='history-refresh'||action==='history-clear'){h.cursor=null;h.previous=[];if(action==='history-clear')h.filters={limit:'25'};}await taskList();window.scrollTo(0,0);});
-  if (action === 'events-more') busy(button,()=>taskEvents(state.eventsTask,true));
-  if (action === 'events-refresh') busy(button,async()=>{const task=await api('/tasks/'+encodeURIComponent(state.eventsTask.id));state.taskEvents=null;await taskEvents(task);});
-  if (action === 'enrollments-more') busy(button,()=>renderWorkers(true));
+  if (['history-refresh','history-clear'].includes(action)) busy(button,async()=>{if(action==='history-clear')state.taskHistory.filters={};resetList('tasks');await taskList();});
+  if (action === 'events-refresh') busy(button,async()=>{const task=await api('/tasks/'+encodeURIComponent(state.eventsTask.id));resetList('events:'+task.id);await taskEvents(task);});
   if (action === 'enroll-worker') busy(button,async()=>{const code=await api('/worker-enrollments',{method:'POST'});$('#enrollment').hidden=false;$('#enrollment').innerHTML='<p>接入码仅显示这一次，10 分钟有效。</p><pre id="one-time-code" class="code"></pre><p class="hint">在目标机器运行下方命令，按提示输入接入码（输入时不可见）。</p><pre id="join-command" class="code"></pre>';$('#one-time-code').textContent=code.code;$('#join-command').textContent='skill-mng worker join --server '+location.origin+'\n'+'skill-mng worker start';await renderWorkers();});
   if (action === 'close-import') $('#import-dialog').close();
   if (action === 'set-current') busy(button, async()=>{await api('/skills/'+state.detail.id+'/current',{method:'PUT',body:{version_id:state.version}});await detail(state.detail.id,state.version);notice('当前版本已切换');});

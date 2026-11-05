@@ -184,7 +184,7 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
 
     @router.get("/worker-enrollment-history")
     def enrollment_pages(
-        limit: int = Query(default=25, ge=1, le=100),
+        limit: int = Query(default=20, ge=1, le=100),
         cursor: str | None = Query(default=None, max_length=1024),
         user=Depends(admin),
     ):
@@ -277,7 +277,7 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
 
     @router.get("/task-history")
     def task_pages(
-        limit: int = Query(default=25, ge=1, le=100),
+        limit: int = Query(default=20, ge=1, le=100),
         cursor: str | None = Query(default=None, max_length=1024),
         q: str = Query(default="", max_length=120),
         state: Literal[
@@ -306,7 +306,7 @@ def install_execution_api(app, root, authenticated, admin, rate_limit):
     @router.get("/tasks/{task_id}/events")
     def event_pages(
         task_id: str,
-        limit: int = Query(default=50, ge=1, le=100),
+        limit: int = Query(default=20, ge=1, le=100),
         cursor: str | None = Query(default=None, max_length=1024),
         user=Depends(authenticated),
     ):
