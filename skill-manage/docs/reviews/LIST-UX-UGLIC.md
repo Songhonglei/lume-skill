@@ -12,7 +12,7 @@
 
 ### G — Grammar
 
-✅ 全部 JS 语法、19 项 Node 测试、Ruff 及差异检查通过；Python 定向验证 12 项通过（历史接口全套及修复报告可用性）。开发版本 0.3.2.dev13，schema 4，无新增运行依赖。最终 GitHub 提交另跑完整四环境 CI。
+✅ 全部 JS 语法、20 项 Node 测试、Ruff 及差异检查通过；Python 定向验证 12 项通过（历史接口全套及修复报告可用性）。开发版本 0.3.2.dev13，schema 4，无新增运行依赖。最终 GitHub 提交另跑完整四环境 CI。
 
 ### L — Logic
 
@@ -21,6 +21,8 @@
 已修 L2（WARN）：`detailTab:activity` 翻页先移除结果，断网后缺少原页恢复。保留当前结果，失败回滚页码并显示可重试提示；新打开失败时提供重试入口。游标请求带序号，筛选/会话变化后旧结果失效。问题选择跨页保持。
 
 已修 L3（WARN）：`history.py:_task_view` 原先仅从审计关联推断报告，修复任务有复审报告时也可能无入口。增加只读 `report_available` 标记，基于已保存复审记录；测试验证保存前后，浏览器核对修复报告入口。
+
+已修 L4（WARN）：`mountPagination` 的失败回滚增加请求序号保护；切换筛选后迟到的旧失败不回滚新页码或弹出旧错误。补充回归测试同时验证当前失败仍可恢复。
 
 ### I — Integrity
 
@@ -42,6 +44,7 @@
 | L1 内联样式与 CSP 冲突 | ERR | 已修并浏览器复核 |
 | L2 翻页失败恢复 | WARN | 已修并故障注入复核 |
 | L3 修复报告可用性 | WARN | 已修并保存前后验证 |
+| L4 旧失败回滚新筛选状态 | WARN | 已修并测试 |
 | I1 校验提示挤压相邻输入 | WARN | 已修并原生/服务端校验复核 |
 
 无未解决 ERR/WARN。独立 Skill 六模块 GitHub target 审计见 `LIST-UX-skill-release-audit.json`：6 PASS，0 ERR、0 WARN；可选 frontmatter version 缺失保留为 INFO，未改动原 Skill 资源。

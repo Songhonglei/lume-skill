@@ -200,3 +200,20 @@ test('known field validation stays inline while other failures use the global no
   h.isolated.formError({elements:[input]},new Error('服务暂时不可用，请重试'));
   assert.equal(h.toast.hidden,false);assert.equal(h.message.textContent,'服务暂时不可用，请重试');
 });
+test('late pagination failures preserve newer filter state without stale notices',async()=>{
+  const previousAPI=context.api,previousQuery=context.$,previousNotice=context.notice;
+  const size={value:'20'},prev={dataset:{pageStep:'-1'}},next={dataset:{pageStep:'1'}},notices=[];
+  const host={isConnected:true,innerHTML:'',querySelectorAll(selector){return selector==='button,select'?[prev,next,size]:[prev,next];}};
+  context.$=()=>size;context.notice=message=>notices.push(message);
+  try {
+    let reject;context.api=()=>new Promise((_,fail)=>{reject=fail;});
+    const value=context.listState('failure-race');value.nextCursor='old-next';
+    const page={page:0,size:20,total:100,items:[],hasMore:true,cursorMode:true};
+    context.mountPagination(host,'failure-race',page,()=>context.cursorPage('failure-race','/task-history'));
+    const pending=next.onclick();context.resetList('failure-race');value.size=50;value.nextCursor='new-next';reject(new Error('old failure'));await pending;
+    assert.equal(value.page,0);assert.equal(value.size,50);assert.equal(value.nextCursor,'new-next');assert.equal(notices.length,0);
+    context.api=async()=>{throw new Error('current failure');};
+    context.mountPagination(host,'failure-race',{...page,size:50},()=>context.cursorPage('failure-race','/task-history'));
+    await next.onclick();assert.equal(value.page,0);assert.equal(value.nextCursor,'new-next');assert.deepEqual(notices,['current failure']);
+  }finally{context.api=previousAPI;context.$=previousQuery;context.notice=previousNotice;}
+});

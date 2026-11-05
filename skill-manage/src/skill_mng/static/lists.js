@@ -44,10 +44,13 @@ function mountPagination(host, key, page, render) {
       if (step>0) {value.previous.push(value.cursor);value.cursor=value.nextCursor;value.page++;}
       else {value.cursor=value.previous.pop()??null;value.page=Math.max(0,value.page-1);}
     } else value.page+=step;
-    try {await render();}
+    let operationRequest=value.request;
+    try {const pending=render();operationRequest=value.request;await pending;}
     catch (error) {
-      if (view.lists.get(key)===value) {Object.assign(value,previous);if(host.isConnected)mountPagination(host,key,page,render);}
-      notice(error.message);
+      if (view.lists.get(key)===value&&value.request===operationRequest) {
+        Object.assign(value,previous);
+        if(host.isConnected){mountPagination(host,key,page,render);notice(error.message);}
+      }
     } finally {value.busy=false;}
   }
   $('[data-page-size]',host).onchange=event=>change(Number(event.target.value),0);
