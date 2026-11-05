@@ -7,20 +7,22 @@
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/ui.js" defer></script>
+  <script src="/static/lists.js" defer></script>
   <script src="/static/workspace.js" defer></script>
   <script src="/static/settings.js" defer></script>
+  <script src="/static/feedback.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
-  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <div id="notice" popover="manual" role="status" aria-live="polite" aria-atomic="true" hidden><span id="notice-message"></span><button type="button" data-notice-close aria-label="关闭提示">×</button></div>
   <section id="gate" class="gate" aria-label="登录"><p>正在连接工作台…</p></section>
   <div id="workspace" hidden>
     <header class="app-header">
       <a class="brand" href="#skills"><img src="/static/icon.svg" width="28" height="28" alt=""><strong>Skill 工作台</strong></a>
       <span class="divider"></span>
       <nav aria-label="主导航"><a href="#skills" data-nav="skills">Skill 库</a><a href="#tasks" data-nav="tasks">任务中心</a><a href="#settings" data-nav="settings">设置</a></nav>
-      <div class="spacer"></div><span class="release">v0.3.2.dev12</span>
+      <div class="spacer"></div><span class="release">v0.3.2.dev13</span>
       <span id="account"></span><button id="logout" class="text-button">退出</button>
     </header>
     <main id="main" tabindex="-1"></main>
@@ -39,8 +41,8 @@
       <p id="import-status" class="import-status" role="status" aria-live="polite"></p>
       <div id="metadata-fields" hidden>
         <h3>补充信息</h3>
-        <label>名称<input name="name" placeholder="例如 hello-skill" maxlength="80"></label>
-        <label>版本<input name="version" placeholder="例如 1.0.0" maxlength="80"></label>
+        <label>名称<input name="name" pattern="[a-z0-9](?:[a-z0-9]|-){0,79}" placeholder="例如 hello-skill" maxlength="80"></label>
+        <label>版本<input name="version" pattern="[A-Za-z0-9](?:[A-Za-z0-9._+]|-){0,79}" placeholder="例如 1.0.0" maxlength="80"></label>
       </div>
       <p id="import-error" class="error" role="alert"></p>
       <div class="dialog-foot"><button type="button" data-action="close-import">取消</button><button type="submit" class="primary">导入</button></div>

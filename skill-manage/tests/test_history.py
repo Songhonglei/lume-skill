@@ -135,3 +135,26 @@ def test_enrollment_pagination_hides_credentials_and_preserves_roles(client):
     client.post("/api/logout", json={})
     assert client.get("/api/task-history").status_code == 401
     assert client.get("/api/tasks/" + tasks[0]["task_id"] + "/events").status_code == 401
+
+
+def test_workspace_paging_defaults_and_all_supported_sizes(client):
+    root, user, version, tasks = seed_tasks(client, 105)
+    for _ in range(105):
+        create_enrollment(root, user["id"])
+    task_id = tasks[0]["task_id"]
+    with transaction(root, write=True) as db:
+        for i in range(105):
+            record_event(db, user["id"], "paging.test", task_id, {"index": i})
+    for endpoint in [
+        "/api/task-history",
+        "/api/worker-enrollment-history",
+        "/api/tasks/" + task_id + "/events",
+    ]:
+        first = client.get(endpoint).json()
+        assert len(first["items"]) == 20 and first["hasMore"]
+        for size in [20, 30, 50, 100]:
+            page = client.get(endpoint, params={"limit": size}).json()
+            assert len(page["items"]) == size and page["hasMore"]
+            items = collect(client, endpoint + "?limit=" + str(size), page)
+            assert len({item["id"] for item in items}) == len(items)
+            assert len(items) >= 105

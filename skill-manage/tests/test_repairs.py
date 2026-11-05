@@ -115,7 +115,11 @@ def terminal(manifest, state="ready"):
 def test_publish_atomic_fixed_identity_and_idempotency(client):
     root, user, worker, source, manifest, task, raw, body = setup_repair(client)
     assert create_repair(root, user, **body)["reused"]
+    before = client.get("/api/task-history").json()["items"]
+    assert not next(row for row in before if row["id"] == task["task_id"])["report_available"]
     result = freeze_round(root, worker, manifest, 1, candidate_for(raw))
+    after = client.get("/api/task-history").json()["items"]
+    assert next(row for row in after if row["id"] == task["task_id"])["report_available"]
     assert submit_repair_result(root, worker["id"], manifest["attemptId"], 1, terminal(manifest))["saved"]
     assert submit_repair_result(root, worker["id"], manifest["attemptId"], 1, terminal(manifest))["reused"]
     detail = client.get("/api/repairs/" + task["repair_run_id"]).json()

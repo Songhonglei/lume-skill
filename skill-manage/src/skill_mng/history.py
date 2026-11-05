@@ -57,6 +57,10 @@ def _page(rows, limit, scope, snapshot):
 def _task_view(row):
     # Drop large frozen bodies as each row is read, before collecting a history page.
     item = dict(row)
+    repair_report = item.pop("repair_has_report")
+    item["report_available"] = (
+        bool(repair_report) if item["kind"] == "repair" else item["delivery_status"] == "saved"
+    )
     raw = item.pop("result_json")
     result = json.loads(raw) if raw else {}
     manifest = json.loads(item.pop("manifest_json"))
@@ -115,7 +119,7 @@ def task_history(
             ).fetchone()
         )
         query = db.execute(
-            "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,v.skill_id,v.version,a.verdict,a.delivery_status,a.depth,a.result_json,t.manifest_json,r.state AS repair_state FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id WHERE "
+            "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,v.skill_id,v.version,a.verdict,a.delivery_status,a.depth,a.result_json,t.manifest_json,r.state AS repair_state,EXISTS(SELECT 1 FROM repair_rounds rr WHERE rr.repair_run_id=r.id AND rr.review_json IS NOT NULL) AS repair_has_report FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id WHERE "
             + " AND ".join(clauses)
             + " ORDER BY t.rowid DESC LIMIT ?",
             [*args, limit + 1],
