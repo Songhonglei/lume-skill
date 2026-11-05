@@ -234,6 +234,13 @@ def test_history_pagination_and_server_side_search(admin):
     assert admin.get('/api/tasks?kind=generate').json() == []
     assert admin.get('/api/tasks?query=not-a-synthetic-skill').json() == []
     assert admin.get('/api/tasks?offset=-1').status_code == 422
+    counted = admin.get('/api/tasks?paginated=true&limit=1&offset=1').json()
+    assert counted['total'] == 2
+    assert [row['id'] for row in counted['items']] == [first['id']]
+    empty_page = admin.get('/api/tasks?paginated=true&limit=1&offset=2').json()
+    assert empty_page == {'items': [], 'total': 2}
+    assert admin.get('/api/tasks?paginated=true&query=not-a-synthetic-skill').json() == {'items': [], 'total': 0}
+
 
 
 def test_task_filters_apply_before_pagination_and_keep_result_semantics(admin):
@@ -248,6 +255,10 @@ def test_task_filters_apply_before_pagination_and_keep_result_semantics(admin):
     filtered = admin.get('/api/tasks', params={"state": "CANCELLED", "skill_id": uploaded['skill']['id'], "limit": 1})
     assert filtered.status_code == 200
     assert [row['id'] for row in filtered.json()] == [oldest['id']]
+    counted = admin.get('/api/tasks', params={"paginated": True, "state": "CANCELLED", "skill_id": uploaded['skill']['id'], "limit": 1}).json()
+    assert counted['total'] == 1
+    assert [row['id'] for row in counted['items']] == [oldest['id']]
+
     passed = admin.get('/api/tasks', params={"state": "SUCCEEDED", "verdict": "PASSED"}).json()
     assert [row['id'] for row in passed] == [completed['id']]
     assert admin.get('/api/tasks?state=SUCCEEDED&verdict=FAILED').json() == []

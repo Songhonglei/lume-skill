@@ -109,23 +109,30 @@ def list_tasks(connection=Depends(db_connection, scope="function"), limit: int =
                query: Annotated[str, Query(max_length=200)] = "",
                state: Literal["QUEUED", "RUNNING", "CANCEL_REQUESTED", "SUCCEEDED", "FAILED", "CANCELLED", "INTERRUPTED"] | None = None,
                verdict: Literal["PASSED", "FAILED", "INCOMPLETE"] | None = None,
-               skill_id: UUID | None = None, since: datetime | None = None, until: datetime | None = None):
+               skill_id: UUID | None = None, since: datetime | None = None, until: datetime | None = None,
+               paginated: bool = False):
     if any(value is not None and value.tzinfo is None for value in (since, until)):
         raise HTTPException(422, "筛选时间需要包含时区")
     if since and until and since >= until:
         raise HTTPException(422, "结束时间需要晚于开始时间")
     expire_leases(connection)
-    rows = connection.execute(
-        """SELECT * FROM tasks WHERE (%s::text IS NULL OR kind=%s)
+    filters = """WHERE (%s::text IS NULL OR kind=%s)
            AND (%s='' OR input->>'skill_name' ILIKE %s OR id::text ILIKE %s)
            AND (%s::text IS NULL OR state=%s) AND (%s::text IS NULL OR verdict=%s)
            AND (%s::uuid IS NULL OR skill_id=%s)
-           AND (%s::timestamptz IS NULL OR created_at>=%s) AND (%s::timestamptz IS NULL OR created_at<%s)
-           ORDER BY created_at DESC,id DESC LIMIT %s OFFSET %s""",
-        (kind, kind, query, "%" + query + "%", "%" + query + "%", state, state, verdict, verdict,
-         skill_id, skill_id, since, since, until, until, min(max(limit, 1), 200), offset)).fetchall()
+           AND (%s::timestamptz IS NULL OR created_at>=%s) AND (%s::timestamptz IS NULL OR created_at<%s)"""
+    parameters = (kind, kind, query, "%" + query + "%", "%" + query + "%", state, state, verdict, verdict,
+                  skill_id, skill_id, since, since, until, until)
+    # Keep count and rows on the same snapshot, including empty out-of-range pages.
+    result = connection.execute(
+        f"""WITH filtered AS NOT MATERIALIZED (SELECT * FROM tasks {filters}),
+             page AS (SELECT * FROM filtered ORDER BY created_at DESC,id DESC LIMIT %s OFFSET %s)
+             SELECT (SELECT count(*) FROM filtered) AS total,
+                    COALESCE((SELECT jsonb_agg(to_jsonb(page) ORDER BY created_at DESC,id DESC) FROM page), '[]'::jsonb) AS items""",
+        (*parameters, min(max(limit, 1), 200), offset)).fetchone()
+    rows = result["items"]
     annotate_queue_waiting(connection, rows)
-    return rows
+    return {"items": rows, "total": result["total"]} if paginated else rows
 
 
 @router.get("/tasks/{task_id}")
