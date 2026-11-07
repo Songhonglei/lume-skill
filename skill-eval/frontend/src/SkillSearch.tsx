@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { Skill } from './types'
+import { skillIdentity } from './presentation'
 
 export function SkillSearch({ skills, value, onChange }: { skills: Skill[]; value: string; onChange: (id: string) => void }) {
   const selected = skills.find(skill => skill.id === value)
@@ -10,7 +11,7 @@ export function SkillSearch({ skills, value, onChange }: { skills: Skill[]; valu
   const list = useRef<HTMLDivElement>(null)
   const id = useId()
   useEffect(() => { if (selected) setQuery(selected.name) }, [selected?.id, selected?.name])
-  const matches = skills.filter(skill => `${skill.name} ${skill.description}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+  const matches = skills.filter(skill => `${skill.name} ${skill.description} ${skill.id}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
   const visible = matches.slice(0, 30)
   const choose = (skill: Skill) => { onChange(skill.id); setQuery(skill.name); setOpen(false); input.current?.focus() }
   useEffect(() => { list.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' }) }, [active])
@@ -20,7 +21,7 @@ export function SkillSearch({ skills, value, onChange }: { skills: Skill[]; valu
       if (event.key === 'Enter' && open) { event.preventDefault(); if (visible[active]) choose(visible[active]) }
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setOpen(false) }
     }} />{value && <button type="button" className="close" aria-label="清除所选 Skill" onClick={() => { onChange(''); setQuery(''); setActive(0); input.current?.focus() }}>×</button>}</div>
-    {open && <div className="skill-search-results" ref={list} role="listbox" id={`${id}-results`} aria-label="匹配的 Skills">{visible.length ? visible.map((skill, index) => <div role="option" key={skill.id} id={`${id}-${index}`} aria-selected={index === active} onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActive(index)} onClick={() => choose(skill)}><strong>{skill.name}</strong><small>{skill.description || '暂无描述'}</small></div>) : <p className="padded muted">没有匹配的 Skill，换个关键词试试。</p>}{matches.length > visible.length && <p className="search-limit">还有 {matches.length - visible.length} 个匹配，继续输入可缩小范围。</p>}</div>}
-    <small className="muted">{selected ? `已选择 ${selected.name}` : '输入名称，用方向键和 Enter 选择。'}</small>
+    {open && <div className="skill-search-results" ref={list} role="listbox" id={`${id}-results`} aria-label="匹配的 Skills">{visible.length ? visible.map((skill, index) => <div role="option" key={skill.id} id={`${id}-${index}`} aria-selected={index === active} onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActive(index)} onClick={() => choose(skill)}><strong>{skill.name}</strong><small>{skillIdentity(skill)}</small><small>{skill.description || '暂无描述'}</small></div>) : <p className="padded muted">没有匹配的 Skill，换个关键词试试。</p>}{matches.length > visible.length && <p className="search-limit">还有 {matches.length - visible.length} 个匹配，继续输入可缩小范围。</p>}</div>}
+    <small className="muted">{selected ? `已选择 ${selected.name} · ${skillIdentity(selected)}` : '输入名称或 ID，用方向键和 Enter 选择。'}</small>
   </div>
 }

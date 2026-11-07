@@ -1,4 +1,4 @@
-import type { TaskDetail } from './types'
+import type { Assertion, Model, Skill, TaskDetail, Worker } from './types'
 
 type Tone = 'good' | 'bad' | 'warm' | 'info' | 'muted'
 const states: Record<string, [string, Tone]> = {
@@ -9,8 +9,9 @@ const states: Record<string, [string, Tone]> = {
   PASSED: ['全部通过', 'good'], FAILED: ['未通过', 'bad'], INCOMPLETE: ['未完成', 'warm'],
   DRAFT: ['草稿', 'warm'], SAVED: ['已保存', 'muted'], ENABLED: ['已启用', 'good'], ARCHIVED: ['已归档', 'muted'],
   ONLINE: ['在线', 'good'], OFFLINE: ['离线', 'muted'], REVOKED: ['已撤销', 'muted'],
-  NOT_PREPARED: ['待准备', 'muted'], PENDING: ['未开始', 'muted'], WAITING_RESULT: ['等待结果', 'info'],
-  PROBE_PENDING: ['检查中', 'info'], PROBE_PASSED: ['检查通过', 'good'], PROBE_FAILED: ['检查失败', 'bad'], UNCHECKED: ['未检查', 'muted'],
+  NOT_PREPARED: ['待准备', 'muted'], PENDING: ['未开始', 'muted'], WAITING_RESULT: ['等待结果', 'info'], SKIPPED: ['未执行', 'muted'],
+  PROBE_PENDING: ['检查中', 'info'], PROBE_PASSED: ['检查通过', 'good'], PROBE_FAILED: ['检查失败', 'bad'],
+  PROBE_STALE: ['待重新检查', 'warm'], UNCHECKED: ['未检查', 'muted'],
 }
 export function statusOf(value?: string, context?: 'execution') {
   const [label, tone] = states[value || ''] || [value || '—', 'muted']
@@ -44,4 +45,22 @@ export function cancelNotice(state: string) {
 // Normalize only legacy system defaults; preserve named provider connections.
 export function agentConnectionLabel(value?: string) {
   return value && !['Codex', 'Codex 登录'].includes(value) ? value : 'Agent 登录'
+}
+
+export function assertionStatus(assertion: Assertion) {
+  return assertion.skipped ? 'SKIPPED' : assertion.passed ? 'PASSED' : 'FAILED'
+}
+
+export function skillIdentity(skill: Skill, revision = skill.latest_revision) {
+  return `修订 ${revision} · ${skill.id.slice(0, 8)}`
+}
+
+export function connectionCheckStatus(worker: Worker, model?: Model) {
+  const check = worker.probe_request || worker.probe_result
+  if (!check) return 'UNCHECKED'
+  if (!model || check.model_id !== model.id || check.model !== model.name ||
+      check.connection_fingerprint !== model.connection_fingerprint ||
+      worker.capabilities.connection_fingerprint !== model.connection_fingerprint) return 'PROBE_STALE'
+  if (worker.probe_request) return 'PROBE_PENDING'
+  return check.success ? 'PROBE_PASSED' : 'PROBE_FAILED'
 }

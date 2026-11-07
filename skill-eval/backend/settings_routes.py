@@ -51,7 +51,8 @@ def list_workers(connection=Depends(db_connection, scope="function")):
 
 
 @router.post("/workers/{worker_id}/probe")
-def probe(worker_id: UUID, idempotency_key: str = Header(), connection=Depends(db_connection, scope="function")):
+def probe(worker_id: UUID, idempotency_key: str = Header(), expected_model_id: UUID | None = None,
+          connection=Depends(db_connection, scope="function")):
     if not idempotency_key or len(idempotency_key) > 160:
         raise HTTPException(422, "需要有效的请求标识")
     row = required(connection.execute("SELECT * FROM workers WHERE id=%s AND NOT revoked FOR UPDATE", (worker_id,)).fetchone())
@@ -64,7 +65,12 @@ def probe(worker_id: UUID, idempotency_key: str = Header(), connection=Depends(d
     model = setting(connection, "model")
     if not model:
         raise HTTPException(409, "请先保存模型设置")
-    job = {"id": idempotency_key, "model": model["name"]}
+    if expected_model_id and str(expected_model_id) != model["id"]:
+        raise HTTPException(409, "已保存的模型配置已改变，请刷新后重新检查")
+    if row["capabilities"].get("connection_fingerprint") != model["connection_fingerprint"]:
+        raise HTTPException(409, "这个 Worker 与已保存的 Agent 连接不匹配")
+    job = {"id": idempotency_key, "model": model["name"], "model_id": model["id"],
+           "connection_fingerprint": model["connection_fingerprint"]}
     connection.execute("UPDATE workers SET probe_request=%s WHERE id=%s", (jsonb(job), worker_id))
     return job
 

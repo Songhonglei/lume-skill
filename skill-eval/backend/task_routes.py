@@ -23,6 +23,7 @@ class TaskInput(BaseModel):
     expected_set_version_id: UUID | None = None
     expected_model_id: UUID | None = None
     confirmed: bool = False
+    new_set: bool = False
     count: int = Field(default=5, ge=1, le=30)
     requirements: str = Field(default="", max_length=8000)
 
@@ -45,7 +46,12 @@ def annotate_queue_waiting(connection, rows):
 @router.post("/tasks")
 def create_task(body: TaskInput, request: Request,
                 idempotency_key: Annotated[str | None, Header()] = None, connection=Depends(db_connection, scope="function")):
-    key, request_hash = idempotency(idempotency_key), digest(canonical(body.model_dump()))
+    payload = body.model_dump()
+    if not body.new_set:
+        payload.pop("new_set")  # Preserve the request identity of existing tasks.
+    if body.new_set and (body.kind != "generate" or body.set_id):
+        raise HTTPException(422, "只有生成任务可选择新建评测集")
+    key, request_hash = idempotency(idempotency_key), digest(canonical(payload))
     existing = connection.execute("SELECT * FROM tasks WHERE idempotency_key=%s", (key,)).fetchone()
     if existing:
         if existing["request_hash"] != request_hash:
@@ -84,9 +90,9 @@ def create_task(body: TaskInput, request: Request,
         if not body.confirmed:
             raise HTTPException(409, "需要明确确认后才能调用 Agent 生成案例")
         if body.set_id:
-            required(connection.execute("SELECT id FROM evaluation_sets WHERE id=%s AND skill_id=%s AND NOT archived", (body.set_id, source["skill_id"])).fetchone())
-            snapshot["set_id"] = str(body.set_id)
-        else:
+            suite = required(connection.execute("SELECT id,name FROM evaluation_sets WHERE id=%s AND skill_id=%s AND NOT archived", (body.set_id, source["skill_id"])).fetchone())
+            snapshot.update(set_id=str(suite["id"]), set_name=suite["name"])
+        elif not body.new_set:
             previous = connection.execute("SELECT id FROM evaluation_sets WHERE skill_id=%s AND NOT archived LIMIT 1", (source["skill_id"],)).fetchone()
             if previous:
                 raise HTTPException(409, "已有评测集或草稿；请在对应评测集中明确选择重新生成")

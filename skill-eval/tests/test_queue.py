@@ -76,6 +76,49 @@ def complete(admin, authorization, job, bundle=None, metadata=None):
                       headers={**authorization, "X-Lease-Token": job["lease_token"]})
 
 
+def test_explicit_generation_destination_creates_an_independent_inactive_set(admin):
+    _, auth, uploaded, saved = ready(admin)
+    skill_id = uploaded["skill"]["id"]
+    default_set = saved["set_id"]
+    body = {"kind": "generate", "skill_version_id": uploaded["version"]["id"], "confirmed": True}
+    assert admin.post("/api/tasks", json=body, headers={"Idempotency-Key": "implicit"}).status_code == 409
+    assert admin.post("/api/tasks", json={**body, "new_set": True, "set_id": default_set},
+                      headers={"Idempotency-Key": "conflict"}).status_code == 422
+    new = task(admin, uploaded, "new-destination", kind="generate", confirmed=True, new_set=True)
+    assert task(admin, uploaded, "new-destination", kind="generate", confirmed=True, new_set=True)["id"] == new["id"]
+    job = claim(admin, auth)
+    assert job["task_id"] == new["id"] and "set_id" not in job["input"]
+    candidate = admin.get(f"/api/set-versions/{saved['id']}/export").content
+    metadata = {"exit_code": 0, "source_digest_before": job["input"]["source_digest"],
+                "source_digest_after": job["input"]["source_digest"]}
+    response = complete(admin, auth, job, candidate, metadata)
+    assert response.status_code == 200, response.text
+    target = response.json()["summary"]["set_id"]
+    assert target != default_set
+    assert admin.get(f"/api/sets/{target}").json()["active_version_id"] is None
+    assert admin.get(f"/api/skills/{skill_id}").json()["default_set_id"] == default_set
+    existing = task(admin, uploaded, kind="generate", confirmed=True, set_id=default_set)
+    assert existing["input"]["set_id"] == default_set and existing["input"]["set_name"]
+
+
+def test_connection_probe_is_bound_to_saved_model_and_records_completion_time(admin):
+    registered, auth, _, _ = ready(admin)
+    worker_id = registered["worker_id"]
+    model = admin.get("/api/settings").json()["model"]
+    route = f"/api/workers/{worker_id}/probe"
+    assert admin.post(route, params={"expected_model_id": str(uuid4())},
+                      headers={"Idempotency-Key": "wrong-model"}).status_code == 409
+    request = admin.post(route, params={"expected_model_id": model["id"]}, headers={"Idempotency-Key": "check"})
+    assert request.status_code == 200 and request.json()["model_id"] == model["id"]
+    result = {"id": "check", "model": model["name"], "success": True, "message": "fixture", "duration_ms": 1}
+    changed = {**CAPABILITIES, "connection_fingerprint": "b" * 64}
+    assert admin.post("/api/worker/heartbeat", headers=auth, json={"capabilities": changed, "probe_result": result}).status_code == 200
+    saved = admin.get("/api/workers").json()[0]["probe_result"]
+    assert saved["success"] is False and saved["checked_at"]
+    assert saved["model_id"] == model["id"] and saved["connection_fingerprint"] == model["connection_fingerprint"]
+    assert admin.post(route, headers={"Idempotency-Key": "wrong-connection"}).status_code == 409
+
+
 def test_double_click_and_two_workers_compete(admin):
     _, auth, uploaded, _ = ready(admin)
     _, second = worker(admin, "second-worker")

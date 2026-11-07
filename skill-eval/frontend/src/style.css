@@ -604,3 +604,65 @@ main:focus,.task-list:focus,.task-detail:focus{outline-offset:4px}
 .field-error{display:block;color:var(--danger);font-size:13px;line-height:1.6;margin-top:6px;overflow-wrap:anywhere}
 .upload-error{margin:-8px 0 20px;text-align:right}
 @media(max-width:720px){.toast{padding:12px;gap:10px}.upload-error{text-align:left}}
+
+/* Keep task and connection decisions next to their context. */
+.drawer .task-context.snapshot-grid{padding:12px 0 16px;border-top:1px solid var(--border);gap:12px}
+.task-created{font-size:12px;margin:10px 0}
+.task-detail>.artifact-bar{border-top:0;border-bottom:1px solid var(--border);padding-top:0}
+.case-results-toolbar .actions{gap:12px}
+.activation-notice{margin:12px 16px;flex-wrap:wrap}
+.mobile-case-nav{display:none}
+.settings-model{margin-bottom:24px}
+.settings-model .settings-form{max-width:860px}
+.settings-model-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+.model-check-note{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:13px}
+.settings-form>.model-check-history{margin-top:8px;overflow-wrap:anywhere}
+
+@media (min-width:721px) and (max-width:1100px){
+  .tasks-table,.workers-table{min-width:0}
+  .tasks-table th:nth-child(6),.tasks-table .task-date,.workers-table th:nth-child(5),.workers-table .worker-date{display:none}
+  .tasks-table th,.tasks-table td,.workers-table th,.workers-table td{padding:11px 10px}
+  .tasks-table th:last-child{width:23%}
+  .tasks-table td:last-child>.button{margin-left:6px}
+}
+@media (max-width:720px){
+  .tasks-table,.workers-table,.tasks-table tbody,.workers-table tbody{display:block;min-width:0;width:100%}
+  .tasks-table thead,.workers-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .tasks-table tbody tr,.workers-table tbody tr{
+    display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 10px;align-items:center;
+    grid-template-areas:"name name actions" "first second third";padding:12px 14px;border-bottom:1px solid var(--border)
+  }
+  .tasks-table tbody tr:last-child,.workers-table tbody tr:last-child{border-bottom:0}
+  .tasks-table td,.workers-table td{display:block;border:0;height:auto;min-width:0;padding:0;font-size:13px}
+  .tasks-table td:first-child,.workers-table .worker-name{grid-area:name}
+  .task-actions,.worker-actions{grid-area:actions}
+  .task-type,.worker-state{grid-area:first}
+  .task-state,.worker-login{grid-area:second}
+  .task-verdict,.worker-check{grid-area:third}
+  .tasks-table .task-id,.tasks-table .task-date,.workers-table .worker-date{display:none}
+  .tasks-table td:last-child>.button{margin-left:8px}
+  .tasks-table .row-title{font-size:14px}
+  .workers-table .worker-check,.tasks-table .task-verdict{text-align:right}
+  .worker-scroll{max-height:none}
+  .settings-model-fields{grid-template-columns:minmax(0,1fr);gap:0}
+  .focused-editor .case-layout>.case-list{display:none}
+  .mobile-case-nav{display:block;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .mobile-case-nav .actions{justify-content:space-between;align-items:center;gap:8px}
+  .mobile-case-nav .field{margin:0;flex:1;min-width:0}
+  .mobile-case-nav select{width:100%;text-overflow:ellipsis}
+  .mobile-case-nav .case-step{justify-content:flex-start;color:var(--muted);font-size:12px}
+  .focused-editor .case-form{display:flex;flex-direction:column;padding:14px 16px}
+  .case-form .form-top{order:1;padding:10px 0 0;margin:0;border:0;border-top:1px solid var(--border)}
+  .case-form .form-top>div:first-child,.case-editor:not(.editing) .form-top{display:none}
+  .focused-editor .segmented{padding-top:12px}
+  .focused-editor .editor-toolbar{min-height:0}
+}
+@media (max-width:720px) and (min-height:501px){
+  .case-editor.editing{padding-bottom:calc(106px + env(safe-area-inset-bottom,0px))}
+  .editing .editor-toolbar .editor-actions{
+    position:fixed;inset:auto 0 0;justify-content:center;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -5px 16px #23344d14
+  }
+  .editing .editor-actions .button{min-height:36px}
+  .editing .editor-actions .more-menu{top:auto;bottom:calc(100% + 6px)}
+}

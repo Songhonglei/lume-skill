@@ -122,7 +122,14 @@ def heartbeat(body: Heartbeat, request: Request, authorization: str | None = Hea
     capabilities = body.capabilities.model_dump()
     connection.execute("UPDATE workers SET capabilities=%s,last_seen=now() WHERE id=%s", (jsonb(capabilities), worker["id"]))
     if body.probe_result and worker["probe_request"] and worker["probe_request"]["id"] == body.probe_result.id:
-        connection.execute("UPDATE workers SET probe_request=NULL,probe_result=%s WHERE id=%s", (jsonb(body.probe_result.model_dump()), worker["id"]))
+        probe_request = worker["probe_request"]
+        result = {**body.probe_result.model_dump(), "model_id": probe_request.get("model_id"),
+                  "connection_fingerprint": probe_request.get("connection_fingerprint")}
+        if result["connection_fingerprint"] and (
+                result["connection_fingerprint"] != capabilities["connection_fingerprint"]
+                or result["model"] != probe_request["model"]):
+            result.update(success=False, message="检查期间连接配置已改变，请重新检查")
+        connection.execute("UPDATE workers SET probe_request=NULL,probe_result=%s || jsonb_build_object('checked_at',now()) WHERE id=%s", (jsonb(result), worker["id"]))
         worker["probe_request"] = None
     if body.attempt_id:
         task, attempt = locked_attempt(connection, body.attempt_id, worker["id"])

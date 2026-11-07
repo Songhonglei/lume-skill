@@ -12,8 +12,8 @@ import { CaseReview } from './CaseReview'
 
 const textFile = (content: string): EditorFile => ({ encoding: 'utf-8', content, mode: 0o644 })
 
-export function CaseEditor({ version: initial, common, onVersion, active, onDirty, onBusy, initialView }: {
-  version: SetVersion & { files: Files }; common: Common; onVersion: (id: string, view?: EditorView) => void; initialView?: EditorView; active: boolean; onDirty: (value: boolean) => void; onBusy: (value: boolean) => void
+export function CaseEditor({ version: initial, common, onVersion, active, onDirty, onBusy, initialView, initialActivationError }: {
+  version: SetVersion & { files: Files }; common: Common; onVersion: (id: string, view?: EditorView, activationError?: string) => void; initialView?: EditorView; initialActivationError?: string; active: boolean; onDirty: (value: boolean) => void; onBusy: (value: boolean) => void
 }) {
   const [version, setVersion] = useState(initial)
   const [files, setFiles] = useState<Files>(initial.files)
@@ -24,6 +24,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
   const [validation, setValidation] = useState<Validation>(initial.validation)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [activationError, setActivationError] = useState(initialActivationError)
   const [validationOpen, setValidationOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [newFile, setNewFile] = useState('')
@@ -67,6 +68,7 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
   useEffect(() => { const index = fileRows.indexOf(sourceFile); if (index >= 0) filePaging.setPage(Math.floor(index / filePaging.pageSize)) }, [sourceFile])
   const caseDocument = formDocument(files[selected]?.encoding === 'utf-8' ? files[selected].content : '')
   const item = caseDocument.value
+  const caseTitles = new Map(initial.validation.cases?.map(entry => [entry.file, entry.title]))
   const canForm = canEditCase(entry, caseDocument) && files[selected]?.encoding === 'utf-8' && !!selected
   const judge = { ...mapping(entryValue.judge), ...mapping(item.judge) }
   const localJudge = !!mapping(item.judge).type
@@ -102,8 +104,22 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     const savedView = view()
     const current = await saveDraft()
     const saved = await post<SetVersion>(`/api/set-versions/${current.id}/save`, { expected_edit_number: current.edit_number })
-    if (enable) await post(`/api/sets/${current.set_id}/activate`, { version_id: saved.id })
+    if (enable) {
+      try { await post(`/api/sets/${current.set_id}/activate`, { version_id: saved.id }) }
+      catch (error) {
+        common.refresh()
+        onVersion(saved.id, savedView, message(error))
+        return
+      }
+    }
     common.notify(enable ? '版本已保存并启用。' : '版本已保存，尚未启用。'); common.refresh(); onVersion(saved.id, savedView)
+  })
+  const activateVersion = () => action('activate', async () => {
+    try { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }) }
+    catch (error) { setActivationError(message(error)); common.refresh(); return }
+    setActivationError(undefined)
+    common.refresh()
+    common.notify('版本已启用。')
   })
   const addCase = () => {
     let index = 1
@@ -138,15 +154,27 @@ export function CaseEditor({ version: initial, common, onVersion, active, onDirt
     setFiles(previous => ({ ...previous, ...additions }))
     setSourceFile(Object.keys(additions)[0] || sourceFile); setDirty(true); setValidation({})
   })
-  return <div ref={editorRoot} className="case-editor" tabIndex={-1} aria-label="评测集编辑"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <Badge value="ENABLED" />}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}<button className={`text-button validation-status ${validation.valid === false ? 'danger' : ''}`} onClick={() => setValidationOpen(true)}>{validation.valid === undefined ? '待校验' : validation.valid ? '结构通过' : '校验问题'}</button></div><div className="actions wrap">
-    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const savedView = view(); const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id, savedView) })}>新建草稿</Button>{!active && !version.archived && <Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={() => action('activate', async () => { await post(`/api/sets/${version.set_id}/activate`, { version_id: version.id }); common.refresh(); common.notify('版本已启用。') })}>启用</Button>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button variant="link" busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh(); if (!result.valid) setValidationOpen(true); else common.notify('结构通过，案例与判分仍需人工核对。') })}>校验</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
-    <MoreActions><Button variant="link" onClick={() => setReviewOpen(true)}>启用前核对</Button>{!readonly && <Button variant="link" busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>保存版本</Button>}<a className="text-link" title={dirty ? '导出已保存内容' : '导出评测集'} href={`/api/set-versions/${version.id}/export`}>导出</a>{dirty && <p className="menu-note">仅导出已保存内容。</p>}</MoreActions>
+  return <div ref={editorRoot} className={readonly ? "case-editor" : "case-editor editing"} tabIndex={-1} aria-label="评测集编辑"><div className="editor-toolbar"><div className="inline"><Badge value={version.kind}>{version.kind === 'DRAFT' ? '草稿' : `版本 ${version.revision}`}</Badge>{active && <Badge value="ENABLED" />}{dirty ? <span className="small-note" role="status">未保存修改</span> : <span className="muted">{readonly ? '只读快照' : '修改已保存'}</span>}<button className={`text-button validation-status ${validation.valid === false ? 'danger' : ''}`} onClick={() => setValidationOpen(true)}>{validation.valid === undefined ? '待校验' : validation.valid ? '结构通过' : '校验问题'}</button></div><div className="actions wrap editor-actions">
+    {readonly ? <><Button disabled={!!busy} busy={busy === 'fork'} onClick={() => action('fork', async () => { const savedView = view(); const created = await post<SetVersion>(`/api/sets/${version.set_id}/drafts`, { source_version_id: version.id }); common.refresh(); onVersion(created.id, savedView) })}>新建草稿</Button>{!active && !version.archived && <><Button variant="link" onClick={() => setReviewOpen(true)}>启用前核对</Button><Button disabled={!!busy} variant="primary" busy={busy === 'activate'} onClick={activateVersion}>启用此版本</Button></>}</> : <><Button busy={busy === 'draft'} disabled={!dirty || !!busy} onClick={() => action('draft', async () => { await saveDraft(); common.notify('草稿已保存。') })}>保存草稿</Button><Button variant="link" busy={busy === 'validate'} disabled={!!busy} onClick={() => action('validate', async () => { const current = await saveDraft(); const result = await post<Validation>(`/api/set-versions/${current.id}/validate`); setValidation(result); common.refresh(); if (!result.valid) setValidationOpen(true); else common.notify('结构通过，案例与判分仍需人工核对。') })}>校验</Button><Button variant="link" onClick={() => setReviewOpen(true)}>启用前核对</Button><Button variant="primary" busy={busy === 'enable'} disabled={!!busy} onClick={() => saveVersion(true)}>保存并启用</Button></>}
+    <MoreActions>{readonly && (active || version.archived) && <Button variant="link" onClick={() => setReviewOpen(true)}>启用前核对</Button>}{!readonly && <Button variant="link" busy={busy === 'version'} disabled={!!busy} onClick={() => saveVersion(false)}>保存版本</Button>}<a className="text-link" title={dirty ? '导出已保存内容' : '导出评测集'} href={`/api/set-versions/${version.id}/export`}>导出</a>{dirty && <p className="menu-note">仅导出已保存内容。</p>}</MoreActions>
   </div></div>
     {busy === 'attachment' && <p className="small-note" role="status">正在读取附件…</p>}
-    {readonly && <div className="readonly-banner">此版本只读。新建草稿后可编辑，历史任务不受影响。</div>}
+    {readonly && <div className="readonly-banner">{!active && !version.archived ? '此版本已保存，尚未启用。' : '此版本只读，可新建草稿继续编辑。'}</div>}
+    {activationError && !active && <div className="notice error activation-notice" role="alert">
+      <strong>版本已保存，启用失败</strong><span>{activationError}</span>
+    </div>}
     <fieldset className="editor-content" aria-label="案例内容" disabled={!!busy}>
     <div className="segmented"><button aria-pressed={mode === 'form'} className={mode === 'form' ? 'active' : ''} onClick={() => setMode('form')}>案例表单</button><button aria-pressed={mode === 'source'} className={mode === 'source' ? 'active' : ''} onClick={() => setMode('source')}>源码与附件</button></div>
-    {mode === 'form' ? <div className="case-layout"><aside className="case-list"><div className="case-list-head"><span>入口案例 · {entries.length}</span>{!readonly && <button className="text-button" onClick={addCase}>添加</button>}</div>{entries.length > 8 && <div className="case-list-search"><input aria-label="搜索入口案例" placeholder="搜索案例" value={caseQuery} onChange={event => { setCaseQuery(event.target.value); casePaging.setPage(0) }} /></div>}{caseRows.slice(casePaging.start, casePaging.end).map(path => {
+    {mode === 'form' ? <div className="case-layout">
+      <div className="mobile-case-nav">
+        <div className="actions"><label className="field"><span>当前案例</span>
+          <select value={selected} disabled={!entries.length} onChange={event => setSelected(event.target.value)}>
+            {!entries.length && <option value="">暂无案例</option>}
+            {entries.map((path, index) => <option key={path} value={path}>{index + 1}. {String((path === selected ? item.title : caseTitles.get(path)) || path.split('/').pop())}</option>)}
+          </select>
+        </label>{!readonly && <Button variant="link" onClick={addCase}>添加案例</Button>}</div>
+        <div className="actions case-step"><Button variant="link" disabled={entries.indexOf(selected) < 1} onClick={() => setSelected(entries[entries.indexOf(selected) - 1])}>上一条</Button><span>{entries.length ? entries.indexOf(selected) + 1 : 0} / {entries.length}</span><Button variant="link" disabled={!selected || entries.indexOf(selected) >= entries.length - 1} onClick={() => setSelected(entries[entries.indexOf(selected) + 1])}>下一条</Button></div>
+      </div><aside className="case-list"><div className="case-list-head"><span>入口案例 · {entries.length}</span>{!readonly && <button className="text-button" onClick={addCase}>添加</button>}</div>{entries.length > 8 && <div className="case-list-search"><input aria-label="搜索入口案例" placeholder="搜索案例" value={caseQuery} onChange={event => { setCaseQuery(event.target.value); casePaging.setPage(0) }} /></div>}{caseRows.slice(casePaging.start, casePaging.end).map(path => {
       let title = path.split('/').pop() || path
       try { title = mapping(parseDocument(files[path]?.content || '').toJS()).title || title } catch { /* Invalid source remains editable. */ }
       return <button key={path} aria-current={selected === path ? 'true' : undefined} className={selected === path ? 'active' : ''} onClick={() => setSelected(path)}><strong>{String(title)}</strong><small>{path.split('/').pop()}</small></button>
