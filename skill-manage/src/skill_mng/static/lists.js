@@ -26,16 +26,19 @@ async function cursorPage(key, path, filters={}) {
   value.nextCursor=result.nextCursor;
   return {...result,page:value.page,size:value.size,total:result.summary?.total,cursorMode:true};
 }
-function paginationHTML(key, page) {
+function paginationHTML(key, page, compact=false) {
   const id=escapeHTML(key);
-  return `<nav class="pagination" aria-label="分页" data-pagination="${id}"><span class="page-total">${page.total==null?`本页 ${page.items.length} 条`:`共 ${page.total} 条`}</span><label>每页<select data-page-size aria-label="每页条数">${PAGE_SIZES.map(size=>`<option value="${size}" ${size===page.size?'selected':''}>${size}</option>`).join('')}</select></label><button type="button" data-page-step="-1" aria-label="上一页" ${page.page?'':'disabled'}>上一页</button><span class="page-number" aria-live="polite">${page.page+1}${page.pages?` / ${page.pages}`:''}</span><button type="button" data-page-step="1" aria-label="下一页" ${page.hasMore?'':'disabled'}>下一页</button></nav>`;
+  const total=page.total==null?`本页 ${page.items.length} 条`:`共 ${page.total} 条`;
+  if (compact&&page.pages===1) return `<p class="compact-page-count" role="status">${total}</p>`;
+  return `<nav class="pagination${compact?' compact-pagination':''}" aria-label="分页" data-pagination="${id}"><span class="page-total">${total}</span>${compact?'':`<label>每页<select data-page-size aria-label="每页条数">${PAGE_SIZES.map(size=>`<option value="${size}" ${size===page.size?'selected':''}>${size}</option>`).join('')}</select></label>`}<button type="button" data-page-step="-1" aria-label="上一页" ${page.page?'':'disabled'}>${compact?'‹':'上一页'}</button><span class="page-number" aria-live="polite" tabindex="-1">${page.page+1}${page.pages?` / ${page.pages}`:''}</span><button type="button" data-page-step="1" aria-label="下一页" ${page.hasMore?'':'disabled'}>${compact?'›':'下一页'}</button></nav>`;
 }
-function mountPagination(host, key, page, render) {
+function mountPagination(host, key, page, render, {compact=false}={}) {
   if (!host) return;
-  host.innerHTML=paginationHTML(key,page);
+  host.innerHTML=paginationHTML(key,page,compact);
   const value=listState(key);
-  async function change(size, step) {
+  async function change(size, step, control) {
     if (value.busy) return;
+    const restoreFocus=document.activeElement===control;
     const previous={page:value.page,size:value.size,cursor:value.cursor,previous:[...value.previous],nextCursor:value.nextCursor};
     value.busy=true;
     host.querySelectorAll('button,select').forEach(control=>control.disabled=true);
@@ -49,12 +52,20 @@ function mountPagination(host, key, page, render) {
     catch (error) {
       if (view.lists.get(key)===value&&value.request===operationRequest) {
         Object.assign(value,previous);
-        if(host.isConnected){mountPagination(host,key,page,render);notice(error.message);}
+        if(host.isConnected){mountPagination(host,key,page,render,{compact});notice(error.message);}
       }
-    } finally {value.busy=false;}
+    } finally {
+      value.busy=false;
+      if (restoreFocus&&document.activeElement===document.body&&view.lists.get(key)===value) {
+        const pager=document.querySelector(`[data-pagination="${CSS.escape(key)}"]`);
+        const target=pager?.querySelector(size?'[data-page-size]':`[data-page-step="${step}"]:enabled`)||pager?.querySelector('.page-number');
+        target?.focus({preventScroll:true});
+      }
+    }
   }
-  $('[data-page-size]',host).onchange=event=>change(Number(event.target.value),0);
-  host.querySelectorAll('[data-page-step]').forEach(button=>button.onclick=()=>change(0,Number(button.dataset.pageStep)));
+  const sizeSelect=$('[data-page-size]',host);
+  if (sizeSelect) sizeSelect.onchange=event=>change(Number(event.target.value),0,sizeSelect);
+  host.querySelectorAll('[data-page-step]').forEach(button=>button.onclick=()=>change(0,Number(button.dataset.pageStep),button));
 }
 function actionSlots(slots) {
   return `<div class="row-actions" data-action-count="${slots.length}">${slots.map(([name,html])=>`<span class="action-slot" data-action-slot="${escapeHTML(name)}">${html||`<span class="row-primary action-unavailable" aria-disabled="true" aria-label="${escapeHTML(name)}不可用">-</span>`}</span>`).join('')}</div>`;

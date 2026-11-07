@@ -4,7 +4,11 @@ function versionURL(skillId, versionId, extra = {}) {
   const query = new URLSearchParams({version:versionId, ...extra});
   return '#skill/' + encodeURIComponent(skillId) + '?' + query;
 }
-function auditURL(audit) { return audit.task_id?'#task/'+audit.task_id:'#audit/'+audit.id; }
+function reportURL(taskId) { return '#task/'+encodeURIComponent(taskId)+'?view=report'; }
+function auditURL(audit) {
+  if (!audit.task_id) return '#audit/'+encodeURIComponent(audit.id)+'?view=report';
+  return audit.delivery_status==='saved'?reportURL(audit.task_id):'#task/'+encodeURIComponent(audit.task_id);
+}
 function auditKind(audit) { return audit?.mode === 'static' ? '静态预检' : '完整审计'; }
 function issueCount(audit, severity, skillId='', taskId='') {
   const number=severity==='ERR'?audit?.error_count:audit?.warning_count;
@@ -59,11 +63,11 @@ async function detail(id, selected, options = {}) {
   const version = selected || view.versions.get(id) || skill.current_version_id;
   const current = skill.versions.find(item => item.id === version) || skill.versions.find(item => item.id === skill.current_version_id);
   state.detail = skill; state.version = current.id; view.versions.set(id, current.id);
-  state.detailTab = options.tab || 'files';
+  state.detailTab = ['activity','versions'].includes(options.tab) ? options.tab : 'files';
   const audit = current.latest_audit;
   const managementActions=(skill.can_write?'<button data-action="import-version">导入新版本</button>':'')+(state.user.role==='admin'?'<button data-ui="edit-owner">调整维护者</button>':'');
   $('#main').innerHTML = `<div class="crumb"><a href="#skills">Skill 库</a><span>/</span><span>${escapeHTML(skill.name)}</span></div>` + pageHeading(skill.name, skill.description || '', `${skill.can_write?'<button class="primary" data-action="audit">创建审计</button>':''}<a class="button" href="/api/versions/${current.id}/download">下载原包</a>${managementActions?`<details class="more-menu"><summary>更多</summary><div>${managementActions}</div></details>`:''}`) + `<section class="version-strip"><label>所选版本<select id="version-select" aria-label="选择版本">${skill.versions.map(item=>`<option value="${item.id}" ${item.id===current.id?'selected':''}>${escapeHTML(item.version)}${item.id===skill.current_version_id?' · 当前':''}</option>`).join('')}</select></label><div>${badge('neutral',current.id===skill.current_version_id?'当前使用':'历史版本')}</div><div class="version-audit">${auditBadge(audit)}<span class="muted">${audit?auditKind(audit):'未审计'}</span>${audit?`<a target="_blank" rel="noopener noreferrer" href="${auditURL(audit)}">查看${audit.delivery_status==='saved'?'报告':'进展'}</a>`:''}</div>${skill.can_write&&current.id!==skill.current_version_id?'<button data-action="set-current">设为当前版本</button>':''}</section><section class="panel detail-panel"><div class="tabs content-tabs" role="tablist" aria-label="Skill 详情"><button id="detail-tab-files" data-detail-tab="files" aria-controls="detail-content" role="tab" tabindex="0" aria-selected="true">文件</button><button id="detail-tab-activity" data-detail-tab="activity" aria-controls="detail-content" role="tab" tabindex="-1" aria-selected="false">审计与修复</button><button id="detail-tab-versions" data-detail-tab="versions" aria-controls="detail-content" role="tab" tabindex="-1" aria-selected="false">版本历史 <span>${skill.versions.length}</span></button></div><div id="detail-content" role="tabpanel" aria-labelledby="detail-tab-files"></div></section><details class="panel evidence-panel"><summary>版本证据<span class="muted">原包摘要与登记信息</span></summary><div class="card-body"><dl class="facts facts-grid"><div><dt>维护者</dt><dd>${escapeHTML(skill.owner)}</dd></div><div><dt>登记时间</dt><dd>${escapeHTML(fmtDate(current.created_at))}</dd></div><div><dt>原包大小</dt><dd>${(current.byte_size/1024).toFixed(1)} KiB</dd></div><div><dt>内容 SHA-256</dt><dd class="mono">${current.content_digest}</dd></div><div><dt>原包 SHA-256</dt><dd class="mono">${current.artifact_digest}</dd></div></dl></div></details>`;
-  $('#version-select').onchange = event => { view.versions.set(id, event.target.value); location.hash=versionURL(id,event.target.value); };
+  $('#version-select').onchange = event => { view.versions.set(id, event.target.value); location.hash=versionURL(id,event.target.value,{tab:state.detailTab}); };
   await detailTab(state.detailTab, options);
 }
 async function detailTab(tab, options = {}) {
@@ -94,14 +98,14 @@ async function detailTab(tab, options = {}) {
   let files;try{files=await api('/versions/'+version+'/files');}catch(error){if(state.detailTab===tab&&location.hash===routeKey){host.innerHTML=emptyState('文件列表暂时无法读取',error.message,'<button data-retry-files>重试</button>');$('[data-retry-files]',host).onclick=()=>detailTab(tab,options).catch(error=>notice(error.message));}throw error;}
   if (location.hash!==routeKey || state.version!==version || state.detailTab!==tab) return;
   state.files=files;host.dataset.loadedTab=tab;
-  host.innerHTML=`<div class="file-layout"><nav class="file-list" aria-label="文件列表"><p class="file-list-heading">包内文件 <span>${files.length}</span></p><label class="file-search"><span class="sr-only">查找包内文件</span><input id="file-search" type="search" placeholder="查找文件" aria-label="查找包内文件"></label><div id="file-results"></div><div id="files-pagination"></div></nav><div class="file-preview"><div id="file-title" class="file-title"></div><div id="file-content"></div></div></div>`;
+  host.innerHTML=`<div class="file-layout"><nav class="file-list" aria-label="文件列表"><p class="file-list-heading">包内文件</p><label class="file-search"><span class="sr-only">查找包内文件</span><input id="file-search" type="search" placeholder="查找文件" aria-label="查找包内文件"></label><div id="file-results"></div><div id="files-pagination"></div></nav><div class="file-preview"><div id="file-title" class="file-title"></div><div id="file-content"></div></div></div>`;
   const initial=options.file||files.find(file=>file.path==='SKILL.md')?.path||files[0]?.path;
   const paging=listState('files:'+version), position=files.findIndex(file=>file.path===initial);
   if(position>=0)paging.page=Math.floor(position/paging.size);
   const renderFiles=()=>{
     const q=$('#file-search').value.trim().toLocaleLowerCase(),page=localPage('files:'+version,files.filter(file=>file.path.toLocaleLowerCase().includes(q)));
     $('#file-results').innerHTML=page.items.map(file=>`<button data-file="${escapeHTML(file.path)}" title="${escapeHTML(file.path)}">${escapeHTML(file.path)}</button>`).join('')||'<p class="hint">没有匹配文件</p>';
-    mountPagination($('#files-pagination'),'files:'+version,page,renderFiles);
+    mountPagination($('#files-pagination'),'files:'+version,page,renderFiles,{compact:true});
   };
   $('#file-search').oninput=()=>{resetList('files:'+version);renderFiles();};renderFiles();
   if (options.file&&!files.some(file=>file.path===options.file)) {$('#file-title').textContent=options.file;$('#file-content').innerHTML='<div class="alert warning" role="alert">所选版本不包含此文件，请从文件列表选择。</div>';return;}
@@ -123,24 +127,31 @@ async function showFile(path, line = 0) {
 function taskConclusion(task) {
   const empty='<span class="muted" aria-label="尚无检查结论">—</span>';
   if (task.kind==='repair') return ['ready','published','needs_attention','failed'].includes(task.repair_state)?badge(task.repair_state):empty;
-  return task.delivery_status==='saved'?auditBadge({...task,mode:task.audit_mode,state:null}):empty;
+  if (task.delivery_status!=='saved') return empty;
+  const conclusion=auditBadge({...task,mode:task.audit_mode,state:null});
+  return conclusion+(task.published_version_id?windowLink(versionURL(task.skill_id,task.published_version_id),'已有修复版本','task-resolution'):'');
 }
 function taskRows(tasks) {
   if (!tasks.length) return emptyState('暂无匹配记录','调整筛选，或到 Skill 库创建审计。','<a class="button" href="#skills">前往 Skill 库</a>');
-  return `<div class="table-wrap"><table class="records-table result-table task-table"><caption class="sr-only">任务执行与检查结论</caption><colgroup><col class="task-col-name"><col class="task-col-version"><col class="task-col-kind"><col class="task-col-state"><col class="task-col-verdict"><col class="count-col"><col class="count-col"><col class="task-col-time"><col class="task-col-actions"></colgroup><thead><tr><th scope="col">Skill</th><th scope="col">版本</th><th scope="col">任务</th><th scope="col">执行状态</th><th scope="col">检查结论</th><th scope="col" class="numeric-cell">必修</th><th scope="col" class="numeric-cell">建议</th><th scope="col">创建时间</th><th scope="col">操作</th></tr></thead><tbody>${tasks.map(task=>`<tr>
-    <td class="record-title"><a class="skill-name cell-text" target="_blank" rel="noopener noreferrer" href="#task/${task.id}" title="${escapeHTML(task.skill_name)}">${escapeHTML(task.skill_name)}</a></td>
-    <td data-label="版本"><span class="cell-text mono" title="${escapeHTML(task.version)}">${escapeHTML(task.version)}</span></td>
+  return `<div class="table-wrap"><table class="records-table result-table task-table"><caption class="sr-only">任务执行与检查结论</caption><colgroup><col class="task-col-name"><col class="task-col-version"><col class="task-col-kind"><col class="task-col-state"><col class="task-col-verdict"><col class="count-col"><col class="count-col"><col class="task-col-time"><col class="task-col-actions"></colgroup><thead><tr><th scope="col">Skill</th><th scope="col">版本</th><th scope="col">任务</th><th scope="col">执行状态</th><th scope="col">检查结论</th><th scope="col" class="numeric-cell">必修</th><th scope="col" class="numeric-cell">建议</th><th scope="col">创建时间</th><th scope="col">操作</th></tr></thead><tbody>${tasks.map(task=>{
+    const taskURL='#task/'+encodeURIComponent(task.id);
+    const source=escapeHTML(task.version);
+    const published=task.kind==='repair'&&task.published_version_id;
+    const versions=published?`<a href="${versionURL(task.skill_id,task.version_id)}" target="_blank" rel="noopener noreferrer" aria-label="源版本 ${source}">${source}</a><span aria-hidden="true"> → </span><a href="${versionURL(task.skill_id,published)}" target="_blank" rel="noopener noreferrer" aria-label="新版本 ${escapeHTML(task.published_version)}">${escapeHTML(task.published_version)}</a>`:source;
+    return `<tr>
+    <td class="record-title"><a class="skill-name cell-text" target="_blank" rel="noopener noreferrer" href="${taskURL}" title="${escapeHTML(task.skill_name)}">${escapeHTML(task.skill_name)}</a></td>
+    <td data-label="版本"><span class="task-version mono" title="${source}${published?' → '+escapeHTML(task.published_version):''}">${versions}</span></td>
     <td data-label="任务">${task.kind==='repair'?'修复':task.audit_mode==='static'?'静态预检':'完整审计'}</td>
     <td data-label="执行状态">${badge(task.state)}</td>
     <td data-label="检查结论">${taskConclusion(task)}</td>
-    <td class="numeric-cell" data-label="必修">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'ERR',task.skill_id,task.id)}</td>
-    <td class="numeric-cell" data-label="建议">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'WARN',task.skill_id,task.id)}</td>
-    <td data-label="创建时间"><time title="${escapeHTML(fmtDate(task.created_at))}" datetime="${escapeHTML(task.created_at)}">${escapeHTML(fmtShortDate(task.created_at))}</time></td>
+    <td class="numeric-cell${task.kind==='repair'||!task.error_count?' task-card-empty':''}" data-label="必修">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'ERR',task.skill_id,task.id)}</td>
+    <td class="numeric-cell${task.kind==='repair'||!task.warning_count?' task-card-empty':''}" data-label="建议">${task.kind==='repair'?'<span class="muted">—</span>':issueCount(task,'WARN',task.skill_id,task.id)}</td>
+    <td class="task-card-time" data-label="创建时间"><time title="${escapeHTML(fmtDate(task.created_at))}" datetime="${escapeHTML(task.created_at)}">${escapeHTML(fmtShortDate(task.created_at))}</time></td>
     <td class="record-actions">${actionSlots([
-      ['报告',(task.report_available??task.delivery_status==='saved')?windowLink('#task/'+task.id,'报告'):null],
+      ['报告',(task.report_available??task.delivery_status==='saved')?windowLink(reportURL(task.id),'报告'):null],
       ['详情',detailButton('task',task.id)],
-      ['版本',task.skill_id&&task.version_id?windowLink(versionURL(task.skill_id,task.version_id),'版本'):null],
-    ])}</td></tr>`).join('')}</tbody></table></div>`;
+      ['版本',task.skill_id&&task.version_id?windowLink(versionURL(task.skill_id,published||task.version_id),published?'新版本':'版本'):null],
+    ])}</td></tr>`;}).join('')}</tbody></table></div>`;
 }
 async function taskList() {
   const history=state.taskHistory ||= {filters:{},expanded:false};
@@ -149,11 +160,34 @@ async function taskList() {
   const [page,skills]=await Promise.all([cursorPage('tasks','/task-history',history.filters),api('/skills')]);
   if (!page||request!==state.taskHistoryRequest||render!==view.render||!state.user||location.hash!=='#tasks') return;
   history.fingerprint=JSON.stringify({items:page.items,hasMore:page.hasMore,nextCursor:page.nextCursor,summary:page.summary});
-  const filters=history.filters, summary=page.summary;
+  const filters=history.draft||history.filters, summary=page.summary;
   const options=(items,selected)=>items.map(([value,text])=>`<option value="${escapeHTML(value)}" ${value===(selected||'')?'selected':''}>${escapeHTML(text)}</option>`).join('');
-  $('#main').innerHTML=pageHeading('任务中心','','<button data-action="history-refresh">刷新</button>')+`<div class="overview-strip" aria-label="当前筛选范围统计"><div><span>匹配记录</span><strong>${summary.total}</strong></div><div><span>排队 / 执行中</span><strong class="text-primary">${summary.active}</strong></div><div><span>待处理</span><strong class="${summary.attention?'text-warning':''}">${summary.attention}</strong></div><p class="muted">筛选结果统计</p></div><section class="panel"><form id="task-filters" class="history-filters ${history.expanded?'expanded':''}"><label class="history-search"><span class="sr-only">关键词</span><input name="q" type="search" maxlength="120" value="${escapeHTML(filters.q)}" placeholder="搜索 Skill、版本或任务 ID"></label><button type="button" class="mobile-filter-toggle" data-ui="toggle-filters" aria-expanded="${history.expanded}">筛选${Object.keys(filters).filter(key=>!['q','limit'].includes(key)).length?' · 已设置':''}</button><div class="filter-fields"><label>Skill<select name="skill_id">${options([['','全部 Skill'],...skills.map(skill=>[skill.id,skill.name])],filters.skill_id)}</select></label><label>执行状态<select name="state">${options([['','全部状态'],...['queued','waiting_configuration','running','cancelling','succeeded','failed','cancelled'].map(value=>[value,labels[value]])],filters.state)}</select></label><label>任务类型<select name="kind">${options([['','全部类型'],['audit','审计'],['repair','修复']],filters.kind)}</select></label><button type="submit" class="primary">查询</button><button type="button" data-action="history-clear">重置</button></div><button class="mobile-query primary" type="submit">搜索</button></form>${taskRows(page.items)}<div id="tasks-pagination"></div></section>`;
-  $('#task-filters').onsubmit=event=>{event.preventDefault();history.filters=Object.fromEntries([...new FormData(event.target)].filter(([,value])=>value));resetList('tasks');taskList().catch(error=>notice(error.message));};
+  $('#main').innerHTML=pageHeading('任务中心','','<button data-action="history-refresh">刷新</button>')+`<div class="overview-strip" aria-label="当前筛选范围统计"><div><span>匹配记录</span><strong>${summary.total}</strong></div><div><span>排队 / 执行中</span><strong class="text-primary">${summary.active}</strong></div><div><span>待处理</span><strong class="${summary.attention?'text-warning':''}">${summary.attention}</strong></div><p class="muted">筛选结果统计</p></div><section class="panel"><form id="task-filters" class="history-filters ${history.expanded?'expanded':''}"><label class="history-search"><span class="sr-only">关键词</span><input name="q" type="search" maxlength="120" value="${escapeHTML(filters.q)}" placeholder="搜索 Skill、版本或任务 ID"></label><button type="button" class="mobile-filter-toggle" data-ui="toggle-filters" aria-expanded="${history.expanded}">筛选${['skill_id','state','kind'].some(key=>filters[key])?' · 已设置':''}</button><div class="filter-fields"><label>Skill<select name="skill_id">${options([['','全部 Skill'],...skills.map(skill=>[skill.id,skill.name])],filters.skill_id)}</select></label><label>执行状态<select name="state">${options([['','全部状态'],...['queued','waiting_configuration','running','cancelling','succeeded','failed','cancelled'].map(value=>[value,labels[value]])],filters.state)}</select></label><label>任务类型<select name="kind">${options([['','全部类型'],['audit','审计'],['repair','修复']],filters.kind)}</select></label></div><div class="task-filter-actions"><button type="submit" class="task-query primary">查询</button><button type="button" data-action="history-clear">重置</button></div></form>${taskRows(page.items)}<div id="tasks-pagination"></div></section>`;
+  const form=$('#task-filters');
+  form.oninput=()=>{history.draft=Object.fromEntries(new FormData(form));};
+  form.onsubmit=event=>{
+    event.preventDefault();
+    busy($('.task-query',form),()=>applyTaskFilters(Object.fromEntries([...new FormData(form)].filter(([,value])=>value))));
+  };
   mountPagination($('#tasks-pagination'),'tasks',page,taskList);
+}
+async function applyTaskFilters(filters, clear=false) {
+  const history=state.taskHistory, paging=listState('tasks');
+  const previous={page:paging.page,cursor:paging.cursor,previous:paging.previous,nextCursor:paging.nextCursor};
+  const applied=history.filters, draft=history.draft;
+  history.filters=filters;
+  if (clear) history.draft=null;
+  resetList('tasks');
+  const pending=taskList(), request=paging.request;
+  try { await pending; }
+  catch (error) {
+    if (state.taskHistory===history&&paging.request===request) {
+      history.filters=applied;
+      if (clear&&!history.draft) history.draft=draft;
+      Object.assign(paging,previous);
+    }
+    throw error;
+  }
 }
 function eventDetails(value) { try {return JSON.stringify(JSON.parse(value),null,2);} catch {return String(value||'');} }
 const eventNames={'task.created':'任务已创建','task.claimed':'执行机器已领取','audit.saved':'审计报告已保存','model.failed':'模型请求异常','task.cancelled':'任务已停止','repair.created':'修复已授权','repair.round.saved':'本轮结果已保存','repair.published':'新版本已登记'};
@@ -216,7 +250,7 @@ async function findingsPreview(button) {
   state.auditContext=context;
   if (!view.selections.has(audit.id)) view.selections.set(audit.id,new Set(audit.result.findings.filter(item=>item.severity==='ERR'&&!item.reviewRequired).map(item=>item.id)));
   view.findingFilters.set(audit.id,button.dataset.previewFilter||'all');resetList('findings:'+audit.id);
-  const panel=openPanel('版本问题',`<div class="preview-summary">${auditBadge({...audit,state:null})}${windowLink(auditURL({id:audit.id,task_id:button.dataset.previewTask}),'查看报告','')}</div>${findingsSection(audit.result,skill.can_write)}`,{drawer:true,subtitle:`${skill.name} · ${audit.registered_version} · ${audit.mode==='static'?'静态预检':'完整审计'}`,className:'findings-preview',opener:button});
+  const panel=openPanel('版本问题',`<div class="preview-summary">${auditBadge({...audit,state:null})}${windowLink(auditURL({id:audit.id,task_id:button.dataset.previewTask,delivery_status:'saved'}),'查看报告','')}</div>${findingsSection(audit.result,skill.can_write)}`,{drawer:true,subtitle:`${skill.name} · ${audit.registered_version} · ${audit.mode==='static'?'静态预检':'完整审计'}`,className:'findings-preview',opener:button});
   panel.addEventListener('close',()=>{if(state.auditContext===context)state.auditContext=previous;},{once:true});
   renderFindings();
 }
@@ -244,20 +278,22 @@ async function findingDetail(id) {
   await paint();
 }
 async function taskDetail(id) {
-  const request=++view.render;
+  const hash=location.hash, request=++view.render;
   const task=await api('/tasks/'+encodeURIComponent(id));
-  if (request!==view.render||location.hash!=='#task/'+id) return;
+  if (request!==view.render||location.hash!==hash) return;
   state.taskPending=!['succeeded','failed','cancelled'].includes(task.state);
   state.taskFingerprint=JSON.stringify(task);
-  if (task.kind==='repair') return repairTaskDetail(task);
+  if (task.kind==='repair') return repairTaskDetail(task,hash);
   const [audit,skill]=await Promise.all([api('/audits/'+task.audit_run_id),api('/skills/'+task.manifest.skillId)]);
-  if (request!==view.render||location.hash!=='#task/'+id) return;
+  if (request!==view.render||location.hash!==hash) return;
   const result=audit.result, writable=skill.can_write;
   state.auditContext={audit,result,skill,task};
   if (result&&!view.selections.has(audit.id)) view.selections.set(audit.id,new Set(result.findings.filter(finding=>finding.severity==='ERR'&&!finding.reviewRequired).map(finding=>finding.id)));
   const conclusion=result?auditConclusion(audit):{tone:task.state,text:labels[task.state]||'等待执行'};
+  const modelAction=state.user.role==='admin'?'<a class="button primary" href="#settings?tab=model">前往配置模型</a>':'';
+  const waitingModel=modelAction?'配置并检测模型后，任务会自动继续。':'请联系管理员配置并检测模型。完成后任务会自动继续。';
   const delivery={saved:'已保存',pending:'待生成',failed:'未生成'}[audit.delivery_status]||labels[audit.delivery_status]||audit.delivery_status;
-  $('#main').innerHTML=`<div class="crumb"><a href="#tasks">任务中心</a><span>/</span><a href="${versionURL(skill.id,audit.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>审计详情</div>`+pageHeading(skill.name,`${task.manifest.registeredVersion} · ${task.manifest.depth} · ${task.manifest.mode==='static'?'静态预检':'完整审计'}`,`<button data-action="refresh">刷新</button>${writable&&state.taskPending?`<button class="danger-button" data-cancel-task="${id}">停止任务</button>`:''}${result?`<a class="button" href="/api/audits/${audit.id}/report">下载报告</a>`:''}`)+`<section class="result-banner ${statusTone(conclusion.tone)}"><div><p class="eyebrow">${task.manifest.mode==='static'?'静态预检':'本次审计'}</p><h2>${escapeHTML(conclusion.text)}</h2><p>${result?`${result.errorCount} 个必修项 · ${result.warningCount} 个建议项${result.reviewRequired?' · 检查或证据待补齐':''}`:task.state==='waiting_configuration'?'请管理员配置并检测模型后继续。':task.state==='cancelled'?'任务已停止，尚未生成报告。':task.state==='failed'?'任务执行失败，请查看下方提示。':'任务完成后显示结果。'}</p><div class="result-meta">${badge(task.state,'执行：'+(labels[task.state]||task.state))}${badge(audit.delivery_status,'报告：'+delivery)}${task.manifest.mode==='static'?'<span class="badge neutral">静态预检不能替代完整审计</span>':''}</div></div>${result?`<div class="score"><strong>${result.score}</strong><span>/ ${result.maxScore}</span><small>规则得分</small></div>`:''}</section>${task.failure_code?`<div class="alert danger" role="alert">${escapeHTML(taskFailure(task))}</div>`:''}${result?findingsSection(result,writable):''}${result?'<section class="panel report-panel"><div class="section-title"><div><h2>审计报告</h2></div><div class="actions"><button data-ui="download-result">下载 JSON</button><button data-ui="copy-repair">复制修复提示</button></div></div><div id="audit-report-reader"></div></section>':''}<details class="panel evidence-panel"><summary>证据与诊断<span class="muted">版本摘要、规则、执行记录</span></summary><div class="card-body"><dl class="facts facts-grid"><div><dt>版本 ID</dt><dd class="mono">${audit.version_id}</dd></div><div><dt>规则版本</dt><dd>${escapeHTML(task.manifest.ruleVersion)}</dd></div><div><dt>内容 SHA-256</dt><dd class="mono">${task.manifest.contentDigest}</dd></div>${result?`<div><dt>报告 SHA-256</dt><dd class="mono">${result.reportDigest}</dd></div>`:''}</dl><h3 class="subheading">执行尝试</h3><div id="task-attempts"></div><h3 class="subheading">执行记录</h3><div id="task-events"></div></div></details>`;
+  $('#main').innerHTML=`<div class="crumb"><a href="#tasks">任务中心</a><span>/</span><a href="${versionURL(skill.id,audit.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>审计详情</div>`+pageHeading(skill.name,`${task.manifest.registeredVersion} · ${task.manifest.depth} · ${task.manifest.mode==='static'?'静态预检':'完整审计'}`,`<button data-action="refresh">刷新</button>${writable&&state.taskPending?`<button class="danger-button" data-cancel-task="${id}">停止任务</button>`:''}${result?`<a class="button" href="/api/audits/${audit.id}/report">下载报告</a>`:''}`)+`<section class="result-banner ${statusTone(conclusion.tone)}"><div><p class="eyebrow">${task.manifest.mode==='static'?'静态预检':'本次审计'}</p><h2>${escapeHTML(conclusion.text)}</h2><p>${result?`${result.errorCount} 个必修项 · ${result.warningCount} 个建议项${result.reviewRequired?' · 检查或证据待补齐':''}`:task.state==='waiting_configuration'?waitingModel:task.state==='cancelled'?'任务已停止，尚未生成报告。':task.state==='failed'?'任务执行失败，请查看下方提示。':'任务完成后显示结果。'}</p>${task.state==='waiting_configuration'?modelAction:''}<div class="result-meta">${badge(task.state,'执行：'+(labels[task.state]||task.state))}${badge(audit.delivery_status,'报告：'+delivery)}${task.manifest.mode==='static'?'<span class="badge neutral">静态预检不能替代完整审计</span>':''}</div></div>${result?`<div class="score"><strong>${result.score}</strong><span>/ ${result.maxScore}</span><small>规则得分</small></div>`:''}</section>${task.failure_code?`<div class="alert danger" role="alert">${escapeHTML(taskFailure(task))}</div>`:''}${result?findingsSection(result,writable):''}${result?'<section class="panel report-panel" tabindex="-1"><div class="section-title"><div><h2>审计报告</h2></div><div class="actions"><button data-ui="download-result">下载 JSON</button><button data-ui="copy-repair">复制修复提示</button></div></div><div id="audit-report-reader"></div></section>':''}<details class="panel evidence-panel"><summary>证据与诊断<span class="muted">版本摘要、规则、执行记录</span></summary><div class="card-body"><dl class="facts facts-grid"><div><dt>版本 ID</dt><dd class="mono">${audit.version_id}</dd></div><div><dt>规则版本</dt><dd>${escapeHTML(task.manifest.ruleVersion)}</dd></div><div><dt>内容 SHA-256</dt><dd class="mono">${task.manifest.contentDigest}</dd></div>${result?`<div><dt>报告 SHA-256</dt><dd class="mono">${result.reportDigest}</dd></div>`:''}</dl><h3 class="subheading">执行尝试</h3><div id="task-attempts"></div><h3 class="subheading">执行记录</h3><div id="task-events"></div></div></details>`;
   if (result) {renderFindings();mountReader($('#audit-report-reader'),result.reportMarkdown,{title:'报告原文',rawId:'report-source'});}
   objectTable($('#task-attempts'),'attempts:'+task.id,task.attempts.map(item=>({...item,id:String(item.generation)})),[{name:'次数',value:item=>'第 '+item.generation+' 次'},{name:'状态',html:item=>badge(item.state)}],'attempt');
   await taskEvents(task);
@@ -286,14 +322,15 @@ async function openRepair() {
   $('form',dialog).onsubmit=event=>{event.preventDefault();busy($('button[type=submit]',dialog),async()=>{try {const form=new FormData(event.target);const created=await api('/repairs',{method:'POST',body:{audit_run_id:audit.id,selected_ids:selected,target_version:form.get('target_version').trim(),allowed_paths:form.get('allowed_paths').split('\n').map(path=>path.trim()).filter(Boolean),max_rounds:Number(form.get('max_rounds')),publish_after_review:form.has('publish_after_review'),make_current:form.has('make_current'),idempotency_key:key}});dialog.close();location.hash='#task/'+created.task_id;}catch(error){formError($('form',dialog),error);}});};
 }
 
-async function repairTaskDetail(task) {
+async function repairTaskDetail(task,hash) {
   const request=view.render;
   const [repair,skill]=await Promise.all([api('/repairs/'+task.repair_run_id),api('/skills/'+task.manifest.skillId)]);
-  if (request!==view.render||location.hash!=='#task/'+task.id) return;
+  if (request!==view.render||location.hash!==hash) return;
   const last=repair.rounds.at(-1), review=last?.review;
+  const reportRound=repair.rounds.findLast(round=>round.review?.reportMarkdown);
   state.repairContext={repair,skill,task};
-  $('#main').innerHTML=`<div class="crumb"><a href="#tasks">任务中心</a><span>/</span><a href="${versionURL(skill.id,task.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>修复详情</div>`+pageHeading(skill.name,`${task.manifest.registeredVersion} → ${repair.target_version} · ${repair.round}/${repair.max_rounds} 轮`,`<button data-action="refresh">刷新</button>${skill.can_write&&state.taskPending?`<button class="danger-button" data-cancel-task="${task.id}">停止任务</button>`:''}${repair.published_version_id?`<a class="button primary" href="/api/versions/${repair.published_version_id}/download">下载新版本</a>`:last?`<a class="button" href="/api/repairs/${repair.id}/candidate">下载候选</a>`:''}${skill.can_write&&repair.state==='ready'?`<button class="primary" data-publish-repair="${repair.id}">登记新版本</button>`:''}`)+`<section class="result-banner ${statusTone(repair.state)}"><div><p class="eyebrow">修复与复审</p><h2>${label(repair.state)}</h2><p>${repair.state==='published'?'新版本与报告已保存，原版本保留。':repair.state==='ready'?'候选已通过复审，可登记为新版本。':repair.state==='needs_attention'?'请处理下方问题，候选尚未登记。':task.state==='cancelled'?'任务已停止，原版本不变。':repair.state==='failed'||task.state==='failed'?'修复未完成，请查看下方提示。':'正在按授权范围修复并复审。'}</p><div class="result-meta">${badge(task.state,'执行：'+(labels[task.state]||task.state))}${badge(review?.verdict||'neutral','独立复审：'+(labels[review?.verdict]||'尚未完成'))}${review?badge(review.scopeSatisfied?'pass':'review_required','范围复核：'+(review.scopeSatisfied?'通过':'待处理')):''}</div></div>${review?`<div class="score"><strong>${review.score}</strong><span>/ ${review.maxScore}</span><small>${review.errorCount} 个必修项</small></div>`:''}</section>${repair.failure_code||task.failure_code?`<div class="alert danger" role="alert">${escapeHTML(taskFailure(task,repair.failure_code||task.failure_code))}</div>`:''}<div class="process-strip" aria-label="修复阶段">${[['生成候选','editing'],['独立复审','reauditing'],['范围核对','ready'],['登记版本','published']].map(([text,value])=>`<span ${repair.state===value?'aria-current="step"':''}>${text}</span>`).join('<span class="process-divider" aria-hidden="true">→</span>')}</div><section class="panel"><div class="section-title"><div><h2>修复记录</h2><p class="muted">展开文件查看修改。</p></div>${last?`<a href="/api/repairs/${repair.id}/report">下载复审报告</a>`:''}</div><div class="card-body"><div id="repair-rounds"></div></div></section><section class="panel"><div class="section-title"><h2>剩余问题与复审意见</h2></div><div class="card-body">${review?.scopeReason?`<p class="info-line">${escapeHTML(review.scopeReason)}</p>`:''}<div id="remaining-findings"></div></div></section>${review?.reportMarkdown?'<section class="panel report-panel"><div class="section-title"><h2>独立复审报告</h2></div><div id="repair-report-reader"></div></section>':''}<details class="panel evidence-panel"><summary>授权范围与执行记录<span class="muted">所选问题、文件范围及固定摘要</span></summary><div class="card-body"><p>仅修复 ${repair.authorization.selectedIds.length} 个所选问题，最多 ${repair.max_rounds} 轮。</p><p class="info-line">${repair.authorization.publishAfterReview?'复审通过后登记新版本':'仅生成候选'}；${repair.authorization.makeCurrent?'登记后设为当前版本':'不切换当前版本'}</p><dl class="facts facts-grid"><div><dt>允许编辑</dt><dd>${repair.authorization.editPaths.map(escapeHTML).join('、')}</dd></div><div><dt>原包内容 SHA-256</dt><dd class="mono">${task.manifest.contentDigest}</dd></div><div><dt>当前候选 SHA-256</dt><dd class="mono">${repair.candidate_digest||'—'}</dd></div></dl><h3 class="subheading">执行记录</h3><div id="task-events"></div></div></details>`;
-  if (review?.reportMarkdown) mountReader($('#repair-report-reader'),review.reportMarkdown,{title:'复审报告原文'});
+  $('#main').innerHTML=`<div class="crumb"><a href="#tasks">任务中心</a><span>/</span><a href="${versionURL(skill.id,task.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>修复详情</div>`+pageHeading(skill.name,`${task.manifest.registeredVersion} → ${repair.target_version} · ${repair.round}/${repair.max_rounds} 轮`,`<button data-action="refresh">刷新</button>${skill.can_write&&state.taskPending?`<button class="danger-button" data-cancel-task="${task.id}">停止任务</button>`:''}${repair.published_version_id?`<a class="button primary" href="/api/versions/${repair.published_version_id}/download">下载新版本</a>`:last?`<a class="button" href="/api/repairs/${repair.id}/candidate">下载候选</a>`:''}${skill.can_write&&repair.state==='ready'?`<button class="primary" data-publish-repair="${repair.id}">登记新版本</button>`:''}`)+`<section class="result-banner ${statusTone(repair.state)}"><div><p class="eyebrow">修复与复审</p><h2>${label(repair.state)}</h2><p>${repair.state==='published'?'新版本与报告已保存，原版本保留。':repair.state==='ready'?'候选已通过复审，可登记为新版本。':repair.state==='needs_attention'?'请处理下方问题，候选尚未登记。':task.state==='cancelled'?'任务已停止，原版本不变。':repair.state==='failed'||task.state==='failed'?'修复未完成，请查看下方提示。':'正在按授权范围修复并复审。'}</p><div class="result-meta">${badge(task.state,'执行：'+(labels[task.state]||task.state))}${badge(review?.verdict||'neutral','独立复审：'+(labels[review?.verdict]||'尚未完成'))}${review?badge(review.scopeSatisfied?'pass':'review_required','范围复核：'+(review.scopeSatisfied?'通过':'待处理')):''}</div></div>${review?`<div class="score"><strong>${review.score}</strong><span>/ ${review.maxScore}</span><small>${review.errorCount} 个必修项</small></div>`:''}</section>${repair.failure_code||task.failure_code?`<div class="alert danger" role="alert">${escapeHTML(taskFailure(task,repair.failure_code||task.failure_code))}</div>`:''}<div class="process-strip" aria-label="修复阶段">${[['生成候选','editing'],['独立复审','reauditing'],['范围核对','ready'],['登记版本','published']].map(([text,value])=>`<span ${repair.state===value?'aria-current="step"':''}>${text}</span>`).join('<span class="process-divider" aria-hidden="true">→</span>')}</div><section class="panel"><div class="section-title"><div><h2>修复记录</h2><p class="muted">展开文件查看修改。</p></div>${reportRound?`<a href="/api/repairs/${repair.id}/report">下载复审报告</a>`:''}</div><div class="card-body"><div id="repair-rounds"></div></div></section><section class="panel"><div class="section-title"><h2>剩余问题与复审意见</h2></div><div class="card-body">${review?.scopeReason?`<p class="info-line">${escapeHTML(review.scopeReason)}</p>`:''}<div id="remaining-findings"></div></div></section>${reportRound?`<section class="panel report-panel" tabindex="-1"><div class="section-title"><h2>第 ${reportRound.round_number} 轮独立复审报告</h2></div><div id="repair-report-reader"></div></section>`:''}<details class="panel evidence-panel"><summary>授权范围与执行记录<span class="muted">所选问题、文件范围及固定摘要</span></summary><div class="card-body"><p>仅修复 ${repair.authorization.selectedIds.length} 个所选问题，最多 ${repair.max_rounds} 轮。</p><p class="info-line">${repair.authorization.publishAfterReview?'复审通过后登记新版本':'仅生成候选'}；${repair.authorization.makeCurrent?'登记后设为当前版本':'不切换当前版本'}</p><dl class="facts facts-grid"><div><dt>允许编辑</dt><dd>${repair.authorization.editPaths.map(escapeHTML).join('、')}</dd></div><div><dt>原包内容 SHA-256</dt><dd class="mono">${task.manifest.contentDigest}</dd></div><div><dt>当前候选 SHA-256</dt><dd class="mono">${repair.candidate_digest||'—'}</dd></div></dl><h3 class="subheading">执行记录</h3><div id="task-events"></div></div></details>`;
+  if (reportRound) mountReader($('#repair-report-reader'),reportRound.review.reportMarkdown,{title:'复审报告原文'});
   const rounds=repair.rounds.map(round=>({...round,id:repair.id+':'+round.round_number,diff:round.diff.map((change,index)=>({...change,id:repair.id+':'+round.round_number+':'+index}))}));
   view.records.set('diff',rounds.flatMap(round=>round.diff));
   objectTable($('#repair-rounds'),'rounds:'+repair.id,rounds,[{name:'轮次',value:item=>'第 '+item.round_number+' 轮'},{name:'复审结论',html:item=>badge(item.review?.verdict||'review_required')},{name:'文件数',value:item=>item.diff.length}],'round');
@@ -313,7 +350,7 @@ async function pollWorkspace() {
       const page=await api('/task-history?'+params);
       changed=JSON.stringify(page)!==state.taskHistory.fingerprint;
     } else if (state.taskPending) {
-      const task=await api('/tasks/'+encodeURIComponent(hash.slice(6)));
+      const task=await api('/tasks/'+encodeURIComponent(decodeURIComponent(hash.slice(6).split('?')[0])));
       changed=JSON.stringify(task)!==state.taskFingerprint;
     }
     // Polling never replaces DOM, focus, selection, scroll or an open dialog.
@@ -363,13 +400,13 @@ document.addEventListener('click',event=>{
 });
 
 async function auditReportDetail(id) {
-  const request=++view.render;
+  const hash=location.hash, request=++view.render;
   const audit=await api('/audits/'+encodeURIComponent(id));
   const skill=await api('/skills/'+audit.skill_id);
-  if (request!==view.render||location.hash!=='#audit/'+id) return;
+  if (request!==view.render||location.hash!==hash) return;
   const result=audit.result, conclusion=auditConclusion(audit);
   state.taskPending=false;state.auditContext={audit,result,skill,task:null};
   if (result&&!view.selections.has(id)) view.selections.set(id,new Set(result.findings.filter(item=>item.severity==='ERR'&&!item.reviewRequired).map(item=>item.id)));
-  $('#main').innerHTML=`<div class="crumb"><a href="${versionURL(skill.id,audit.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>版本审计报告</div>`+pageHeading(skill.name,`${audit.registered_version} · ${audit.depth} · ${auditKind(audit)}`,`<a class="button" href="/api/audits/${audit.id}/report">下载报告</a>`)+`<section class="result-banner ${statusTone(conclusion.tone)}"><div><h2>${escapeHTML(conclusion.text)}</h2><p>${result?`${result.errorCount} 个必修项 · ${result.warningCount} 个建议项${result.reviewRequired?' · 必要检查尚未完成':''}`:'报告尚未保存。'}</p>${audit.mode==='static'?'<p class="info-line">静态预检不能替代完整审计。</p>':''}</div>${result?`<div class="score"><strong>${result.score}</strong><span>/ ${result.maxScore}</span><small>以最终结论为准</small></div>`:''}</section>${result?findingsSection(result,skill.can_write)+'<section class="panel report-panel"><div class="section-title"><h2>审计报告</h2></div><div id="version-report-reader"></div></section>':''}`;
+  $('#main').innerHTML=`<div class="crumb"><a href="${versionURL(skill.id,audit.version_id)}">${escapeHTML(skill.name)}</a><span>/</span>版本审计报告</div>`+pageHeading(skill.name,`${audit.registered_version} · ${audit.depth} · ${auditKind(audit)}`,`<a class="button" href="/api/audits/${audit.id}/report">下载报告</a>`)+`<section class="result-banner ${statusTone(conclusion.tone)}"><div><h2>${escapeHTML(conclusion.text)}</h2><p>${result?`${result.errorCount} 个必修项 · ${result.warningCount} 个建议项${result.reviewRequired?' · 必要检查尚未完成':''}`:'报告尚未保存。'}</p>${audit.mode==='static'?'<p class="info-line">静态预检不能替代完整审计。</p>':''}</div>${result?`<div class="score"><strong>${result.score}</strong><span>/ ${result.maxScore}</span><small>以最终结论为准</small></div>`:''}</section>${result?findingsSection(result,skill.can_write)+'<section class="panel report-panel" tabindex="-1"><div class="section-title"><h2>审计报告</h2></div><div id="version-report-reader"></div></section>':''}`;
   if (result) {renderFindings();mountReader($('#version-report-reader'),result.reportMarkdown,{title:'报告原文'});}
 }

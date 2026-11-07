@@ -105,12 +105,21 @@ def task_history(
         joins = (
             " FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id "
             "LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id "
+            "LEFT JOIN published_repairs resolved ON resolved.audit_run_id=a.id AND resolved.rank=1 "
+            "LEFT JOIN versions published ON published.id=COALESCE(r.published_version_id,resolved.published_version_id) "
+        )
+        published_repairs = (
+            "WITH published_repairs AS (SELECT audit_run_id,published_version_id,"
+            "ROW_NUMBER() OVER (PARTITION BY audit_run_id ORDER BY finished_at DESC,id DESC) AS rank "
+            "FROM repair_runs WHERE state='published' AND published_version_id IS NOT NULL) "
         )
         # Count the same filtered insertion snapshot, not just this cursor's page.
         summary = dict(
             db.execute(
-                "SELECT COUNT(*) AS total,COALESCE(SUM(t.state IN ('queued','running','cancelling')),0) AS active,"
-                "COALESCE(SUM(t.state IN ('failed','waiting_configuration') OR a.verdict IN ('fail','review_required','error') "
+                published_repairs
+                + "SELECT COUNT(*) AS total,COALESCE(SUM(t.state IN ('queued','running','cancelling')),0) AS active,"
+                "COALESCE(SUM(t.state IN ('failed','waiting_configuration') "
+                "OR (a.verdict IN ('fail','review_required','error') AND resolved.published_version_id IS NULL) "
                 "OR r.state='needs_attention'),0) AS attention"
                 + joins
                 + "WHERE "
@@ -119,7 +128,14 @@ def task_history(
             ).fetchone()
         )
         query = db.execute(
-            "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,v.skill_id,v.version,a.verdict,a.delivery_status,a.depth,a.result_json,t.manifest_json,r.state AS repair_state,EXISTS(SELECT 1 FROM repair_rounds rr WHERE rr.repair_run_id=r.id AND rr.review_json IS NOT NULL) AS repair_has_report FROM tasks t JOIN versions v ON v.id=t.version_id JOIN skills s ON s.id=v.skill_id LEFT JOIN audit_runs a ON a.id=t.audit_run_id LEFT JOIN repair_runs r ON r.id=t.repair_run_id WHERE "
+            published_repairs
+            + "SELECT t.rowid AS _position,t.id,t.kind,t.repair_run_id,t.version_id,t.state,t.created_at,"
+            "t.finished_at,t.failure_code,t.audit_run_id,t.lease_generation,s.name AS skill_name,s.owner_id,"
+            "v.skill_id,v.version,a.verdict,a.delivery_status,a.depth,a.result_json,t.manifest_json,"
+            "r.state AS repair_state,published.id AS published_version_id,published.version AS published_version,"
+            "EXISTS(SELECT 1 FROM repair_rounds rr WHERE rr.repair_run_id=r.id AND rr.review_json IS NOT NULL) AS repair_has_report"
+            + joins
+            + "WHERE "
             + " AND ".join(clauses)
             + " ORDER BY t.rowid DESC LIMIT ?",
             [*args, limit + 1],

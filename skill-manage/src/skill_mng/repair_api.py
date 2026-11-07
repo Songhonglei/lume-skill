@@ -118,7 +118,7 @@ def install_repair_api(app, root, authenticated, machine):
     @router.get("/repairs/{repair_id}/report")
     def report(repair_id: str, user=Depends(authenticated)):
         result = detail(repair_id, user)
-        review = result["rounds"][-1]["review"] if result["rounds"] else None
+        review = next((item["review"] for item in reversed(result["rounds"]) if item["review"]), None)
         if not review:
             raise HTTPException(409, "复审报告尚未保存")
         return Response(

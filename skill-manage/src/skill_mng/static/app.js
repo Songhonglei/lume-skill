@@ -66,12 +66,21 @@ async function route() {
   $('#main').setAttribute('aria-busy','true');
   $('#main').innerHTML='<div class="route-loading" role="status"><span class="loading-dot" aria-hidden="true"></span>正在读取页面…</div>';
   try {
-    if (path.startsWith('skill/')) await detail(decodeURIComponent(path.slice(6)), params.get('version'), {file:params.get('file'),line:Math.min(1000000,Math.max(0,Number(params.get('line'))||0))});
+    if (path.startsWith('skill/')) await detail(decodeURIComponent(path.slice(6)), params.get('version'), {file:params.get('file'),line:Math.min(1000000,Math.max(0,Number(params.get('line'))||0)),tab:params.get('tab')});
     else if (path.startsWith('task/')) await taskDetail(decodeURIComponent(path.slice(5)));
     else if (path.startsWith('audit/')) await auditReportDetail(decodeURIComponent(path.slice(6)));
     else if (path === 'tasks') await taskList();
-    else if (path === 'settings') await settings();
+    else if (path === 'settings') {
+      if (params.has('tab')) view.settingsTab=params.get('tab');
+      await settings();
+    }
     else await library();
+    if (navigation!==view.navigation) return;
+    if (params.get('view')==='report') {
+      const report=$('#main .report-panel');
+      report?.focus({preventScroll:true});
+      report?.scrollIntoView();
+    }
     document.title = ($('#main h1')?.textContent || 'Skill') + ' · Skill 工作台';
   } catch (error) { if(navigation===view.navigation&&state.user) $('#main').innerHTML=emptyState('页面暂时无法打开',error.message,'<button class="primary" data-ui="retry-route">重试</button><a class="button" href="#skills">返回 Skill 库</a>'); }
   finally { if(navigation===view.navigation) $('#main').removeAttribute('aria-busy'); }
@@ -200,11 +209,23 @@ document.addEventListener('click', event => {
   if (button.dataset.revokeWorker) busy(button,async()=>{if(!await confirmAction('撤销机器接入','撤销后，这台机器将无法领取任务或提交结果。重新使用需要新的接入码。','撤销接入'))return;await api('/workers/'+button.dataset.revokeWorker,{method:'DELETE'});await renderWorkers();notice('接入已撤销');});
   if (button.dataset.revokeCode) busy(button,async()=>{if(!await confirmAction('撤销接入码','撤销后立即失效，接入机器需重新生成。','撤销接入码'))return;await api('/worker-enrollments/'+button.dataset.revokeCode,{method:'DELETE'});await renderWorkers();});
   if (action === 'probe-model') busy(button,async()=>{if(view.modelDraft){notice('请先保存配置，再检测能力');return;}const m=await api('/model/probe',{method:'POST'});await settings();notice(m.ready?'模型能力检测通过':'检测未通过：'+m.failure_code);});
-  if (['history-refresh','history-clear'].includes(action)) busy(button,async()=>{if(action==='history-clear')state.taskHistory.filters={};resetList('tasks');await taskList();});
+  if (action === 'history-refresh') busy(button,taskList);
+  if (action === 'history-clear') busy(button,()=>applyTaskFilters({},true));
   if (action === 'events-refresh') busy(button,async()=>{const task=await api('/tasks/'+encodeURIComponent(state.eventsTask.id));resetList('events:'+task.id);await taskEvents(task);});
-  if (action === 'enroll-worker') busy(button,async()=>{const code=await api('/worker-enrollments',{method:'POST'});$('#enrollment').hidden=false;$('#enrollment').innerHTML='<p>接入码仅显示这一次，10 分钟有效。</p><pre id="one-time-code" class="code"></pre><p class="hint">在目标机器运行下方命令，按提示输入接入码（输入时不可见）。</p><pre id="join-command" class="code"></pre>';$('#one-time-code').textContent=code.code;$('#join-command').textContent='skill-mng worker join --server '+location.origin+'\n'+'skill-mng worker start';await renderWorkers();});
+  if (action === 'enroll-worker') busy(button,()=>enrollWorker(button));
   if (action === 'close-import') $('#import-dialog').close();
-  if (action === 'set-current') busy(button, async()=>{await api('/skills/'+state.detail.id+'/current',{method:'PUT',body:{version_id:state.version}});await detail(state.detail.id,state.version);notice('当前版本已切换');});
+  if (action === 'set-current') busy(button,async()=>{
+    const {detail:skill,version}=state, tab=state.detailTab, hash=location.hash;
+    const current=skill.versions.find(item=>item.id===skill.current_version_id);
+    const selected=skill.versions.find(item=>item.id===version);
+    const audit=selected.latest_audit;
+    let status='未审计';
+    if (audit) status=audit.state&&audit.state!=='succeeded'?labels[audit.state]:auditConclusion(audit).text;
+    if(!await confirmAction('设为当前版本',`当前版本将从 ${current.version} 切换到 ${selected.version}（${status}）。`,'确认切换'))return;
+    await api('/skills/'+skill.id+'/current',{method:'PUT',body:{version_id:version}});
+    if(location.hash===hash&&state.user)await detail(skill.id,version,{tab});
+    notice('当前版本已切换');
+  });
   if (action === 'set-owner') busy(button, async()=>{await api('/skills/'+state.detail.id+'/owner',{method:'PUT',body:{owner_id:$('#owner-select').value}});await detail(state.detail.id,state.version);notice('维护者已更新');});
 });
 $('#logout').onclick = () => busy($('#logout'),async()=>{await api('/logout',{method:'POST'});state.user=null;clearSessionView();state.auditContext=null;state.taskHistory=null;state.taskEvents=null;state.enrollmentHistory=null;state.taskHistoryRequest=(state.taskHistoryRequest||0)+1;await init();});
@@ -215,7 +236,8 @@ document.addEventListener('click',event=>{
 window.addEventListener('hashchange',async()=>{
   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
   await route();
-  if (!new URLSearchParams(location.hash.split('?')[1]||'').has('line')) window.scrollTo(0,view.positions.get(location.hash)||0);
+  const params=new URLSearchParams(location.hash.split('?')[1]||'');
+  if (!params.has('line')&&params.get('view')!=='report') window.scrollTo(0,view.positions.get(location.hash)||0);
 });
 init();
 

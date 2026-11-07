@@ -419,6 +419,7 @@ def create_app(root: Path | str | None = None) -> FastAPI:
             "audit": "静态预检 + 模型语义审计",
             "repair": "授权修复 + 独立复审 + 新版本",
             "model": "由管理员配置兼容模型服务，并完成工具与结构化输出检测",
+            **({"public_url": read_config(root).get("public_url")} if user["role"] == "admin" else {}),
         }
 
     @app.get("/")

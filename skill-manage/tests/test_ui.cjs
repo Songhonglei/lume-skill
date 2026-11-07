@@ -84,6 +84,31 @@ test('issue search treats input literally and selection excludes review-only fin
 });
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/lists.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/workspace.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/skill_mng/static/settings.js'),'utf8'),context);
+
+test('published repairs expose both versions and link directly to the report',()=>{
+  const html=context.taskRows([{id:'repair',kind:'repair',skill_id:'skill',skill_name:'Sample',version_id:'source',version:'1.0.0',published_version_id:'published',published_version:'1.0.1',report_available:true,state:'succeeded',repair_state:'published'}]);
+  assert.match(html,/version=source"[^>]+aria-label="源版本 1\.0\.0"/);
+  assert.match(html,/version=published"[^>]+aria-label="新版本 1\.0\.1"/);
+  assert.match(html,/#task\/repair\?view=report/);
+});
+
+test('compact file paging only offers navigation for multiple pages',()=>{
+  const single=context.paginationHTML('files',{total:2,items:[],pages:1},true);
+  assert.match(single,/共 2 条/);
+  assert.doesNotMatch(single,/<button|<select/);
+  const multiple=context.paginationHTML('files',{total:35,items:[],page:0,pages:2,hasMore:true},true);
+  assert.match(multiple,/aria-label="下一页"/);
+  assert.doesNotMatch(multiple,/<select/);
+});
+
+test('remote worker instructions require an HTTPS address outside loopback',()=>{
+  for (const origin of ['', 'http://workbench.example', 'https://127.0.0.2', 'https://[::1]', 'https://localhost']) {
+    assert.equal(context.remoteWorkerOrigin(origin),'');
+  }
+  assert.equal(context.remoteWorkerOrigin('https://workbench.example:8443'),'https://workbench.example:8443');
+});
+
 test('finding pagination clamps on filter changes without selecting hidden rows',()=>{
   context.state={auditContext:{audit:{id:'paged'},result:{findings:Array.from({length:61},(_,i)=>({id:'item-'+i,severity:'ERR',file:'scripts/'+i+'.py',message:'syntax',reviewRequired:i===0}))}}};
   vm.runInContext("view.findingFilters.set('paged','all');view.findingQueries.set('paged','');listState('findings:paged').page=1",context);
