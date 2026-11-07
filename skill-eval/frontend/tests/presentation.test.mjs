@@ -1,6 +1,24 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { cancelNotice, missingResult, statusOf, taskView } from '../src/presentation.ts'
+import { assertionStatus, cancelNotice, connectionCheckStatus, missingResult, statusOf, taskView } from '../src/presentation.ts'
+
+test('a skipped judge is distinct from a failed precondition or assertion', () => {
+  assert.equal(assertionStatus({ passed: false, skipped: true }), 'SKIPPED')
+  assert.equal(assertionStatus({ passed: false }), 'FAILED')
+  assert.equal(assertionStatus({ passed: true }), 'PASSED')
+})
+
+test('connection checks are current only for the same saved model and connection', () => {
+  const model = { id: 'current', name: 'model', connection_fingerprint: 'agent' }
+  const result = { model_id: model.id, model: model.name, connection_fingerprint: 'agent', success: true }
+  const worker = { capabilities: { connection_fingerprint: 'agent' }, probe_result: result }
+  assert.equal(connectionCheckStatus(worker, model), 'PROBE_PASSED')
+  assert.equal(connectionCheckStatus({ ...worker, probe_request: result }, model), 'PROBE_PENDING')
+  assert.equal(connectionCheckStatus({ ...worker, probe_request: result }, { ...model, id: 'changed' }), 'PROBE_STALE')
+  assert.equal(connectionCheckStatus(worker, { ...model, id: 'changed' }), 'PROBE_STALE')
+  assert.equal(connectionCheckStatus({ ...worker, probe_result: { model: model.name, success: true } }, model), 'PROBE_STALE')
+  assert.equal(connectionCheckStatus({ ...worker, capabilities: { connection_fingerprint: 'changed' } }, model), 'PROBE_STALE')
+})
 const old = { id: 'old', number: 1, state: 'COMPLETED', summary: { verdict: 'PASSED', cases: [{ case_id: 'a', verdict: 'PASSED' }] } }
 const task = { state: 'QUEUED', current_attempt_id: null, summary: null, attempts: [old], artifacts: [{ id: 'report', attempt_id: 'old' }] }
 test('a queued retry cannot inherit the preceding successful result or report', () => {
