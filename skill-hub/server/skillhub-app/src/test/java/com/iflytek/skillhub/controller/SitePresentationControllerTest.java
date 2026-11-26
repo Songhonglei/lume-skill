@@ -79,6 +79,12 @@ class SitePresentationControllerTest {
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"))
                 .andExpect(content().bytes(new byte[]{1, 2}));
+        when(assets.readFavicon("asset-id")).thenReturn(new byte[]{3, 4});
+        mvc.perform(get("/api/v1/site-presentation/assets/asset-id/favicon"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"))
+                .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"))
+                .andExpect(content().bytes(new byte[]{3, 4}));
         mvc.perform(get(ADMIN)).andExpect(status().isUnauthorized());
     }
 

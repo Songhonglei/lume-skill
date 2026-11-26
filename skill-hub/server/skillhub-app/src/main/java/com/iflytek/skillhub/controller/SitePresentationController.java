@@ -38,8 +38,18 @@ public class SitePresentationController extends BaseApiController {
     @GetMapping("/assets/{assetId}")
     @Operation(summary = "Read a normalized public branding image")
     public ResponseEntity<byte[]> asset(@PathVariable String assetId) {
+        return imageResponse(assets.read(assetId));
+    }
+
+    @GetMapping("/assets/{assetId}/favicon")
+    @Operation(summary = "Read the 64-pixel browser icon generated from a public branding image")
+    public ResponseEntity<byte[]> favicon(@PathVariable String assetId) {
+        return imageResponse(assets.readFavicon(assetId));
+    }
+
+    private ResponseEntity<byte[]> imageResponse(byte[] image) {
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG)
                 .cacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable())
-                .header("X-Content-Type-Options", "nosniff").body(assets.read(assetId));
+                .header("X-Content-Type-Options", "nosniff").body(image);
     }
 }

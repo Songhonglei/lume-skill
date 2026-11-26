@@ -1,16 +1,17 @@
 /** @vitest-environment jsdom */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const api = vi.hoisted(() => ({ settings: vi.fn(), updateSettings: vi.fn(), deliveries: vi.fn(), retry: vi.fn() }))
 vi.mock('./notification-email-api', () => ({ notificationEmailApi: api }))
 vi.mock('@/api/client', () => ({ ApiError: class ApiError extends Error { constructor(message: string, public status: number) { super(message) } } }))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }) }))
 import { NotificationEmailSettingsPanel } from './notification-email-settings'
+import { NotificationEmailDeliveriesPanel } from './notification-email-deliveries'
 Element.prototype.scrollIntoView = vi.fn()
 Element.prototype.hasPointerCapture = () => false
 Element.prototype.releasePointerCapture = vi.fn()
-function setup() { const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }); render(<QueryClientProvider client={client}><NotificationEmailSettingsPanel /></QueryClientProvider>); return client }
+function setup(tab: 'mail' | 'deliveries' = 'deliveries') { const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }); render(<QueryClientProvider client={client}>{tab === 'mail' ? <NotificationEmailSettingsPanel /> : <NotificationEmailDeliveriesPanel />}</QueryClientProvider>); return client }
 describe('business email administration', () => {
   beforeEach(() => {
     api.settings.mockResolvedValue({ enabled: false, digestWindowMinutes: 15, publicBaseUrl: 'https://example.test/sub', version: 2, smtpConfigured: true })
@@ -29,18 +30,26 @@ describe('business email administration', () => {
     await waitFor(() => expect(api.retry).toHaveBeenCalledWith(18, true))
   })
   it('filters and paginates without reusing records for a previous filter', async () => {
-    setup(); await screen.findByText('#18')
+    setup()
+    const history = screen.getByRole('region', { name: 'notificationEmail.deliveries' })
+    const recent = screen.getByRole('region', { name: 'notificationEmail.recentDeliveries' })
+    await within(history).findByText('#18')
+    expect(api.deliveries).toHaveBeenCalledTimes(1)
+    expect(api.settings).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'pagination.next' }))
     await waitFor(() => expect(api.deliveries).toHaveBeenCalledWith(1, ''))
     api.deliveries.mockResolvedValue({ items: [], totalPages: 0 })
     fireEvent.keyDown(screen.getByRole('combobox', { name: 'notificationEmail.filter' }), { key: 'Enter' })
     fireEvent.click(await screen.findByRole('option', { name: 'notificationEmail.status.FAILED' }))
     await waitFor(() => expect(api.deliveries).toHaveBeenCalledWith(0, 'FAILED'))
-    await screen.findByText('notificationEmail.noDeliveries')
-    expect(screen.queryByText('#18')).toBeNull()
+    await within(history).findByText('notificationEmail.noDeliveries')
+    expect(within(history).queryByText('#18')).toBeNull()
+    expect(within(recent).getByText('#18')).toBeTruthy()
   })
   it('does not expose secrets and saves ordinary settings with their version', async () => {
-    setup(); const toggle = await screen.findByRole('switch', { name: 'notificationEmail.enabled' })
+    setup('mail'); const toggle = await screen.findByRole('switch', { name: 'notificationEmail.enabled' })
+    expect(api.deliveries).not.toHaveBeenCalled()
+    expect(screen.queryByText('notificationEmail.recentDeliveries')).toBeNull()
     expect(toggle.getAttribute('aria-checked')).toBe('false')
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-checked')).toBe('true')
@@ -72,7 +81,7 @@ describe('business email administration', () => {
   it('discards an unsaved email change and reports dirty state to the settings shell', async () => {
     const onDirtyChange = vi.fn()
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(<QueryClientProvider client={client}><NotificationEmailSettingsPanel view="mail" onDirtyChange={onDirtyChange} /></QueryClientProvider>)
+    render(<QueryClientProvider client={client}><NotificationEmailSettingsPanel onDirtyChange={onDirtyChange} /></QueryClientProvider>)
     const field = await screen.findByRole('spinbutton', { name: 'notificationEmail.window' })
     fireEvent.change(field, { target: { value: '35' } })
     await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(true))

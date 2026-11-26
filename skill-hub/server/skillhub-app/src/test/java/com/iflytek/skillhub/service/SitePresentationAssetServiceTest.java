@@ -160,6 +160,26 @@ class SitePresentationAssetServiceTest {
     }
 
     @Test
+    void faviconUsesTheSameLogoPixelsWithTransparentPaddingForLegacyRectangles() throws Exception {
+        var source = new BufferedImage(128, 64, BufferedImage.TYPE_INT_RGB);
+        var graphics = source.createGraphics();
+        graphics.setColor(Color.BLUE);
+        graphics.fillRect(0, 0, 128, 64);
+        graphics.dispose();
+        var png = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", png);
+        String key = "site-presentation/assets/" + ID + ".png";
+        when(storage.exists(key)).thenReturn(true);
+        when(storage.getObject(key)).thenReturn(new ByteArrayInputStream(png.toByteArray()));
+
+        var icon = ImageIO.read(new ByteArrayInputStream(service.readFavicon(ID)));
+        assertThat(icon.getWidth()).isEqualTo(64);
+        assertThat(icon.getHeight()).isEqualTo(64);
+        assertThat(icon.getRGB(32, 32)).isEqualTo(Color.BLUE.getRGB());
+        assertThat(icon.getRGB(32, 0)).isZero();
+    }
+
+    @Test
     void storageFailurePropagates() {
         when(storage.exists("site-presentation/assets/" + ID + ".png"))
                 .thenThrow(new StorageAccessException("exists", "redacted", new IllegalStateException("offline")));

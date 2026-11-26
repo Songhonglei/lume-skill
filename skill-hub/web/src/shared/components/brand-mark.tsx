@@ -1,4 +1,4 @@
-import { PRODUCT_NAME } from '@/shared/lib/product-brand'
+import { DEFAULT_BRAND_MARK, PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { withBasePath } from '@/shared/lib/base-path'
 import { useState } from 'react'
 import { presentationAssetUrl } from '@/api/site-presentation'
@@ -18,7 +18,7 @@ export function BrandMark({ className, imageClassName, alt }: BrandMarkProps) {
   const { settings } = useSitePresentation()
   const configured = presentationAssetUrl(settings.logoUrl)
   const [failedUrl, setFailedUrl] = useState<string>()
-  const src = configured && configured !== failedUrl ? configured : withBasePath('/lumaskill-mark.svg')
+  const src = configured && configured !== failedUrl ? configured : withBasePath(DEFAULT_BRAND_MARK)
   return (
     <span className={cn('inline-flex items-center justify-center overflow-hidden rounded-xl', className)}>
       <img

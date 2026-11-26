@@ -43,7 +43,8 @@ describe('site presentation settings', () => {
     await setup()
     expect(screen.getAllByRole('textbox')).toHaveLength(3)
     expect(screen.queryByRole('switch')).toBeNull()
-    expect(document.querySelectorAll('input[type="file"]')).toHaveLength(2)
+    expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
+    expect(screen.getByLabelText('sitePresentation.logoUrl')).toBeTruthy()
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.queryByTestId('live-homepage-preview')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.tabs.home' }))
@@ -137,7 +138,7 @@ describe('site presentation settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.save' }))
     const sections = Object.fromEntries(Object.entries(settings.sections).map(([id, config]) => [id, { ...config, enabled: true }]))
     sections.hero = { ...sections.hero, texts: { description: settings.sections.hero.texts.description, badge: { en: 'Preserve badge' } } }
-    await waitFor(() => expect(sitePresentationApi.update).toHaveBeenCalledWith({ settings: { ...settings, siteName: null, logoUrl: null, faviconUrl: null, sections, links: { cliPackage: 'https://team.example/cli', community: '/community' } }, version: 7 }))
+    await waitFor(() => expect(sitePresentationApi.update).toHaveBeenCalledWith({ settings: { ...settings, siteName: null, logoUrl: null, sections, links: { cliPackage: 'https://team.example/cli', community: '/community' } }, version: 7 }))
   })
 
   it('retains entered content on a failed save', async () => {

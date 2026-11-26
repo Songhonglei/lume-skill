@@ -6884,6 +6884,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/site-presentation/assets/{assetId}/favicon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the 64-pixel browser icon generated from a public branding image */
+        get: operations["favicon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -8492,6 +8509,7 @@ export interface components {
         SitePresentationSettings: {
             siteName?: string | null;
             logoUrl?: string | null;
+            /** @description Browser icon derived from the platform logo. Accepted for compatibility and ignored on update. */
             faviconUrl?: string | null;
             sections: {
                 [key: string]: components["schemas"]["SitePresentationSection"];
@@ -25326,6 +25344,28 @@ export interface operations {
         };
     };
     asset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    favicon: {
         parameters: {
             query?: never;
             header?: never;

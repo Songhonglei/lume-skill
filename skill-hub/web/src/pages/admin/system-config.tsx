@@ -10,9 +10,11 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Switch } from '@/shared/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { NotificationEmailSettingsPanel } from '@/features/notification/notification-email-settings'
+import { NotificationEmailDeliveriesPanel } from '@/features/notification/notification-email-deliveries'
 import { AvatarReviewSettingsPanel } from '@/features/skill/avatar-review-settings'
 import { RecommendationSettingsPanel } from '@/features/recommendation/recommendation-settings'
 import { SitePresentationSettingsPanel } from '@/features/site-presentation/site-presentation-settings'
@@ -21,6 +23,9 @@ import { SearchIndexMaintenance } from '@/features/governance/search-index-maint
 type Section = 'site' | 'recommendations' | 'access' | 'operations'
 type DraftDomain = 'site' | 'recommendations' | 'avatar' | 'email'
 const sections = ['site', 'recommendations', 'access', 'operations'] as const
+const operationsTabs = ['mail', 'deliveries', 'index'] as const
+type OperationsTab = (typeof operationsTabs)[number]
+type SettingsNavigation = { section: Section } | { tab: OperationsTab }
 
 export function SystemConfigPage() {
   const { t } = useTranslation()
@@ -29,13 +34,13 @@ export function SystemConfigPage() {
   const rules = useQuery({ queryKey: ['system-config', 'rules'], queryFn: systemConfigApi.listRoleGrants })
   const roles = useQuery({ queryKey: ['system-config', 'roles'], queryFn: systemConfigApi.listRoles })
   const [section, setSection] = useState<Section>('site')
-  const [operationsTab, setOperationsTab] = useState<'mail' | 'deliveries' | 'index'>('mail')
-  const [resetKeys, setResetKeys] = useState<Record<Section, number>>({ site: 0, recommendations: 0, access: 0, operations: 0 })
+  const [operationsTab, setOperationsTab] = useState<OperationsTab>('mail')
+  const [resetKeys, setResetKeys] = useState({ site: 0, recommendations: 0, access: 0 })
   const [dirtyFlags, setDirtyFlags] = useState<Record<DraftDomain, boolean>>({ site: false, recommendations: false, avatar: false, email: false })
   const [busyFlags, setBusyFlags] = useState<Record<DraftDomain | 'index', boolean>>({ site: false, recommendations: false, avatar: false, email: false, index: false })
   const dirtyCallbacks = useMemo(() => Object.fromEntries((['site', 'recommendations', 'avatar', 'email'] as const).map(key => [key, (value: boolean) => setDirtyFlags(previous => previous[key] === value ? previous : { ...previous, [key]: value })])) as Record<DraftDomain, (value: boolean) => void>, [])
   const busyCallbacks = useMemo(() => Object.fromEntries((['site', 'recommendations', 'avatar', 'email', 'index'] as const).map(key => [key, (value: boolean) => setBusyFlags(previous => previous[key] === value ? previous : { ...previous, [key]: value })])) as Record<DraftDomain | 'index', (value: boolean) => void>, [])
-  const [pendingSection, setPendingSection] = useState<Section | null>(null)
+  const [pendingNavigation, setPendingNavigation] = useState<SettingsNavigation | null>(null)
   const [providerCode, setProviderCode] = useState('')
   const [email, setEmail] = useState('')
   const [roleCode, setRoleCode] = useState('')
@@ -85,13 +90,30 @@ export function SystemConfigPage() {
     if (!settings.data || !draft || updateSettings.isPending || !settingsDirty) return false
     return run(() => updateSettings.mutateAsync({ ...draft, version: settings.data!.version }))
   }
-  function changeSection(next: Section) { if (busy || next === section) return; if (currentDirty) setPendingSection(next); else { setSection(next); setError(''); setMessage('') } }
-  function discardSection() {
-    if (!pendingSection || busy) return
-    setResetKeys(current => ({ ...current, [section]: current[section] + 1 }))
+  function navigateSettings(next: SettingsNavigation) {
+    if ('section' in next) setSection(next.section)
+    else setOperationsTab(next.tab)
+    setPendingNavigation(null)
+    setError('')
+    setMessage('')
+  }
+  function changeSection(next: Section) {
+    if (busy || next === section) return
+    if (currentDirty) setPendingNavigation({ section: next })
+    else navigateSettings({ section: next })
+  }
+  function changeOperationsTab(value: string) {
+    const tab = operationsTabs.find(item => item === value)
+    if (!tab || busy || tab === operationsTab) return
+    if (dirtyFlags.email) setPendingNavigation({ tab })
+    else navigateSettings({ tab })
+  }
+  function discardAndNavigate() {
+    if (!pendingNavigation || busy) return
+    if (section !== 'operations') setResetKeys(current => ({ ...current, [section]: current[section] + 1 }))
     if (section === 'access' && settings.data) { setDraft({ passwordLoginEnabled: settings.data.passwordLoginEnabled, selfRegistrationEnabled: settings.data.selfRegistrationEnabled }); setRuleEditor(null) }
     setDirtyFlags(current => ({ ...current, ...(section === 'site' ? { site: false } : section === 'recommendations' ? { recommendations: false } : section === 'access' ? { avatar: false } : { email: false }) }))
-    setSection(pendingSection); setPendingSection(null); setError(''); setMessage('')
+    navigateSettings(pendingNavigation)
   }
   function openRule(rule: ExternalRoleGrantRule | 'new') {
     setRuleEditor(rule); setRuleError(''); setProviderCode(rule === 'new' ? '' : rule.providerCode); setEmail(rule === 'new' ? '' : rule.email); setRoleCode(rule === 'new' ? (roles.data?.[0]?.code ?? '') : rule.roleCode)
@@ -129,7 +151,17 @@ export function SystemConfigPage() {
       {message && <p role="status" className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">{message}</p>}
       <div hidden={section !== 'site'}><SitePresentationSettingsPanel key={resetKeys.site} onDirtyChange={dirtyCallbacks.site} onBusyChange={busyCallbacks.site} /></div>
       <div hidden={section !== 'recommendations'}><RecommendationSettingsPanel key={resetKeys.recommendations} onDirtyChange={dirtyCallbacks.recommendations} onBusyChange={busyCallbacks.recommendations} /></div>
-      <div hidden={section !== 'operations'} className="space-y-6"><header><h2 className="text-2xl font-semibold">{t('recommendations.navigation.operations')}</h2><p className="mt-1 text-sm text-muted-foreground">{t('systemConfig.operationsHelp')}</p></header><div role="group" aria-label={t('systemConfig.operationsNavigation')} className="inline-flex max-w-full flex-wrap gap-1 rounded-full border bg-muted/50 p-1">{(['mail', 'deliveries', 'index'] as const).map(tab => <Button key={tab} variant="ghost" aria-pressed={operationsTab === tab} disabled={busy} className={`rounded-full px-4 ${operationsTab === tab ? 'bg-background shadow-sm hover:bg-background' : 'text-muted-foreground'}`} onClick={() => setOperationsTab(tab)}>{t(`systemConfig.operationsTab.${tab}`)}</Button>)}</div><div key={resetKeys.operations} hidden={operationsTab === 'index'}><NotificationEmailSettingsPanel view={operationsTab === 'deliveries' ? 'deliveries' : 'mail'} onViewDeliveries={() => setOperationsTab('deliveries')} onDirtyChange={dirtyCallbacks.email} onBusyChange={busyCallbacks.email} /></div><div hidden={operationsTab !== 'index'}><SearchIndexMaintenance onBusyChange={busyCallbacks.index} /></div></div>
+      {section === 'operations' && <section className="space-y-4" aria-labelledby="operations-title">
+        <h2 id="operations-title" className="text-2xl font-semibold">{t('recommendations.navigation.operations')}</h2>
+        <Tabs value={operationsTab} onValueChange={changeOperationsTab} className="min-w-0 space-y-6">
+          <TabsList aria-label={t('systemConfig.operationsNavigation')} className="flex flex-wrap gap-x-5">
+            {operationsTabs.map(tab => <TabsTrigger key={tab} value={tab} disabled={busy}>{t(`systemConfig.operationsTab.${tab}`)}</TabsTrigger>)}
+          </TabsList>
+          <TabsContent value="mail"><NotificationEmailSettingsPanel onDirtyChange={dirtyCallbacks.email} onBusyChange={busyCallbacks.email} /></TabsContent>
+          <TabsContent value="deliveries"><NotificationEmailDeliveriesPanel /></TabsContent>
+          <TabsContent value="index"><SearchIndexMaintenance onBusyChange={busyCallbacks.index} /></TabsContent>
+        </Tabs>
+      </section>}
       <div hidden={section !== 'access'} className="space-y-8"><header><h2 className="text-2xl font-semibold">{t('recommendations.navigation.access')}</h2><p className="mt-1 text-sm text-muted-foreground">{t('systemConfig.accessHelp')}</p></header><div className="grid items-stretch gap-6 xl:grid-cols-2"><section className="flex min-w-0 flex-col rounded-xl border p-5"><header className="mb-6"><h3 className="text-lg font-semibold">{t('systemConfig.localAuth')}</h3><p className="mt-1 text-sm leading-5 text-muted-foreground">{t('systemConfig.lockoutHelp')}</p></header>
         {settings.isError && <p role="alert">{t('systemConfig.loadFailed')}</p>}{settings.isPending && <p role="status">{t('systemConfig.loading')}</p>}
         {settings.data && draft && <><div className="divide-y">{([['passwordLoginEnabled', 'passwordLogin', 'passwordLoginHelp'], ['selfRegistrationEnabled', 'selfRegistration', 'selfRegistrationHelp']] as const).map(([field, title, help]) => <div key={field} className="flex items-center justify-between gap-6 py-4"><div className="min-w-0 space-y-1"><Label htmlFor={field}>{t(`systemConfig.${title}`)}</Label><p id={`${field}-help`} className="text-xs leading-5 text-muted-foreground">{t(`systemConfig.${help}`)}</p></div><Switch id={field} aria-describedby={`${field}-help`} data-analytics-id={field === 'passwordLoginEnabled' ? 'admin.auth.password.toggle' : 'admin.auth.registration.toggle'} checked={draft[field]} disabled={updateSettings.isPending} onCheckedChange={value => setDraft({ ...draft, [field]: value })} /></div>)}</div>{!draft.passwordLoginEnabled && draft.selfRegistrationEnabled && <p className="mb-4 text-sm text-muted-foreground">{t('systemConfig.registrationRequiresLogin')}</p>}<footer className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t pt-4"><span className="text-xs text-muted-foreground">{t(settingsDirty ? 'systemConfig.unsaved' : 'systemConfig.upToDate')}</span><div className="flex gap-2"><Button data-analytics-id="admin.auth.discard" variant="outline" disabled={!settingsDirty || updateSettings.isPending} onClick={() => { setDraft({ passwordLoginEnabled: settings.data!.passwordLoginEnabled, selfRegistrationEnabled: settings.data!.selfRegistrationEnabled }); setError('') }}>{t('systemConfig.discard')}</Button><Button data-analytics-id="admin.auth.save" disabled={!settingsDirty || updateSettings.isPending} onClick={() => { if (draft.passwordLoginEnabled === false && settings.data!.passwordLoginEnabled) setConfirmLoginOff(true); else void saveSettings() }}>{t(updateSettings.isPending ? 'systemConfig.saving' : 'systemConfig.saveChanges')}</Button></div></footer></>}
@@ -138,7 +170,7 @@ export function SystemConfigPage() {
       </div>
     </div>
     <Dialog open={!!ruleEditor} onOpenChange={open => { if (!open && !ruleBusy) setRuleEditor(null) }}><DialogContent hideClose={ruleBusy} className="w-[min(calc(100vw-2rem),55rem)]" onEscapeKeyDown={event => { if (ruleBusy) event.preventDefault() }} onPointerDownOutside={event => { if (ruleBusy) event.preventDefault() }}><DialogHeader><DialogTitle>{t(ruleEditor === 'new' ? 'systemConfig.addRule' : 'systemConfig.editRule')}</DialogTitle><DialogDescription>{t('systemConfig.ruleApplies')}</DialogDescription></DialogHeader><form data-analytics-id={ruleEditor === 'new' ? 'admin.role.rule.create' : undefined} onSubmit={event => { event.preventDefault(); void saveRule() }}><fieldset disabled={ruleBusy} className="space-y-5"><div className="rounded-lg bg-muted/50 p-4"><Shield aria-hidden className="mb-2 h-5 w-5 text-muted-foreground" /><p className="text-sm leading-6">{t('systemConfig.ruleNoMerge')}</p></div><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="role-grant-provider">{t('systemConfig.provider')}</Label><Input data-analytics-id="admin.role.rule.provider.input" id="role-grant-provider" required maxLength={64} pattern="[a-z0-9][a-z0-9_-]{0,63}" value={providerCode} readOnly={ruleEditor !== 'new'} onChange={event => setProviderCode(event.target.value.toLowerCase())} onBlur={() => setProviderCode(value => value.trim())} placeholder="github" /></div><div className="space-y-1.5"><Label htmlFor="role-grant-email">{t('systemConfig.email')}</Label><Input data-analytics-id="admin.role.rule.email.input" id="role-grant-email" type="email" required value={email} readOnly={ruleEditor !== 'new'} onChange={event => setEmail(event.target.value)} onBlur={() => setEmail(value => value.trim().toLowerCase())} /></div></div><div className="space-y-1.5"><Label htmlFor="role-grant-role">{t('systemConfig.role')}</Label><Select value={roleCode} onValueChange={setRoleCode} disabled={ruleBusy}><SelectTrigger data-analytics-id={ruleEditor === 'new' ? 'admin.role.rule.role.select' : 'admin.role.rule.role.edit'} id="role-grant-role"><SelectValue /></SelectTrigger><SelectContent>{(roles.data ?? []).map(role => <SelectItem key={role.code} value={role.code}>{role.name}</SelectItem>)}</SelectContent></Select></div>{ruleError && <p role="alert" className="text-sm text-destructive">{ruleError}</p>}<DialogFooter className="justify-end border-t pt-4 sm:justify-end"><Button data-analytics-id="admin.role.rule.discard" type="button" variant="outline" onClick={() => setRuleEditor(null)}>{t('dialog.cancel')}</Button><Button data-analytics-id={ruleEditor === 'new' ? 'admin.role.rule.create' : 'admin.role.rule.save'} type="submit" disabled={!roles.data?.length || (ruleEditor !== 'new' && !ruleDirty)}>{t(ruleBusy ? 'systemConfig.saving' : 'systemConfig.saveChanges')}</Button></DialogFooter></fieldset></form></DialogContent></Dialog>
-    <ConfirmDialog open={pendingSection !== null} onOpenChange={open => { if (!open) setPendingSection(null) }} title={t('sitePresentation.leaveTitle')} description={t('sitePresentation.leaveHelp')} confirmText={t('sitePresentation.leaveConfirm')} onConfirm={discardSection} />
+    <ConfirmDialog open={pendingNavigation !== null} onOpenChange={open => { if (!open) setPendingNavigation(null) }} title={t('sitePresentation.leaveTitle')} description={t('sitePresentation.leaveHelp')} confirmText={t('sitePresentation.leaveConfirm')} onConfirm={discardAndNavigate} />
     <ConfirmDialog open={blocker.status === 'blocked'} onOpenChange={open => { if (!open && blocker.status === 'blocked') blocker.reset() }} title={t('sitePresentation.leaveTitle')} description={t('sitePresentation.leaveHelp')} confirmText={t('sitePresentation.leaveConfirm')} onConfirm={() => { if (blocker.status === 'blocked') blocker.proceed() }} />
     <ConfirmDialog confirmAnalyticsId="admin.auth.login.disable.confirm" cancelAnalyticsId="admin.auth.login.disable.cancel" open={confirmLoginOff} onOpenChange={setConfirmLoginOff} title={t('systemConfig.lockoutTitle')} description={<>{t('systemConfig.lockoutWarning')}{error && <span role="alert" className="mt-3 block text-destructive">{error}</span>}</>} confirmText={t('systemConfig.confirmDisableLogin')} closeOnConfirm={false} onConfirm={async () => { if (await saveSettings()) setConfirmLoginOff(false) }} />
     <ConfirmDialog confirmAnalyticsId="admin.role.rule.disable.confirm" cancelAnalyticsId="admin.role.rule.disable.cancel" open={!!ruleToDisable} onOpenChange={open => { if (!open) setRuleToDisable(null) }} closeOnConfirm={false} title={t('systemConfig.disableTitle')} description={<>{t('systemConfig.disableConfirm')}{error && <span role="alert" className="mt-3 block text-destructive">{error}</span>}</>} confirmText={t('systemConfig.disable')} variant="destructive" onConfirm={async () => { if (ruleToDisable && await run(() => disableRule.mutateAsync({ id: ruleToDisable.id, version: ruleToDisable.version }))) setRuleToDisable(null) }} />
