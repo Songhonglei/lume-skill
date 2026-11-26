@@ -115,7 +115,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
   return (
     <div
       ref={rootRef}
-      className="relative"
+      className="relative grid"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -124,24 +124,21 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={user.displayName}
-        className={cn('flex items-center gap-3 text-foreground hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-md', triggerClassName)}
+        className={cn('luma-header-icon inline-grid', triggerClassName)}
         onClick={() => setIsClickOpen((current) => !current)}
       >
         {user.avatarUrl ? (
           <img
             src={avatarAssetUrl(user.avatarUrl)}
-            alt={user.displayName}
+            alt=""
             loading="lazy"
-            className="w-8 h-8 rounded-full border border-border/60"
+            className="size-7 rounded-full border border-border/60 object-cover"
           />
         ) : (
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent text-sm font-semibold text-accent-foreground flex-shrink-0">
+          <span aria-hidden="true" className="grid size-7 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
             {user.displayName?.charAt(0) ?? '?'}
           </span>
         )}
-        <span className="sr-only">
-          {user.displayName}
-        </span>
       </button>
       {open ? (
         <div

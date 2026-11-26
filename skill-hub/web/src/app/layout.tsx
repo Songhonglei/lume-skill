@@ -139,7 +139,7 @@ export function Layout() {
           </nav>
         ) : null}
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" style={{ color: 'hsl(var(--text-secondary))' }}>
+        <div className="flex shrink-0 items-center gap-1" style={{ color: 'hsl(var(--text-secondary))' }}>
           {/* Hamburger — visible below xl */}
           {!isAuthEntryRoute ? (
             <button data-analytics-id="navigation.menu.toggle"
@@ -149,7 +149,7 @@ export function Layout() {
               aria-expanded={mobileMenuOpen}
               aria-label={t(mobileMenuOpen ? 'layout.closeNavigation' : 'layout.openNavigation')}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? <X className="size-[18px]" /> : <Menu className="size-[18px]" />}
             </button>
           ) : null}
           <ThemeToggle />

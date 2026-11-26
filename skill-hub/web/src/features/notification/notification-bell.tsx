@@ -47,19 +47,19 @@ export function NotificationBell() {
   const badgeLabel = unreadCount > 99 ? '99+' : String(unreadCount)
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative grid">
       <button data-analytics-id="notification.menu.toggle"
         type="button"
         aria-label={t('notification.title')}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
+        className="luma-header-icon relative inline-grid"
       >
         {/* Bell SVG */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -75,7 +75,7 @@ export function NotificationBell() {
         {/* Unread badge */}
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-semibold leading-none"
+            className="pointer-events-none absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-0.5 text-[10px] font-semibold leading-none text-white"
             aria-label={`${unreadCount} unread`}
           >
             {badgeLabel}

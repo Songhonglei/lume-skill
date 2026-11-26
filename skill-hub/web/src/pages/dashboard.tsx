@@ -157,19 +157,13 @@ export function DashboardSidebar({
 
         <div className="mb-4 hidden items-center gap-3 px-3 py-2 lg:flex">
           {user?.avatarUrl ? (
-            <img src={avatarAssetUrl(user.avatarUrl)} alt={user.displayName} className="h-8 w-8 shrink-0 rounded-full border border-border/60" />
+            <img src={avatarAssetUrl(user.avatarUrl)} alt="" className="size-8 shrink-0 rounded-full border border-border/60" />
           ) : (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+            <div aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold">
               {user?.displayName?.charAt(0) ?? '?'}
             </div>
           )}
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{user?.displayName}</div>
-            <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
-            <div className="truncate text-xs text-muted-foreground">
-              {t('dashboard.userId')}: {user?.userId}
-            </div>
-          </div>
+          <p className="min-w-0 break-words text-sm font-semibold">{user?.displayName}</p>
         </div>
 
         <div className={`${mobileOpen ? 'block' : 'hidden'} border-t p-2 lg:block lg:border-0 lg:p-0`}>

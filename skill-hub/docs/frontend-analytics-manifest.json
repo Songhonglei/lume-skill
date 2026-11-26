@@ -753,7 +753,7 @@
     {"file":"web/src/pages/dashboard/suite-management.tsx","line":335,"host":"Link","prop":"data-analytics-id","event":"click","ids":["suite.operation.open"]},
     {"file":"web/src/pages/dashboard.tsx","line":97,"host":"Link","prop":"data-analytics-id","event":"click","forward":"card.analyticsId"},
     {"file":"web/src/pages/dashboard.tsx","line":145,"host":"button","prop":"data-analytics-id","event":"click","ids":["navigation.dashboard.toggle"]},
-    {"file":"web/src/pages/dashboard.tsx","line":184,"host":"Link","prop":"data-analytics-id","event":"click","forward":"item.analyticsId"},
+    {"file":"web/src/pages/dashboard.tsx","line":178,"host":"Link","prop":"data-analytics-id","event":"click","forward":"item.analyticsId"},
     {"file":"web/src/pages/device.tsx","line":103,"host":"form","prop":"data-analytics-id","event":"submit","ids":["auth.device.authorize"]},
     {"file":"web/src/pages/github-skills.tsx","line":40,"host":"Button","prop":"data-analytics-id","event":"click","ids":["skill.detail.open"]},
     {"file":"web/src/pages/github-skills.tsx","line":83,"host":"form","prop":"data-analytics-id","event":"submit","ids":["github.catalog.search"]},
@@ -916,10 +916,10 @@
     {"file":"web/src/shared/components/route-error.tsx","line":24,"host":"Button","prop":"data-analytics-id","event":"click","ids":["navigation.route.retry"]},
     {"file":"web/src/shared/components/theme-toggle.tsx","line":14,"host":"button","prop":"data-analytics-id","event":"click","ids":["navigation.theme.toggle"]},
     {"file":"web/src/shared/components/user-menu.tsx","line":122,"host":"button","prop":"data-analytics-id","event":"click","ids":["navigation.account.toggle"]},
-    {"file":"web/src/shared/components/user-menu.tsx","line":156,"host":"Link","prop":"data-analytics-id","event":"click","ids":["navigation.dashboard.open"]},
-    {"file":"web/src/shared/components/user-menu.tsx","line":160,"host":"Link","prop":"data-analytics-id","event":"click","ids":["review.queue.open"]},
-    {"file":"web/src/shared/components/user-menu.tsx","line":165,"host":"Link","prop":"data-analytics-id","event":"click","ids":["admin.settings.open"]},
-    {"file":"web/src/shared/components/user-menu.tsx","line":170,"host":"button","prop":"data-analytics-id","event":"click","ids":["auth.logout.request"]},
+    {"file":"web/src/shared/components/user-menu.tsx","line":153,"host":"Link","prop":"data-analytics-id","event":"click","ids":["navigation.dashboard.open"]},
+    {"file":"web/src/shared/components/user-menu.tsx","line":157,"host":"Link","prop":"data-analytics-id","event":"click","ids":["review.queue.open"]},
+    {"file":"web/src/shared/components/user-menu.tsx","line":162,"host":"Link","prop":"data-analytics-id","event":"click","ids":["admin.settings.open"]},
+    {"file":"web/src/shared/components/user-menu.tsx","line":167,"host":"button","prop":"data-analytics-id","event":"click","ids":["auth.logout.request"]},
     {"file":"web/src/shared/ui/dialog.tsx","line":45,"host":"DialogPrimitive.Close","prop":"data-analytics-id","event":"click","forward":"closeAnalyticsId"}
   ]
 }
