@@ -307,7 +307,9 @@ public class SkillSearchAppService {
                 null,
                 skill.getVisibility() == com.iflytek.skillhub.domain.skill.SkillVisibility.PRIVATE
                         && !skill.getOwnerId().equals(userId) ? null : SkillAvatarUrls.current(skill, namespaceSlug)
-        ).withSource(skill.isGithubSyncManaged() ? "github" : "platform");
+        ).withSource(skill.isGithubSyncManaged() ? "github"
+                : headlineVersion != null && SkillPackageProvenance.isExternal(headlineVersion.parsedMetadataJson())
+                        ? "external" : "platform");
     }
 
     private com.iflytek.skillhub.dto.SkillLifecycleVersionResponse toLifecycleVersion(

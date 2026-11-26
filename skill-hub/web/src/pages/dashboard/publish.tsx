@@ -37,7 +37,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
 import { Pencil, RotateCcw } from 'lucide-react'
 import { SkillAvatarEditor, KEEP_AVATAR, type AvatarEdit } from '@/features/skill/skill-avatar-editor'
 import { SkillAvatarManager } from '@/features/skill/skill-avatar-manager'
-import { previewSkillPackage, usePublishSkill, useSkillDetail, useSkillVersionDetail } from '@/shared/hooks/use-skill-queries'
+import { previewSkillPackage, resolveExternalSkillPackage, usePublishSkill, useSkillDetail, useSkillVersionDetail } from '@/shared/hooks/use-skill-queries'
 import { getSkillDetailQueryKey } from '@/shared/hooks/query-keys'
 import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
@@ -93,6 +93,11 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   const shortDescriptionEdited = useRef(Boolean(restoredDraft?.shortTouched))
   const overviewEdited = useRef(Boolean(restoredDraft?.overviewTouched))
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [sourceMode, setSourceMode] = useState<'local' | 'external'>(restoredDraft?.externalSourceUrl ? 'external' : 'local')
+  const [sourceInput, setSourceInput] = useState(restoredDraft?.externalSourceUrl ?? '')
+  const [externalSourceUrl, setExternalSourceUrl] = useState<string>()
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState('')
   const [mustReselectPackage, setMustReselectPackage] = useState(restoredDraft?.hadPackage ?? false)
   const [namespaceSlug, setNamespaceSlug] = useState(restoredDraft?.namespace ?? prefill.namespace)
   const [visibility, setVisibility] = useState(restoredDraft?.visibility ?? prefill.visibility)
@@ -151,7 +156,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   const avatarTarget = useQuery({ queryKey: ['skill-avatar', namespaceSlug, updateSlug], queryFn: () => skillAvatarApi.status(namespaceSlug, updateSlug), enabled: resourceReady && !!namespaceSlug && !!updateSlug })
   const avatarUnavailable = !!updateSlug && (avatarTarget.isLoading || avatarTarget.isError)
   const isBusy = publishMutation.isPending || isSavingAvatar
-  const avatarOnly = isUpdate && !selectedFile && !mustReselectPackage
+  const avatarOnly = isUpdate && !selectedFile && !mustReselectPackage && sourceMode === 'local'
   const selectedNamespace = namespaces?.find((ns) => ns.slug === namespaceSlug)
   const useTeamDefault = !updateSlug && !search.visibility && !visibilityEdited && selectedNamespace?.type === 'TEAM'
   const effectiveVisibility = useTeamDefault ? 'NAMESPACE_ONLY' : visibility
@@ -167,7 +172,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   const draftChanged = Boolean(selectedFile || mustReselectPackage || namespaceSlug !== prefill.namespace || visibilityEdited ||
     displayNameEdited.current || sourceTouched.current.short || sourceTouched.current.overview)
   const accepted = submissionState?.kind === 'accepted'
-  const shouldProtect = !accepted && (draftChanged || avatarEdit.action !== 'KEEP' || isPackaging || isBusy)
+  const shouldProtect = !accepted && (draftChanged || avatarEdit.action !== 'KEEP' || isPackaging || importing || isBusy)
   const blocker = useBlocker({
     shouldBlockFn: () => shouldProtect && !editorOpen && !isBusy && !submitting.current,
     enableBeforeUnload: shouldProtect && !editorOpen,
@@ -180,18 +185,20 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     }
     savePublishDraft(draftKey, {
       namespace: namespaceSlug, visibility, visibilityEdited, hadPackage: Boolean(selectedFile || mustReselectPackage),
+      externalSourceUrl: externalSourceUrl || (sourceMode === 'external' && mustReselectPackage ? restoredDraft?.externalSourceUrl : undefined),
       displayName: displayNameEdited.current ? displayName : undefined,
       shortDescription, overview, shortSource, overviewSource,
       shortTouched: sourceTouched.current.short, overviewTouched: sourceTouched.current.overview,
     })
   }, [draftKey, accepted, draftChanged, displayName, namespaceSlug, visibility, visibilityEdited, selectedFile,
-    mustReselectPackage, shortDescription, overview, shortSource, overviewSource])
-  const canSubmit = resourceReady && !ownerReadOnly && !isPackaging && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (avatarOnly && avatarEdit.action !== 'KEEP'))
+    mustReselectPackage, shortDescription, overview, shortSource, overviewSource, externalSourceUrl, sourceMode, restoredDraft?.externalSourceUrl])
+  const canSubmit = resourceReady && !ownerReadOnly && !isPackaging && !importing && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (avatarOnly && avatarEdit.action !== 'KEEP'))
 
   const handleRemoveSelectedFile = () => {
     selectionGeneration.current += 1
     setFolderError('')
     setSelectedFile(null)
+    setExternalSourceUrl(undefined)
     setMustReselectPackage(false)
     setPrecheckWarnings([])
     setWarningDialogOpen(false)
@@ -205,6 +212,22 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     setFileRevision(value => value + 1)
     setPrecheckWarnings([])
     setWarningDialogOpen(false)
+  }
+
+  const importExternal = async () => {
+    if (!sourceInput.trim() || importing) return
+    setImporting(true)
+    setImportError('')
+    try {
+      const imported = await resolveExternalSkillPackage(sourceInput.trim())
+      handleFileSelect(imported.file)
+      setSourceInput(imported.sourceUrl)
+      setExternalSourceUrl(imported.sourceUrl)
+    } catch (error) {
+      setImportError(error instanceof ApiError ? error.message : t('publish.external.failed'))
+    } finally {
+      setImporting(false)
+    }
   }
 
   const handleFolderSelect = async (files: File[]) => {
@@ -254,6 +277,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
       const result = await publishMutation.mutateAsync({
         namespace: namespaceSlug,
         file: selectedFile!,
+        externalSourceUrl,
         visibility: effectiveVisibility,
         confirmWarnings,
         avatarAction: avatarEdit.action,
@@ -398,23 +422,59 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           <section id="publish-package-section" tabIndex={-1} aria-labelledby="publish-package-label" aria-invalid={attempted && !selectedFile} className="min-w-0 space-y-3 scroll-mt-24 lg:col-start-1 lg:row-start-1">
             <h2 id="publish-package-label" className="text-base font-semibold">{t('publish.file')} <span className="text-destructive">*</span></h2>
             {isUpdate && <p className="text-sm text-muted-foreground">{t('publish.optionalPackage')}</p>}
-            <UploadZone
-              key={`${namespaceSlug}/${updateSlug}`}
-              formatHint={t('publish.packageFormatHint')}
-              analyticsId="skill.package.select"
-              folderAnalyticsId="skill.package.folder.select"
-              pickerAnalyticsId="skill.package.folder.open"
-              selectedFile={selectedFile}
-              previewStatus={selectedFile ? packagePreview.isPending ? 'reading' : packagePreview.isError ? 'error' : packagePreview.isSuccess ? 'ready' : 'idle' : 'idle'}
-              previewError={packagePreview.isError ? t('publish.packagePreviewFailed') : undefined}
-              isPackaging={isPackaging}
-              onFileSelect={handleFileSelect}
-              onFolderSelect={handleFolderSelect}
-              onRemove={handleRemoveSelectedFile}
-              replaceActionId={`${previewId}-replace-action`}
-              disabled={ownerReadOnly || isBusy}
-            />
-            {mustReselectPackage && <p role="status" className="text-sm text-muted-foreground">{t('publish.form.reselectPackage')}</p>}
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('publish.external.source')}>
+              {(['local', 'external'] as const).map(mode => (
+                <Button key={mode} type="button" size="sm" variant={sourceMode === mode ? 'soft' : 'outline'}
+                  aria-pressed={sourceMode === mode} disabled={ownerReadOnly || importing || isBusy || isPackaging}
+                  onClick={() => {
+                    if (mode === sourceMode) return
+                    handleRemoveSelectedFile()
+                    setImportError('')
+                    setSourceMode(mode)
+                  }}>
+                  {t(`publish.external.${mode}`)}
+                </Button>
+              ))}
+            </div>
+            {sourceMode === 'local' ? (
+              <UploadZone
+                key={`${namespaceSlug}/${updateSlug}`}
+                formatHint={t('publish.packageFormatHint')}
+                analyticsId="skill.package.select"
+                folderAnalyticsId="skill.package.folder.select"
+                pickerAnalyticsId="skill.package.folder.open"
+                selectedFile={selectedFile}
+                previewStatus={selectedFile ? packagePreview.isPending ? 'reading' : packagePreview.isError ? 'error' : packagePreview.isSuccess ? 'ready' : 'idle' : 'idle'}
+                previewError={packagePreview.isError ? t('publish.packagePreviewFailed') : undefined}
+                isPackaging={isPackaging}
+                onFileSelect={handleFileSelect}
+                onFolderSelect={handleFolderSelect}
+                onRemove={handleRemoveSelectedFile}
+                replaceActionId={`${previewId}-replace-action`}
+                disabled={ownerReadOnly || isBusy}
+              />
+            ) : (
+              <form className="space-y-2 rounded-lg border bg-card p-3 sm:p-4" onSubmit={event => { event.preventDefault(); void importExternal() }}>
+                <Label htmlFor="external-skill-url">{t('publish.external.url')}</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Input id="external-skill-url" type="url" maxLength={2048} value={sourceInput}
+                    className="min-w-40 flex-1" disabled={importing || ownerReadOnly || isBusy}
+                    placeholder="https://github.com/owner/repo/tree/main/skill"
+                    aria-describedby="external-skill-help" onChange={event => {
+                      setSourceInput(event.target.value)
+                      setImportError('')
+                      handleRemoveSelectedFile()
+                    }} />
+                  <Button type="submit" variant="outline" disabled={!sourceInput.trim() || importing || ownerReadOnly || isBusy}>
+                    {t(importing ? 'publish.external.checking' : 'publish.external.import')}
+                  </Button>
+                </div>
+                <p id="external-skill-help" className="text-xs text-muted-foreground">{t('publish.external.help')}</p>
+                {importError && <p role="alert" className="text-sm text-destructive">{importError}</p>}
+                {externalSourceUrl && packagePreview.isSuccess && <p role="status" className="text-sm font-medium">{t('publish.external.checked')}</p>}
+              </form>
+            )}
+            {mustReselectPackage && <p role="status" className="text-sm text-muted-foreground">{t(sourceMode === 'external' ? 'publish.external.reimport' : 'publish.form.reselectPackage')}</p>}
             {folderError && <p role="alert" className="text-sm text-destructive">{folderError}</p>}
             {attempted && !selectedFile && <p role="alert" className="text-sm text-destructive">{t('publish.selectRequired')}</p>}
             {selectedFile && packagePreview.isError && <Button data-analytics-id="skill.package.preview.retry" type="button" size="sm" variant="outline" disabled={ownerReadOnly || isBusy} onClick={() => packagePreview.refetch()}>{t('publish.retryPackagePreview')}</Button>}
@@ -550,7 +610,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
               if (canSubmit) { if (avatarOnly) void handlePublish(); else setConfirmOpen(true) }
               else focusField(missingFields[0]?.id ?? 'publish-form-heading')
             }}
-            disabled={ownerReadOnly || isBusy || isPackaging || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && packagePreview.isPending)}
+            disabled={ownerReadOnly || isBusy || isPackaging || importing || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && packagePreview.isPending)}
           >{isBusy ? t('publish.publishing') : t(avatarOnly ? 'publish.saveAvatar' : 'publish.nextConfirm')}</Button>
         </footer>
 
@@ -598,7 +658,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           closeOnConfirm={false}
           onConfirm={() => { if (blocker.status === 'blocked') blocker.proceed() }}
         />
-        <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('publish.confirmDetails')} description={<span className="whitespace-pre-line">{[displayName, `@${namespaceSlug}/${packagePreview.data?.name}@${packagePreview.data?.version}`, audience, previewShortDescription, t('publish.reviewNotice.description')].join('\n\n')}</span>} confirmText={t('publish.confirm')} cancelText={t('publish.backToEdit')} onConfirm={() => { if (!canSubmit) return; setConfirmOpen(false); void handlePublish() }} />
+        <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('publish.confirmDetails')} description={<span className="whitespace-pre-line">{[displayName, `@${namespaceSlug}/${packagePreview.data?.name}@${packagePreview.data?.version}`, audience, externalSourceUrl, previewShortDescription, t('publish.reviewNotice.description')].filter(Boolean).join('\n\n')}</span>} confirmText={t('publish.confirm')} cancelText={t('publish.backToEdit')} onConfirm={() => { if (!canSubmit) return; setConfirmOpen(false); void handlePublish() }} />
         <ConfirmDialog confirmAnalyticsId={avatarOnly ? undefined : 'skill.publish.confirm'} cancelAnalyticsId={avatarOnly ? undefined : 'skill.publish.cancel'}
           open={warningDialogOpen}
           onOpenChange={setWarningDialogOpen}

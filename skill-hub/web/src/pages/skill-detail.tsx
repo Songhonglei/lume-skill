@@ -14,7 +14,7 @@ import { FileTree } from '@/features/skill/file-tree'
 import { FilePreviewDialog } from '@/features/skill/file-preview-dialog'
 import type { FileTreeNode } from '@/features/skill/file-tree-builder'
 import type { SkillFile } from '@/api/types'
-import { getVersionPresentation } from '@/shared/lib/version-presentation'
+import { getExternalSkillSource, getVersionPresentation } from '@/shared/lib/version-presentation'
 import { CopyButton } from '@/shared/components/copy-button'
 import { buildSkillhubInstallCommand, getBaseUrl, InstallCommand } from '@/features/skill/install-command'
 import { copyToClipboard } from '@/shared/lib/clipboard'
@@ -209,6 +209,7 @@ export function SkillDetailPage() {
   const unavailableVersion = Boolean(requestedVersion && versionDetailError instanceof ApiError && [403, 404].includes(versionDetailError.status))
   const selectedVersionEntry = versions?.find((version) => version.version === selectedVersion)
     ?? (selectedVersionDetail ? { ...selectedVersionDetail, downloadAvailable: false, syncRevision: undefined } : undefined)
+  const externalSource = getExternalSkillSource(selectedVersionDetail?.parsedMetadataJson)
   const historicalMetadata = getVersionPresentation(selectedVersionDetail?.parsedMetadataJson)
   const selectedDisplayName = selectedMetadata?.displayName ?? historicalMetadata.displayName ?? skill?.displayName
   const selectedSummary = selectedMetadata?.summary ?? historicalMetadata.summary ?? skill?.summary
@@ -971,6 +972,13 @@ export function SkillDetailPage() {
               </span>
             )}
           </div>
+          {selectedVersionDetail && <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span className="rounded-md bg-secondary px-2 py-1">{t(externalSource || skill.githubSource ? 'skillSource.external' : 'skillSource.local')}</span>
+            {externalSource && <a href={externalSource} target="_blank" rel="noreferrer"
+              className="min-w-0 rounded-sm text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+              {t('skillSource.link')}
+            </a>}
+          </div>}
           <div className="flex items-center gap-4"><SkillAvatar name={selectedDisplayName ?? skill.displayName} url={skill.avatarUrl} size="h-12 w-12 text-xl" /><h1 className="text-balance break-words text-2xl font-semibold tracking-tight sm:text-3xl text-foreground [overflow-wrap:anywhere]">{selectedDisplayName}</h1></div>
           <div className="flex min-w-0 items-center gap-2">
             <code className="min-w-0 break-all text-sm text-muted-foreground">@{skill.namespace}/{skill.slug}</code>

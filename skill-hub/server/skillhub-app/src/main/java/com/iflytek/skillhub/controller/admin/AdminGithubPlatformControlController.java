@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/admin/github-sync/platform-control")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class AdminGithubPlatformControlController extends BaseApiController {
     private final GithubPlatformControlAppService controls;
     public AdminGithubPlatformControlController(ApiResponseFactory factory, GithubPlatformControlAppService controls) {

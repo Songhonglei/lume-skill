@@ -1,6 +1,8 @@
 package com.iflytek.skillhub.controller.portal;
 
 import com.iflytek.skillhub.service.SkillPackagePreviewService;
+import com.iflytek.skillhub.service.ExternalSkillPackageService;
+import com.iflytek.skillhub.dto.ExternalSkillPackageResponse;
 import com.iflytek.skillhub.dto.SkillPackagePreviewResponse;
 import com.iflytek.skillhub.domain.shared.exception.DomainForbiddenException;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 
 /**
@@ -39,6 +42,18 @@ public class SkillPublishController extends BaseApiController {
     private final SkillPackageArchiveExtractor skillPackageArchiveExtractor;
     private final SkillHubMetrics skillHubMetrics;
     private final SkillPackagePreviewService packagePreview;
+    private final ExternalSkillPackageService externalPackages;
+
+    @PostMapping(value = "/external-package")
+    @RateLimit(category = "publish", authenticated = 10, anonymous = 0)
+    public ApiResponse<ExternalSkillPackageResponse> previewExternal(
+            @RequestParam("url") String url,
+            @AuthenticationPrincipal PlatformPrincipal principal) {
+        if (principal == null) throw new DomainForbiddenException("error.auth.required");
+        var result = externalPackages.resolve(url);
+        return ok("response.success.read", new ExternalSkillPackageResponse(
+                result.sourceUrl(), Base64.getEncoder().encodeToString(result.zip())));
+    }
 
     @PostMapping(value = "/package-preview", consumes = "multipart/form-data")
     @RateLimit(category = "publish", authenticated = 10, anonymous = 0)
@@ -60,12 +75,14 @@ public class SkillPublishController extends BaseApiController {
                                   SkillPackageArchiveExtractor skillPackageArchiveExtractor,
                                   ApiResponseFactory responseFactory,
                                   SkillHubMetrics skillHubMetrics,
-                                  SkillPackagePreviewService packagePreview) {
+                                  SkillPackagePreviewService packagePreview,
+                                  ExternalSkillPackageService externalPackages) {
         super(responseFactory);
         this.skillPublishService = skillPublishService;
         this.skillPackageArchiveExtractor = skillPackageArchiveExtractor;
         this.skillHubMetrics = skillHubMetrics;
         this.packagePreview = packagePreview;
+        this.externalPackages = externalPackages;
     }
 
     /**
@@ -86,8 +103,10 @@ public class SkillPublishController extends BaseApiController {
             @RequestParam(value = "shortDescription", required = false) String shortDescription,
             @RequestParam(value = "overview", required = false) String overview,
             @RequestParam(value = "resetPresentation", defaultValue = "false") boolean resetPresentation,
+            @RequestParam(value = "externalSourceUrl", required = false) String externalSourceUrl,
             @AuthenticationPrincipal PlatformPrincipal principal, HttpServletRequest request) throws IOException {
 
+        if (principal == null) throw new DomainForbiddenException("error.auth.required");
         SkillVisibility skillVisibility = SkillVisibility.valueOf(visibility.toUpperCase());
 
         List<PackageEntry> entries;
@@ -107,6 +126,7 @@ public class SkillPublishController extends BaseApiController {
                     String.join("\n", extractionWarnings));
         }
 
+        String verifiedSource = externalSourceUrl == null ? null : externalPackages.verify(externalSourceUrl, entries);
         SkillPublishService.PublishResult publishResult = skillPublishService.publish(
                 namespace,
                 entries,
@@ -115,7 +135,7 @@ public class SkillPublishController extends BaseApiController {
                 principal.platformRoles(),
                 confirmWarnings, avatarAction, avatarUploadId, expectedSlug, displayName,
                 shortDescription, overview, resetPresentation, AuditRequestContext.from(request),
-                principal.tokenCapabilities()
+                principal.tokenCapabilities(), verifiedSource
         );
 
         PublishResponse response = new PublishResponse(

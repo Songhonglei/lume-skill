@@ -32,6 +32,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/admin/github-sync/credentials")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 @Tag(name = "GitHub Sync Admin")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class AdminGithubCredentialController extends BaseApiController {
     private final GithubCredentialAdminAppService credentials;
 

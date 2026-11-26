@@ -41,6 +41,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping({"/api/v1/namespaces/{namespaceSlug}/github-sources",
         "/api/web/namespaces/{namespaceSlug}/github-sources"})
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubTeamSourceController extends BaseApiController {
     private final GithubTeamSourceAppService sources;
     private final GithubSourceIgnoreAppService ignores;

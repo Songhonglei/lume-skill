@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncHistoryCleanupTask {
     private static final Logger log = LoggerFactory.getLogger(GithubSyncHistoryCleanupTask.class);
     private static final int DISCOVERY_BATCH_SIZE = 500;

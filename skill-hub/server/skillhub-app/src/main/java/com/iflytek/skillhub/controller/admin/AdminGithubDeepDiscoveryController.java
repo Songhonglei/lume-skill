@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/github-sync/deep-discovery/configuration")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 @Tag(name = "GitHub Sync Admin")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class AdminGithubDeepDiscoveryController extends BaseApiController {
     private final GithubDeepDiscoveryConfigurationAppService configurations;
 

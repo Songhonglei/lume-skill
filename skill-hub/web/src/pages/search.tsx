@@ -4,7 +4,7 @@ import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Check, Loader2 } from 'lucide-react'
-import type { PagedResponse, SkillSource, SkillSummary } from '@/api/types'
+import type { PagedResponse, SkillSummary } from '@/api/types'
 import { useAuth } from '@/features/auth/use-auth'
 import { MarketSearchControls } from '@/features/search/market-search-controls'
 import { flattenMarketSkills, getMarketSkillsKey, useMarketSkills, type MarketSearchParams } from '@/features/search/use-market-skills'
@@ -19,7 +19,7 @@ import { formatNamespaceSearchInput, normalizeSearchQuery, parseNamespaceSearchI
 import { Button } from '@/shared/ui/button'
 
 const PAGE_SIZE = 12
-interface MarketFilters { q: string; namespace: string; source: SkillSource; label: string; sort: string; starredOnly: boolean }
+interface MarketFilters { q: string; namespace: string; label: string; sort: string; starredOnly: boolean }
 
 function filterStarredSkills(skills: SkillSummary[], query: string, namespace: string): SkillSummary[] {
   const normalizedQuery = query.trim().toLowerCase()
@@ -58,13 +58,12 @@ export function SearchPage() {
   const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth()
   const q = normalizeSearchQuery(searchParams.q || '')
   const namespace = (searchParams.namespace || '').replace(/^@/, '')
-  const source = searchParams.source ?? (namespace ? 'all' : 'platform')
   const selectedLabel = searchParams.label || ''
   const sort = searchParams.sort || 'newest'
   const starredOnly = searchParams.starredOnly ?? false
   const language = i18n.resolvedLanguage || i18n.language || 'en'
   const viewer = user?.userId ?? null
-  const params: MarketSearchParams = { q, namespace: namespace || undefined, source, label: selectedLabel || undefined, sort, size: PAGE_SIZE }
+  const params: MarketSearchParams = { q, namespace: namespace || undefined, label: selectedLabel || undefined, sort, size: PAGE_SIZE }
   const queryKey = getMarketSkillsKey(params, viewer, language)
   const scrollKey = JSON.stringify([queryKey, starredOnly])
   const [queryInput, setQueryInput] = useState(formatNamespaceSearchInput(namespace, q))
@@ -87,7 +86,7 @@ export function SearchPage() {
   const restoring = useMarketScroll(scrollKey, !isPageLoading && displayItems.length > 0)
 
   const applyFilters = (next: MarketFilters, replace = false) => {
-    const nextParams: MarketSearchParams = { q: next.q, namespace: next.namespace || undefined, source: next.source, label: next.label || undefined, sort: next.sort, size: PAGE_SIZE }
+    const nextParams: MarketSearchParams = { q: next.q, namespace: next.namespace || undefined, label: next.label || undefined, sort: next.sort, size: PAGE_SIZE }
     const nextKey = getMarketSkillsKey(nextParams, viewer, language)
     const nextScrollKey = JSON.stringify([nextKey, next.starredOnly])
     clearMarketScroll(nextScrollKey)
@@ -97,13 +96,12 @@ export function SearchPage() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' })
     navigate({ to: '/search', search: { ...next, page: 0 }, ...(replace ? { replace: true } : {}) })
   }
-  const current: MarketFilters = { q, namespace, source, label: selectedLabel, sort, starredOnly }
+  const current: MarketFilters = { q, namespace, label: selectedLabel, sort, starredOnly }
   const handleSearch = (text: string) => {
     const parsed = parseNamespaceSearchInput(text)
     setQueryInput(text)
-    startTransition(() => applyFilters({ ...current, q: parsed.query, namespace: parsed.namespace, source: searchParams.source ?? (parsed.namespace ? 'all' : 'platform') }, true))
+    startTransition(() => applyFilters({ ...current, q: parsed.query, namespace: parsed.namespace }, true))
   }
-  const handleSourceChange = (value: SkillSource) => applyFilters({ ...current, source: value })
   const handleStarredToggle = () => {
     if (!isAuthenticated) {
       navigate({ to: '/login', search: { returnTo: toRouterPath(window.location.pathname, window.location.search, window.location.hash) } })
@@ -134,10 +132,10 @@ export function SearchPage() {
     <div className="space-y-4 sm:space-y-6">
       <DashboardPageHeader title={t('nav.marketplace')} />
       <MarketSearchControls query={queryInput} onQueryChange={setQueryInput} onSearch={handleSearch}
-        source={source} onSourceChange={handleSourceChange} labels={labels ?? []} selectedLabel={selectedLabel}
+        labels={labels ?? []} selectedLabel={selectedLabel}
         onLabelChange={label => applyFilters({ ...current, label: label === selectedLabel ? '' : label })}
         starredOnly={starredOnly} onStarredToggle={handleStarredToggle} sort={sort} onSortChange={value => applyFilters({ ...current, sort: value })}
-        namespace={namespace} onNamespaceClear={() => applyFilters({ ...current, namespace: '', source: searchParams.source ?? 'platform' })}
+        namespace={namespace} onNamespaceClear={() => applyFilters({ ...current, namespace: '' })}
         resultCount={resultCount} isUpdating={isUpdatingResults} />
       {isPageLoading ? <div role="status" aria-label={t('common.loading')}><SkeletonList count={PAGE_SIZE} /></div> : loadFailed && displayItems.length === 0 ? (
         <div className="text-center" role="alert"><EmptyState title={t('search.source.loadFailed')} /><Button data-analytics-id="search.source.retry" variant="outline" onClick={retry}>{t('search.source.retry')}</Button></div>
@@ -156,10 +154,9 @@ export function SearchPage() {
               : <span role="status" className="inline-flex items-center gap-2"><Check aria-hidden="true" className="h-4 w-4" />{t('search.market.allLoaded', { count: displayItems.length })}</span>}
           </div>
         </>
-      ) : <EmptyState title={starredOnly ? t('search.noStarredResults') : source === 'github' && !q && !namespace && !selectedLabel ? t('search.market.githubEmpty') : t('search.noResults')}
+      ) : <EmptyState title={starredOnly ? t('search.noStarredResults') : t('search.noResults')}
         description={starredOnly ? (q ? t('search.noStarredResultsFor', { q }) : t('search.noStarredSkills')) : q ? t('search.noResultsFor', { q }) : undefined}
-        action={q || namespace || selectedLabel ? <Button onClick={() => { setQueryInput(''); applyFilters({ ...current, q: '', namespace: '', label: '' }) }}>{t('search.market.reset')}</Button>
-          : !starredOnly && source === 'github' ? <Button onClick={() => handleSourceChange('platform')}>{t('search.market.viewPlatform')}</Button> : undefined} />}
+        action={q || namespace || selectedLabel ? <Button onClick={() => { setQueryInput(''); applyFilters({ ...current, q: '', namespace: '', label: '' }) }}>{t('search.market.reset')}</Button> : undefined} />}
     </div>
   )
 }

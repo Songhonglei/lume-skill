@@ -15,7 +15,7 @@ vi.mock('@/features/auth/use-auth', () => ({ useAuth: () => ({ isAuthenticated: 
 vi.mock('@/shared/hooks/use-label-queries', () => ({ useVisibleLabels: () => ({ data: [] }) }))
 vi.mock('@/shared/hooks/use-user-queries', () => ({ useMyStars: () => ({ data: state.favorites, isLoading: false, isFetching: false }) }))
 vi.mock('@/features/search/use-market-skills', async original => ({ ...await original<typeof import('@/features/search/use-market-skills')>(), useMarketSkills: () => state.query }))
-vi.mock('@/features/search/market-search-controls', () => ({ MarketSearchControls: ({ onSourceChange }: { onSourceChange: (source: string) => void }) => <button onClick={() => onSourceChange('github')}>change source</button> }))
+vi.mock('@/features/search/market-search-controls', () => ({ MarketSearchControls: ({ onLabelChange }: { onLabelChange: (label: string) => void }) => <button onClick={() => onLabelChange('research')}>change label</button> }))
 vi.mock('@/features/skill/skill-card', () => ({ SkillCard: ({ skill }: { skill: { displayName: string } }) => <article>{skill.displayName}</article> }))
 
 let intersect: IntersectionObserverCallback
@@ -70,9 +70,9 @@ describe('market incremental list states', () => {
 
   it('trims a destination cache to one batch and resets paging on filter changes', () => {
     render(<SearchPage />)
-    fireEvent.click(screen.getByRole('button', { name: 'change source' }))
+    fireEvent.click(screen.getByRole('button', { name: 'change label' }))
     const trim = state.trim.mock.calls[0][1]
     expect(trim({ pages: ['first', 'second'], pageParams: [0, 1] })).toEqual({ pages: ['first'], pageParams: [0] })
-    expect(state.navigate).toHaveBeenCalledWith({ to: '/search', search: { q: '', namespace: '', source: 'github', label: '', sort: 'newest', starredOnly: false, page: 0 } })
+    expect(state.navigate).toHaveBeenCalledWith({ to: '/search', search: { q: '', namespace: '', label: 'research', sort: 'newest', starredOnly: false, page: 0 } })
   })
 })

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/github-sync/repositories")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 @Tag(name = "GitHub Sync Admin")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class AdminGithubSyncRepositoryController extends BaseApiController {
     private final GithubSyncRepositoryQueryRepository queries;
 

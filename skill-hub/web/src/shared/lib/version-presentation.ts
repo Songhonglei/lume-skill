@@ -28,3 +28,15 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function validName(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= 200 ? value.trim() : undefined
 }
+export function getExternalSkillSource(snapshot?: string): string | undefined {
+  if (!snapshot) return undefined
+  try {
+    const source = JSON.parse(snapshot)?.externalSourceUrl
+    if (typeof source !== 'string') return undefined
+    const link = new URL(source)
+    return link.protocol === 'https:' && ['github.com', 'clawhub.ai', 'skillhub.cn', 'skills.sh'].includes(link.hostname)
+      ? link.href : undefined
+  } catch {
+    return undefined
+  }
+}

@@ -33,6 +33,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/admin/github-sync/discovery-entries")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 @Tag(name = "GitHub Sync Admin")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class AdminGithubDiscoveryController extends BaseApiController {
     private final GithubDiscoveryAdminAppService discovery;
     private final GithubSearchPreviewAppService previews;

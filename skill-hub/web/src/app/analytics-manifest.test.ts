@@ -31,11 +31,11 @@ describe('frontend semantic marker source contract', () => {
       }
     }
     expect(ids.has('navigation.primary.open')).toBe(false)
-    expect(['navigation.skills.open', 'navigation.suites.open', 'navigation.github.open'].every(id => ids.has(id))).toBe(true)
+    expect(['navigation.skills.open', 'navigation.suites.open'].every(id => ids.has(id))).toBe(true)
   })
 
   it('retains the original eight meanings and explicit meaningful cancellation categories', () => {
-    for (const id of ['search.query.submit', 'skill.card.open', 'skill.detail.render', 'skill.download.request', 'skill.command.copy', 'skill.prompt.copy', 'skill.publish.request', 'skill.publish.confirm', 'skill.publish.cancel', 'skill.delete.cancel', 'review.reject.cancel', 'github.admission.cancel', 'suite.draft.cancel']) expect(ids.has(id)).toBe(true)
+    for (const id of ['search.query.submit', 'skill.card.open', 'skill.detail.render', 'skill.download.request', 'skill.command.copy', 'skill.prompt.copy', 'skill.publish.request', 'skill.publish.confirm', 'skill.publish.cancel', 'skill.delete.cancel', 'review.reject.cancel', 'suite.draft.cancel']) expect(ids.has(id)).toBe(true)
     expect(manifest.sites.filter(site => site.ids?.includes('skill.detail.render')).map(site => [site.file, site.host, site.event])).toEqual([['web/src/pages/skill-detail.tsx', 'div', 'structural']])
     expect(manifest.sites.some(site => site.host === 'ConfirmDialog' && site.prop === 'cancelAnalyticsId' && site.ids?.includes('skill.publish.cancel'))).toBe(true)
   })
@@ -61,7 +61,6 @@ describe('frontend semantic marker source contract', () => {
       for (const action of actions) for (const phase of ['request', 'confirm', 'cancel']) expect(ids.has(`${domain}.${action}.${phase}`)).toBe(true)
     }
     for (const action of ['dismiss', 'resolve', 'hide', 'archive']) for (const phase of ['request', 'confirm', 'cancel']) expect(ids.has(`report.${action}.${phase}`)).toBe(true)
-    for (const action of ['pause', 'resume']) for (const phase of ['request', 'confirm', 'cancel']) expect(ids.has(`github.platform.${action}.${phase}`)).toBe(true)
     for (const action of ['create', 'update']) for (const phase of ['request', 'confirm', 'cancel']) expect(ids.has(`skill.promotion.${action}.${phase}`)).toBe(true)
     for (const action of ['direct', 'request']) for (const phase of ['submit', 'cancel']) expect(ids.has(`skill.revocation.${action}.${phase}`)).toBe(true)
     for (const generic of ['namespace.lifecycle.confirm', 'suite.lifecycle.confirm', 'report.action.confirm', 'github.platform.control', 'github.credential.toggle', 'skill.promotion.confirm', 'skill.revocation.submit']) expect(ids.has(generic)).toBe(false)

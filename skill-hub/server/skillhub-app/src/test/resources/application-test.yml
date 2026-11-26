@@ -37,6 +37,8 @@ spring:
             user-info-uri: https://api.github.com/user
 
 skillhub:
+  github-sync:
+    enabled: true
   scheduling:
     enabled: false
   auth:

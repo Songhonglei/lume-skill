@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncPublicationTask {
     private static final Logger log = LoggerFactory.getLogger(GithubSyncPublicationTask.class);
 

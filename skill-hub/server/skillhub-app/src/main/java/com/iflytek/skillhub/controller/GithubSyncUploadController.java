@@ -20,6 +20,7 @@ import java.util.UUID;
 @RestController
 @Hidden
 @RequestMapping("/internal/github-sync/v1")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncUploadController {
     private final GithubSyncUploadAppService uploads;
 

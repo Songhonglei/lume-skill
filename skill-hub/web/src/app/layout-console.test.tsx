@@ -134,7 +134,7 @@ describe('shared console layout composition', () => {
 
     resolvedPathname = pathname = '/admin/system-config'
     view.rerender(<Layout />)
-    expect(sidebar().getByText('sidebar.githubSync')).toBeTruthy()
+    expect(sidebar().queryByText('sidebar.githubSync')).toBeNull()
     expect(sidebar().getByText('sidebar.governance')).toBeTruthy()
     expect(sidebar().queryByRole('link', { name: 'sidebar.profile' })).toBeNull()
     roles = ['USER_ADMIN']

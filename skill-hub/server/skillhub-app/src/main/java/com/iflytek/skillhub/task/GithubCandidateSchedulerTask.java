@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubCandidateSchedulerTask {
     private static final Logger log = LoggerFactory.getLogger(GithubCandidateSchedulerTask.class);
     private final GithubCandidateTaskRepository candidates;
