@@ -66,6 +66,30 @@ class ExternalSkillPackageServiceTest {
     }
 
     @Test
+    void resolvesGithubBlobDirectoriesWithoutImportingSiblingSkills() throws IOException {
+        String blobFolder = GITHUB.replace("/tree/", "/blob/");
+        String blobFile = blobFolder + "/SKILL.md";
+        doReturn(zip(Map.of(
+                "repo-main/.agents/skills/demo/SKILL.md", SKILL_MD,
+                "repo-main/.agents/skills/demo/references/guide.md", "# Guide",
+                "repo-main/.agents/skills/demo/README.md", "# Readme",
+                "repo-main/.agents/skills/another/SKILL.md", SKILL_MD))).when(service).download(any());
+
+        var folder = service.resolve(blobFolder + "?plain=1#readme");
+        var file = service.resolve(blobFile);
+        assertThat(folder.sourceUrl()).isEqualTo(GITHUB);
+        assertThat(file.sourceUrl()).isEqualTo(blobFile);
+        assertThat(folder.entries()).extracting(PackageEntry::path)
+                .containsExactlyInAnyOrder("SKILL.md", "references/guide.md", "README.md");
+        assertThat(service.verify(folder.sourceUrl(), file.entries())).isEqualTo(GITHUB);
+        assertThat(ExternalSkillLink.parse(blobFolder).download()).isEqualTo(ExternalSkillLink.parse(GITHUB).download());
+        assertThatThrownBy(() -> service.resolve(blobFolder + "/README.md"))
+                .isInstanceOf(DomainBadRequestException.class).hasMessageContaining("external.directory");
+        assertThatThrownBy(() -> service.resolve(blobFolder + "/missing"))
+                .isInstanceOf(DomainBadRequestException.class).hasMessageContaining("external.directory");
+    }
+
+    @Test
     void rejectsAmbiguousFoldersAndMalformedAgentSkills() throws IOException {
         doReturn(zip(Map.of("repo-head/a/SKILL.md", SKILL_MD, "repo-head/b/SKILL.md", SKILL_MD)))
                 .when(service).download(any());
