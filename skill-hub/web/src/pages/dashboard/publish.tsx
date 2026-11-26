@@ -198,6 +198,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     selectionGeneration.current += 1
     setFolderError('')
     setSelectedFile(null)
+    if (selectedFile) setFileRevision(value => value + 1)
     setExternalSourceUrl(undefined)
     setMustReselectPackage(false)
     setPrecheckWarnings([])
@@ -372,6 +373,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     field?.focus()
   }
 
+  const showPublicationFields = isUpdate || (selectedFile !== null && packagePreview.isSuccess)
   const missingFields = [
     { id: 'publish-package-section', invalid: !selectedFile, label: 'publish.file' },
     { id: 'namespace', invalid: !namespaceSlug, label: 'publish.namespace' },
@@ -380,7 +382,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   ].filter(field => field.invalid)
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] animate-fade-up">
+    <div className="mx-auto w-full max-w-[50rem] animate-fade-up">
       {submissionState && <PublishResultPanel
         state={submissionState}
         onReturnToForm={() => {
@@ -397,12 +399,12 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
         onViewMySkills={() => navigate({ to: '/dashboard/skills' })}
         onViewVersion={result => navigate({ to: '/space/$namespace/$slug', params: { namespace: result.namespace, slug: result.slug }, search: { version: result.version } })}
       />}
-      <div hidden={!!submissionState} inert={!!submissionState} className="space-y-8">
+      <div hidden={!!submissionState} inert={!!submissionState} className="space-y-5">
         <div id="publish-form-heading" tabIndex={-1}>
           <DashboardPageHeader title={t(isUpdate ? 'publish.updateTitle' : 'publish.title')} />
         </div>
 
-        {attempted && !avatarOnly && missingFields.length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-destructive">
+        {showPublicationFields && attempted && !avatarOnly && missingFields.length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-destructive">
           <p>{t('publish.source.requiredSummary')}</p>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
             {missingFields.map(field => <button key={field.id} type="button" className="underline underline-offset-4" onClick={() => focusField(field.id)}>{t(field.label)}</button>)}
@@ -418,9 +420,12 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           <p className="mt-1 text-sm text-muted-foreground">{t('publish.resubmitNotice.description')}</p>
         </div>}
 
-        <div className="grid min-w-0 gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_344px]">
-          <section id="publish-package-section" tabIndex={-1} aria-labelledby="publish-package-label" aria-invalid={attempted && !selectedFile} className="min-w-0 space-y-3 scroll-mt-24 lg:col-start-1 lg:row-start-1">
-            <h2 id="publish-package-label" className="text-base font-semibold">{t('publish.file')} <span className="text-destructive">*</span></h2>
+        <div className="min-w-0 space-y-4">
+          <section id="publish-package-section" tabIndex={-1} aria-labelledby="publish-package-label" aria-invalid={attempted && !avatarOnly && !selectedFile} className="min-w-0 space-y-3 scroll-mt-24 rounded-xl border bg-card p-4 sm:p-6">
+            <h2 id="publish-package-label" className="flex items-center gap-2.5 text-base font-semibold">
+              <span aria-hidden="true" className="inline-grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs text-primary">1</span>
+              {t('publish.form.package')}
+            </h2>
             {isUpdate && <p className="text-sm text-muted-foreground">{t('publish.optionalPackage')}</p>}
             <div className="flex flex-wrap gap-2" role="group" aria-label={t('publish.external.source')}>
               {(['local', 'external'] as const).map(mode => (
@@ -449,16 +454,19 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                 isPackaging={isPackaging}
                 onFileSelect={handleFileSelect}
                 onFolderSelect={handleFolderSelect}
-                onRemove={handleRemoveSelectedFile}
+                onRemove={() => {
+                  handleRemoveSelectedFile()
+                  requestAnimationFrame(() => focusField('publish-package-section'))
+                }}
                 replaceActionId={`${previewId}-replace-action`}
                 disabled={ownerReadOnly || isBusy}
               />
             ) : (
-              <form className="space-y-2 rounded-lg border bg-card p-3 sm:p-4" onSubmit={event => { event.preventDefault(); void importExternal() }}>
+              <form aria-busy={importing} className="space-y-2 rounded-lg border bg-background p-3" onSubmit={event => { event.preventDefault(); void importExternal() }}>
                 <Label htmlFor="external-skill-url">{t('publish.external.url')}</Label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Input id="external-skill-url" type="url" maxLength={2048} value={sourceInput}
-                    className="min-w-40 flex-1" disabled={importing || ownerReadOnly || isBusy}
+                    className="min-w-0 flex-1" disabled={importing || ownerReadOnly || isBusy}
                     placeholder="https://github.com/owner/repo/tree/main/skill"
                     aria-describedby="external-skill-help" onChange={event => {
                       setSourceInput(event.target.value)
@@ -471,21 +479,32 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                 </div>
                 <p id="external-skill-help" className="text-xs text-muted-foreground">{t('publish.external.help')}</p>
                 {importError && <p role="alert" className="text-sm text-destructive">{importError}</p>}
-                {externalSourceUrl && packagePreview.isSuccess && <p role="status" className="text-sm font-medium">{t('publish.external.checked')}</p>}
+                {selectedFile && (packagePreview.isPending || packagePreview.isSuccess) && <p role="status" className="text-xs font-medium">{t(packagePreview.isSuccess ? 'publish.external.checked' : 'publish.readingPackage')}</p>}
               </form>
+            )}
+            {selectedFile && packagePreview.data && (
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span className="[overflow-wrap:anywhere]"><code>{packagePreview.data.name}</code> · {packagePreview.data.version}</span>
+                {packagePreview.data.examplesStatus === 'ready' && <span role="status">{t('publish.examplesReady', { count: packagePreview.data.examplesCount })}</span>}
+                {packagePreview.data.examplesStatus === 'none' && <span>{t('publish.examplesNone')}</span>}
+                {packagePreview.data.examplesStatus === 'invalid' && <span role="status">{t('publish.examplesInvalid')}</span>}
+              </div>
             )}
             {mustReselectPackage && <p role="status" className="text-sm text-muted-foreground">{t(sourceMode === 'external' ? 'publish.external.reimport' : 'publish.form.reselectPackage')}</p>}
             {folderError && <p role="alert" className="text-sm text-destructive">{folderError}</p>}
-            {attempted && !selectedFile && <p role="alert" className="text-sm text-destructive">{t('publish.selectRequired')}</p>}
+            {sourceMode === 'external' && selectedFile && packagePreview.isError && <p role="alert" className="text-sm text-destructive">{t('publish.packagePreviewFailed')}</p>}
             {selectedFile && packagePreview.isError && <Button data-analytics-id="skill.package.preview.retry" type="button" size="sm" variant="outline" disabled={ownerReadOnly || isBusy} onClick={() => packagePreview.refetch()}>{t('publish.retryPackagePreview')}</Button>}
           </section>
 
-          <aside aria-labelledby="publish-settings-heading" className="min-w-0 self-start rounded-xl bg-muted/40 p-5 sm:p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:row-span-4">
-            <h2 id="publish-settings-heading" className="text-lg font-semibold">{t('publish.settings')}</h2>
-            <div className="mt-4 space-y-4">
-              <div className="space-y-3">
+          <section hidden={!showPublicationFields} aria-labelledby="publish-details-heading" className="min-w-0 space-y-5 rounded-xl border bg-card p-4 sm:p-6">
+            <h2 id="publish-details-heading" className="flex items-center gap-2.5 text-base font-semibold">
+              <span aria-hidden="true" className="inline-grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs text-primary">2</span>
+              {t('publish.form.details')}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="namespace">{t('publish.namespace')} <span className="text-destructive">*</span></Label>
-                {isLoadingNamespaces ? <div className="h-11 animate-shimmer rounded-lg" /> : <Select
+                {isLoadingNamespaces ? <div className="h-[var(--control-height)] animate-shimmer rounded-lg" /> : <Select
                   disabled={!!updateSlug || ownerReadOnly || isBusy}
                   value={normalizeSelectValue(namespaceSlug) ?? EMPTY_NAMESPACE_VALUE}
                   onValueChange={value => { setNamespaceSlug(value === EMPTY_NAMESPACE_VALUE ? '' : value); setAvatarEdit(KEEP_AVATAR) }}
@@ -497,7 +516,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                   </SelectContent>
                 </Select>}
               </div>
-              <div className="space-y-3">
+              <div className="min-w-0 space-y-2">
                 <Label htmlFor="visibility">{t('publish.visibility')} <span className="text-destructive">*</span></Label>
                 <Select value={effectiveVisibility} onValueChange={value => { setVisibility(value); setVisibilityEdited(true) }} disabled={ownerReadOnly || isBusy || avatarOnly}>
                   <SelectTrigger data-analytics-id="skill.publish.visibility.interact" id="visibility" aria-describedby="publish-visibility-help"><SelectValue /></SelectTrigger>
@@ -507,47 +526,30 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                     <SelectItem data-analytics-id="skill.publish.visibility.private" value="PRIVATE">{t('publish.visibilityOptions.private')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <p id="publish-visibility-help" className="text-xs leading-5 text-muted-foreground">{namespaceSlug ? audience : t('publish.selectNamespace')}</p>
+                <p id="publish-visibility-help" className="text-xs leading-5 text-muted-foreground">{namespaceSlug ? audience : null}</p>
               </div>
             </div>
-          </aside>
-
-          <section aria-labelledby="publish-identity-heading" className="min-w-0 space-y-5 lg:col-start-1 lg:row-start-2">
-            <h2 id="publish-identity-heading" className="text-lg font-semibold">{t('publish.form.identity')}</h2>
-            <div className="min-w-0">
-              <div className="min-w-0 space-y-2">
-                <Label htmlFor="skill-display-name">{t('publish.displayName')}</Label>
-                <Input
-                  id="skill-display-name"
-                  value={resourceReady ? displayName : ''}
-                  maxLength={200}
-                  disabled={ownerReadOnly || isBusy || !selectedFile}
-                  placeholder={isUpdate ? search.updateName : t('publish.displayNamePlaceholder')}
-                  aria-describedby="skill-display-name-help"
-                  onChange={event => { displayNameEdited.current = true; setDisplayName(event.target.value) }}
-                />
-                <p id="skill-display-name-help" className="text-xs leading-5 text-muted-foreground">{t('publish.form.nameHelp')}</p>
-                {selectedFile && packagePreview.data && <p className="break-all text-xs text-muted-foreground"><code>{packagePreview.data.name}</code> · {packagePreview.data.version}</p>}
-                {selectedFile && packagePreview.data?.examplesStatus === 'ready' && <p role="status" className="text-xs text-muted-foreground">{t('publish.examplesReady', { count: packagePreview.data.examplesCount })}</p>}
-                {selectedFile && packagePreview.data?.examplesStatus === 'none' && <p className="text-xs text-muted-foreground">{t('publish.examplesNone')}</p>}
-                {selectedFile && packagePreview.data?.examplesStatus === 'invalid' && <p role="status" className="text-xs text-muted-foreground">{t('publish.examplesInvalid')}</p>}
-              </div>
+            <div className="min-w-0 space-y-2">
+              <Label htmlFor="skill-display-name">{t('publish.displayName')}</Label>
+              <Input
+                id="skill-display-name"
+                value={resourceReady ? displayName : ''}
+                maxLength={200}
+                disabled={ownerReadOnly || isBusy || !selectedFile}
+                placeholder={isUpdate ? search.updateName : t('publish.displayNamePlaceholder')}
+                aria-describedby="skill-display-name-help"
+                onChange={event => { displayNameEdited.current = true; setDisplayName(event.target.value) }}
+              />
+              <p id="skill-display-name-help" className="text-xs leading-5 text-muted-foreground">{t('publish.form.nameHelp')}</p>
             </div>
-          </section>
-
-          <section aria-labelledby="publish-presentation-heading" className="min-w-0 space-y-8 border-t pt-8 lg:col-start-1 lg:row-start-3">
             <div className="space-y-2">
-              <h2 id="publish-presentation-heading" className="text-lg font-semibold">{t('publish.form.presentation')}</h2>
-              <p className="text-sm leading-6 text-muted-foreground">{t('publish.form.presentationHelp')}</p>
-            </div>
-            <div className="space-y-3">
               <Label htmlFor="skill-short-description">{t('publish.shortDescription')} <span className="text-destructive">*</span></Label>
               <Textarea
                 aria-label={t('publish.shortDescription')}
                 aria-required
                 id="skill-short-description"
-                rows={4}
-                className="min-h-[120px] resize-y"
+                rows={3}
+                className="min-h-20 resize-y"
                 maxLength={200}
                 value={previewShortDescription}
                 disabled={ownerReadOnly || isBusy}
@@ -571,13 +573,13 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
               {shortInvalid && selectedFile && <p id="skill-short-description-error" role={attempted ? 'alert' : 'status'} className={attempted ? 'text-sm text-destructive' : 'text-sm text-amber-700 dark:text-amber-400'}>{t('publish.source.shortRequired')}</p>}
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 id="skill-overview-label" tabIndex={-1} className="text-sm font-medium scroll-mt-24">{t('publish.overview')} <span className="text-destructive">*</span></h3>
-                <Button type="button" variant="outline" size="sm" disabled={ownerReadOnly || isBusy || readingOverview || readingPublished || (!!selectedFile && packagePreview.isPending)} onClick={openOverviewEditor}><Pencil className="mr-2 h-4 w-4" aria-hidden />{t('publish.editOverview')}</Button>
+                <Button type="button" variant="outline" size="sm" disabled={ownerReadOnly || isBusy || readingOverview || readingPublished || (!!selectedFile && packagePreview.isPending)} onClick={openOverviewEditor}><Pencil className="h-3.5 w-3.5" aria-hidden />{t('publish.editOverview')}</Button>
               </div>
-              <div className="rounded-xl border border-border bg-background p-5 sm:p-6" aria-labelledby="skill-overview-label" aria-describedby={overviewInvalid && selectedFile ? 'skill-overview-error' : undefined}>
-                {readingOverview ? <p role="status" className="py-5 text-sm text-muted-foreground">{t('publish.readingOverview')}</p> : overviewPreviewFailed ? <p role="status" className="py-5 text-sm text-muted-foreground">{t('publish.overviewPreviewUnavailable')}</p> : previewOverview.trim() ? <div className="max-h-80 overflow-hidden [mask-image:linear-gradient(black_85%,transparent)]"><MarkdownRenderer content={previewOverview} /></div> : <div className="py-5"><h4 className="font-medium">{t('publish.emptyOverview')}</h4><p className="mt-2 text-sm text-muted-foreground">{t('publish.emptyOverviewHelp')}</p></div>}
+              <div className="rounded-lg border bg-background p-3 sm:p-4" aria-labelledby="skill-overview-label" aria-describedby={overviewInvalid && selectedFile ? 'skill-overview-error' : undefined}>
+                {readingOverview ? <p role="status" className="text-sm text-muted-foreground">{t('publish.readingOverview')}</p> : overviewPreviewFailed ? <p role="status" className="text-sm text-muted-foreground">{t('publish.overviewPreviewUnavailable')}</p> : previewOverview.trim() ? <div className="max-h-44 overflow-y-auto [overflow-wrap:anywhere]"><MarkdownRenderer content={previewOverview} /></div> : <p className="text-sm text-muted-foreground">{t('publish.emptyOverview')}</p>}
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -589,30 +591,27 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
               {overviewInvalid && selectedFile && <p id="skill-overview-error" role={attempted ? 'alert' : 'status'} className={attempted ? 'text-sm text-destructive' : 'text-sm text-amber-700 dark:text-amber-400'}>{t('publish.source.overviewRequired')}</p>}
               {overviewPreviewFailed && <Button type="button" variant="outline" disabled={ownerReadOnly || isBusy} onClick={() => packageOverview.refetch()}>{t('publish.retryPackagePreview')}</Button>}
             </div>
-          </section>
-          <details open={avatarOnly || undefined} className="group min-w-0 border-t pt-4 lg:col-start-1 lg:row-start-4">
-            <summary className="cursor-pointer rounded-sm text-sm font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{t('publish.form.optionalAvatar')}</summary>
-            <div className="mt-4">              <div className="min-w-0 space-y-3">
+            <details open={avatarOnly || undefined} className="min-w-0 border-t pt-4">
+              <summary className="cursor-pointer rounded-sm text-sm font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{t('publish.form.optionalAvatar')}</summary>
+              <div className="mt-3 min-w-0 space-y-3">
                 <SkillAvatarEditor key={`${namespaceSlug}/${updateSlug}`} name={displayName || search.updateName || updateSlug} currentUrl={avatarTarget.data?.avatarUrl} canRemove={!!updateSlug} disabled={ownerReadOnly || isBusy || avatarUnavailable} onChange={setAvatarEdit} />
                 {updateSlug && <SkillAvatarManager namespace={namespaceSlug} slug={updateSlug} disabled={ownerReadOnly || isBusy} />}
                 {avatarTarget.isError && <p role="alert" className="text-sm text-destructive">{t('skillAvatar.failed')}</p>}
               </div>
-            </div>
-          </details>
+            </details>
+            <footer className="flex flex-wrap items-center justify-end gap-2 border-t pt-4">
+              <Button id="publish-confirm-action" data-analytics-id={avatarOnly ? 'skill.avatar.save' : 'skill.publish.request'}
+                className="sm:min-w-32"
+                onClick={() => {
+                  setAttempted(true)
+                  if (canSubmit) { if (avatarOnly) void handlePublish(); else setConfirmOpen(true) }
+                  else focusField(missingFields[0]?.id ?? 'publish-form-heading')
+                }}
+                disabled={ownerReadOnly || isBusy || isPackaging || importing || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && !packagePreview.isSuccess)}
+              >{isBusy ? t('publish.publishing') : t(avatarOnly ? 'publish.saveAvatar' : 'publish.nextConfirm')}</Button>
+            </footer>
+          </section>
         </div>
-
-        <footer className="sticky bottom-0 z-20 flex flex-wrap items-center justify-end gap-3 border-t bg-background/95 py-3 backdrop-blur sm:justify-between">
-          <p className="hidden text-xs leading-5 text-muted-foreground sm:block">{namespaceSlug ? audience : t('publish.selectNamespace')}</p>
-          <Button id="publish-confirm-action" data-analytics-id={avatarOnly ? 'skill.avatar.save' : 'skill.publish.request'}
-            className="sm:min-w-32"
-            onClick={() => {
-              setAttempted(true)
-              if (canSubmit) { if (avatarOnly) void handlePublish(); else setConfirmOpen(true) }
-              else focusField(missingFields[0]?.id ?? 'publish-form-heading')
-            }}
-            disabled={ownerReadOnly || isBusy || isPackaging || importing || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && packagePreview.isPending)}
-          >{isBusy ? t('publish.publishing') : t(avatarOnly ? 'publish.saveAvatar' : 'publish.nextConfirm')}</Button>
-        </footer>
 
         <Dialog open={viewOverview} onOpenChange={setViewOverview}>
           <DialogContent className="w-[min(calc(100vw-2rem),56rem)]"><DialogTitle>{t('publish.overview')}</DialogTitle><MarkdownRenderer content={previewOverview} /></DialogContent>
@@ -658,7 +657,35 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           closeOnConfirm={false}
           onConfirm={() => { if (blocker.status === 'blocked') blocker.proceed() }}
         />
-        <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('publish.confirmDetails')} description={<span className="whitespace-pre-line">{[displayName, `@${namespaceSlug}/${packagePreview.data?.name}@${packagePreview.data?.version}`, audience, externalSourceUrl, previewShortDescription, t('publish.reviewNotice.description')].filter(Boolean).join('\n\n')}</span>} confirmText={t('publish.confirm')} cancelText={t('publish.backToEdit')} onConfirm={() => { if (!canSubmit) return; setConfirmOpen(false); void handlePublish() }} />
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={t('publish.confirmDetails')}
+          description={
+            <span className="block space-y-3 text-left">
+              <span className="block space-y-0.5 rounded-lg border bg-muted/30 p-3">
+                <strong className="block font-medium text-foreground">{displayName.trim() || packagePreview.data?.displayName || packagePreview.data?.name}</strong>
+                <code className="block break-all text-xs">@{namespaceSlug}/{packagePreview.data?.name}@{packagePreview.data?.version}</code>
+                <span className="block text-xs">{audience}</span>
+              </span>
+              {externalSourceUrl && <span className="block break-all text-xs">{externalSourceUrl}</span>}
+              <span className="block max-h-24 overflow-y-auto whitespace-pre-wrap [overflow-wrap:anywhere]">{previewShortDescription}</span>
+              <span className="block text-xs">{t('publish.reviewNotice.description')}</span>
+            </span>
+          }
+          confirmText={t('publish.confirm')}
+          cancelText={t('publish.backToEdit')}
+          onCloseAutoFocus={event => {
+            event.preventDefault()
+            const action = document.getElementById('publish-confirm-action')
+            if (!submitting.current && !action?.closest('[hidden]')) action?.focus()
+          }}
+          onConfirm={() => {
+            if (!canSubmit) return
+            setConfirmOpen(false)
+            void handlePublish()
+          }}
+        />
         <ConfirmDialog confirmAnalyticsId={avatarOnly ? undefined : 'skill.publish.confirm'} cancelAnalyticsId={avatarOnly ? undefined : 'skill.publish.cancel'}
           open={warningDialogOpen}
           onOpenChange={setWarningDialogOpen}

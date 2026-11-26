@@ -16,7 +16,22 @@ vi.mock('@tanstack/react-router', () => ({ useBlocker: () => ({ status: 'idle' }
 vi.mock('react-i18next', async () => ({ ...await vi.importActual<typeof import('react-i18next')>('react-i18next'), useTranslation: () => ({ t: (key: string) => key }) }))
 vi.mock('@/shared/hooks/use-skill-queries', () => ({ useSkillDetail: (_namespace: string, slug: string) => ({ data: slug ? {publishedVersion:{version:'1.0.0'},ownerReadOnly:permissions.ownerReadOnly} : undefined }), useSkillVersionDetail: (namespace: string, slug: string) => ({ data: snapshots.values[`${namespace}/${slug}`] ?? snapshots.values[slug], isLoading: false }), previewSkillPackage: preview, usePublishSkill: () => ({ mutateAsync: publish, isPending: false }) }))
 vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: [{ id: 1, slug: 'team-ai', displayName: 'Team', type: 'TEAM'  }], isLoading: false }) }))
-vi.mock('@/features/publish/upload-zone', () => ({ UploadZone: ({ onFileSelect, onFolderSelect, previewError }: { onFileSelect: (file: File) => void; onFolderSelect: (files: File[]) => void; previewError?: string }) => <><button onClick={() => onFolderSelect([new File(['folder'], 'SKILL.md')])}>select-folder</button><input aria-label="package" type="file" onChange={e => { if (e.target.files?.[0]) onFileSelect(e.target.files[0]) }} />{previewError && <p role="alert">{previewError}</p>}</> }))
+vi.mock('@/features/publish/upload-zone', () => ({
+  UploadZone: ({ onFileSelect, onFolderSelect, onRemove, selectedFile, previewError }: {
+    onFileSelect: (file: File) => void
+    onFolderSelect: (files: File[]) => void
+    onRemove: () => void
+    selectedFile?: File | null
+    previewError?: string
+  }) => (
+    <>
+      <button onClick={() => onFolderSelect([new File(['folder'], 'SKILL.md')])}>select-folder</button>
+      <input aria-label="package" type="file" onChange={event => { if (event.target.files?.[0]) onFileSelect(event.target.files[0]) }} />
+      {selectedFile && <button onClick={onRemove}>remove-package</button>}
+      {previewError && <p role="alert">{previewError}</p>}
+    </>
+  ),
+}))
 vi.mock('@/features/skill/skill-avatar-editor', () => ({ KEEP_AVATAR: { action: 'KEEP', ready: true }, SkillAvatarEditor: () => null }))
 vi.mock('@/features/skill/skill-avatar-manager', () => ({ SkillAvatarManager: () => null }))
 vi.mock('@/api/client', async (importOriginal) => ({ ...await importOriginal<typeof import('@/api/client')>(), skillAvatarApi: { status: vi.fn().mockResolvedValue({ action: 'KEEP' }) } }))
@@ -113,15 +128,26 @@ describe('web presentation publishing', () => {
     await waitFor(() => expect(publish).toHaveBeenCalledWith(expect.objectContaining({ overview: '# Custom explanation' })))
   })
 
-  it('places the next action after namespace and visibility settings in document order', async () => {
+  it('reveals all publication fields together after parsing the package and puts confirmation last', async () => {
     preview.mockResolvedValue(metadata('Title'))
-    mount(); select('package.zip')
+    mount()
+    expect(screen.queryByRole('region', { name: 'publish.form.details' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'publish.nextConfirm' })).toBeNull()
+    select('package.zip')
+    await screen.findByRole('region', { name: 'publish.form.details' })
     await waitFor(() => expect(screen.getByRole('button', { name: 'publish.nextConfirm' }).hasAttribute('disabled')).toBe(false))
     const next = screen.getByRole('button', { name: 'publish.nextConfirm' })
-    for (const id of ['namespace', 'visibility']) {
+    for (const id of ['namespace', 'visibility', 'skill-display-name', 'skill-short-description']) {
       const control = document.getElementById(id)!
       expect(Boolean(control.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
     }
+    fireEvent.change(screen.getByLabelText('publish.displayName'), { target: { value: 'Custom title' } })
+    fireEvent.click(screen.getByRole('button', { name: 'remove-package' }))
+    expect(screen.queryByRole('region', { name: 'publish.form.details' })).toBeNull()
+
+    select('replacement.zip')
+    await screen.findByRole('region', { name: 'publish.form.details' })
+    expect((screen.getByLabelText('publish.displayName') as HTMLInputElement).value).toBe('Custom title')
   })
 
   it('sends edited presentation and reset intent independently of form defaults', async () => {
@@ -174,7 +200,8 @@ describe('web display name publishing', () => {
     let finishOld!: (value: ReturnType<typeof metadata>) => void
     preview.mockReturnValueOnce(new Promise(resolve => { finishOld = resolve })).mockResolvedValueOnce(metadata('当前包名称'))
     mount(); select('old.zip')
-    fireEvent.click(screen.getByRole('button', { name: 'publish.nextConfirm' })); expect(publish).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'publish.nextConfirm' })).toBeNull()
+    expect(publish).not.toHaveBeenCalled()
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(1))
     select('new.zip')
     await waitFor(() => expect((screen.getByLabelText('publish.displayName') as HTMLInputElement).value).toBe('当前包名称'))
@@ -187,7 +214,8 @@ describe('web display name publishing', () => {
     preview.mockRejectedValueOnce(new Error('invalid package')).mockResolvedValueOnce(metadata('重试后的名称'))
     mount(); select('invalid.zip')
     await screen.findByRole('alert')
-    fireEvent.click(screen.getByRole('button', { name: 'publish.nextConfirm' })); expect(publish).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'publish.nextConfirm' })).toBeNull()
+    expect(publish).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'publish.retryPackagePreview' }))
     await waitFor(() => expect((screen.getByLabelText('publish.displayName') as HTMLInputElement).value).toBe('重试后的名称'))
   })

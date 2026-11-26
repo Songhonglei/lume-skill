@@ -132,7 +132,7 @@ export function SystemConfigPage() {
   }
   const ruleBusy = createRule.isPending || updateRule.isPending
 
-  return <div className="space-y-6 pb-12">
+  return <div className="max-w-5xl space-y-5 pb-12">
     <header className="space-y-4">
       <h1 className="text-2xl font-semibold">{t('systemConfig.title')}</h1>
       <nav aria-label={t('recommendations.settingsNavigation')} className="flex flex-wrap gap-1 border-b pb-2">
@@ -151,10 +151,9 @@ export function SystemConfigPage() {
       {message && <p role="status" className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">{message}</p>}
       <div hidden={section !== 'site'}><SitePresentationSettingsPanel key={resetKeys.site} onDirtyChange={dirtyCallbacks.site} onBusyChange={busyCallbacks.site} /></div>
       <div hidden={section !== 'recommendations'}><RecommendationSettingsPanel key={resetKeys.recommendations} onDirtyChange={dirtyCallbacks.recommendations} onBusyChange={busyCallbacks.recommendations} /></div>
-      {section === 'operations' && <section className="space-y-4" aria-labelledby="operations-title">
-        <h2 id="operations-title" className="text-2xl font-semibold">{t('recommendations.navigation.operations')}</h2>
-        <Tabs value={operationsTab} onValueChange={changeOperationsTab} className="min-w-0 space-y-6">
-          <TabsList aria-label={t('systemConfig.operationsNavigation')} className="flex flex-wrap gap-x-5">
+      {section === 'operations' && <section aria-label={t('recommendations.navigation.operations')}>
+        <Tabs value={operationsTab} onValueChange={changeOperationsTab} className="min-w-0 space-y-4">
+          <TabsList aria-label={t('systemConfig.operationsNavigation')} className="flex flex-wrap gap-x-4 gap-y-0">
             {operationsTabs.map(tab => <TabsTrigger key={tab} value={tab} disabled={busy}>{t(`systemConfig.operationsTab.${tab}`)}</TabsTrigger>)}
           </TabsList>
           <TabsContent value="mail"><NotificationEmailSettingsPanel onDirtyChange={dirtyCallbacks.email} onBusyChange={busyCallbacks.email} /></TabsContent>
@@ -162,7 +161,7 @@ export function SystemConfigPage() {
           <TabsContent value="index"><SearchIndexMaintenance onBusyChange={busyCallbacks.index} /></TabsContent>
         </Tabs>
       </section>}
-      <div hidden={section !== 'access'} className="space-y-8"><header><h2 className="text-2xl font-semibold">{t('recommendations.navigation.access')}</h2><p className="mt-1 text-sm text-muted-foreground">{t('systemConfig.accessHelp')}</p></header><div className="grid items-stretch gap-6 xl:grid-cols-2"><section className="flex min-w-0 flex-col rounded-xl border p-5"><header className="mb-6"><h3 className="text-lg font-semibold">{t('systemConfig.localAuth')}</h3><p className="mt-1 text-sm leading-5 text-muted-foreground">{t('systemConfig.lockoutHelp')}</p></header>
+      <div hidden={section !== 'access'} className="space-y-6"><div className="grid items-stretch gap-6 xl:grid-cols-2"><section className="flex min-w-0 flex-col rounded-xl border p-5"><header className="mb-6"><h3 className="text-lg font-semibold">{t('systemConfig.localAuth')}</h3><p className="mt-1 text-sm leading-5 text-muted-foreground">{t('systemConfig.lockoutHelp')}</p></header>
         {settings.isError && <p role="alert">{t('systemConfig.loadFailed')}</p>}{settings.isPending && <p role="status">{t('systemConfig.loading')}</p>}
         {settings.data && draft && <><div className="divide-y">{([['passwordLoginEnabled', 'passwordLogin', 'passwordLoginHelp'], ['selfRegistrationEnabled', 'selfRegistration', 'selfRegistrationHelp']] as const).map(([field, title, help]) => <div key={field} className="flex items-center justify-between gap-6 py-4"><div className="min-w-0 space-y-1"><Label htmlFor={field}>{t(`systemConfig.${title}`)}</Label><p id={`${field}-help`} className="text-xs leading-5 text-muted-foreground">{t(`systemConfig.${help}`)}</p></div><Switch id={field} aria-describedby={`${field}-help`} data-analytics-id={field === 'passwordLoginEnabled' ? 'admin.auth.password.toggle' : 'admin.auth.registration.toggle'} checked={draft[field]} disabled={updateSettings.isPending} onCheckedChange={value => setDraft({ ...draft, [field]: value })} /></div>)}</div>{!draft.passwordLoginEnabled && draft.selfRegistrationEnabled && <p className="mb-4 text-sm text-muted-foreground">{t('systemConfig.registrationRequiresLogin')}</p>}<footer className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t pt-4"><span className="text-xs text-muted-foreground">{t(settingsDirty ? 'systemConfig.unsaved' : 'systemConfig.upToDate')}</span><div className="flex gap-2"><Button data-analytics-id="admin.auth.discard" variant="outline" disabled={!settingsDirty || updateSettings.isPending} onClick={() => { setDraft({ passwordLoginEnabled: settings.data!.passwordLoginEnabled, selfRegistrationEnabled: settings.data!.selfRegistrationEnabled }); setError('') }}>{t('systemConfig.discard')}</Button><Button data-analytics-id="admin.auth.save" disabled={!settingsDirty || updateSettings.isPending} onClick={() => { if (draft.passwordLoginEnabled === false && settings.data!.passwordLoginEnabled) setConfirmLoginOff(true); else void saveSettings() }}>{t(updateSettings.isPending ? 'systemConfig.saving' : 'systemConfig.saveChanges')}</Button></div></footer></>}
       </section><AvatarReviewSettingsPanel key={resetKeys.access} onDirtyChange={dirtyCallbacks.avatar} onBusyChange={busyCallbacks.avatar} /></div>

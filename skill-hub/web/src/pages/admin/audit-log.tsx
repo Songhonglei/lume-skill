@@ -5,6 +5,7 @@ import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
+import { AUDIT_ACTION_OPTIONS, auditActionLabelKey, formatAuditDetails } from '@/shared/lib/audit-log-presentation'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
@@ -25,27 +26,6 @@ import {
   TableRow,
 } from '@/shared/ui/table'
 import { useAuditLog } from '@/features/admin/use-audit-log'
-
-const ACTION_OPTIONS = [
-  { value: '', labelKey: 'auditLog.filterAll' },
-  { value: 'CLI_PUBLISH', labelKey: 'auditLog.filterCliPublish' },
-  { value: 'COMPAT_PUBLISH', labelKey: 'auditLog.filterCompatPublish' },
-  { value: 'REVIEW_SUBMIT', labelKey: 'auditLog.filterReviewSubmit' },
-  { value: 'REVIEW_APPROVE', labelKey: 'auditLog.filterReviewApprove' },
-  { value: 'REVIEW_REJECT', labelKey: 'auditLog.filterReviewReject' },
-  { value: 'PROMOTION_SUBMIT', labelKey: 'auditLog.filterPromotionSubmit' },
-  { value: 'PROMOTION_APPROVE', labelKey: 'auditLog.filterPromotionApprove' },
-  { value: 'PROMOTION_REJECT', labelKey: 'auditLog.filterPromotionReject' },
-  { value: 'REPORT_SKILL', labelKey: 'auditLog.filterReportSkill' },
-  { value: 'RESOLVE_SKILL_REPORT', labelKey: 'auditLog.filterResolveSkillReport' },
-  { value: 'DISMISS_SKILL_REPORT', labelKey: 'auditLog.filterDismissSkillReport' },
-  { value: 'HIDE_SKILL', labelKey: 'auditLog.filterHideSkill' },
-  { value: 'ARCHIVE_SKILL', labelKey: 'auditLog.filterArchiveSkill' },
-  { value: 'UNHIDE_SKILL', labelKey: 'auditLog.filterUnhideSkill' },
-  { value: 'UNARCHIVE_SKILL', labelKey: 'auditLog.filterUnarchiveSkill' },
-  { value: 'YANK_SKILL_VERSION', labelKey: 'auditLog.filterYankVersion' },
-  { value: 'REBUILD_SEARCH_INDEX', labelKey: 'auditLog.filterRebuildSearchIndex' },
-] as const
 
 /**
  * Admin audit log page with server-backed filtering. The route owns filter state
@@ -83,17 +63,10 @@ export function AuditLogPage() {
   }
 
   const actionLabel = (action: string) => {
-    const known = ACTION_OPTIONS.find(option => option.value === action)
-    return known ? t(known.labelKey) : action
+    const labelKey = auditActionLabelKey(action)
+    return labelKey ? t(labelKey) : action
   }
-  let detailText = selected?.details ?? ''
-  if (detailText) {
-    try {
-      detailText = JSON.stringify(JSON.parse(detailText), null, 2)
-    } catch {
-      // Historical records may contain plain text.
-    }
-  }
+  const detailText = formatAuditDetails(selected?.details)
 
   const applySearchIndexRebuildFilter = () => {
     setActionFilter('REBUILD_SEARCH_INDEX')
@@ -141,7 +114,7 @@ export function AuditLogPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ACTION_OPTIONS.map((option) => (
+              {AUDIT_ACTION_OPTIONS.map((option) => (
                 <SelectItem data-analytics-id={option.value === '' ? 'admin.audit.action.all' : option.value === 'CLI_PUBLISH' ? 'admin.audit.action.cli.publish' : option.value === 'COMPAT_PUBLISH' ? 'admin.audit.action.compat.publish' : option.value === 'REVIEW_SUBMIT' ? 'admin.audit.action.review.submit' : option.value === 'REVIEW_APPROVE' ? 'admin.audit.action.review.approve' : option.value === 'REVIEW_REJECT' ? 'admin.audit.action.review.reject' : option.value === 'PROMOTION_SUBMIT' ? 'admin.audit.action.promotion.submit' : option.value === 'PROMOTION_APPROVE' ? 'admin.audit.action.promotion.approve' : option.value === 'PROMOTION_REJECT' ? 'admin.audit.action.promotion.reject' : option.value === 'REPORT_SKILL' ? 'admin.audit.action.report' : option.value === 'RESOLVE_SKILL_REPORT' ? 'admin.audit.action.report.resolve' : option.value === 'DISMISS_SKILL_REPORT' ? 'admin.audit.action.report.dismiss' : option.value === 'HIDE_SKILL' ? 'admin.audit.action.hide' : option.value === 'ARCHIVE_SKILL' ? 'admin.audit.action.archive' : option.value === 'UNHIDE_SKILL' ? 'admin.audit.action.unhide' : option.value === 'UNARCHIVE_SKILL' ? 'admin.audit.action.unarchive' : option.value === 'YANK_SKILL_VERSION' ? 'admin.audit.action.version.yank' : 'admin.audit.action.search.rebuild'}
                   key={option.value || allActionFilterValue}
                   value={option.value || allActionFilterValue}
