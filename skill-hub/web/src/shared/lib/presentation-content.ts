@@ -172,24 +172,29 @@ export function presentationItemVisible(settings: SitePresentationSettings, sect
 const hasUnsafeUrlCharacters = (value: string) => Array.from(value).some(character => character === '\\' || character.charCodeAt(0) <= 32 || character.charCodeAt(0) === 127)
 
 /** Root-relative links belong to this frontend, including deployments under a base path. */
-export function presentationLinkUrl(settings: SitePresentationSettings, slot: PresentationLink, fallback: string = PRESENTATION_LINKS[slot]): string {
-  const value = settings.links[slot]?.trim()
+export function presentationNavigationUrl(raw: string | undefined): string | undefined {
+  const value = raw?.trim()
+  if (!value || hasUnsafeUrlCharacters(value) || /%(?![0-9a-f]{2})/i.test(value)) return undefined
   if (value?.startsWith('/')) {
     try {
       let decodedPath = value.split(/[?#]/)[0]
       for (let pass = 0; pass < 5; pass += 1) {
         let decoded: string
-        try { decoded = decodeURIComponent(decodedPath) } catch { if (pass === 0) return fallback; break }
+        try { decoded = decodeURIComponent(decodedPath) } catch { if (pass === 0) return undefined; break }
         if (decoded === decodedPath) break
         decodedPath = decoded
       }
-      if (/%(?:25|2e|2f|5c)/i.test(decodedPath)) return fallback
+      if (/%(?:25|2e|2f|5c)/i.test(decodedPath)) return undefined
       if (!decodedPath.startsWith('//') && !hasUnsafeUrlCharacters(decodedPath) && !/(^|\/)\.{1,2}(\/|$)/.test(decodedPath) && !hasUnsafeUrlCharacters(value)) return withBasePath(value)
     } catch { /* Invalid encodings must not bypass the base path boundary. */ }
-    return fallback
+    return undefined
   }
-  if (value && !hasUnsafeUrlCharacters(value)) {
-    try { const url = new URL(value); if (['https:', 'http:'].includes(url.protocol) && !url.username && !url.password) return url.href } catch { /* Retain the product default for invalid settings. */ }
+  if (/^https?:\/\//i.test(value)) {
+    try { const url = new URL(value); if (!url.username && !url.password && url.port !== '0') return url.href } catch { /* Retain the product default for invalid settings. */ }
   }
-  return fallback
+  return undefined
+}
+
+export function presentationLinkUrl(settings: SitePresentationSettings, slot: PresentationLink, fallback: string = PRESENTATION_LINKS[slot]): string {
+  return presentationNavigationUrl(settings.links[slot]) ?? fallback
 }

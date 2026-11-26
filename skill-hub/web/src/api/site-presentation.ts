@@ -4,6 +4,7 @@ import type { components } from './generated/schema'
 
 export type SitePresentationSettings = components['schemas']['SitePresentationSettings']
 export type SitePresentationResponse = components['schemas']['SitePresentationResponse']
+export type SitePresentationLink = components['schemas']['SitePresentationLink']
 
 /** Bound the entire startup read, including response body consumption. */
 async function loadPublicPresentation(): Promise<SitePresentationResponse> {

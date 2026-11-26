@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.dto;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,7 +19,10 @@ public record SitePresentationSettings(
         @NotEmpty @Size(max = 9) Map<@Pattern(regexp = "hero|curated|capabilities|quickStart|popular|latest|enterprise|cta|footer") String,
                 @NotNull @Valid SitePresentationSection> sections,
         @NotNull @Size(max = 9) Map<@Pattern(regexp = "repository|documentation|cliDocumentation|cliPackage|license|contributing|changelog|codeOfConduct|community") String,
-                @NotNull @Size(max = 2048) String> links) {
+                @NotNull @Size(max = 2048) String> links,
+        @ArraySchema(arraySchema = @Schema(nullable = true, description = "Homepage links in display order. Null uses the existing homepage links; an empty list hides them."), maxItems = MAX_COMMON_LINKS)
+        @Size(max = MAX_COMMON_LINKS) List<@NotNull @Valid SitePresentationLink> commonLinks) {
+    public static final int MAX_COMMON_LINKS = 5;
     public static final List<String> SECTION_IDS = List.of(
             "hero", "curated", "capabilities", "quickStart", "popular", "latest", "enterprise", "cta", "footer");
 
@@ -26,5 +30,10 @@ public record SitePresentationSettings(
         Map<String, SitePresentationSection> sections = new LinkedHashMap<>();
         for (String id : SECTION_IDS) sections.put(id, SitePresentationSection.defaults());
         return new SitePresentationSettings(null, null, null, Map.copyOf(sections), Map.of());
+    }
+
+    public SitePresentationSettings(String siteName, String logoUrl, String faviconUrl,
+            Map<String, SitePresentationSection> sections, Map<String, String> links) {
+        this(siteName, logoUrl, faviconUrl, sections, links, null);
     }
 }

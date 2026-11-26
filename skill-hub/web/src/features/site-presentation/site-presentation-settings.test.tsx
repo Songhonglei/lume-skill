@@ -41,7 +41,7 @@ function preservedSettings(): SitePresentationSettings {
 describe('site presentation settings', () => {
   it('uses compact identity and homepage groups, with no permanent preview column', async () => {
     await setup()
-    expect(screen.getAllByRole('textbox')).toHaveLength(3)
+    expect(screen.getAllByRole('textbox')).toHaveLength(5)
     expect(screen.queryByRole('switch')).toBeNull()
     expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
     expect(screen.getByLabelText('sitePresentation.logoUrl')).toBeTruthy()
@@ -83,7 +83,7 @@ describe('site presentation settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.tabs.home' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'sitePresentation.introductionHeading' }), { target: { value: 'Our team skills' } })
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.tabs.identity' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'sitePresentation.linkLabels.documentation' }), { target: { value: '/guide' } })
+    fireEvent.change(screen.getAllByRole('textbox', { name: 'sitePresentation.commonLinkUrl' })[1], { target: { value: '/guide' } })
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.tabs.home' }))
     fireEvent.click(screen.getByRole('switch', { name: 'sitePresentation.regions.popular' }))
     expect(sitePresentationApi.update).not.toHaveBeenCalled()
@@ -92,7 +92,10 @@ describe('site presentation settings', () => {
     expect(state.blocker.mock.lastCall?.[0].shouldBlockFn()).toBe(true)
     expect(state.blocker.mock.lastCall?.[0].enableBeforeUnload).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.save' }))
-    const expected = { ...settings, siteName: 'Team Library', sections: { ...settings.sections, hero: { ...settings.sections.hero, texts: { ...settings.sections.hero.texts, title: { en: 'Our team skills', zh: '团队简介' } } }, popular: { ...settings.sections.popular, enabled: true } }, links: { ...settings.links, documentation: '/guide' } }
+    const expected = { ...settings, siteName: 'Team Library', sections: { ...settings.sections, hero: { ...settings.sections.hero, texts: { ...settings.sections.hero.texts, title: { en: 'Our team skills', zh: '团队简介' } } }, popular: { ...settings.sections.popular, enabled: true } }, commonLinks: [
+      { title: 'landing.experience.cta.deploy', url: settings.links.repository },
+      { title: 'landing.experience.cta.docs', url: '/guide' },
+    ] }
     await waitFor(() => expect(sitePresentationApi.update).toHaveBeenCalledWith({ settings: expected, version: 7 }))
     await waitFor(() => expect(client.getQueryData(SITE_PRESENTATION_QUERY_KEY)).toEqual({ settings: expected, version: 8 }))
     expect(screen.getByText('sitePresentation.saved')).toBeTruthy()

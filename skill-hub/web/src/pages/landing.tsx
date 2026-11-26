@@ -25,8 +25,9 @@ import { useSearchSkills } from '@/shared/hooks/use-skill-queries'
 import { useInView } from '@/shared/hooks/use-in-view'
 import { Button, buttonVariants } from '@/shared/ui/button'
 import { useSitePresentation, presentationText } from '@/shared/hooks/use-site-presentation'
-import { presentationItemVisible, presentationLinkUrl } from '@/shared/lib/presentation-content'
+import { presentationItemVisible, presentationLinkUrl, presentationNavigationUrl } from '@/shared/lib/presentation-content'
 import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
+import { cn } from '@/shared/lib/utils'
 
 function EnterpriseSection() {
   const { t, i18n } = useTranslation()
@@ -140,6 +141,10 @@ function LandingIntroduction() {
   const { t, i18n } = useTranslation()
   const { settings } = useSitePresentation()
   const text = (section: Parameters<typeof presentationText>[1], slot: string) => presentationText(settings, section, slot, i18n.resolvedLanguage, t)
+  const commonLinks = settings.commonLinks?.flatMap(link => {
+    const href = presentationNavigationUrl(link.url)
+    return href && link.title?.trim() ? [{ title: link.title.trim(), href }] : []
+  })
   const navigate = useNavigate()
 
   const { data: popularSkills, isLoading: isLoadingPopular, isError: popularFailed } = useSearchSkills({
@@ -377,7 +382,7 @@ function LandingIntroduction() {
         <EnterpriseSection />
       </div>}
 
-      {settings.sections.cta.enabled && <section className="[overflow-wrap:anywhere] relative z-10 w-full border-t border-border/70 py-7 text-center md:py-9">
+      {settings.sections.cta.enabled && commonLinks === undefined && <section className="[overflow-wrap:anywhere] relative z-10 w-full border-t border-border/70 py-7 text-center md:py-9">
         <div className={APP_FRAME_CLASS_NAME}>
           <h2 className="mb-3 text-xl font-semibold tracking-tight text-foreground">{text('cta', 'title')}</h2>
           <p className="mb-8 text-muted-foreground">{text('cta', 'description')}</p>
@@ -389,6 +394,16 @@ function LandingIntroduction() {
               {text('cta', 'secondaryActionLabel')} <CheckCircle2 className="h-4 w-4" />
             </a>}
           </div>
+        </div>
+      </section>}
+      {settings.sections.cta.enabled && !!commonLinks?.length && <section aria-labelledby="home-common-links" className="relative z-10 w-full border-t border-border/70 py-7 md:py-9">
+        <div className={APP_FRAME_CLASS_NAME}>
+          <h2 id="home-common-links" className="mb-4 text-xl font-semibold tracking-tight">{t('sitePresentation.commonLinksTitle')}</h2>
+          <ul className="flex flex-wrap gap-3">
+            {commonLinks.map(({ title, href }, index) => <li key={index} className="min-w-0 max-w-full">
+              <a href={href} target={href.startsWith('/') ? undefined : '_blank'} rel="noreferrer" className={cn(buttonVariants({ variant: 'outline' }), 'h-auto min-h-[var(--control-height)] max-w-full whitespace-normal py-2 text-left [overflow-wrap:anywhere]')}>{title}</a>
+            </li>)}
+          </ul>
         </div>
       </section>}
     </>
