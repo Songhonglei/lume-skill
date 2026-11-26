@@ -2679,7 +2679,8 @@
   },
   "copyButton": {
     "copied": "Copied",
-    "copy": "Copy"
+    "copy": "Copy",
+    "failed": "Copy failed. Try again."
   },
   "pagination": {
     "currentPage": "Page {{page}}",

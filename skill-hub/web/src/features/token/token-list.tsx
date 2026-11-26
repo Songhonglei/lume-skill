@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { tokenApi } from '@/api/client'
 import { Button } from '@/shared/ui/button'
+import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import {
   Table,
   TableBody,
@@ -57,7 +58,6 @@ import {
   TOKEN_TABLE_HEAD_CLASS_NAME,
 } from './token-table-style'
 import { getTokenPreset, TOKEN_CAPABILITIES } from './token-capabilities'
-import { cn } from '@/shared/lib/utils'
 import { TokenPermissionDetails } from './token-permission-details'
 
 const PAGE_SIZE = 10
@@ -513,27 +513,13 @@ export function TokenList() {
                         {formatDate(token.lastUsedAt)}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-xs">
-                        <p>
-                          {formatDate(token.expiresAt, t('token.neverExpires'))}
-                        </p>
-                        <p
-                          className={cn(
-                            'mt-1',
-                            expired
-                              ? 'text-destructive'
-                              : token.expiresAt
-                                ? 'text-success'
-                                : 'text-muted-foreground',
-                          )}
-                        >
-                          {t(
-                            expired
-                              ? 'token.statusExpired'
-                              : token.expiresAt
-                                ? 'token.statusActive'
-                                : 'token.statusPermanent',
-                          )}
-                        </p>
+                        <div className="inline-flex items-center gap-2">
+                          <ListStatusIcon
+                            kind={expired ? 'expired' : token.expiresAt ? 'active' : 'permanent'}
+                            label={t(expired ? 'token.statusExpired' : token.expiresAt ? 'token.statusActive' : 'token.statusPermanent')}
+                          />
+                          <span>{formatDate(token.expiresAt, t('token.neverExpires'))}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-center gap-1">

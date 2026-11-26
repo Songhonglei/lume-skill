@@ -6,6 +6,7 @@ import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
+import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import {
   Select,
   SelectContent,
@@ -215,14 +216,14 @@ export function AdminUsersPage() {
         </Card>
       ) : (
         <>
-          <Card>
+          <Card data-density="compact">
             <Table>
               <TableHeader className="max-md:sr-only">
                 <TableRow>
                   <TableHead>{t('adminUsers.colUsername')}</TableHead>
                   <TableHead>{t('adminUsers.colUserId')}</TableHead>
                   <TableHead>{t('adminUsers.colEmail')}</TableHead>
-                  <TableHead>{t('adminUsers.colStatus')}</TableHead>
+                  <TableHead className="w-12 whitespace-nowrap">{t('adminUsers.colStatus')}</TableHead>
                   <TableHead>{t('adminUsers.colRole')}</TableHead>
                   <TableHead>{t('adminUsers.colCreatedAt')}</TableHead>
                   <TableHead>{t('adminUsers.colActions')}</TableHead>
@@ -233,29 +234,22 @@ export function AdminUsersPage() {
                   <TableRow key={user.userId} className="max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:px-3 max-md:py-3">
                     <TableCell className="break-words font-medium max-md:order-1 max-md:p-1 [overflow-wrap:anywhere]">{user.username}</TableCell>
                     <TableCell className="max-md:order-3 max-md:col-span-2 max-md:p-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-1">
                         <span className="font-mono text-xs text-muted-foreground min-w-0 max-w-[14rem] truncate" title={user.userId}>{user.userId}</span>
-                        <CopyButton analyticsId="admin.user.identifier.copy" text={user.userId} ariaLabel={t('adminUsers.copyUserId', { username: user.username })} />
+                        <CopyButton iconOnly analyticsId="admin.user.identifier.copy" text={user.userId} ariaLabel={t('adminUsers.copyUserId', { username: user.username })} />
                       </div>
                     </TableCell>
-                    <TableCell className="break-all max-md:order-4 max-md:col-span-2 max-md:p-1 max-md:text-xs">{user.email || '—'}</TableCell>
+                    <TableCell className="text-xs max-md:order-4 max-md:col-span-2 max-md:p-1 [overflow-wrap:anywhere]">{user.email || '—'}</TableCell>
                     <TableCell className="max-md:order-2 max-md:p-1">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                          user.status === 'ACTIVE'
-                            ? 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20 dark:text-emerald-300'
-                            : user.status === 'PENDING'
-                              ? 'bg-amber-500/10 text-amber-800 border-amber-500/20 dark:text-amber-300'
-                              : 'bg-red-500/10 text-red-800 border-red-500/20 dark:text-red-300'
-                        }`}
-                      >
-                        {user.status === 'ACTIVE' ? t('adminUsers.statusActive') : user.status === 'PENDING' ? t('adminUsers.statusPending') : t('adminUsers.statusDisabled')}
-                      </span>
+                      <ListStatusIcon
+                        kind={user.status === 'ACTIVE' ? 'active' : user.status === 'PENDING' ? 'pending' : 'disabled'}
+                        label={t(user.status === 'ACTIVE' ? 'adminUsers.statusActive' : user.status === 'PENDING' ? 'adminUsers.statusPending' : 'adminUsers.statusDisabled')}
+                      />
                     </TableCell>
-                    <TableCell className="max-md:order-5 max-md:col-span-2 max-md:p-1 max-md:text-xs">{user.platformRoles.join(', ')}</TableCell>
-                    <TableCell className="max-md:order-6 max-md:col-span-2 max-md:p-1 max-md:text-xs">{formatDate(user.createdAt)}</TableCell>
+                    <TableCell className="text-xs max-md:order-5 max-md:col-span-2 max-md:p-1 [overflow-wrap:anywhere]">{user.platformRoles.join(', ')}</TableCell>
+                    <TableCell className="text-xs tabular-nums text-muted-foreground max-md:order-6 max-md:col-span-2 max-md:p-1">{formatDate(user.createdAt)}</TableCell>
                     <TableCell className="max-md:order-7 max-md:col-span-2 max-md:p-1">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 xl:flex-nowrap">
                         <Button data-analytics-id="admin.user.role.edit"
                           variant="outline"
                           size="sm"

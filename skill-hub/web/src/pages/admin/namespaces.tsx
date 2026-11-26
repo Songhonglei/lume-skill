@@ -5,6 +5,7 @@ import type { AdminNamespace, NamespaceMember, NamespaceRole } from '@/api/types
 import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { toast } from '@/shared/lib/toast'
 import { Button } from '@/shared/ui/button'
+import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
@@ -430,9 +431,10 @@ export function AdminNamespacesPage() {
                       </TableCell>
                       <TableCell className="max-sm:hidden">{namespaceTypeLabel(t, namespace.type)}</TableCell>
                       <TableCell className="max-sm:order-2 max-sm:p-1">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusClassName(namespace.status)}`}>
-                          {statusLabel(t, namespace.status)}
-                        </span>
+                        <ListStatusIcon
+                          kind={namespace.status === 'FROZEN' ? 'frozen' : namespace.status === 'ARCHIVED' ? 'archived' : 'active'}
+                          label={statusLabel(t, namespace.status)}
+                        />
                       </TableCell>
                       <TableCell className="max-sm:hidden">{namespace.stats.memberCount}</TableCell>
                       <TableCell className="max-sm:hidden">{namespace.stats.skillCount}</TableCell>

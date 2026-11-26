@@ -982,7 +982,7 @@ export function SkillDetailPage() {
           <div className="flex items-center gap-4"><SkillAvatar name={selectedDisplayName ?? skill.displayName} url={skill.avatarUrl} size="h-12 w-12 text-xl" /><h1 className="text-balance break-words text-2xl font-semibold tracking-tight sm:text-3xl text-foreground [overflow-wrap:anywhere]">{selectedDisplayName}</h1></div>
           <div className="flex min-w-0 items-center gap-2">
             <code className="min-w-0 break-all text-sm text-muted-foreground">@{skill.namespace}/{skill.slug}</code>
-            <CopyButton analyticsId="skill.coordinate.copy" text={`@${skill.namespace}/${skill.slug}`} ariaLabel={t('skillDetail.copyCoordinate')} className="shrink-0" />
+            <CopyButton iconOnly analyticsId="skill.coordinate.copy" text={`@${skill.namespace}/${skill.slug}`} ariaLabel={t('skillDetail.copyCoordinate')} className="shrink-0" />
           </div>
           {skill.avatarUrl && user?.userId !== skill.ownerId && (namespace === 'global'
             ? isPromotionAdmin

@@ -2677,7 +2677,8 @@
   },
   "copyButton": {
     "copied": "已复制",
-    "copy": "复制"
+    "copy": "复制",
+    "failed": "复制失败，请重试"
   },
   "pagination": {
     "currentPage": "第 {{page}} 页",
