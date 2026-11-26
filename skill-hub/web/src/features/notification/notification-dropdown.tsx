@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { Link } from '@tanstack/react-router'
 import type { NotificationItem } from '@/api/types'
 import { getNotificationItems } from './notification-page'
@@ -37,7 +38,7 @@ export function NotificationDropdown({ onClose }: Props) {
 
   return (
     <div
-      className="absolute right-0 top-10 z-50 w-80 rounded-xl border bg-popover text-popover-foreground shadow-lg"
+      className="z-50 rounded-xl border bg-popover text-popover-foreground shadow-lg max-sm:fixed max-sm:inset-x-3 max-sm:top-16 sm:absolute sm:right-0 sm:top-10 sm:w-80"
       style={{ borderColor: 'hsl(var(--border))' }}
     >
       {/* Header */}
@@ -45,19 +46,17 @@ export function NotificationDropdown({ onClose }: Props) {
         <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
           {t('notification.title')}
         </span>
-        <button data-analytics-id="notification.all.read"
+        <Button data-analytics-id="notification.all.read" size="sm" variant="ghost"
           type="button"
           onClick={handleMarkAllRead}
           disabled={markAllRead.isPending || notifications.length === 0}
-          className="text-xs hover:opacity-70 transition-opacity disabled:opacity-40"
-          style={{ color: 'hsl(var(--text-secondary))' }}
         >
           {t('notification.markAllRead')}
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
-      <ul className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
+      <ul className="max-h-[min(18rem,calc(100dvh-12rem))] overflow-y-auto divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
         {isLoading ? (
           <li className="px-4 py-6 text-center text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
             …
@@ -105,8 +104,7 @@ export function NotificationDropdown({ onClose }: Props) {
         <Link data-analytics-id="notification.list.open"
           to="/dashboard/notifications"
           onClick={onClose}
-          className="text-xs hover:opacity-70 transition-opacity"
-          style={{ color: 'hsl(var(--text-secondary))' }}
+          className={buttonVariants({ size: 'sm', variant: 'ghost' })}
         >
           {t('notification.viewAll')}
         </Link>

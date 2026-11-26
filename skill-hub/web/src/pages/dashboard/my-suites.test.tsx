@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(), hook: vi.fn(),
   data: { items: [], total: 0, page: 0, size: 12, attentionCount: 0, hasChangingOperations: false } as MySkillSuiteWorkspace,
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => mocks.navigate }))
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => mocks.navigate, useSearch: () => ({}) }))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'zh-CN' } }) }))
 vi.mock('@/shared/hooks/use-suite-queries', () => ({ useMySuiteWorkspace: (...args: unknown[]) => {
   mocks.hook(...args)

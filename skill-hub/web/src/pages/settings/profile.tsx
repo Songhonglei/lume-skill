@@ -182,7 +182,7 @@ export function ProfileSettingsPage() {
         <div className="flex flex-wrap items-center gap-2">
           {user?.canChangePassword === true ? (
             <Button data-analytics-id="account.security.open" type="button" variant="outline" size="sm" onClick={() => void navigate({ to: '/settings/security' })}>
-              {t('profile.resetPassword')}
+              {t('profile.updatePassword')}
             </Button>
           ) : null}
           {hasEditableFields ? (

@@ -1,4 +1,12 @@
 {
+  "legal": {
+    "contents": "章节目录"
+  },
+  "list": {
+    "loadFailed": "列表加载失败",
+    "details": "详情",
+    "clearFilters": "清除筛选"
+  },
   "dateTimePicker": {
     "placeholder": "选择日期与时间",
     "title": "选择过期时间",
@@ -25,7 +33,7 @@
     "home": "技能中心",
     "search": "搜索",
     "marketplace": "技能库",
-    "githubSkills": "开源技能",
+    "githubSkills": "GitHub 技能",
     "skillDetail": "技能详情",
     "explore": "探索",
     "dashboard": "控制台",
@@ -36,6 +44,7 @@
     "login": "登录"
   },
   "githubCatalog": {
+    "manageSync": "管理 GitHub 同步",
     "catalogIntro": "浏览从 GitHub 同步的技能，或按来源仓库查看。",
     "searchRepositories": "搜索仓库名称或所有者",
     "searchMembers": "搜索仓库内的技能",
@@ -83,7 +92,7 @@
     "repositoryRetry": "重试",
     "repositoryEmpty": "当前页面没有结果。",
     "repositoryFirstPage": "返回第一页",
-    "title": "开源技能",
+    "title": "GitHub 技能",
     "sourceLabel": "GITHUB 公开仓库",
     "description": "浏览来自公开 GitHub 仓库、经过 {{siteName}} 审核发布的技能。每项技能均可查看来源仓库、路径、固定提交和许可证信息。",
     "explore": "浏览开源技能",
@@ -93,7 +102,7 @@
     "resultsTitle": "探索技能",
     "resultsDescription": "按名称或描述检索 @github 目录中的技能。",
     "resultCount": "共 {{count}} 项",
-    "searchPlaceholder": "搜索开源技能",
+    "searchPlaceholder": "搜索 GitHub 技能",
     "search": "搜索",
     "sortLabel": "排序方式",
     "viewSkill": "查看技能",
@@ -435,7 +444,7 @@
       "retry": "重试",
       "label": "来源",
       "platform": "平台技能",
-      "github": "GitHub 同步",
+      "github": "GitHub 技能",
       "all": "全部来源",
       "platformHint": "浏览平台发布的技能，不包含 GitHub 同步内容。",
       "githubHint": "浏览从 GitHub 同步的技能；仍按当前账号的访问权限展示。",
@@ -569,6 +578,7 @@
     "backToLogin": "返回登录"
   },
   "device": {
+    "restartHint": "如果设备码已过期，请回到终端重新获取设备码。",
     "title": "设备授权",
     "subtitle": "请输入设备上显示的 8 位用户码",
     "codeLabel": "用户码",
@@ -581,6 +591,7 @@
     "notice": "授权后,设备将可以访问你的账户"
   },
   "cliAuth": {
+    "restartHint": "回到终端重新发起 CLI 登录，再打开终端提供的新链接。",
     "validating": "验证中...",
     "pleaseWait": "请稍候",
     "creatingToken": "创建令牌中...",
@@ -636,10 +647,10 @@
     "mySkills": "我的技能",
     "mySuites": "我的套件",
     "publish": "技能发布",
-    "namespaces": "命名空间",
+    "namespaces": "我的命名空间",
     "stars": "我的收藏",
     "subscriptions": "我的订阅",
-    "tokens": "Token 凭证",
+    "tokens": "Token 管理",
     "reviewProgress": "我的审核",
     "admin": "管理员",
     "governance": "治理中心",
@@ -1242,6 +1253,11 @@
     }
   },
   "overview": {
+    "pendingCount": "等待审核（{{count}}）",
+    "suiteAttentionCount": "待处理套件（{{count}}）",
+    "resubmitNamed": "修改并重提 · {{name}}",
+    "rejectedCount": "需处理的审核（{{count}}）",
+    "currentWork": "待处理事项",
     "mySkills": "我的技能",
     "mySkillsDesc": "查看和管理你发布的所有技能",
     "mySuites": "我的套件",
@@ -1704,6 +1720,11 @@
     "fallbackErrorDescription": "标签操作未能完成。"
   },
   "auditLog": {
+    "requestId": "请求 ID",
+    "actionCode": "操作代码",
+    "originalDetails": "原始详情",
+    "detailsTitle": "审计详情",
+    "resource": "操作对象",
     "title": "审计日志",
     "subtitle": "查看系统操作记录",
     "filterAll": "全部",
@@ -1743,6 +1764,7 @@
     "nextPage": "下一页"
   },
   "profile": {
+    "updatePassword": "更新密码",
     "avatar": {
       "title": "头像",
       "choose": "选择头像",
@@ -1852,6 +1874,8 @@
     "emptyDescription": "该命名空间下还没有发布任何技能"
   },
   "skillDetail": {
+    "installCopyFailed": "复制失败。可在安装说明中手动复制命令。",
+    "copyInstallCommand": "复制安装命令",
     "copyCoordinate": "复制完整技能标识",
     "unpublishedPreviewTitle": "未公开版本预览",
     "unpublishedPreviewDescription": "你正在查看尚未发布的版本。名称、摘要和内容仅在现有预览权限范围内可见，公众仍看到已发布版本。",
@@ -1926,7 +1950,7 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "{{siteName}} CLI",
     "installCommandUnsafeVersion": "该版本号无法安全地生成跨平台命令，请联系发布者修正版本号。",
-    "download": "下载",
+    "download": "下载 ZIP",
     "labelsSectionTitle": "标签管理",
     "labelsSectionDescription": "为这个技能挂载或移除推荐标签，帮助用户筛选和发现。",
     "labelsSectionDescriptionSuperAdmin": "管理这个技能上的全部标签，包括不会出现在公开筛选里的特权标签。",
@@ -2240,7 +2264,7 @@
     "manualCopy": "无法自动复制，请手动复制下方链接",
     "revoked": "邀请已作废",
     "error": "邀请操作失败，请重试",
-    "invalid": "邀请链接无效或已失效，请联系空间管理员获取新链接。",
+    "invalid": "邀请链接已失效或不完整，请联系邀请人获取新链接。",
     "loading": "正在核对邀请…",
     "networkError": "连接失败，请重试。",
     "namespace": "目标空间：{{name}}",
@@ -2640,6 +2664,7 @@
     "copy": "复制"
   },
   "pagination": {
+    "currentPage": "第 {{page}} 页",
     "label": "分页导航",
     "prev": "上一页",
     "next": "下一页",
@@ -2712,6 +2737,7 @@
   },
   "user": {
     "menu": {
+      "tokens": "Token 管理",
       "settings": "设置",
       "adminSettings": "后台管理",
       "dashboard": "控制台",
@@ -2756,8 +2782,19 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "audience": {
+      "public": "可见范围：所有访问者",
+      "private": "可见范围：你和有权限的管理员",
+      "global": "可见范围：所有已登录用户",
+      "team": "可见范围：{{namespace}} 空间成员"
+    },
     "packageFormatHint": "ZIP 根目录需包含 SKILL.md",
     "form": {
+      "reselectPackage": "已恢复草稿。请重新选择技能包。",
+      "leave": "离开并保留草稿",
+      "leaveDescription": "当前标签页会保留文字和发布设置。返回后请重新选择文件。",
+      "leaveTitle": "离开发布页面？",
+      "optionalAvatar": "技能头像（选填）",
       "identity": "基本信息",
       "nameHelp": "默认读取包内名称；留空时使用技能包名称。",
       "presentation": "展示介绍",
@@ -3128,7 +3165,7 @@
       "delete": "删除技能",
       "tokenManage": "管理 API 令牌"
     },
-    "title": "API Tokens",
+    "title": "Token 管理",
     "createNew": "创建新 Token",
     "copyHint": "出于安全原因，Token 明文只在创建成功时可复制一次，后续无法再次查看或复制。若仍需使用，请重新创建新的 Token。",
     "empty": "还没有创建任何 Token",
@@ -3357,6 +3394,9 @@
     "restoreErrorTitle": "恢复命名空间失败"
   },
   "suite": {
+    "backToCatalog": "返回套件库",
+    "catalogLoadFailed": "套件库加载失败",
+    "candidateVisibilityHint": "套件可见范围：{{visibility}}。搜索结果只包含符合此范围的技能。",
     "workspace": {
       "description": "管理套件、查看版本与创建进度。",
       "searchLabel": "搜索我的套件",
@@ -3770,7 +3810,7 @@
     "publishable": "可发布",
     "reviewSnapshotFailed": "无法读取套件审核快照。",
     "reviewSnapshotRetry": "重新读取",
-    "myTitle": "我的技能套件",
+    "myTitle": "我的套件",
     "myDescription": "管理草稿、审核中和已发布的套件版本。",
     "view": "查看",
     "myEmpty": "还没有技能套件",
@@ -4078,6 +4118,7 @@
     "governanceActivity": "最近处理记录",
     "governanceSearchMoved": "搜索索引维护已移至系统设置。",
     "filters": {
+      "advanced": "更多筛选",
       "title": "筛选条件",
       "q": "关键词",
       "status": "审核状态",
@@ -4486,7 +4527,7 @@
     "skillCount": "{{count}} 个技能",
     "browseTopic": "浏览专题",
     "viewAll": "浏览全部精选",
-    "empty": "还没有推荐内容，发布配置后将在这里展示。",
+    "empty": "暂无精选内容",
     "manageTopics": "管理专题",
     "manageFeatured": "管理精选",
     "chooseSkills": "选择技能",

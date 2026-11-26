@@ -5,7 +5,11 @@ import { Button } from '@/shared/ui/button'
 interface PaginationProps {
   analyticsId?: string
   page: number
-  totalPages: number
+  totalPages?: number
+  hasNext?: boolean
+  previousAnalyticsId?: string
+  nextAnalyticsId?: string
+  className?: string
   onPageChange: (page: number) => void
   disabled?: boolean
   mobileCompact?: boolean
@@ -51,99 +55,80 @@ export function buildPageItems(
 export function Pagination({
   page,
   totalPages,
+  hasNext,
+  previousAnalyticsId,
+  nextAnalyticsId,
+  className,
   onPageChange,
   compact = false,
   disabled = false,
-  mobileCompact = false,
+  mobileCompact = true,
   analyticsId,
 }: PaginationProps) {
   const { t } = useTranslation()
-  const pageItems = buildPageItems(page, totalPages)
+  if (page === 0 && (totalPages === undefined ? !hasNext : totalPages <= 1)) return null
+
+  const pageItems = totalPages === undefined ? [] : buildPageItems(Math.max(0, Math.min(page, totalPages - 1)), totalPages)
+  const indicator = totalPages === undefined
+    ? t('pagination.currentPage', { page: page + 1 })
+    : t('pagination.pageIndicator', { page: page + 1, total: totalPages })
+  const buttonClass = 'min-h-9 shrink-0 whitespace-nowrap sm:min-h-0'
 
   return (
     <nav
       aria-label={t('pagination.label')}
-      className={cn(
-        'flex flex-wrap items-center justify-center',
-        compact ? 'gap-1 py-2' : 'gap-2 py-4 sm:gap-3',
-      )}
+      className={cn('flex flex-wrap items-center justify-center gap-2 max-sm:w-full sm:ml-auto sm:justify-end',
+        compact ? 'py-2' : 'py-3', className)}
     >
       <Button
-        data-analytics-id={analyticsId}
+        type="button"
+        data-analytics-id={previousAnalyticsId ? previousAnalyticsId : analyticsId}
         variant="outline"
         size="sm"
+        className={buttonClass}
         onClick={() => onPageChange(page - 1)}
         disabled={disabled || page <= 0}
-        className={
-          compact
-            ? 'shrink-0 gap-1.5 px-2'
-            : 'min-w-0 flex-1 sm:flex-none sm:min-w-[90px]'
-        }
       >
         {t('pagination.prev')}
       </Button>
-
-      {mobileCompact && (
-        <span
-          className="px-2 text-xs tabular-nums text-muted-foreground sm:hidden"
-          aria-current="page"
-        >
-          {t('pagination.pageIndicator', { page: page + 1, total: totalPages })}
-        </span>
-      )}
-      <div
-        className={cn(
-          'flex items-center justify-center',
-          compact ? 'gap-2' : 'order-3 w-full gap-1.5 sm:order-none sm:w-auto',
-          mobileCompact && 'hidden sm:flex',
-        )}
+      <span
+        className={cn('px-1 text-xs tabular-nums text-muted-foreground', totalPages !== undefined && (mobileCompact ? 'sm:hidden' : 'hidden'))}
+        aria-current="page"
       >
-        {pageItems.map((item, index) =>
-          item === 'ellipsis' ? (
-            <span
-              key={`ellipsis-${index}`}
-              className={cn(
-                'text-muted-foreground select-none',
-                compact ? 'px-1 text-xs' : 'px-2 text-sm',
-              )}
-              aria-hidden="true"
-            >
-              …
-            </span>
-          ) : (
-            <Button
-              data-analytics-id={analyticsId}
-              key={item}
-              type="button"
-              disabled={disabled}
-              variant={item === page ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onPageChange(item)}
-              aria-label={t('pagination.goToPage', { page: item + 1 })}
-              aria-current={item === page ? 'page' : undefined}
-              className={
-                compact
-                  ? 'h-7 min-w-7 px-1.5 text-xs'
-                  : 'min-w-[2.25rem] h-9 px-2'
-              }
-            >
-              {item + 1}
-            </Button>
-          ),
-        )}
-      </div>
-
+        {indicator}
+      </span>
+      {totalPages !== undefined && (
+        <div className={cn('flex flex-wrap items-center justify-center gap-1', mobileCompact ? 'hidden sm:flex' : 'order-last w-full sm:order-none sm:w-auto')}>
+          {pageItems.map((item, index) =>
+            item === 'ellipsis' ? (
+              <span key={`ellipsis-${index}`} className="px-1 text-xs text-muted-foreground" aria-hidden="true">…</span>
+            ) : (
+              <Button
+                data-analytics-id={analyticsId}
+                key={item}
+                type="button"
+                disabled={disabled}
+                variant={item === page ? 'soft' : 'ghost'}
+                size="sm"
+                className={cn(buttonClass, 'min-w-7 px-1.5 tabular-nums')}
+                onClick={() => { if (item !== page) onPageChange(item) }}
+                aria-label={t('pagination.goToPage', { page: item + 1 })}
+                aria-current={item === page ? 'page' : undefined}
+              >
+                {item + 1}
+              </Button>
+            ),
+          )}
+        </div>
+      )}
       <Button
-        data-analytics-id={analyticsId}
+        type="button"
+        data-analytics-id={nextAnalyticsId ? nextAnalyticsId : analyticsId}
         variant="outline"
         size="sm"
+        className={buttonClass}
         onClick={() => onPageChange(page + 1)}
-        disabled={disabled || page >= totalPages - 1}
-        className={
-          compact
-            ? 'shrink-0 gap-1.5 px-2'
-            : 'min-w-0 flex-1 sm:flex-none sm:min-w-[90px]'
-        }
+        disabled={disabled || (totalPages === undefined ? !hasNext : page >= totalPages - 1)}
       >
         {t('pagination.next')}
       </Button>

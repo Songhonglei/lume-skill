@@ -29,7 +29,7 @@ function resolveAuthenticatedReturnTo(value: unknown) {
   const target = resolveAuthReturnTo(value)
   try {
     const pathname = decodeURIComponent(new URL(target, 'http://localhost').pathname)
-    if (/^\/(?:login|register)\/?$/i.test(pathname) || pathname.startsWith('//') || pathname.includes('\\')) {
+    if (/^\/(?:login|register|reset-password)\/?$/i.test(pathname) || pathname.startsWith('//') || pathname.includes('\\')) {
       return '/'
     }
   } catch {

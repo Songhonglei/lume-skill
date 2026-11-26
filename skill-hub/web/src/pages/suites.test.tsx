@@ -4,11 +4,24 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SuitesPage } from './suites'
 
+import { useState } from 'react'
+
 const mocks = vi.hoisted(() => ({
+  routeSearch: {} as { q?: string; label?: string; page?: number },
+  changeRoute: undefined as ((search: { q?: string; label?: string; page?: number }) => void) | undefined,
   search: vi.fn((_params?: unknown) => ({ data: { items: [], total: 0, page: 0, size: 12 }, isLoading: false })),
 }))
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }))
+vi.mock('@tanstack/react-router', () => ({
+  useLocation: () => ({ pathname: '/suites' }),
+  useNavigate: () => ({ search }: { search: typeof mocks.routeSearch }) => mocks.changeRoute?.(search),
+  useSearch: () => {
+    const [search, setSearch] = useState(mocks.routeSearch)
+    mocks.changeRoute = setSearch
+    return search
+  },
+  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }))
 vi.mock('@/shared/hooks/use-suite-queries', () => ({
   useResourceSearch: (params: unknown) => mocks.search(params),

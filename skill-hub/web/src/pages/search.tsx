@@ -149,10 +149,10 @@ export function SearchPage() {
               navigate({ to: `/space/${skill.namespace}/${encodeURIComponent(skill.slug)}`, search: { returnTo: toRouterPath(window.location.pathname, window.location.search) } })
             }} />)}
           </div>
-          <div ref={sentinel} className="flex min-h-16 flex-wrap items-center justify-center gap-3 py-4 text-sm text-muted-foreground">
+          <div ref={sentinel} className="flex min-h-12 flex-wrap items-center justify-center gap-3 py-3 sm:justify-end text-sm text-muted-foreground">
             {isFetchingMore ? <span role="status" className="inline-flex items-center gap-2"><Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />{t('search.market.loadingMore')}</span>
               : loadFailed ? <div role="alert" className="flex flex-wrap items-center justify-center gap-3"><span>{t('search.market.appendFailed')}</span><Button data-analytics-id="search.results.retry" variant="outline" size="sm" disabled={isUpdatingResults} onClick={retry}>{t('search.source.retry')}</Button></div>
-              : hasMore ? <Button data-analytics-id="search.results.more" variant="ghost" size="sm" disabled={isUpdatingResults || restoring} onClick={loadMore}>{t('search.market.loadMore')}</Button>
+              : hasMore ? <Button data-analytics-id="search.results.more" variant="outline" size="sm" disabled={isUpdatingResults || restoring} onClick={loadMore}>{t('search.market.loadMore')}</Button>
               : <span role="status" className="inline-flex items-center gap-2"><Check aria-hidden="true" className="h-4 w-4" />{t('search.market.allLoaded', { count: displayItems.length })}</span>}
           </div>
         </>

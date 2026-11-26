@@ -1,3 +1,4 @@
+import { Pagination } from '@/shared/components/pagination'
 import { useSiteName } from '@/shared/lib/product-brand'
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from '@tanstack/react-router'
@@ -87,7 +88,15 @@ export function EmailBatchDetail({ id }: { id: string }) {
           {item.targetPath?.startsWith('/') && !item.targetPath.startsWith('//') && !item.targetPath.includes('\\') ? <a href={withBasePath(item.targetPath)} className="underline">{t('notificationEmail.openItem')}</a> : null}
         </li>
       })}</ul>}
-      <nav aria-label={t('pagination.label')} className="flex items-center justify-center gap-2"><Button size="sm" variant="outline" disabled={index === 0 || query.isPending} onClick={() => setIndex((value) => value - 1)}>{t('pagination.prev')}</Button><Button size="sm" variant="outline" disabled={!batch.nextCursor || query.isPending} onClick={() => { if (batch.nextCursor) { setCursors((current) => [...current.slice(0, index + 1), batch.nextCursor ?? null]); setIndex((value) => value + 1) } }}>{t('pagination.next')}</Button></nav>
+      <Pagination page={index} hasNext={!!batch.nextCursor} disabled={query.isFetching}
+        onPageChange={next => {
+          if (next > index) {
+            if (!batch.nextCursor) return
+            const cursor = batch.nextCursor
+            setCursors(current => [...current.slice(0, index + 1), cursor])
+          }
+          setIndex(next)
+        }} />
     </Card> : null}
   </div>
 }

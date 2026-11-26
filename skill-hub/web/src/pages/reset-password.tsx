@@ -1,9 +1,9 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import { FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { authApi } from '@/api/client'
 import { useLocalAuthCapabilities } from '@/features/auth/use-local-auth-capabilities'
-import { Button } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 
@@ -12,6 +12,7 @@ import { Input } from '@/shared/ui/input'
  */
 export function ResetPasswordPage() {
   const { t } = useTranslation()
+  const { returnTo } = useSearch({ from: '/reset-password' })
   const { data: capabilities, isError: capabilitiesError } = useLocalAuthCapabilities()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -105,7 +106,7 @@ export function ResetPasswordPage() {
               <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                 {t('resetPassword.successMessage')}
               </p>
-              <Link data-analytics-id="auth.login.open" to="/login" className="block text-center font-medium text-primary hover:underline">
+              <Link data-analytics-id="auth.login.open" to="/login" search={{ returnTo }} className={buttonVariants()}>
                 {t('resetPassword.backToLogin')}
               </Link>
             </div>
@@ -185,6 +186,9 @@ export function ResetPasswordPage() {
               </Button>
             </form>
           ) : null}
+          {!isSuccess && <Link data-analytics-id="auth.login.open" to="/login" search={{ returnTo }} className={buttonVariants({ variant: 'ghost', className: 'mt-3' })}>
+              {t('resetPassword.backToLogin')}
+            </Link>}
         </CardContent>
       </Card>
     </div>

@@ -27,14 +27,15 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
   useParams: () => ({ namespace: 'global', slug: 'care-workflow' }),
   useSearch: () => ({ version: '1.0.0' }),
-  Link: ({ children, params, search, ...props }: {
+  Link: ({ children, params, search, to, ...props }: {
     children: ReactNode
-    params: { namespace: string; slug: string }
+    to?: string
+    params?: { namespace: string; slug: string }
     search?: { returnTo?: string; version?: string }
     className?: string
   }) => (
     <a
-      href={`/space/${params.namespace}/${params.slug}?version=${encodeURIComponent(search?.version ?? '')}&returnTo=${encodeURIComponent(search?.returnTo ?? '')}`}
+      href={params ? `/space/${params.namespace}/${params.slug}?version=${encodeURIComponent(search?.version ?? '')}&returnTo=${encodeURIComponent(search?.returnTo ?? '')}` : to}
       className={props.className}
     >
       {children}
@@ -203,7 +204,7 @@ describe('SuiteDetailPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'suite.membersTabShort' }))
 
     expect(screen.getByText(`suite.blockingReasons.${blockingReason}`)).not.toBeNull()
-    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.queryAllByRole('link').map(link => link.getAttribute('href')).filter(href => href !== '/suites')).toEqual([])
   })
 
   it('shows release metadata and the member snapshot in version history', () => {

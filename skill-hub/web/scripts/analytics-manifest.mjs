@@ -9,7 +9,7 @@ const destination = path.join(root, 'docs/frontend-analytics-manifest.json')
 const sourceRoot = path.join(root, 'web/src')
 const markerProp = /^(data-analytics-id|analyticsId|[a-z]+AnalyticsId)$/
 const idPattern = /^[a-z]+(?:\.[a-z]+){2,}$/
-const passthrough = new Set(['analyticsId', 'confirmAnalyticsId', 'cancelAnalyticsId', 'closeAnalyticsId', 'copyAnalyticsId', 'downloadAnalyticsId', 'skillhubAnalyticsId', 'clawhubAnalyticsId', 'folderAnalyticsId', 'pickerAnalyticsId'])
+const passthrough = new Set(['analyticsId', 'confirmAnalyticsId', 'cancelAnalyticsId', 'closeAnalyticsId', 'copyAnalyticsId', 'downloadAnalyticsId', 'skillhubAnalyticsId', 'clawhubAnalyticsId', 'folderAnalyticsId', 'pickerAnalyticsId', 'previousAnalyticsId', 'nextAnalyticsId'])
 const navigationFiles = new Set(['web/src/app/layout.tsx', 'web/src/pages/dashboard.tsx', 'web/src/features/namespace/namespace-management-nav.tsx'])
 
 function walk(dir) {

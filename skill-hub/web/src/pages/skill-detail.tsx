@@ -3,7 +3,7 @@ import { startTransition, useCallback, useEffect, useRef, useState, type MouseEv
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Download, Folder, Globe, Lock, MoreHorizontal, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
+import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Copy, Download, Folder, Globe, Lock, MoreHorizontal, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
 import { SkillInstructions } from '@/features/skill/skill-instructions'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { SkillVisibilityDialog } from '@/features/skill/skill-visibility-dialog'
@@ -16,7 +16,8 @@ import type { FileTreeNode } from '@/features/skill/file-tree-builder'
 import type { SkillFile } from '@/api/types'
 import { getVersionPresentation } from '@/shared/lib/version-presentation'
 import { CopyButton } from '@/shared/components/copy-button'
-import { InstallCommand } from '@/features/skill/install-command'
+import { buildSkillhubInstallCommand, getBaseUrl, InstallCommand } from '@/features/skill/install-command'
+import { copyToClipboard } from '@/shared/lib/clipboard'
 import { ShareButton } from '@/features/skill/share-button'
 import { InstallForAgentButton } from '@/features/skill/install-for-agent-button'
 import { SkillLabelPanel } from '@/features/skill/skill-label-panel'
@@ -274,6 +275,9 @@ export function SkillDetailPage() {
     : selectedVersionEntry
   const isVersionDownloadable = selectedVersionEntry?.downloadAvailable ?? false
   const isVersionInstallable = selectedVersionEntry?.status === 'PUBLISHED' && isVersionDownloadable
+  const quickInstallCommand = isVersionInstallable && canInteract && skill?.status !== 'ARCHIVED' && selectedVersionEntry
+    ? buildSkillhubInstallCommand(namespace, slug, getBaseUrl(), selectedVersionEntry.version)
+    : ''
   const suiteMemberships = skill?.memberOfSuites?.items ?? skill?.entryForSuites ?? []
   const suiteMembershipTotal = skill?.memberOfSuites?.total ?? suiteMemberships.length
 
@@ -986,6 +990,46 @@ export function SkillDetailPage() {
               </div>
             </div>
           )}
+          <div className="flex flex-wrap items-center gap-2">
+            {quickInstallCommand && (
+              <Button data-analytics-id="skill.command.copy" type="button" onClick={async () => {
+                try {
+                  await copyToClipboard(quickInstallCommand)
+                  toast.success(t('copyButton.copied'))
+                } catch {
+                  toast.error(t('skillDetail.installCopyFailed'))
+                }
+              }}>
+                <Copy aria-hidden="true" className="size-4" />{t('skillDetail.copyInstallCommand')}
+              </Button>
+            )}
+            <Button
+              data-analytics-id="skill.download.request"
+              variant={quickInstallCommand ? 'outline' : 'default'}
+              onClick={handleDownload}
+              disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
+            >
+              <Download aria-hidden="true" className="h-4 w-4" />
+              {t('skillDetail.download')}
+            </Button>
+            {canInteract && canReport ? (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" aria-label={t('mySkills.moreActions')}>
+                    <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem data-analytics-id="report.create.open" onSelect={handleOpenReport} disabled={hasReported || reportMutation.isPending}>
+                    {hasReported ? t('skillDetail.reportedSkill') : reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+            {selectedVersionEntry ? <code className="text-xs text-muted-foreground">
+              {selectedVersionEntry.syncRevision ? t('review.githubRevisionValue', { count: selectedVersionEntry.syncRevision }) : `v${selectedVersionEntry.version}`}
+            </code> : null}
+          </div>
           {selectedSummary && (
             <p className="text-sm text-muted-foreground leading-6">{selectedSummary}</p>
           )}
@@ -1008,31 +1052,6 @@ export function SkillDetailPage() {
               ))}
             </div>
           )}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              data-analytics-id="skill.download.request"
-              size="lg"
-              onClick={handleDownload}
-              disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
-            >
-              <Download aria-hidden="true" className="h-4 w-4" />
-              {t('skillDetail.download')}
-            </Button>
-            {canInteract && canReport ? (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" size="lg" aria-label={t('mySkills.moreActions')}>
-                    <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem data-analytics-id="report.create.open" onSelect={handleOpenReport} disabled={hasReported || reportMutation.isPending}>
-                    {hasReported ? t('skillDetail.reportedSkill') : reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-          </div>
           {showingUnpublishedPreview && (
             <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{t('skillDetail.unpublishedPreviewTitle')}</div>

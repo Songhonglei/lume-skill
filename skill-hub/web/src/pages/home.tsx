@@ -37,45 +37,41 @@ export function HomePage() {
   }
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-8">
       {/* Hero Section */}
-      <div className="text-center space-y-8 py-16 animate-fade-up">
-        <div className="space-y-4">
-          <BrandMark className="mx-auto h-16 w-16 rounded-2xl bg-background shadow-sm ring-1 ring-border/70 md:h-20 md:w-20" />
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold leading-tight [overflow-wrap:anywhere]" style={{ color: 'hsl(var(--foreground))' }}>
+      <div className="rounded-xl border border-border border-t-[3px] border-t-primary bg-card p-5 sm:p-7 space-y-4 animate-fade-up">
+        <div className="flex items-center gap-3">
+          <BrandMark className="size-8 shrink-0" />
+          <h1 className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-3xl" style={{ color: 'hsl(var(--foreground))' }}>
             {settings.siteName ?? PRODUCT_NAME}
           </h1>
         </div>
 
-        <div className="max-w-2xl mx-auto animate-fade-up delay-1">
+        <div className="max-w-xl">
           <SearchBar analyticsId="search.query.submit" onSearch={handleSearch} />
         </div>
 
-        <div className="flex items-center justify-center gap-4 animate-fade-up delay-2">
-          <button data-analytics-id="navigation.skills.open"
-            className="px-8 py-3.5 rounded-xl text-base font-medium text-white bg-[#202020] shadow-sm hover:bg-[#111] transition-colors"
+        <div className="flex flex-wrap items-center gap-2">
+          <Button data-analytics-id="navigation.skills.open" variant="outline"
             onClick={() => navigate({ to: '/search', search: { q: '', sort: 'relevance', page: 0, starredOnly: false } })}
           >
             {t('home.browseSkills')}
-          </button>
-          <button data-analytics-id="skill.publish.open"
-            className="px-8 py-3.5 rounded-xl text-base font-medium border transition-colors"
-            style={{ background: 'var(--bg-secondary-btn, #F7FAFC)', borderColor: 'hsl(var(--muted-foreground))', color: 'hsl(var(--muted-foreground))' }}
+          </Button>
+          <Button data-analytics-id="skill.publish.open" variant="soft"
             onClick={() => navigate({ to: '/dashboard/publish' })}
           >
             {t('home.publishSkill')}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Popular Downloads Section */}
-      <section className="space-y-6 animate-fade-up">
-        <div className="flex items-center justify-between">
+      {(isLoadingPopular || !!popularSkills?.items.length) && <section className="space-y-6 animate-fade-up">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2" style={{ color: 'hsl(var(--foreground))' }}>
+            <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
               {t('home.popularTitle')}
             </h2>
-            <p style={{ color: 'hsl(var(--text-secondary))' }}>{t('home.popularDescription')}</p>
           </div>
           <Button data-analytics-id="discovery.popular.open"
             variant="ghost"
@@ -98,16 +94,15 @@ export function HomePage() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       {/* Latest Releases Section */}
-      <section className="space-y-6 animate-fade-up">
-        <div className="flex items-center justify-between">
+      {(isLoadingLatest || !!latestSkills?.items.length) && <section className="space-y-6 animate-fade-up">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight mb-2" style={{ color: 'hsl(var(--foreground))' }}>
+            <h2 className="text-xl font-semibold tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
               {t('home.latestTitle')}
             </h2>
-            <p style={{ color: 'hsl(var(--text-secondary))' }}>{t('home.latestDescription')}</p>
           </div>
           <Button data-analytics-id="discovery.latest.open"
             variant="ghost"
@@ -130,7 +125,7 @@ export function HomePage() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       {/* Quick Start Section */}
       <QuickStartSection ns="home" />

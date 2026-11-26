@@ -188,6 +188,8 @@ vi.mock('@/features/skill/file-tree', () => ({
 
 vi.mock('@/features/skill/install-command', () => ({
   InstallCommand: () => <div>install</div>,
+  getBaseUrl: () => 'https://registry.example',
+  buildSkillhubInstallCommand: (_ns: string, _slug: string, _base: string, version: string) => `demo ${version}`,
   isPortableSkillVersion: () => true,
 }))
 

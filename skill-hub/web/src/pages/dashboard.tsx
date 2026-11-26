@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { useAuth } from '@/features/auth/use-auth'
 import { APP_SHELL_PAGE_CLASS_NAME } from '@/app/page-shell-style'
+import { useMyReviewProgress } from '@/features/review/use-my-review-progress'
+import { useMySuiteWorkspace } from '@/shared/hooks/use-suite-queries'
+import { reviewResubmitSearch } from '@/features/review/review-progress-actions'
+import { buttonVariants } from '@/shared/ui/button'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import {
   Star, Heart, Package, Boxes, Key, Flag, Globe,
@@ -87,9 +91,28 @@ const OVERVIEW_CARDS = [
  */
 export function DashboardPage() {
   const { t } = useTranslation()
+  const rejected = useMyReviewProgress({ status: 'REJECTED', page: 0, size: 3 }).data
+  const pending = rejected?.statusCounts.pending ?? 0
+  const suiteAttention = useMySuiteWorkspace('', 'ALL', 0, 12).data?.attentionCount ?? 0
+  const rejectedCount = rejected?.total ?? 0
+  const rework = rejected?.items.find(item => item.subjectType !== 'SUITE_VERSION' && Boolean(item.subjectSlug || item.skillSlug))
   return (
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
       <DashboardPageHeader title={t('dashboard.title')} />
+      {(rejectedCount > 0 || pending > 0 || suiteAttention > 0) && (
+        <section aria-labelledby="dashboard-tasks" className="rounded-lg border bg-card">
+          <h2 id="dashboard-tasks" className="border-b px-4 py-3 text-sm font-semibold">{t('overview.currentWork')}</h2>
+          <div className="divide-y">
+            {rejectedCount > 0 && <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+              <Link to="/dashboard/review-progress" search={{ status: 'REJECTED' }} className="flex-1 text-sm font-medium hover:underline">{t('overview.rejectedCount', { count: rejectedCount })}</Link>
+              {rework && <Link data-analytics-id="skill.resubmit.open" to="/dashboard/publish" search={reviewResubmitSearch(rework)}
+                className={buttonVariants({ variant: 'outline', size: 'sm', className: 'h-auto min-h-7 max-w-full whitespace-normal text-left' })}>{t('overview.resubmitNamed', { name: rework.subjectSlug || rework.skillSlug })}</Link>}
+            </div>}
+            {suiteAttention > 0 && <Link to="/dashboard/suites" search={{ state: 'ATTENTION' }} className="flex items-center justify-between gap-2 px-4 py-3 text-sm font-medium hover:bg-accent">{t('overview.suiteAttentionCount', { count: suiteAttention })}<ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" /></Link>}
+            {pending > 0 && <Link to="/dashboard/review-progress" search={{ status: 'PENDING' }} className="flex items-center justify-between gap-2 px-4 py-3 text-sm font-medium hover:bg-accent">{t('overview.pendingCount', { count: pending })}<ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" /></Link>}
+          </div>
+        </section>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {OVERVIEW_CARDS.map((card) => {
         const Icon = card.icon

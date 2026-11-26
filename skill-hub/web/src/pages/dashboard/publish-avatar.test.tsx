@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ publish: vi.fn(), navigate: vi.fn(), submit: v
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ invalidateQueries: mocks.refresh }), useQuery: ({ queryKey, enabled }: { queryKey: unknown[]; enabled?: boolean }) => queryKey[0] === 'skill-package-preview'
   ? { data: enabled ? { name: 'foo', displayName: 'Foo', version: '1.1', description:'Summary', overview:'# Overview' } : undefined, isSuccess: !!enabled, isPending: false, isError: false }
   : { data: { avatarUrl: '/owner-active' }, isLoading: false, isError: false } }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => mocks.navigate, useSearch: () => mocks.search }))
+vi.mock('@tanstack/react-router', () => ({ useBlocker: () => ({ status: 'idle' }), useNavigate: () => mocks.navigate, useSearch: () => mocks.search }))
 vi.mock('react-i18next', async () => ({ ...await vi.importActual<typeof import('react-i18next')>('react-i18next'), useTranslation: () => ({ t: (key: string) => key }) }))
 vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useSkillVersionDetail: () => ({data:undefined,isLoading:false}),

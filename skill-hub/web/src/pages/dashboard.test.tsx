@@ -23,6 +23,9 @@ vi.mock('@/features/auth/use-auth', () => ({
   }),
 }))
 
+vi.mock('@/features/review/use-my-review-progress', () => ({ useMyReviewProgress: () => ({ data: undefined }) }))
+vi.mock('@/shared/hooks/use-suite-queries', () => ({ useMySuiteWorkspace: () => ({ data: undefined }) }))
+
 vi.mock('@/shared/hooks/use-user-queries', () => ({
   useMySkills: () => ({
     data: { items: [], total: 0, page: 0, size: 5 },

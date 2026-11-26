@@ -1,3 +1,4 @@
+import { Pagination } from '@/shared/components/pagination'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { KeyboardEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -65,7 +66,7 @@ export function AdminUsersPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [actionType, setActionType] = useState<'ban' | 'unban' | 'reset'>('ban')
 
-  const { data, isLoading } = useAdminUsers({
+  const { data, isLoading, isError, refetch } = useAdminUsers({
     search,
     status: statusFilter || undefined,
     page,
@@ -197,7 +198,12 @@ export function AdminUsersPage() {
         </div>
       </Card>
 
-      {isLoading ? (
+      {isError ? (
+        <Card role="alert" className="flex flex-wrap items-center gap-3 p-4">
+          <p className="text-sm text-destructive">{t('list.loadFailed')}</p>
+          <Button variant="outline" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>
+        </Card>
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-14 animate-shimmer rounded-lg" />
@@ -211,7 +217,7 @@ export function AdminUsersPage() {
         <>
           <Card>
             <Table>
-              <TableHeader>
+              <TableHeader className="max-md:sr-only">
                 <TableRow>
                   <TableHead>{t('adminUsers.colUsername')}</TableHead>
                   <TableHead>{t('adminUsers.colUserId')}</TableHead>
@@ -224,32 +230,32 @@ export function AdminUsersPage() {
               </TableHeader>
               <TableBody>
                 {data.items.map((user) => (
-                  <TableRow key={user.userId}>
-                    <TableCell className="font-medium">{user.username}</TableCell>
-                    <TableCell>
+                  <TableRow key={user.userId} className="max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:px-3 max-md:py-3">
+                    <TableCell className="break-words font-medium max-md:order-1 max-md:p-1 [overflow-wrap:anywhere]">{user.username}</TableCell>
+                    <TableCell className="max-md:order-3 max-md:col-span-2 max-md:p-1">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-muted-foreground min-w-0 max-w-[14rem] truncate" title={user.userId}>{user.userId}</span>
                         <CopyButton analyticsId="admin.user.identifier.copy" text={user.userId} ariaLabel={t('adminUsers.copyUserId', { username: user.username })} />
                       </div>
                     </TableCell>
-                    <TableCell>{user.email || '-'}</TableCell>
-                    <TableCell>
+                    <TableCell className="break-all max-md:order-4 max-md:col-span-2 max-md:p-1 max-md:text-xs">{user.email || '—'}</TableCell>
+                    <TableCell className="max-md:order-2 max-md:p-1">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                           user.status === 'ACTIVE'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20 dark:text-emerald-300'
                             : user.status === 'PENDING'
-                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              ? 'bg-amber-500/10 text-amber-800 border-amber-500/20 dark:text-amber-300'
+                              : 'bg-red-500/10 text-red-800 border-red-500/20 dark:text-red-300'
                         }`}
                       >
                         {user.status === 'ACTIVE' ? t('adminUsers.statusActive') : user.status === 'PENDING' ? t('adminUsers.statusPending') : t('adminUsers.statusDisabled')}
                       </span>
                     </TableCell>
-                    <TableCell>{user.platformRoles.join(', ')}</TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
+                    <TableCell className="max-md:order-5 max-md:col-span-2 max-md:p-1 max-md:text-xs">{user.platformRoles.join(', ')}</TableCell>
+                    <TableCell className="max-md:order-6 max-md:col-span-2 max-md:p-1 max-md:text-xs">{formatDate(user.createdAt)}</TableCell>
+                    <TableCell className="max-md:order-7 max-md:col-span-2 max-md:p-1">
+                      <div className="flex flex-wrap gap-2">
                         <Button data-analytics-id="admin.user.role.edit"
                           variant="outline"
                           size="sm"
@@ -284,7 +290,7 @@ export function AdminUsersPage() {
                           </Button>
                         )}
                         <Button data-analytics-id="admin.user.password.reset"
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleTriggerPasswordReset(user)}
                         >
@@ -298,28 +304,10 @@ export function AdminUsersPage() {
             </Table>
           </Card>
 
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              {t('adminUsers.totalRecords', { total: data.total, page: page + 1 })}
-            </p>
-            <div className="flex gap-2">
-              <Button data-analytics-id="admin.user.previous"
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-              >
-                {t('adminUsers.prevPage')}
-              </Button>
-              <Button data-analytics-id="admin.user.next"
-                variant="outline"
-                size="sm"
-                disabled={(page + 1) * 20 >= data.total}
-                onClick={() => setPage(page + 1)}
-              >
-                {t('adminUsers.nextPage')}
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-4">
+            <p className="text-xs text-muted-foreground">{t('adminUsers.totalRecords', { total: data.total, page: page + 1 })}</p>
+            <Pagination previousAnalyticsId="admin.user.previous" nextAnalyticsId="admin.user.next"
+              page={page} totalPages={Math.ceil(data.total / 20)} onPageChange={setPage} />
           </div>
         </>
       )}

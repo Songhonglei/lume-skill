@@ -4,6 +4,7 @@ const capabilities = vi.hoisted(() => ({ passwordLoginEnabled: true }))
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: unknown }) => children,
+  useSearch: () => ({ returnTo: '/dashboard/suites/new' }),
 }))
 
 vi.mock('react-i18next', async () => {
@@ -29,6 +30,7 @@ vi.mock('@/features/auth/use-local-auth-capabilities', () => ({
 
 vi.mock('@/shared/ui/button', () => ({
   Button: ({ children }: { children: unknown }) => children,
+  buttonVariants: () => '',
 }))
 
 vi.mock('@/shared/ui/card', () => ({

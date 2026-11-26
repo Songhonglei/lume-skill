@@ -12,10 +12,10 @@ const snapshots = vi.hoisted(() => ({ values: {} as Record<string, {version:stri
 const publish = vi.hoisted(() => vi.fn())
 const permissions = vi.hoisted(() => ({ ownerReadOnly: false }))
 const searchParams = vi.hoisted(() => ({ value: { namespace: 'team-ai', updateSkill: undefined as string | undefined } }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), useSearch: () => searchParams.value }))
+vi.mock('@tanstack/react-router', () => ({ useBlocker: () => ({ status: 'idle' }), useNavigate: () => vi.fn(), useSearch: () => searchParams.value }))
 vi.mock('react-i18next', async () => ({ ...await vi.importActual<typeof import('react-i18next')>('react-i18next'), useTranslation: () => ({ t: (key: string) => key }) }))
 vi.mock('@/shared/hooks/use-skill-queries', () => ({ useSkillDetail: (_namespace: string, slug: string) => ({ data: slug ? {publishedVersion:{version:'1.0.0'},ownerReadOnly:permissions.ownerReadOnly} : undefined }), useSkillVersionDetail: (namespace: string, slug: string) => ({ data: snapshots.values[`${namespace}/${slug}`] ?? snapshots.values[slug], isLoading: false }), previewSkillPackage: preview, usePublishSkill: () => ({ mutateAsync: publish, isPending: false }) }))
-vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: [{ id: 1, slug: 'team-ai', displayName: 'Team' }], isLoading: false }) }))
+vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: [{ id: 1, slug: 'team-ai', displayName: 'Team', type: 'TEAM'  }], isLoading: false }) }))
 vi.mock('@/features/publish/upload-zone', () => ({ UploadZone: ({ onFileSelect, onFolderSelect, previewError }: { onFileSelect: (file: File) => void; onFolderSelect: (files: File[]) => void; previewError?: string }) => <><button onClick={() => onFolderSelect([new File(['folder'], 'SKILL.md')])}>select-folder</button><input aria-label="package" type="file" onChange={e => { if (e.target.files?.[0]) onFileSelect(e.target.files[0]) }} />{previewError && <p role="alert">{previewError}</p>}</> }))
 vi.mock('@/features/skill/skill-avatar-editor', () => ({ KEEP_AVATAR: { action: 'KEEP', ready: true }, SkillAvatarEditor: () => null }))
 vi.mock('@/features/skill/skill-avatar-manager', () => ({ SkillAvatarManager: () => null }))
@@ -57,7 +57,7 @@ describe('web presentation publishing', () => {
     expect(screen.queryByRole('textbox', { name: 'publish.overview' })).toBeNull()
     submitPackage()
     await waitFor(() => expect(publish).toHaveBeenCalledWith(expect.objectContaining({
-      shortDescription: undefined, overview: undefined, resetPresentation: true,
+      shortDescription: undefined, overview: undefined, resetPresentation: true, visibility: 'NAMESPACE_ONLY',
     })))
   })
 

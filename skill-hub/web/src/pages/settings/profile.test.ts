@@ -66,8 +66,8 @@ describe('ProfileSettingsPage', () => {
     expect(typeof ProfileSettingsPage).toBe('function')
   })
 
-  it('renders reset-password entry action', () => {
+  it('renders update-password entry action', () => {
     const html = renderToStaticMarkup(React.createElement(ProfileSettingsPage))
-    expect(html).toContain('profile.resetPassword')
+    expect(html).toContain('profile.updatePassword')
   })
 })

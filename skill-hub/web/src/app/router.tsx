@@ -295,6 +295,9 @@ const registerRoute = createRoute({
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'reset-password',
+  validateSearch: (search: Record<string, unknown>) => ({
+    returnTo: isSafeAuthReturnTo(search.returnTo) ? search.returnTo : undefined,
+  }),
   component: ResetPasswordPage,
 })
 
@@ -356,14 +359,23 @@ const githubSkillsRoute = createRoute({
 const suitesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'suites',
+  validateSearch: (search: Record<string, unknown>) => {
+    const page = Number(search.page)
+    return {
+      q: typeof search.q === 'string' ? normalizeSearchQuery(search.q) || undefined : undefined,
+      label: typeof search.label === 'string' ? search.label.trim().slice(0, 128) || undefined : undefined,
+      page: Number.isInteger(page) && page > 0 && page <= 2147483647 ? page : undefined,
+    }
+  },
   component: SuitesPage,
 })
 
 const suiteDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/suite/$namespace/$slug',
-  validateSearch: (search: Record<string, unknown>): { version?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { version?: string; returnTo?: string } => ({
     version: typeof search.version === 'string' && search.version ? search.version : undefined,
+    returnTo: isSafeAuthReturnTo(search.returnTo) && /^\/suites(?:\?|$)/.test(search.returnTo) ? search.returnTo : undefined,
   }),
   component: SuiteDetailPage,
 })
@@ -465,8 +477,9 @@ const dashboardSuitesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'dashboard/suites',
   beforeLoad: requireAuth,
-  validateSearch: (search: Record<string, unknown>): { tab?: 'suites' | 'publishing' } => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: 'suites' | 'publishing'; state?: 'ATTENTION' } => ({
     tab: search.tab === 'publishing' ? 'publishing' : undefined,
+    state: search.state === 'ATTENTION' ? 'ATTENTION' : undefined,
   }),
   component: MySuitesPage,
 })
