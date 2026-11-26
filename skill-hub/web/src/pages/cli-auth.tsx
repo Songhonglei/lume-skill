@@ -203,7 +203,8 @@ export function CliAuthPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold font-heading">{t('cliAuth.error')}</h1>
-          <p className="text-muted-foreground">{errorMessage}</p>
+          <p role="alert" className="text-sm text-destructive">{errorMessage}</p>
+          {user && <p className="text-sm text-muted-foreground">{t('cliAuth.restartHint')}</p>}
         </div>
 
         {!user && (

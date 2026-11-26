@@ -16,6 +16,8 @@ export function clearSessionScopedQueries(queryClient: QueryClient) {
   queryClient.removeQueries({ queryKey: ['namespaces', 'my'] })
   queryClient.removeQueries({ queryKey: ['governance'] })
   queryClient.removeQueries({ queryKey: ['reviews'] })
+  queryClient.removeQueries({ queryKey: ['suites', 'workspace'] })
+  void queryClient.resetQueries({ queryKey: ['resources', 'search'] })
   queryClient.removeQueries({ queryKey: ['promotions'] })
   queryClient.removeQueries({ queryKey: ['reports'] })
   queryClient.removeQueries({ queryKey: ['admin', 'users'] })

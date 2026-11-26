@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 
 interface LegalSection {
   title: string
@@ -23,6 +24,7 @@ export function LegalDocument({
   note,
   sections,
 }: LegalDocumentProps) {
+  const { t } = useTranslation()
   return (
     <div className="mx-auto max-w-4xl space-y-8 animate-fade-up">
       <div className="space-y-4">
@@ -41,11 +43,19 @@ export function LegalDocument({
         ) : null}
       </div>
 
+      <details className="rounded-lg border bg-card px-4 py-3">
+        <summary className="cursor-pointer rounded-sm text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{t('legal.contents')}</summary>
+        <nav aria-label={t('legal.contents')} className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+          {sections.map((section, index) => (
+            <a key={section.title} href={`#section-${index + 1}`} className="rounded-sm text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{section.title}</a>
+          ))}
+        </nav>
+      </details>
       <div className="space-y-4">
-        {sections.map((section) => (
-          <Card key={section.title} className="glass-strong">
+        {sections.map((section, index) => (
+          <Card key={section.title} className="glass-strong scroll-mt-20" id={`section-${index + 1}`}>
             <CardHeader>
-              <CardTitle className="text-xl font-heading">{section.title}</CardTitle>
+              <h2 className="text-xl font-semibold font-heading">{section.title}</h2>
             </CardHeader>
             <CardContent className="space-y-4">
               {section.paragraphs.map((paragraph) => (

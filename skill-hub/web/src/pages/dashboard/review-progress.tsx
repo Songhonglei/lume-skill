@@ -1,3 +1,4 @@
+import { reviewResubmitSearch } from '@/features/review/review-progress-actions'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { ChevronDown, ChevronUp, Clock3, RotateCcw, Search } from 'lucide-react'
@@ -30,6 +31,11 @@ export function ReviewProgressPage() {
   const search = useSearch({ from: '/dashboard/review-progress' })
   const [queryInput, setQueryInput] = useState(search.q ?? '')
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [appliedQuery, setAppliedQuery] = useState(search.q)
+  if (appliedQuery !== search.q) {
+    setAppliedQuery(search.q)
+    setQueryInput(search.q ?? '')
+  }
   const progressQuery = useMyReviewProgress({
     subjectType: search.type,
     status: search.status,
@@ -73,9 +79,9 @@ export function ReviewProgressPage() {
       />
 
       <Card className="border-border/70">
-        <CardContent className="space-y-6 p-5 md:p-6">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end">
-            <form data-analytics-id="review.progress.search" className="flex min-w-0 flex-1 gap-2" onSubmit={submitSearch}>
+        <CardContent className="space-y-4 p-3 sm:p-5 md:p-6">
+          <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+            <form data-analytics-id="review.progress.search" className="flex w-full min-w-0 gap-2 sm:flex-1" onSubmit={submitSearch}>
               <div className="relative min-w-0 flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -88,7 +94,7 @@ export function ReviewProgressPage() {
               </div>
               <Button type="submit" variant="outline">{t('reviewProgress.searchAction')}</Button>
             </form>
-            <div className="w-full md:w-44">
+            <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
               <Select
                 value={search.type ?? 'ALL'}
                 onValueChange={(value) => updateSearch({
@@ -106,7 +112,7 @@ export function ReviewProgressPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full md:w-48">
+            <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
               <Select
                 value={search.status ?? 'ALL'}
                 onValueChange={(value) => updateSearch({
@@ -143,12 +149,12 @@ export function ReviewProgressPage() {
                     page: 0,
                   })}
                   className={cn(
-                    'rounded-xl border border-border/70 bg-background px-4 py-3 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    'rounded-lg border border-border bg-background px-2 py-1.5 text-left transition-colors hover:bg-muted/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring sm:px-3 sm:py-2',
                     search.status === status && 'border-primary/40 bg-primary/5',
                   )}
                 >
-                  <span className="block text-2xl font-semibold text-foreground">{count}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="mr-1.5 inline text-sm font-semibold tabular-nums text-foreground">{count}</span>
+                  <span className="text-xs text-muted-foreground">
                     {t(`reviewProgress.${labelKey}`)}
                   </span>
                 </button>
@@ -163,8 +169,9 @@ export function ReviewProgressPage() {
               ))}
             </div>
           ) : progressQuery.isError ? (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">
-              {t('reviewProgress.error')}
+            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 p-4 text-sm text-destructive">
+              <p>{t('reviewProgress.error')}</p>
+              <Button type="button" variant="outline" onClick={() => void progressQuery.refetch()}>{t('reviewCenter.retry')}</Button>
             </div>
           ) : progressQuery.data?.items.length ? (
             <div className="space-y-3">
@@ -260,10 +267,7 @@ function ProgressItem({
           {status === 'REJECTED' && !isSuite ? (
             <Link data-analytics-id="skill.resubmit.open"
               to="/dashboard/publish"
-              search={{
-                namespace: item.namespace,
-                ...(isMetadata ? { updateSkill: slug } : { resubmitSkill: slug, resubmitVersion: item.skillVersion }),
-              }}
+              search={reviewResubmitSearch(item)}
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-2')}
             >
               <RotateCcw className="h-4 w-4" />

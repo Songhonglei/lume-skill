@@ -1,4 +1,12 @@
 {
+  "legal": {
+    "contents": "Contents"
+  },
+  "list": {
+    "loadFailed": "Could not load the list",
+    "details": "Details",
+    "clearFilters": "Clear filters"
+  },
   "dateTimePicker": {
     "placeholder": "Choose date and time",
     "title": "Choose expiration",
@@ -25,7 +33,7 @@
     "home": "Skill Center",
     "search": "Search",
     "marketplace": "Skill Library",
-    "githubSkills": "Open-source Skills",
+    "githubSkills": "GitHub skills",
     "skillDetail": "Skill Detail",
     "explore": "Explore Skills",
     "dashboard": "Console",
@@ -36,6 +44,7 @@
     "login": "Login"
   },
   "githubCatalog": {
+    "manageSync": "Manage GitHub sync",
     "catalogIntro": "Browse Skills synced from GitHub and explore their source repositories.",
     "searchRepositories": "Search owner or repository",
     "searchMembers": "Search skills in this repository",
@@ -83,7 +92,7 @@
     "repositoryRetry": "Try again",
     "repositoryEmpty": "No results on this page.",
     "repositoryFirstPage": "Go to first page",
-    "title": "Open-source Skills",
+    "title": "GitHub skills",
     "sourceLabel": "PUBLIC GITHUB REPOSITORIES",
     "description": "Explore skills from public GitHub repositories, reviewed and published by {{siteName}}. Each skill page shows its source, path, pinned commit, and license details.",
     "explore": "Browse open-source skills",
@@ -93,7 +102,7 @@
     "resultsTitle": "Explore skills",
     "resultsDescription": "Search skills in the @github catalog by name or description.",
     "resultCount": "{{count}} results",
-    "searchPlaceholder": "Search open-source skills",
+    "searchPlaceholder": "Search GitHub skills",
     "search": "Search",
     "sortLabel": "Sort by",
     "viewSkill": "View skill",
@@ -435,7 +444,7 @@
       "retry": "Retry",
       "label": "Source",
       "platform": "Platform",
-      "github": "GitHub synced",
+      "github": "GitHub skills",
       "all": "All sources",
       "platformHint": "Skills published on this platform, excluding GitHub imports.",
       "githubHint": "Skills synced from GitHub, limited to your existing access.",
@@ -569,6 +578,7 @@
     "backToLogin": "Back to login"
   },
   "device": {
+    "restartHint": "If the code has expired, return to your terminal to get a new one.",
     "title": "Device Authorization",
     "subtitle": "Enter the 8-digit user code shown on your device",
     "codeLabel": "User Code",
@@ -581,6 +591,7 @@
     "notice": "After authorization, the device will have access to your account"
   },
   "cliAuth": {
+    "restartHint": "Restart the CLI sign-in in your terminal and open the new link it provides.",
     "validating": "Validating...",
     "pleaseWait": "Please wait",
     "creatingToken": "Creating token...",
@@ -636,10 +647,10 @@
     "mySkills": "My Skills",
     "mySuites": "My Suites",
     "publish": "Publish",
-    "namespaces": "Namespaces",
+    "namespaces": "My namespaces",
     "stars": "My Stars",
     "subscriptions": "Subscriptions",
-    "tokens": "API Tokens",
+    "tokens": "Token management",
     "reviewProgress": "Review Progress",
     "admin": "Admin",
     "governance": "Governance center",
@@ -1242,6 +1253,11 @@
     }
   },
   "overview": {
+    "pendingCount": "Awaiting review ({{count}})",
+    "suiteAttentionCount": "Suites that need attention ({{count}})",
+    "resubmitNamed": "Revise and resubmit · {{name}}",
+    "rejectedCount": "Reviews that need attention ({{count}})",
+    "currentWork": "Action items",
     "mySkills": "My Skills",
     "mySkillsDesc": "View and manage all your published skills",
     "mySuites": "My Suites",
@@ -1705,6 +1721,11 @@
     "fallbackErrorDescription": "The label action could not be completed."
   },
   "auditLog": {
+    "requestId": "Request ID",
+    "actionCode": "Action code",
+    "originalDetails": "Raw details",
+    "detailsTitle": "Audit event details",
+    "resource": "Resource",
     "title": "Audit Log",
     "subtitle": "View system operation records",
     "filterAll": "All",
@@ -1744,6 +1765,7 @@
     "nextPage": "Next"
   },
   "profile": {
+    "updatePassword": "Update password",
     "avatar": {
       "title": "Avatar",
       "choose": "Choose avatar",
@@ -1853,6 +1875,8 @@
     "emptyDescription": "No skills have been published in this namespace yet"
   },
   "skillDetail": {
+    "installCopyFailed": "Copy failed. Copy the command manually from the installation instructions.",
+    "copyInstallCommand": "Copy install command",
     "copyCoordinate": "Copy full skill identifier",
     "unpublishedPreviewTitle": "Unpublished version preview",
     "unpublishedPreviewDescription": "You are viewing an unpublished version under the existing preview permissions. Public readers continue to see the published name, summary and content.",
@@ -1927,7 +1951,7 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "{{siteName}} CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
-    "download": "Download",
+    "download": "Download ZIP",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
     "labelsSectionDescriptionSuperAdmin": "Manage all labels on this skill, including privileged labels that stay hidden from public filters.",
@@ -2241,7 +2265,7 @@
     "manualCopy": "Automatic copy failed. Copy the link below manually.",
     "revoked": "Invitation revoked",
     "error": "Invitation action failed. Try again.",
-    "invalid": "This invitation link is invalid or expired. Ask a space admin for a new link.",
+    "invalid": "This invitation is invalid or incomplete. Ask the person who invited you for a new link.",
     "loading": "Checking invitation…",
     "networkError": "Connection failed. Try again.",
     "namespace": "Space: {{name}}",
@@ -2642,6 +2666,7 @@
     "copy": "Copy"
   },
   "pagination": {
+    "currentPage": "Page {{page}}",
     "label": "Pagination",
     "prev": "Previous",
     "next": "Next",
@@ -2714,6 +2739,7 @@
   },
   "user": {
     "menu": {
+      "tokens": "Token management",
       "settings": "Settings",
       "adminSettings": "Administration",
       "dashboard": "Console",
@@ -2758,8 +2784,19 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "audience": {
+      "public": "Visible to all visitors",
+      "private": "Visible to you and authorized administrators",
+      "global": "Visible to signed-in users",
+      "team": "Visible to members of {{namespace}}"
+    },
     "packageFormatHint": "The ZIP root must contain SKILL.md",
     "form": {
+      "reselectPackage": "Draft restored. Select the skill package again.",
+      "leave": "Leave with draft",
+      "leaveDescription": "This tab keeps your text and publishing settings. Select your files again when you return.",
+      "leaveTitle": "Leave this page?",
+      "optionalAvatar": "Skill avatar (optional)",
       "identity": "Basic information",
       "nameHelp": "Starts with the package title. Leave empty to use the package name.",
       "presentation": "Presentation",
@@ -3130,7 +3167,7 @@
       "delete": "Delete skills",
       "tokenManage": "Manage API tokens"
     },
-    "title": "API Tokens",
+    "title": "Token management",
     "createNew": "Create Token",
     "copyHint": "For security reasons, token plaintext can only be copied once when it is created. It cannot be viewed or copied again later. If you still need it, create a new token.",
     "empty": "No tokens created yet",
@@ -3359,6 +3396,9 @@
     "restoreErrorTitle": "Failed to restore namespace"
   },
   "suite": {
+    "backToCatalog": "Back to suite catalog",
+    "catalogLoadFailed": "Could not load the suite catalog",
+    "candidateVisibilityHint": "Suite visibility: {{visibility}}. Search only shows eligible skills.",
     "workspace": {
       "description": "Manage suites, versions and creation progress.",
       "searchLabel": "Search my suites",
@@ -3772,7 +3812,7 @@
     "publishable": "Publishable",
     "reviewSnapshotFailed": "Unable to load the suite review snapshot.",
     "reviewSnapshotRetry": "Retry loading",
-    "myTitle": "My skill suites",
+    "myTitle": "My suites",
     "myDescription": "Manage draft, pending-review, and published suite versions.",
     "view": "View",
     "myEmpty": "No skill suites yet",
@@ -4080,6 +4120,7 @@
     "governanceActivity": "Recent decisions",
     "governanceSearchMoved": "Search index maintenance is now in system settings.",
     "filters": {
+      "advanced": "More filters",
       "title": "Filter requests",
       "q": "Keywords",
       "status": "Review status",

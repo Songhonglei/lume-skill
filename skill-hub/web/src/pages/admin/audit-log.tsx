@@ -1,3 +1,6 @@
+import type { AuditLogItem } from '@/api/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Pagination } from '@/shared/components/pagination'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -60,8 +63,9 @@ export function AuditLogPage() {
   const [startTimeFilter, setStartTimeFilter] = useState('')
   const [endTimeFilter, setEndTimeFilter] = useState('')
   const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState<AuditLogItem | null>(null)
 
-  const { data, isLoading } = useAuditLog({
+  const { data, isLoading, isError, refetch } = useAuditLog({
     action: actionFilter || undefined,
     userId: userIdFilter || undefined,
     requestId: requestIdFilter || undefined,
@@ -76,6 +80,19 @@ export function AuditLogPage() {
 
   const formatDate = (dateString: string) => {
     return formatLocalDateTime(dateString, i18n.language)
+  }
+
+  const actionLabel = (action: string) => {
+    const known = ACTION_OPTIONS.find(option => option.value === action)
+    return known ? t(known.labelKey) : action
+  }
+  let detailText = selected?.details ?? ''
+  if (detailText) {
+    try {
+      detailText = JSON.stringify(JSON.parse(detailText), null, 2)
+    } catch {
+      // Historical records may contain plain text.
+    }
   }
 
   const applySearchIndexRebuildFilter = () => {
@@ -193,7 +210,12 @@ export function AuditLogPage() {
         </div>
       </Card>
 
-      {isLoading ? (
+      {isError ? (
+        <Card role="alert" className="flex flex-wrap items-center gap-3 p-4">
+          <p className="text-sm text-destructive">{t('list.loadFailed')}</p>
+          <Button variant="outline" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>
+        </Card>
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-14 animate-shimmer rounded-lg" />
@@ -207,26 +229,24 @@ export function AuditLogPage() {
         <>
           <Card>
             <Table>
-              <TableHeader>
+              <TableHeader className="max-sm:sr-only">
                 <TableRow>
                   <TableHead>{t('auditLog.colTime')}</TableHead>
                   <TableHead>{t('auditLog.colAction')}</TableHead>
-                  <TableHead>{t('auditLog.colUserId')}</TableHead>
                   <TableHead>{t('auditLog.colUsername')}</TableHead>
-                  <TableHead>{t('auditLog.colIp')}</TableHead>
+                  <TableHead>{t('auditLog.resource')}</TableHead>
                   <TableHead>{t('auditLog.colDetail')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.items.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell>{formatDate(log.timestamp)}</TableCell>
-                    <TableCell className="font-medium">{log.action}</TableCell>
-                    <TableCell>{log.userId || '-'}</TableCell>
-                    <TableCell>{log.username || '-'}</TableCell>
-                    <TableCell>{log.ipAddress || '-'}</TableCell>
-                    <TableCell className="max-w-md truncate">
-                      {log.details || `${log.resourceType || '-'}:${log.resourceId || '-'}`}
+                  <TableRow key={log.id} className="max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-x-2 max-sm:px-3 max-sm:py-2">
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground max-sm:order-3 max-sm:p-1">{formatDate(log.timestamp)}</TableCell>
+                    <TableCell className="break-words font-medium max-sm:order-1 max-sm:p-1 [overflow-wrap:anywhere]">{actionLabel(log.action)}</TableCell>
+                    <TableCell className="break-words max-sm:order-4 max-sm:col-span-2 max-sm:p-1 max-sm:text-xs [overflow-wrap:anywhere]">{log.username || log.userId || '—'}</TableCell>
+                    <TableCell className="break-all text-muted-foreground max-sm:hidden">{[log.resourceType, log.resourceId].filter(Boolean).join(' / ') || '—'}</TableCell>
+                    <TableCell className="text-right max-sm:order-2 max-sm:p-1">
+                      <Button type="button" size="sm" variant="outline" onClick={() => setSelected(log)}>{t('list.details')}</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -234,31 +254,36 @@ export function AuditLogPage() {
             </Table>
           </Card>
 
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              {t('auditLog.totalRecords', { total: data.total, page: page + 1 })}
-            </p>
-            <div className="flex gap-2">
-              <Button data-analytics-id="admin.audit.previous"
-                variant="outline"
-                size="sm"
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-              >
-                {t('auditLog.prevPage')}
-              </Button>
-              <Button data-analytics-id="admin.audit.next"
-                variant="outline"
-                size="sm"
-                disabled={(page + 1) * 20 >= data.total}
-                onClick={() => setPage(page + 1)}
-              >
-                {t('auditLog.nextPage')}
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-4">
+            <p className="text-xs text-muted-foreground">{t('auditLog.totalRecords', { total: data.total, page: page + 1 })}</p>
+            <Pagination previousAnalyticsId="admin.audit.previous" nextAnalyticsId="admin.audit.next"
+              page={page} totalPages={Math.ceil(data.total / 20)} onPageChange={setPage} />
           </div>
         </>
       )}
+      <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null) }}>
+        <DialogContent className="max-h-[85dvh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{t('auditLog.detailsTitle')}</DialogTitle></DialogHeader>
+          {selected && <>
+            <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
+              {[
+                ['auditLog.colTime', formatDate(selected.timestamp)],
+                ['auditLog.colAction', actionLabel(selected.action)],
+                ['auditLog.actionCode', selected.action],
+                ['auditLog.colUsername', selected.username],
+                ['auditLog.colUserId', selected.userId],
+                ['auditLog.colIp', selected.ipAddress],
+                ['auditLog.requestId', selected.requestId],
+                ['auditLog.resource', [selected.resourceType, selected.resourceId].filter(Boolean).join(' / ')],
+              ].map(([key, value]) => <div key={key} className="contents"><dt className="text-muted-foreground">{t(key || '')}</dt><dd className="break-all">{value || '—'}</dd></div>)}
+            </dl>
+            {detailText && <details className="rounded-lg border p-3">
+              <summary className="cursor-pointer text-sm font-medium">{t('auditLog.originalDetails')}</summary>
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-muted p-2 text-xs">{detailText}</pre>
+            </details>}
+          </>}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

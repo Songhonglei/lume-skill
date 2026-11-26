@@ -6,7 +6,7 @@ import { ArrowUpRight, Download, Search, Layers, FolderGit2 } from 'lucide-react
 import type { SkillSummary } from '@/api/types'
 import { useSearchSkills } from '@/shared/hooks/use-skill-queries'
 import { Pagination } from '@/shared/components/pagination'
-import { Button } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { cn } from '@/shared/lib/utils'
 import { Input } from '@/shared/ui/input'
@@ -77,14 +77,15 @@ export function GithubSkillsPage() {
 
   return <div className={cn(APP_SHELL_PAGE_CLASS_NAME, 'github-catalog-page space-y-6')}>
     <header className="max-w-3xl space-y-3 pb-2">
-      <DashboardPageHeader title={t('githubCatalog.title')} />
+      <DashboardPageHeader title={t('githubCatalog.title')}
+        actions={<Link to="/dashboard/github-sync" className={buttonVariants({ variant: 'outline' })}>{t('githubCatalog.manageSync')}</Link>} />
     </header>
     <section className="space-y-4">
       <form data-analytics-id="github.catalog.search" onSubmit={submit} className="mb-7 flex max-w-3xl items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-sm">
         <Search className="ml-2 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input className="min-w-0 border-0 bg-transparent shadow-none" maxLength={120} value={input} onChange={event => setInput(event.target.value)}
           placeholder={t(view ? 'githubCatalog.searchRepositories' : 'githubCatalog.searchPlaceholder')} aria-label={t(view ? 'githubCatalog.searchRepositories' : 'githubCatalog.searchPlaceholder')} />
-        <Button type="submit">{t('githubCatalog.search')}</Button>
+        <Button type="submit" variant="outline">{t('githubCatalog.search')}</Button>
       </form>
       {!view && <div className="flex flex-wrap items-center gap-4 border-t border-border pt-4">
         {browseNavigation}

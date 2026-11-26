@@ -119,7 +119,7 @@ export function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-sm font-medium" htmlFor="password">{t('login.password')}</label>
-                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-300">
+                  <Link data-analytics-id="auth.password.reset.open" to="/reset-password" search={{ returnTo }} className="text-sm font-medium text-sky-700 hover:underline dark:text-sky-300">
                     {t('login.forgotPassword')}
                   </Link>
                 </div>

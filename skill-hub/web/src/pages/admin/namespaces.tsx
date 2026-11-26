@@ -1,5 +1,5 @@
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
-import { KeyboardEvent, useEffect, useMemo, useState } from 'react'
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AdminNamespace, NamespaceMember, NamespaceRole } from '@/api/types'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
@@ -109,6 +109,7 @@ export function AdminNamespacesPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [page, setPage] = useState(0)
+  const detailsHeading = useRef<HTMLDivElement>(null)
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null)
   const [memberPage, setMemberPage] = useState(0)
   const [draftRoles, setDraftRoles] = useState<Record<string, string>>({})
@@ -382,7 +383,12 @@ export function AdminNamespacesPage() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(26rem,0.9fr)]">
         <Card className="min-w-0 overflow-hidden">
-          {namespacesQuery.isLoading ? (
+          {namespacesQuery.isError ? (
+            <div role="alert" className="flex flex-wrap items-center gap-3 p-4">
+              <p className="text-sm text-destructive">{t('list.loadFailed')}</p>
+              <Button variant="outline" onClick={() => void namespacesQuery.refetch()}>{t('reviewCenter.retry')}</Button>
+            </div>
+          ) : namespacesQuery.isLoading ? (
             <div className="space-y-3 p-5">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="h-14 animate-shimmer rounded-lg" />
@@ -393,7 +399,7 @@ export function AdminNamespacesPage() {
           ) : (
             <>
               <Table>
-                <TableHeader className="whitespace-nowrap">
+                <TableHeader className="whitespace-nowrap max-sm:sr-only">
                   <TableRow>
                     <TableHead>{t('adminNamespaces.colNamespace')}</TableHead>
                     <TableHead>{t('adminNamespaces.colType')}</TableHead>
@@ -405,24 +411,32 @@ export function AdminNamespacesPage() {
                 </TableHeader>
                 <TableBody>
                   {namespaces.map((namespace) => (
-                    <TableRow data-analytics-id="admin.namespace.open"
-                      key={namespace.slug}
-                      className={selectedSlug === namespace.slug ? 'bg-secondary/50' : undefined}
-                      onClick={() => setSelectedSlug(namespace.slug)}
+                    <TableRow key={namespace.slug}
+                      className={`max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-center max-sm:px-3 max-sm:py-2 ${selectedSlug === namespace.slug ? 'bg-secondary/50' : ''}`}
                     >
-                      <TableCell>
-                        <div className="font-medium">{namespace.displayName}</div>
+                      <TableCell className="max-sm:order-1 max-sm:p-1">
+                        <Button data-analytics-id="admin.namespace.open" type="button" variant="link"
+                          aria-controls="admin-namespace-details" aria-current={selectedSlug === namespace.slug ? 'true' : undefined}
+                          className="h-auto max-w-full whitespace-normal px-0 text-left [overflow-wrap:anywhere]"
+                          onClick={() => {
+                            setSelectedSlug(namespace.slug)
+                            requestAnimationFrame(() => {
+                              detailsHeading.current?.focus({ preventScroll: true })
+                              if (window.matchMedia('(max-width: 1279px)').matches) detailsHeading.current?.scrollIntoView({ block: 'start' })
+                            })
+                          }}
+                        >{namespace.displayName}</Button>
                         <div className="font-mono text-xs text-muted-foreground">@{namespace.slug}</div>
                       </TableCell>
-                      <TableCell>{namespaceTypeLabel(t, namespace.type)}</TableCell>
-                      <TableCell>
+                      <TableCell className="max-sm:hidden">{namespaceTypeLabel(t, namespace.type)}</TableCell>
+                      <TableCell className="max-sm:order-2 max-sm:p-1">
                         <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusClassName(namespace.status)}`}>
                           {statusLabel(t, namespace.status)}
                         </span>
                       </TableCell>
-                      <TableCell>{namespace.stats.memberCount}</TableCell>
-                      <TableCell>{namespace.stats.skillCount}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="max-sm:hidden">{namespace.stats.memberCount}</TableCell>
+                      <TableCell className="max-sm:hidden">{namespace.stats.skillCount}</TableCell>
+                      <TableCell className="text-muted-foreground max-sm:hidden">
                         {formatLocalDateTime(namespace.updatedAt, i18n.language, { dateStyle: 'medium' })}
                       </TableCell>
                     </TableRow>
@@ -434,12 +448,12 @@ export function AdminNamespacesPage() {
           )}
         </Card>
 
-        <Card className="min-w-0 p-5">
+        <Card id="admin-namespace-details" className="min-w-0 p-5">
           {!selectedNamespace ? (
             <div className="py-20 text-center text-muted-foreground">{t('adminNamespaces.selectNamespace')}</div>
           ) : (
             <div className="space-y-6">
-              <NamespaceDetailHeader namespace={selectedNamespace} t={t} i18nLanguage={i18n.language} />
+              <div ref={detailsHeading} tabIndex={-1} className="scroll-mt-20"><NamespaceDetailHeader namespace={selectedNamespace} t={t} i18nLanguage={i18n.language} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <SmallFact label={t('adminNamespaces.members')} value={selectedNamespace.stats.memberCount} />
                 <SmallFact label={t('adminNamespaces.skills')} value={selectedNamespace.stats.skillCount} />

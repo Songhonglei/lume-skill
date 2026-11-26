@@ -133,13 +133,15 @@ export function DeviceAuthPage() {
 
           {message && (
             <div
+              role={message.type === 'error' ? 'alert' : 'status'}
               className={`p-4 rounded-xl text-sm ${
                 message.type === 'success'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  ? 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/20 dark:text-emerald-300'
+                  : 'bg-red-500/10 text-red-800 border border-red-500/20 dark:text-red-300'
               }`}
             >
-              {message.text}
+              <p>{message.text}</p>
+              {message.type === 'error' && <p className="mt-2 text-muted-foreground">{t('device.restartHint')}</p>}
             </div>
           )}
 

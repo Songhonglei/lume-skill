@@ -222,6 +222,8 @@ function LandingIntroduction() {
     ? 'md:grid-cols-1 lg:grid-cols-1'
     : [2, 4].includes(visibleFeatures.length) ? 'md:grid-cols-2 lg:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
 
+  const hasPopular = !!popularSkills?.items.length
+  const hasLatest = !!latestSkills?.items.length
   const popularTitle = text('popular', 'title')
   const popularDescription = text('popular', 'description')
   const latestTitle = text('latest', 'title')
@@ -281,16 +283,16 @@ function LandingIntroduction() {
 
       {settings.sections.curated?.enabled !== false && <HomepageRecommendations />}
 
-      {settings.sections.popular.enabled && <section ref={popularView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-4 scroll-fade-up${popularView.inView ? ' in-view' : ''} md:py-5`}>
+      {settings.sections.popular.enabled && (hasPopular || isLoadingPopular || popularFailed) && <section ref={popularView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-4 scroll-fade-up${popularView.inView ? ' in-view' : ''} md:py-5`}>
         <div className={`${APP_FRAME_CLASS_NAME} space-y-6`}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="mb-2 text-xl font-semibold tracking-tight text-foreground">{popularTitle}</h2>
-              <p className="text-sm text-muted-foreground">{popularDescription}</p>
+              {popularDescription && <p className="text-sm text-muted-foreground">{popularDescription}</p>}
             </div>
             <Button data-analytics-id="discovery.popular.open"
               variant="ghost"
-              className="h-auto min-h-9 whitespace-normal"
+              className="h-auto min-h-8 whitespace-normal"
               onClick={() => navigate({ to: '/search', search: { q: '', sort: 'downloads', page: 0, starredOnly: false } })}
             >
               {text('popular', 'viewAllLabel')}
@@ -301,7 +303,7 @@ function LandingIntroduction() {
           ) : (
             !popularSkills?.items.length ? (
               <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                {t(popularFailed ? 'search.source.loadFailed' : 'home.noVisibleSkills')}
+                {t('search.source.loadFailed')}
               </p>
             ) :
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -315,16 +317,16 @@ function LandingIntroduction() {
         </div>
       </section>}
 
-      {settings.sections.latest.enabled && <section ref={latestView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-4 scroll-fade-up${latestView.inView ? ' in-view' : ''} md:py-5`}>
+      {settings.sections.latest.enabled && (hasLatest || isLoadingLatest || latestFailed) && <section ref={latestView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-4 scroll-fade-up${latestView.inView ? ' in-view' : ''} md:py-5`}>
         <div className={`${APP_FRAME_CLASS_NAME} space-y-6`}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="mb-2 text-xl font-semibold tracking-tight text-foreground">{latestTitle}</h2>
-              <p className="text-sm text-muted-foreground">{latestDescription}</p>
+              {latestDescription && <p className="text-sm text-muted-foreground">{latestDescription}</p>}
             </div>
             <Button data-analytics-id="discovery.latest.open"
               variant="ghost"
-              className="h-auto min-h-9 whitespace-normal"
+              className="h-auto min-h-8 whitespace-normal"
               onClick={() => navigate({ to: '/search', search: { q: '', sort: 'newest', page: 0, starredOnly: false } })}
             >
               {text('latest', 'viewAllLabel')}
@@ -335,7 +337,7 @@ function LandingIntroduction() {
           ) : (
             !latestSkills?.items.length ? (
               <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                {t(latestFailed ? 'search.source.loadFailed' : 'home.noVisibleSkills')}
+                {t('search.source.loadFailed')}
               </p>
             ) :
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -349,7 +351,7 @@ function LandingIntroduction() {
         </div>
       </section>}
 
-      {settings.sections.capabilities.enabled && <section ref={featuresView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-7 scroll-fade-up${featuresView.inView ? ' in-view' : ''} md:py-9`}>
+      {settings.sections.capabilities.enabled && visibleFeatures.length > 0 && <section ref={featuresView.ref} className={`[overflow-wrap:anywhere] relative z-10 w-full py-7 scroll-fade-up${featuresView.inView ? ' in-view' : ''} md:py-9`}>
         <div className={APP_FRAME_CLASS_NAME}>
           <div className="mb-5 max-w-3xl">
             <h2 className="mb-4 text-xl font-semibold tracking-tight text-foreground">

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useBlocker, useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { UploadZone } from '@/features/publish/upload-zone'
 import { packageFolderAsZip } from '@/features/publish/folder-zip'
@@ -11,6 +11,8 @@ import {
   isPrecheckFailureMessage,
   isVersionExistsMessage,
 } from '@/features/publish/publish-error-utils'
+import { useAuth } from '@/features/auth/use-auth'
+import { readPublishDraft, savePublishDraft } from '@/features/publish/publish-draft'
 import { normalizePublishPrefill } from '@/features/publish/publish-prefill'
 import { Button } from '@/shared/ui/button'
 import {
@@ -48,9 +50,19 @@ import { ApiError, skillAvatarApi } from '@/api/client'
 const EMPTY_NAMESPACE_VALUE = '__select_namespace__'
 
 export function PublishPage() {
+  const { user } = useAuth(false)
+  const search = useSearch({ from: '/dashboard/publish' })
+  const identity = JSON.stringify([user?.userId, search.namespace, search.updateSkill, search.resubmitSkill, search.resubmitVersion, search.visibility])
+  const draftKey = user?.userId ? `luma.publish-draft:${identity}` : ''
+  return <PublishForm key={identity} search={search} draftKey={draftKey} />
+}
+
+type PublishSearch = Parameters<typeof normalizePublishPrefill>[0] & { updateSkill?: string; updateName?: string }
+
+function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: string }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const search = useSearch({ from: '/dashboard/publish' })
+  const [restoredDraft] = useState(() => readPublishDraft(draftKey))
   const prefill = normalizePublishPrefill(search)
   const updateSlug = typeof search.updateSkill === 'string' ? search.updateSkill : prefill.resubmitSkill
   const isUpdate = !!search.updateSkill && !prefill.resubmitSkill
@@ -60,14 +72,14 @@ export function PublishPage() {
   const [avatarEdit, setAvatarEdit] = useState<AvatarEdit>(KEEP_AVATAR)
   const previewId = useId()
   const [fileRevision, setFileRevision] = useState(0)
-  const [displayName, setDisplayName] = useState('')
-  const [shortDescription, setShortDescription] = useState('')
-  const [overview, setOverview] = useState('')
+  const [displayName, setDisplayName] = useState(restoredDraft?.displayName ?? '')
+  const [shortDescription, setShortDescription] = useState(restoredDraft?.shortDescription ?? '')
+  const [overview, setOverview] = useState(restoredDraft?.overview ?? '')
   const [editorOpen, setEditorOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [submissionState, setSubmissionState] = useState<PublishSubmissionState | null>(null)
-  const [shortSource, setShortSource] = useState<PresentationSource>('package')
-  const [overviewSource, setOverviewSource] = useState<PresentationSource>('package')
+  const [shortSource, setShortSource] = useState<PresentationSource>(restoredDraft?.shortSource ?? 'package')
+  const [overviewSource, setOverviewSource] = useState<PresentationSource>(restoredDraft?.overviewSource ?? 'package')
   const [attempted, setAttempted] = useState(false)
   const [viewOverview, setViewOverview] = useState(false)
   const [restoreField, setRestoreField] = useState<'short' | 'overview' | null>(null)
@@ -75,58 +87,23 @@ export function PublishPage() {
   const restoredFocus = useRef<string | null>(null)
   const restoreOpener = useRef<HTMLButtonElement | null>(null)
   const initialized = useRef('')
-  const sourceTouched = useRef({short:false,overview:false})
+  const sourceTouched = useRef({ short: restoredDraft?.shortTouched ?? false, overview: restoredDraft?.overviewTouched ?? false })
   const resourceIdentity = `${prefill.namespace}/${updateSlug}`
-  const formIdentity = useRef(resourceIdentity)
-  const displayNameEdited = useRef(false)
-  const shortDescriptionEdited = useRef(false)
-  const overviewEdited = useRef(false)
+  const displayNameEdited = useRef(restoredDraft?.displayName !== undefined)
+  const shortDescriptionEdited = useRef(Boolean(restoredDraft?.shortTouched))
+  const overviewEdited = useRef(Boolean(restoredDraft?.overviewTouched))
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [namespaceSlug, setNamespaceSlug] = useState<string>(prefill.namespace)
-  const [visibility, setVisibility] = useState<string>(prefill.visibility)
+  const [mustReselectPackage, setMustReselectPackage] = useState(restoredDraft?.hadPackage ?? false)
+  const [namespaceSlug, setNamespaceSlug] = useState(restoredDraft?.namespace ?? prefill.namespace)
+  const [visibility, setVisibility] = useState(restoredDraft?.visibility ?? prefill.visibility)
+  const [visibilityEdited, setVisibilityEdited] = useState(restoredDraft?.visibilityEdited ?? false)
   const [warningDialogOpen, setWarningDialogOpen] = useState(false)
   const [precheckWarnings, setPrecheckWarnings] = useState<string[]>([])
   const [isPackaging, setIsPackaging] = useState(false)
   const [folderError, setFolderError] = useState('')
   const selectionGeneration = useRef(0)
-  // Route identity is read during render. Effects must not hydrate cached data
-  // from the previous namespace while its local form state is being reset.
-  const resourceReady = formIdentity.current === resourceIdentity && (!updateSlug || namespaceSlug === prefill.namespace)
-
-  useEffect(() => {
-    const identity = `${prefill.namespace}/${updateSlug}`
-    if (formIdentity.current !== identity) {
-      selectionGeneration.current += 1
-      formIdentity.current = identity
-      initialized.current = ''
-      sourceTouched.current = { short: false, overview: false }
-      restoredFocus.current = null
-      restoreOpener.current = null
-      displayNameEdited.current = false
-      shortDescriptionEdited.current = false
-      overviewEdited.current = false
-      setIsPackaging(false)
-      setFolderError('')
-      setSelectedFile(null)
-      setFileRevision(value => value + 1)
-      setDisplayName('')
-      setShortDescription('')
-      setOverview('')
-      setShortSource('package')
-      setOverviewSource('package')
-      setAttempted(false)
-      setSubmissionState(null)
-      setEditorOpen(false)
-      setConfirmOpen(false)
-      setRestoreField(null)
-      setViewOverview(false)
-      setWarningDialogOpen(false)
-      setPrecheckWarnings([])
-    }
-    setNamespaceSlug(prefill.namespace)
-    setVisibility(prefill.visibility)
-    setAvatarEdit(KEEP_AVATAR)
-  }, [prefill.namespace, prefill.visibility, updateSlug])
+  const resourceReady = !updateSlug || namespaceSlug === prefill.namespace
+  useEffect(() => () => { selectionGeneration.current += 1 }, [])
 
   const { data: namespaces, isLoading: isLoadingNamespaces } = useMyNamespaces()
   const publishMutation = usePublishSkill()
@@ -174,19 +151,48 @@ export function PublishPage() {
   const avatarTarget = useQuery({ queryKey: ['skill-avatar', namespaceSlug, updateSlug], queryFn: () => skillAvatarApi.status(namespaceSlug, updateSlug), enabled: resourceReady && !!namespaceSlug && !!updateSlug })
   const avatarUnavailable = !!updateSlug && (avatarTarget.isLoading || avatarTarget.isError)
   const isBusy = publishMutation.isPending || isSavingAvatar
-  const avatarOnly = isUpdate && !selectedFile
-  const canSubmit = resourceReady && !ownerReadOnly && !isPackaging && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (isUpdate && avatarEdit.action !== 'KEEP'))
+  const avatarOnly = isUpdate && !selectedFile && !mustReselectPackage
   const selectedNamespace = namespaces?.find((ns) => ns.slug === namespaceSlug)
+  const useTeamDefault = !updateSlug && !search.visibility && !visibilityEdited && selectedNamespace?.type === 'TEAM'
+  const effectiveVisibility = useTeamDefault ? 'NAMESPACE_ONLY' : visibility
   const namespaceOnlyLabel = selectedNamespace?.type === 'GLOBAL'
     ? t('publish.visibilityOptions.loggedInUsersOnly')
     : t('publish.visibilityOptions.namespaceOnly')
+  const audience = effectiveVisibility === 'PUBLIC'
+    ? t('publish.audience.public')
+    : effectiveVisibility === 'PRIVATE' ? t('publish.audience.private')
+    : selectedNamespace?.type === 'GLOBAL' ? t('publish.audience.global')
+    : t('publish.audience.team', { namespace: selectedNamespace?.displayName ?? namespaceSlug })
 
-
+  const draftChanged = Boolean(selectedFile || mustReselectPackage || namespaceSlug !== prefill.namespace || visibilityEdited ||
+    displayNameEdited.current || sourceTouched.current.short || sourceTouched.current.overview)
+  const accepted = submissionState?.kind === 'accepted'
+  const shouldProtect = !accepted && (draftChanged || avatarEdit.action !== 'KEEP' || isPackaging || isBusy)
+  const blocker = useBlocker({
+    shouldBlockFn: () => shouldProtect && !editorOpen && !isBusy && !submitting.current,
+    enableBeforeUnload: shouldProtect && !editorOpen,
+    withResolver: true,
+  })
+  useEffect(() => {
+    if (accepted || !draftChanged) {
+      savePublishDraft(draftKey)
+      return
+    }
+    savePublishDraft(draftKey, {
+      namespace: namespaceSlug, visibility, visibilityEdited, hadPackage: Boolean(selectedFile || mustReselectPackage),
+      displayName: displayNameEdited.current ? displayName : undefined,
+      shortDescription, overview, shortSource, overviewSource,
+      shortTouched: sourceTouched.current.short, overviewTouched: sourceTouched.current.overview,
+    })
+  }, [draftKey, accepted, draftChanged, displayName, namespaceSlug, visibility, visibilityEdited, selectedFile,
+    mustReselectPackage, shortDescription, overview, shortSource, overviewSource])
+  const canSubmit = resourceReady && !ownerReadOnly && !isPackaging && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (avatarOnly && avatarEdit.action !== 'KEEP'))
 
   const handleRemoveSelectedFile = () => {
     selectionGeneration.current += 1
     setFolderError('')
     setSelectedFile(null)
+    setMustReselectPackage(false)
     setPrecheckWarnings([])
     setWarningDialogOpen(false)
   }
@@ -195,6 +201,7 @@ export function PublishPage() {
     selectionGeneration.current += 1
     setFolderError('')
     setSelectedFile(file)
+    setMustReselectPackage(false)
     setFileRevision(value => value + 1)
     setPrecheckWarnings([])
     setWarningDialogOpen(false)
@@ -202,18 +209,17 @@ export function PublishPage() {
 
   const handleFolderSelect = async (files: File[]) => {
     const generation = ++selectionGeneration.current
-    const identity = formIdentity.current
     setFolderError('')
     setIsPackaging(true)
     try {
       const zip = await packageFolderAsZip(files)
-      if (generation !== selectionGeneration.current || identity !== formIdentity.current) return
+      if (generation !== selectionGeneration.current) return
       setIsPackaging(false)
       handleFileSelect(zip)
     } catch {
-      if (generation === selectionGeneration.current && identity === formIdentity.current) setFolderError(t('publish.folderPackagingFailed'))
+      if (generation === selectionGeneration.current) setFolderError(t('publish.folderPackagingFailed'))
     } finally {
-      if (identity === formIdentity.current && generation === selectionGeneration.current) setIsPackaging(false)
+      if (generation === selectionGeneration.current) setIsPackaging(false)
     }
   }
 
@@ -248,7 +254,7 @@ export function PublishPage() {
       const result = await publishMutation.mutateAsync({
         namespace: namespaceSlug,
         file: selectedFile!,
-        visibility,
+        visibility: effectiveVisibility,
         confirmWarnings,
         avatarAction: avatarEdit.action,
         avatarUploadId: avatarEdit.uploadId,
@@ -258,6 +264,7 @@ export function PublishPage() {
       })
       setPrecheckWarnings([])
       setWarningDialogOpen(false)
+      savePublishDraft(draftKey)
       setSubmissionState({ kind: 'accepted', result, hadPublishedVersion: !!updateTarget?.publishedVersion })
     } catch (error) {
       // A package rejection may also reflect changed membership. Re-read the
@@ -387,7 +394,7 @@ export function PublishPage() {
           <p className="mt-1 text-sm text-muted-foreground">{t('publish.resubmitNotice.description')}</p>
         </div>}
 
-        <div className="grid min-w-0 gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_344px]">
+        <div className="grid min-w-0 gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,1fr)_344px]">
           <section id="publish-package-section" tabIndex={-1} aria-labelledby="publish-package-label" aria-invalid={attempted && !selectedFile} className="min-w-0 space-y-3 scroll-mt-24 lg:col-start-1 lg:row-start-1">
             <h2 id="publish-package-label" className="text-base font-semibold">{t('publish.file')} <span className="text-destructive">*</span></h2>
             {isUpdate && <p className="text-sm text-muted-foreground">{t('publish.optionalPackage')}</p>}
@@ -407,19 +414,47 @@ export function PublishPage() {
               replaceActionId={`${previewId}-replace-action`}
               disabled={ownerReadOnly || isBusy}
             />
+            {mustReselectPackage && <p role="status" className="text-sm text-muted-foreground">{t('publish.form.reselectPackage')}</p>}
             {folderError && <p role="alert" className="text-sm text-destructive">{folderError}</p>}
             {attempted && !selectedFile && <p role="alert" className="text-sm text-destructive">{t('publish.selectRequired')}</p>}
             {selectedFile && packagePreview.isError && <Button data-analytics-id="skill.package.preview.retry" type="button" size="sm" variant="outline" disabled={ownerReadOnly || isBusy} onClick={() => packagePreview.refetch()}>{t('publish.retryPackagePreview')}</Button>}
           </section>
 
+          <aside aria-labelledby="publish-settings-heading" className="min-w-0 self-start rounded-xl bg-muted/40 p-5 sm:p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:row-span-4">
+            <h2 id="publish-settings-heading" className="text-lg font-semibold">{t('publish.settings')}</h2>
+            <div className="mt-4 space-y-4">
+              <div className="space-y-3">
+                <Label htmlFor="namespace">{t('publish.namespace')} <span className="text-destructive">*</span></Label>
+                {isLoadingNamespaces ? <div className="h-11 animate-shimmer rounded-lg" /> : <Select
+                  disabled={!!updateSlug || ownerReadOnly || isBusy}
+                  value={normalizeSelectValue(namespaceSlug) ?? EMPTY_NAMESPACE_VALUE}
+                  onValueChange={value => { setNamespaceSlug(value === EMPTY_NAMESPACE_VALUE ? '' : value); setAvatarEdit(KEEP_AVATAR) }}
+                >
+                  <SelectTrigger data-analytics-id="skill.publish.namespace.interact" id="namespace" aria-invalid={attempted && !namespaceSlug}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem data-analytics-id="skill.publish.namespace.clear" value={EMPTY_NAMESPACE_VALUE}>{t('publish.selectNamespace')}</SelectItem>
+                    {namespaces?.map(ns => <SelectItem data-analytics-id="skill.publish.namespace.select" key={ns.slug} value={ns.slug}>{ns.displayName} (@{ns.slug})</SelectItem>)}
+                  </SelectContent>
+                </Select>}
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="visibility">{t('publish.visibility')} <span className="text-destructive">*</span></Label>
+                <Select value={effectiveVisibility} onValueChange={value => { setVisibility(value); setVisibilityEdited(true) }} disabled={ownerReadOnly || isBusy || avatarOnly}>
+                  <SelectTrigger data-analytics-id="skill.publish.visibility.interact" id="visibility" aria-describedby="publish-visibility-help"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem data-analytics-id="skill.publish.visibility.public" value="PUBLIC">{t('publish.visibilityOptions.public')}</SelectItem>
+                    <SelectItem data-analytics-id="skill.publish.visibility.namespace" value="NAMESPACE_ONLY">{namespaceOnlyLabel}</SelectItem>
+                    <SelectItem data-analytics-id="skill.publish.visibility.private" value="PRIVATE">{t('publish.visibilityOptions.private')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p id="publish-visibility-help" className="text-xs leading-5 text-muted-foreground">{namespaceSlug ? audience : t('publish.selectNamespace')}</p>
+              </div>
+            </div>
+          </aside>
+
           <section aria-labelledby="publish-identity-heading" className="min-w-0 space-y-5 lg:col-start-1 lg:row-start-2">
             <h2 id="publish-identity-heading" className="text-lg font-semibold">{t('publish.form.identity')}</h2>
-            <div className="grid min-w-0 gap-6 sm:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
-              <div className="min-w-0 space-y-3">
-                <SkillAvatarEditor key={`${namespaceSlug}/${updateSlug}`} name={displayName || search.updateName || updateSlug} currentUrl={avatarTarget.data?.avatarUrl} canRemove={!!updateSlug} disabled={ownerReadOnly || isBusy || avatarUnavailable} onChange={setAvatarEdit} />
-                {updateSlug && <SkillAvatarManager namespace={namespaceSlug} slug={updateSlug} disabled={ownerReadOnly || isBusy} />}
-                {avatarTarget.isError && <p role="alert" className="text-sm text-destructive">{t('skillAvatar.failed')}</p>}
-              </div>
+            <div className="min-w-0">
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="skill-display-name">{t('publish.displayName')}</Label>
                 <Input
@@ -439,38 +474,6 @@ export function PublishPage() {
               </div>
             </div>
           </section>
-
-          <aside aria-labelledby="publish-settings-heading" className="min-w-0 self-start rounded-xl bg-muted/40 p-5 sm:p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 lg:row-span-3">
-            <h2 id="publish-settings-heading" className="text-lg font-semibold">{t('publish.settings')}</h2>
-            <div className="mt-6 space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="namespace">{t('publish.namespace')} <span className="text-destructive">*</span></Label>
-                {isLoadingNamespaces ? <div className="h-11 animate-shimmer rounded-lg" /> : <Select
-                  disabled={!!updateSlug || ownerReadOnly || isBusy}
-                  value={normalizeSelectValue(namespaceSlug) ?? EMPTY_NAMESPACE_VALUE}
-                  onValueChange={value => { setNamespaceSlug(value === EMPTY_NAMESPACE_VALUE ? '' : value); setAvatarEdit(KEEP_AVATAR) }}
-                >
-                  <SelectTrigger data-analytics-id="skill.publish.namespace.interact" id="namespace" aria-invalid={attempted && !namespaceSlug}><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem data-analytics-id="skill.publish.namespace.clear" value={EMPTY_NAMESPACE_VALUE}>{t('publish.selectNamespace')}</SelectItem>
-                    {namespaces?.map(ns => <SelectItem data-analytics-id="skill.publish.namespace.select" key={ns.slug} value={ns.slug}>{ns.displayName} (@{ns.slug})</SelectItem>)}
-                  </SelectContent>
-                </Select>}
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="visibility">{t('publish.visibility')} <span className="text-destructive">*</span></Label>
-                <Select value={visibility} onValueChange={setVisibility} disabled={ownerReadOnly || isBusy || avatarOnly}>
-                  <SelectTrigger data-analytics-id="skill.publish.visibility.interact" id="visibility" aria-describedby="publish-visibility-help"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem data-analytics-id="skill.publish.visibility.public" value="PUBLIC">{t('publish.visibilityOptions.public')}</SelectItem>
-                    <SelectItem data-analytics-id="skill.publish.visibility.namespace" value="NAMESPACE_ONLY">{namespaceOnlyLabel}</SelectItem>
-                    <SelectItem data-analytics-id="skill.publish.visibility.private" value="PRIVATE">{t('publish.visibilityOptions.private')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p id="publish-visibility-help" className="text-xs leading-5 text-muted-foreground">{t('publish.reviewNotice.description')}</p>
-              </div>
-            </div>
-          </aside>
 
           <section aria-labelledby="publish-presentation-heading" className="min-w-0 space-y-8 border-t pt-8 lg:col-start-1 lg:row-start-3">
             <div className="space-y-2">
@@ -527,13 +530,21 @@ export function PublishPage() {
               {overviewPreviewFailed && <Button type="button" variant="outline" disabled={ownerReadOnly || isBusy} onClick={() => packageOverview.refetch()}>{t('publish.retryPackagePreview')}</Button>}
             </div>
           </section>
+          <details open={avatarOnly || undefined} className="group min-w-0 border-t pt-4 lg:col-start-1 lg:row-start-4">
+            <summary className="cursor-pointer rounded-sm text-sm font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{t('publish.form.optionalAvatar')}</summary>
+            <div className="mt-4">              <div className="min-w-0 space-y-3">
+                <SkillAvatarEditor key={`${namespaceSlug}/${updateSlug}`} name={displayName || search.updateName || updateSlug} currentUrl={avatarTarget.data?.avatarUrl} canRemove={!!updateSlug} disabled={ownerReadOnly || isBusy || avatarUnavailable} onChange={setAvatarEdit} />
+                {updateSlug && <SkillAvatarManager namespace={namespaceSlug} slug={updateSlug} disabled={ownerReadOnly || isBusy} />}
+                {avatarTarget.isError && <p role="alert" className="text-sm text-destructive">{t('skillAvatar.failed')}</p>}
+              </div>
+            </div>
+          </details>
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-          <p className="text-xs leading-5 text-muted-foreground">{t('publish.form.confirmHelp')}</p>
+        <footer className="sticky bottom-0 z-20 flex flex-wrap items-center justify-end gap-3 border-t bg-background/95 py-3 backdrop-blur sm:justify-between">
+          <p className="hidden text-xs leading-5 text-muted-foreground sm:block">{namespaceSlug ? audience : t('publish.selectNamespace')}</p>
           <Button id="publish-confirm-action" data-analytics-id={avatarOnly ? 'skill.avatar.save' : 'skill.publish.request'}
-            className="w-full text-primary-foreground disabled:text-primary-foreground sm:w-auto sm:min-w-40"
-            size="lg"
+            className="sm:min-w-32"
             onClick={() => {
               setAttempted(true)
               if (canSubmit) { if (avatarOnly) void handlePublish(); else setConfirmOpen(true) }
@@ -577,7 +588,17 @@ export function PublishPage() {
             })
           }}
         />
-        <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('publish.confirmDetails')} description={<span className="whitespace-pre-line">{[displayName, `@${namespaceSlug}/${packagePreview.data?.name}@${packagePreview.data?.version}`, `${t('publish.visibility')}: ${visibility === 'PUBLIC' ? t('publish.visibilityOptions.public') : visibility === 'PRIVATE' ? t('publish.visibilityOptions.private') : namespaceOnlyLabel}`, previewShortDescription, t('publish.reviewNotice.description')].join('\n\n')}</span>} confirmText={t('publish.confirm')} cancelText={t('publish.backToEdit')} onConfirm={() => { if (!canSubmit) return; setConfirmOpen(false); void handlePublish() }} />
+        <ConfirmDialog
+          open={blocker.status === 'blocked'}
+          onOpenChange={open => { if (!open && blocker.status === 'blocked') blocker.reset() }}
+          title={t('publish.form.leaveTitle')}
+          description={t('publish.form.leaveDescription')}
+          confirmText={t('publish.form.leave')}
+          cancelText={t('publish.backToEdit')}
+          closeOnConfirm={false}
+          onConfirm={() => { if (blocker.status === 'blocked') blocker.proceed() }}
+        />
+        <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={t('publish.confirmDetails')} description={<span className="whitespace-pre-line">{[displayName, `@${namespaceSlug}/${packagePreview.data?.name}@${packagePreview.data?.version}`, audience, previewShortDescription, t('publish.reviewNotice.description')].join('\n\n')}</span>} confirmText={t('publish.confirm')} cancelText={t('publish.backToEdit')} onConfirm={() => { if (!canSubmit) return; setConfirmOpen(false); void handlePublish() }} />
         <ConfirmDialog confirmAnalyticsId={avatarOnly ? undefined : 'skill.publish.confirm'} cancelAnalyticsId={avatarOnly ? undefined : 'skill.publish.cancel'}
           open={warningDialogOpen}
           onOpenChange={setWarningDialogOpen}

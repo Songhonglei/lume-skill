@@ -1,10 +1,12 @@
-import { useLocation, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useLocation, useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { SkillCard } from '@/features/skill/skill-card'
 import { Pagination } from '@/shared/components/pagination'
 import { useMyStarsPage } from '@/shared/hooks/use-user-queries'
-import { Card } from '@/shared/ui/card'
+import { EmptyState } from '@/shared/components/empty-state'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
+import { getSkillSquareSearch } from '@/shared/lib/skill-navigation'
 import { buildReturnTo } from '@/shared/lib/auth-route'
 
 const PAGE_SIZE = 12
@@ -15,7 +17,7 @@ export function MyStarsPage() {
   const location = useLocation()
   const search = useSearch({ from: '/dashboard/stars' })
   const page = search.page ?? 0
-  const { data, isLoading } = useMyStarsPage({ page, size: PAGE_SIZE })
+  const { data, isLoading, isError, refetch } = useMyStarsPage({ page, size: PAGE_SIZE })
   const skills = data?.items ?? []
   const totalPages = data ? Math.max(Math.ceil(data.total / data.size), 1) : 1
 
@@ -33,8 +35,12 @@ export function MyStarsPage() {
     <div className="space-y-8 animate-fade-up">
       <DashboardPageHeader title={t('stars.title')} />
 
-      {!skills || skills.length === 0 ? (
-        <Card className="p-12 text-center text-muted-foreground">{t('stars.empty')}</Card>
+      {isError ? (
+        <div role="alert"><EmptyState title={t('list.loadFailed')} action={<Button variant="outline" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>} /></div>
+      ) : skills.length === 0 ? (
+        <EmptyState title={t('stars.empty')} action={page > 0 && totalPages > 0
+          ? <Button variant="outline" onClick={() => void navigate({ to: '/dashboard/stars', search: { page: undefined } })}>{t('reviewCenter.firstPage')}</Button>
+          : <Link to="/search" search={getSkillSquareSearch()} className={buttonVariants({ variant: 'outline' })}>{t('home.browseSkills')}</Link>} />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

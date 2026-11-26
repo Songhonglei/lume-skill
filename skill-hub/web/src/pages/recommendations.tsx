@@ -5,13 +5,31 @@ import { ArrowLeft } from 'lucide-react'
 import { recommendationApi, recommendationDisplay, recommendationSkills, RECOMMENDATION_KEY } from '@/api/recommendations'
 import { RecommendationCover } from '@/features/recommendation/recommendation-cover'
 import { RecommendationPreview } from '@/features/recommendation/recommendation-preview'
-import { Button } from '@/shared/ui/button'
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
+import { EmptyState } from '@/shared/components/empty-state'
+import { getSkillSquareSearch } from '@/shared/lib/skill-navigation'
+import { Button, buttonVariants } from '@/shared/ui/button'
 
 export function FeaturedPage() {
   const { t, i18n } = useTranslation()
   const query = useQuery({ queryKey: [...RECOMMENDATION_KEY, i18n.resolvedLanguage ?? i18n.language], queryFn: recommendationApi.get, retry: false })
-  return <div className="space-y-6"><Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{t('recommendations.home')}</Link><h1 className="text-3xl font-semibold">{t('recommendations.featured')}</h1>
-    {query.isPending && <p role="status">{t('common.loading')}</p>}{query.isError && <p role="alert">{t('recommendations.loadFailed')}</p>}{query.data && <RecommendationPreview compact entryPath="/featured" content={recommendationDisplay(query.data)} />}</div>
+  const content = query.data && recommendationDisplay(query.data)
+  return (
+    <div className="space-y-6">
+      <Link to="/" className={buttonVariants({ variant: 'ghost', size: 'sm', className: '-ml-2.5' })}>
+        <ArrowLeft aria-hidden="true" className="size-4" />{t('recommendations.home')}
+      </Link>
+      <DashboardPageHeader title={t('recommendations.featured')} />
+      {query.isPending ? <p role="status">{t('common.loading')}</p>
+        : query.isError ? <div role="alert"><EmptyState title={t('recommendations.loadFailed')}
+          action={<Button variant="outline" onClick={() => void query.refetch()}>{t('recommendations.retry')}</Button>} /></div>
+        : content && (content.topics.length || content.featuredSkills.length)
+          ? <RecommendationPreview compact entryPath="/featured" content={content} />
+          : <EmptyState title={t('recommendations.empty')} action={
+            <Link to="/search" search={getSkillSquareSearch()} className={buttonVariants({ variant: 'outline' })}>{t('home.browseSkills')}</Link>
+          } />}
+    </div>
+  )
 }
 export function RecommendationTopicPage() {
   const { t, i18n } = useTranslation()

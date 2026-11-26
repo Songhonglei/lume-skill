@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Boxes, ChevronRight, Search, X } from 'lucide-react'
 import type { MySkillSuiteWorkspaceItem } from '@/api/types'
@@ -21,7 +21,9 @@ const FILTERS = ['ALL', 'ATTENTION', 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'OT
 export function MySuitesPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const [filters, setFilters] = useState({ query: '', state: 'ALL', page: 0 })
+  const routeState = useSearch({ from: '/dashboard/suites' }).state ?? 'ALL'
+  const [filters, setFilters] = useState({ query: '', state: routeState as string, page: 0 })
+  useEffect(() => setFilters(current => ({ ...current, state: routeState, page: 0 })), [routeState])
   const [queryInput, setQueryInput] = useState('')
   const workspace = useMySuiteWorkspace(filters.query, filters.state, filters.page, PAGE_SIZE)
   const data = workspace.data
@@ -49,25 +51,27 @@ export function MySuitesPage() {
     else viewSuite(item)
   }
 
+  const createAction = <Button data-analytics-id="suite.create.open" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>
+  const unfilteredEmpty = !workspace.isLoading && !workspace.isError && !filters.query && filters.state === 'ALL' && data?.total === 0
   return (
     <div className="space-y-4 animate-fade-up">
       <SuiteWorkspaceHeader title={t('suite.myTitle')}
-        actions={<Button data-analytics-id="suite.create.open" size="sm" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>} />
+        actions={unfilteredEmpty ? undefined : createAction} />
       <div className="flex flex-wrap items-center gap-2">
         <form data-analytics-id="suite.owned.search" className="flex w-full items-center gap-2 sm:w-auto" onSubmit={event => { event.preventDefault(); update({ query: queryInput.trim() }) }}>
         <div className="relative min-w-0 flex-1 sm:w-72">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input className="h-8 pl-8 pr-8 text-xs" value={queryInput} maxLength={200}
+          <Input className="pl-8 pr-8" value={queryInput} maxLength={200}
             aria-label={t('suite.workspace.searchLabel')} placeholder={t('suite.workspace.searchPlaceholder')}
             onChange={event => setQueryInput(event.target.value)} />
           {queryInput && <button data-analytics-id="suite.query.clear" type="button" aria-label={t('suite.workspace.clearSearch')}
             className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => setQueryInput('')}><X className="h-3.5 w-3.5" aria-hidden="true" /></button>}
         </div>
-        <Button type="submit" size="sm" variant="outline" className="h-8 text-xs">{t('nav.search')}</Button>
+        <Button type="submit" variant="outline">{t('nav.search')}</Button>
         </form>
         <Select value={filters.state} onValueChange={state => update({ state })}>
-          <SelectTrigger data-analytics-id="suite.owned.interact" className="h-8 w-32 text-xs" aria-label={t('suite.workspace.stateFilter')}><SelectValue /></SelectTrigger>
+          <SelectTrigger data-analytics-id="suite.owned.interact" className="w-36" aria-label={t('suite.workspace.stateFilter')}><SelectValue /></SelectTrigger>
           <SelectContent>{FILTERS.map(state => <SelectItem data-analytics-id="suite.owned.filter" key={state} value={state}>{t(`suite.workspace.filter.${state}`)}</SelectItem>)}</SelectContent>
         </Select>
         {data && <button data-analytics-id="suite.attention.filter" type="button" aria-pressed={filters.state === 'ATTENTION'}
@@ -82,7 +86,7 @@ export function MySuitesPage() {
           {t('suite.workspace.error')}<Button data-analytics-id="suite.owned.refresh" variant="ghost" size="sm" onClick={() => workspace.refetch()}>{t('suite.workspace.reload')}</Button>
         </div> : data?.items.length ? <>
           <div className="overflow-hidden rounded-lg border" aria-busy={stale || workspace.isFetching}>
-            <div className="hidden grid-cols-[minmax(0,1fr)_5rem_10rem_9rem_8rem] gap-3 border-b bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground lg:grid">
+            <div className="hidden grid-cols-[minmax(0,1fr)_5rem_12rem_9rem_8rem] gap-3 border-b bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground lg:grid">
               {['suite', 'version', 'state', 'updated', 'action'].map(column => <span key={column} className={column === 'action' ? 'text-right' : ''}>{t(`suite.workspace.columns.${column}`)}</span>)}
             </div>
             <div className={cn('divide-y', stale && 'opacity-60')}>
@@ -124,7 +128,8 @@ export function MySuitesPage() {
             <span className="text-[11px] text-muted-foreground">{t('suite.workspace.total', { count: data.total, size: PAGE_SIZE })}</span>
             <Pagination analyticsId="suite.owned.paginate" page={filters.page} totalPages={Math.max(1, Math.ceil(data.total / PAGE_SIZE))} onPageChange={page => update({ page })} />
           </div>
-        </> : <EmptyState title={t(filters.query || filters.state !== 'ALL' ? 'suite.workspace.noMatches' : 'suite.myEmpty')} />}
+        </> : <EmptyState title={t(unfilteredEmpty ? 'suite.myEmpty' : 'suite.workspace.noMatches')}
+          action={unfilteredEmpty ? createAction : <Button variant="outline" onClick={() => { setQueryInput(''); update({ query: '', state: 'ALL' }) }}>{t('list.clearFilters')}</Button>} />}
     </div>
   )
 }

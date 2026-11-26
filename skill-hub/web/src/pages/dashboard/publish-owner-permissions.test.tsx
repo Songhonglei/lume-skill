@@ -14,7 +14,7 @@ vi.mock('@/shared/hooks/use-skill-queries', async () => ({
   useSkillVersionDetail: () => ({ data: undefined, isLoading: false }), previewSkillPackage: vi.fn().mockResolvedValue({ name: 'foo', displayName: 'Foo', version: '1.1', description:'Summary', overview:'# Overview' }),
   usePublishSkill: () => ({ mutateAsync: api.publish, isPending: false }),
 }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => api.navigate, useSearch: () => api.search }))
+vi.mock('@tanstack/react-router', () => ({ useBlocker: () => ({ status: 'idle' }), useNavigate: () => api.navigate, useSearch: () => api.search }))
 vi.mock('react-i18next', async () => ({ ...await vi.importActual<typeof import('react-i18next')>('react-i18next'), useTranslation: () => ({ t: (key: string) => key }) }))
 vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: [{ slug: 'team', displayName: 'Team' }], isLoading: false }) }))
 vi.mock('@/features/publish/upload-zone', () => ({ UploadZone: ({ onFileSelect }: { onFileSelect: (file: File) => void }) => <button onClick={() => onFileSelect(new File(['zip'], 'skill.zip'))}>choose package</button> }))

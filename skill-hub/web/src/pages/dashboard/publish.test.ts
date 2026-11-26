@@ -9,6 +9,7 @@ vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ invalidateQue
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => vi.fn(),
+  useBlocker: () => ({ status: 'idle' }),
   useSearch: () => useSearchMock(),
 }))
 
@@ -71,6 +72,7 @@ vi.mock('@/shared/lib/toast', () => ({
 }))
 
 vi.mock('@/api/client', () => ({
+  authApi: { getMe: vi.fn() },
   ApiError: class ApiError extends Error {
     serverMessageKey?: string
   },

@@ -16,7 +16,7 @@ import type { ReviewTask } from '@/api/types'
 import { useAuth } from '@/features/auth/use-auth'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { Pagination } from '@/shared/components/pagination'
-import { Button } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs'
 import { ReviewResultsPanel } from '@/features/review/review-results-panel'
@@ -45,7 +45,6 @@ export function ReviewsPage() {
   const namespacesQuery = useMyNamespaces()
   const namespaces = namespacesQuery.data ?? []
   const routeFilters = parseReviewCenterFilters(search)
-  const [draft, setDraft] = useState<ReviewCenterFilters>(routeFilters)
   const [applied, setApplied] = useState<ReviewCenterFilters>(routeFilters)
   const [page, setPage] = useState(search.page ?? 0)
   const { q: routeQ, status: routeStatus, namespace: routeNamespace, reviewKind: routeKind, originType: routeOrigin, sortDirection: routeSort } = routeFilters
@@ -55,7 +54,6 @@ export function ReviewsPage() {
   useEffect(() => {
     const next = { q: routeQ, status: routeStatus, namespace: routeNamespace, reviewKind: routeKind, originType: routeOrigin, sortDirection: routeSort }
     setApplied(next)
-    setDraft(next)
     setPage(routePage)
   }, [routeQ, routeStatus, routeNamespace, routeKind, routeOrigin, routeSort, routePage])
 
@@ -83,7 +81,6 @@ export function ReviewsPage() {
   const applyNow = (filters: ReviewCenterFilters, nextPage = 0) => {
     const normalized = { ...filters, q: filters.q.trim() }
     setApplied(normalized)
-    setDraft(normalized)
     setPage(nextPage)
     void navigate({ to: '/dashboard/reviews', search: { ...reviewCenterSearch(normalized, nextPage), reviewView: normalized.originType === 'GITHUB_SYNC' ? (search.reviewView ?? 'snapshots') : undefined } })
     // A repeated query or reset must refresh the same key rather than silently reuse a stale result.
@@ -148,11 +145,11 @@ export function ReviewsPage() {
     return <div className="space-y-6"><DashboardPageHeader title={t('reviewCenter.title')} /><Card className="p-6" role="alert"><p>{t(namespacesQuery.isError ? 'reviewCenter.scopeFailed' : 'reviewCenter.noPermission')}</p>{namespacesQuery.isError && <Button type="button" variant="outline" className="mt-3" onClick={() => void namespacesQuery.refetch()}>{t('reviewCenter.retry')}</Button>}</Card></div>
   }
 
-  return <Tabs value={applied.originType} onValueChange={origin => apply({ ...applied, originType: origin as ReviewCenterFilters['originType'] })} className="space-y-7">
+  return <Tabs value={applied.originType} onValueChange={origin => apply({ ...applied, originType: origin as ReviewCenterFilters['originType'] })} className="space-y-4 sm:space-y-6">
     <DashboardPageHeader title={t('reviewCenter.title')}
-      actions={<div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">{!profileMode && <div className="w-full sm:w-[440px]"><TabsList aria-label={t('reviewCenter.filters.originType')} className="grid h-[52px] w-full grid-cols-3 gap-1 rounded-xl border-0 bg-secondary p-1 sm:h-10">{REVIEW_ORIGINS.map((origin, index) => <TabsTrigger key={origin} value={origin} disabled={batch.busy} className="h-11 min-w-0 rounded-lg border-0 px-2 py-0 text-xs font-medium text-muted-foreground after:hidden aria-selected:bg-primary aria-selected:text-primary-foreground sm:h-8 sm:text-sm">{t(`reviewCenter.origin.${origin}`)}{sourceCounts[index].data !== undefined && <span className="ml-2 hidden text-xs opacity-65 sm:inline">{sourceCounts[index].data}</span>}</TabsTrigger>)}</TabsList></div>}{isUserAdmin && canReviewSkills ? <Link to="/dashboard/reviews" search={profileMode ? {} : { type: 'profile' }} className="inline-flex min-h-9 items-center rounded-lg border border-border/60 px-3 text-sm hover:bg-secondary">{t(profileMode ? 'reviewCenter.skillQueue' : 'reviewCenter.profileQueue')}</Link> : null}</div>} />
-    {profileMode ? <ProfileReviewTable /> : <TabsContent value={applied.originType} className="mt-0 space-y-7">
-      <ReviewCenterFilterForm value={draft} namespaces={options} namespaceLoading={scopes.isLoading || scopes.isError} onChange={setDraft} onApply={() => apply(draft)} onReset={() => apply({ ...DEFAULT_REVIEW_FILTERS })} />
+      actions={<div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">{!profileMode && <div className="w-full sm:w-[440px]"><TabsList aria-label={t('reviewCenter.filters.originType')} className="grid h-[52px] w-full grid-cols-3 gap-1 rounded-xl border-0 bg-secondary p-1 sm:h-10">{REVIEW_ORIGINS.map((origin, index) => <TabsTrigger key={origin} value={origin} disabled={batch.busy} className="h-11 min-w-0 rounded-lg border-0 px-2 py-0 text-xs font-medium text-muted-foreground after:hidden aria-selected:bg-primary aria-selected:text-primary-foreground sm:h-8 sm:text-sm">{t(`reviewCenter.origin.${origin}`)}{sourceCounts[index].data !== undefined && <span className="ml-2 hidden text-xs opacity-65 sm:inline">{sourceCounts[index].data}</span>}</TabsTrigger>)}</TabsList></div>}{isUserAdmin && canReviewSkills ? <Link to="/dashboard/reviews" search={profileMode ? {} : { type: 'profile' }} className={buttonVariants({ variant: 'outline' })}>{t(profileMode ? 'reviewCenter.skillQueue' : 'reviewCenter.profileQueue')}</Link> : null}</div>} />
+    {profileMode ? <ProfileReviewTable /> : <TabsContent value={applied.originType} className="mt-0 space-y-4 sm:space-y-6">
+      <ReviewCenterFilterForm value={applied} namespaces={options} namespaceLoading={scopes.isLoading || scopes.isError} onChange={apply} onReset={() => apply({ ...DEFAULT_REVIEW_FILTERS })} />
       {scopes.isError && <div role="alert" className="flex flex-wrap items-center gap-3 text-sm"><p className="text-destructive">{t('reviewCenter.scopeFailed')}</p><Button type="button" size="sm" variant="outline" onClick={() => void scopes.refetch()}>{t('reviewCenter.retry')}</Button></div>}
       {batch.dialogs}
       {applied.originType === 'GITHUB_SYNC' && <div className="flex justify-end gap-2 [&_button]:min-h-11 sm:[&_button]:min-h-8">
@@ -184,7 +181,7 @@ export function ReviewsPage() {
                     </table>
                   </div>
                   <div className="divide-y divide-border px-4 md:hidden">{query.data.items.map((review) => <article key={review.id} className="space-y-4 py-5"><div className="flex items-start gap-3"><label className="flex min-h-11 min-w-11 items-center justify-center">{batch.checkbox(review)}</label>{renderObject(review)}</div><div>{renderMetadata(review)}</div><div className="flex items-end justify-between gap-4"><p className="min-w-0 break-words text-xs text-muted-foreground">{review.submittedByName || review.submittedBy} · {t(`reviewCenter.origin.${review.originType || 'USER'}`)}<span className="mt-1 block">{formatDate(review.submittedAt)}</span></p><Button data-analytics-id="review.detail.open" variant="link" className="shrink-0" onClick={() => openReview(review)}>{t('reviewCenter.open')}</Button></div></article>)}</div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground"><p>{t('reviewCenter.pageSummary', { total: query.data.totalElements, page: page + 1 })}</p><Pagination analyticsId="review.list.paginate" page={page} totalPages={Math.max(query.data.totalPages, 1)} onPageChange={(nextPage) => apply(applied, nextPage)} /></div>
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 border-t px-4 pt-2 text-xs text-muted-foreground sm:pt-0"><p>{t('reviewCenter.pageSummary', { total: query.data.totalElements, page: page + 1 })}</p><Pagination analyticsId="review.list.paginate" page={page} totalPages={Math.max(query.data.totalPages, 1)} onPageChange={nextPage => apply(applied, nextPage)} /></div>
                 </>}
       </ReviewResultsPanel>}
     </TabsContent>}

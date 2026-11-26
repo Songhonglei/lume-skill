@@ -1,5 +1,5 @@
-import { useId, type FormEvent } from 'react'
-import { Search } from 'lucide-react'
+import { useId, useState, type FormEvent } from 'react'
+import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { ReviewCenterFilters } from './review-center-filters'
 import { REVIEW_KINDS, REVIEW_STATUSES } from './review-center-filters'
@@ -14,11 +14,10 @@ interface ReviewCenterFilterFormProps {
   namespaces: ReviewFilterOption[]
   namespaceLoading?: boolean
   onChange: (filters: ReviewCenterFilters) => void
-  onApply: () => void
   onReset: () => void
 }
 
-export const REVIEW_FILTER_TRIGGER_CLASS_NAME = 'h-11 w-full rounded-lg bg-background px-3 text-sm md:h-8 md:w-44'
+export const REVIEW_FILTER_TRIGGER_CLASS_NAME = 'w-full bg-background sm:w-44'
 export const REVIEW_FILTER_CONTENT_CLASS_NAME = 'w-[var(--radix-select-trigger-width)] min-w-0 max-w-[var(--radix-select-trigger-width)] [&_[role=option]]:min-h-11 [&_[role=option]]:rounded-lg [&_[role=option]]:py-1.5 md:[&_[role=option]]:min-h-8 md:[&_[role=option]]:py-1 [&_[data-radix-select-viewport]]:h-auto [&_[data-radix-select-viewport]]:min-w-0 [&_[data-radix-select-viewport]]:p-1.5'
 
 function measureScopeLabel(option: HTMLElement) {
@@ -31,11 +30,16 @@ function measureScopeLabel(option: HTMLElement) {
   label.toggleAttribute('data-overflow', distance > 0)
 }
 
-export function ReviewCenterFilterForm({ value, namespaces, namespaceLoading, onChange, onApply, onReset }: ReviewCenterFilterFormProps) {
+export function ReviewCenterFilterForm({ value, namespaces, namespaceLoading, onChange, onReset }: ReviewCenterFilterFormProps) {
   const { t } = useTranslation()
   const id = useId()
+  const [input, setInput] = useState({ applied: value.q, text: value.q })
+  if (input.applied !== value.q) setInput({ applied: value.q, text: value.q })
   const setValue = <K extends keyof ReviewCenterFilters>(key: K, next: ReviewCenterFilters[K]) => onChange({ ...value, [key]: next })
-  const submit = (event: FormEvent) => { event.preventDefault(); onApply() }
+  const submit = (event: FormEvent) => { event.preventDefault(); setValue('q', input.text.trim()) }
+  const selectedScope = namespaces.find(item => item.value === value.namespace)
+  const scopeLabel = value.namespace !== 'ALL' ? selectedScope?.label || value.namespace : ''
+  const kindLabel = value.reviewKind !== 'ALL' ? t(`reviewCenter.kind.${value.reviewKind}`) : ''
   const field = (key: 'status' | 'namespace' | 'reviewKind' | 'originType', options: ReviewFilterOption[]) => (
     <div className="min-w-0">
       <label htmlFor={`${id}-${key}`} className="mb-2 block text-xs font-medium text-muted-foreground">{t(`reviewCenter.filters.${key}`)}</label>
@@ -49,25 +53,35 @@ export function ReviewCenterFilterForm({ value, namespaces, namespaceLoading, on
     </div>
   )
   return (
-    <form onSubmit={submit} className="rounded-[10px] bg-secondary p-5" aria-label={t('reviewCenter.filters.title')}>
-      <h2 className="mb-5 text-[15px] font-semibold">{t('reviewCenter.filters.title')}</h2>
-      <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-4 md:flex md:flex-wrap md:items-end">
-        <div className="col-span-2 min-w-0 md:w-[408px] md:max-w-full">
+    <div className="rounded-lg border bg-card p-3 sm:p-4">
+      <form data-analytics-id="review.filter.apply" onSubmit={submit} className="flex flex-wrap items-end gap-2 sm:gap-3" aria-label={t('reviewCenter.filters.title')}>
+        {field('status', REVIEW_STATUSES.map(status => ({ value: status, label: t(`reviewCenter.status.${status}`) })))}
+        <div className="min-w-0 flex-1 sm:max-w-md">
           <label htmlFor={`${id}-q`} className="mb-2 block text-xs font-medium text-muted-foreground">{t('reviewCenter.filters.q')}</label>
-          <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id={`${id}-q`} value={value.q} onChange={(event) => setValue('q', event.target.value)} placeholder={t('reviewCenter.filters.searchPlaceholder')} className="h-11 bg-background pl-9 md:h-8" /></div>
+          <div className="flex gap-2">
+            <Input id={`${id}-q`} value={input.text} onChange={event => setInput({ applied: value.q, text: event.target.value })}
+              placeholder={t('reviewCenter.filters.searchPlaceholder')} className="min-w-0 bg-background" />
+            <Button type="submit" variant="outline" aria-label={t('reviewCenter.filters.apply')} title={t('reviewCenter.filters.apply')} className="shrink-0 px-2.5">
+              <Search aria-hidden="true" className="size-4" />
+            </Button>
+          </div>
         </div>
-        {field('status', REVIEW_STATUSES.map((status) => ({ value: status, label: t(`reviewCenter.status.${status}`) })))}
-        {field('namespace', [{ value: 'ALL', label: t('reviewCenter.filters.allScopes') }, ...namespaces])}
-      </div>
-      <div className="grid grid-cols-2 gap-4 md:flex md:flex-wrap md:items-end">
-        {field('reviewKind', REVIEW_KINDS.map((kind) => ({ value: kind, label: t(`reviewCenter.kind.${kind}`) })))}
-        <div className="col-span-2 mt-2 flex w-full gap-3 md:ml-auto md:mt-0 md:w-auto">
-          <Button data-analytics-id="review.filter.reset" type="button" variant="outline" onClick={onReset} className="h-11 flex-1 bg-background md:h-8 md:w-20 md:flex-none">{t('reviewCenter.filters.reset')}</Button>
-          <Button data-analytics-id="review.filter.apply" type="submit" className="h-11 flex-1 md:h-8 md:w-[100px] md:flex-none">{t('reviewCenter.filters.apply')}</Button>
+      </form>
+      <details className="group mt-2">
+        <summary className="flex w-fit max-w-full cursor-pointer list-none flex-wrap items-center gap-1.5 rounded-sm py-1 text-xs font-medium text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+          <ChevronDown aria-hidden="true" className="size-4 group-open:rotate-180" />
+          {t('reviewCenter.filters.advanced')}
+          {[scopeLabel, kindLabel].filter(Boolean).map((label, index) => <span key={index} className="max-w-48 truncate rounded border px-1.5 py-0.5" title={label}>{label}</span>)}
+        </summary>
+        <div className="mt-2 flex flex-wrap items-end gap-3 border-t pt-3">
+          {field('namespace', [{ value: 'ALL', label: t('reviewCenter.filters.allScopes') }, ...namespaces])}
+          {field('reviewKind', REVIEW_KINDS.map(kind => ({ value: kind, label: t(`reviewCenter.kind.${kind}`) })))}
+          <Button data-analytics-id="review.filter.reset" type="button" variant="ghost" onClick={() => {
+            setInput({ applied: value.q, text: '' })
+            onReset()
+          }}>{t('reviewCenter.filters.reset')}</Button>
         </div>
-      </div>
-      </div>
-    </form>
+      </details>
+    </div>
   )
 }

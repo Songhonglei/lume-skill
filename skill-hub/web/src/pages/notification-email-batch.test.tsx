@@ -62,7 +62,7 @@ describe('protected email batch details', () => {
     api.batch.mockResolvedValue({ id: 23, status: 'MERGED', items: [], totalItems: 0, nextCursor: null, mergedIntoDeliveryId: 31 })
     setup(); await screen.findByText('notificationEmail.mergedHelp')
     expect(screen.getByText('notificationEmail.viewMergedBatch')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'pagination.next' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.queryByRole('navigation', { name: 'pagination.label' })).toBeNull()
   })
 
   it('shows sign-in guidance instead of an endless loader without a session', async () => {

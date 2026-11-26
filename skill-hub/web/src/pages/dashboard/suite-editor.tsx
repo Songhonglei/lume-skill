@@ -535,8 +535,8 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
               </button>
             ))}
           </div>
-          <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_160px_auto]">
-            <div className="relative">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
               <Input data-analytics-id="suite.candidate.search"
                 className="h-9 pl-9"
@@ -548,23 +548,13 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
                 placeholder={candidateScope === 'coordinate' ? '@global/skill-name' : t('suite.searchSkills')}
               />
             </div>
-            <Select value={visibility} onValueChange={(value) => {
-              if (value === 'PUBLIC' || value === 'NAMESPACE_ONLY' || value === 'PRIVATE') {
-                setVisibility(value)
-                setCandidateSearchStarted(false)
-              }
-            }}>
-              <SelectTrigger data-analytics-id="suite.candidate.visibility.interact"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem data-analytics-id="suite.candidate.visibility.public" value="PUBLIC">{t('suite.visibilityPublic')}</SelectItem>
-                <SelectItem data-analytics-id="suite.candidate.visibility.namespace" value="NAMESPACE_ONLY">{t('suite.visibilityNamespace')}</SelectItem>
-                <SelectItem data-analytics-id="suite.candidate.visibility.private" value="PRIVATE">{t('suite.visibilityPrivate')}</SelectItem>
-              </SelectContent>
-            </Select>
             <Button data-analytics-id="suite.candidate.search" size="sm" className="h-9 px-5" disabled={marketSearchRequiresKeyword} onClick={runCandidateSearch}>
               {t('suite.search')}
             </Button>
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t('suite.candidateVisibilityHint', { visibility: t(visibility === 'PUBLIC' ? 'suite.visibilityPublic' : visibility === 'PRIVATE' ? 'suite.visibilityPrivate' : 'suite.visibilityNamespace') })}
+          </p>
         </div>
 
         <div className="min-h-[220px]">

@@ -8,21 +8,22 @@ import { PRESENTATION_CONTENT, PRESENTATION_ITEMS } from '@/shared/lib/presentat
 import { LandingPage } from './landing'
 import { HomePage } from './home'
 
-const state = vi.hoisted((): { settings: SitePresentationSettings | null; search: (params: unknown, enabled: boolean) => void } => ({ settings: null, search: vi.fn() }))
+const state = vi.hoisted((): { settings: SitePresentationSettings | null; hasSkills: boolean; search: (params: unknown, enabled: boolean) => void } => ({ settings: null, hasSkills: false, search: vi.fn() }))
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }))
 vi.mock('react-i18next', async (original) => ({ ...await original<typeof import('react-i18next')>(), useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: 'zh' } }) }))
 vi.mock('@/shared/hooks/use-site-presentation', async (original) => ({ ...await original<typeof import('@/shared/hooks/use-site-presentation')>(), useSitePresentation: () => ({ settings: state.settings ?? defaultSitePresentation() }) }))
-vi.mock('@/shared/hooks/use-skill-queries', () => ({ useSearchSkills: (params: unknown, enabled = true) => { state.search(params, enabled); return { data: { items: [] }, isLoading: false } } }))
+vi.mock('@/shared/hooks/use-skill-queries', () => ({ useSearchSkills: (params: unknown, enabled = true) => { state.search(params, enabled); return { data: { items: state.hasSkills ? [{ id: 1, namespace: 'team', slug: 'example' }] : [] }, isLoading: false } } }))
 vi.mock('@/shared/hooks/use-in-view', () => ({ useInView: () => ({ ref: null, inView: true }) }))
 vi.mock('@/features/search/search-bar', () => ({ SearchBar: () => <input aria-label="market-search" /> }))
 vi.mock('@/shared/components/brand-mark', () => ({ BrandMark: () => <div /> }))
 vi.mock('@/shared/components/landing-quick-start', () => ({ LandingQuickStartSection: () => <div>landing-quick-start</div> }))
 vi.mock('@/shared/components/quick-start', () => ({ QuickStartSection: () => <div>market-quick-start</div> }))
 vi.mock('@/features/skill/skill-card', () => ({ SkillCard: () => <div /> }))
-afterEach(() => { cleanup(); vi.clearAllMocks(); state.settings = null })
+afterEach(() => { cleanup(); vi.clearAllMocks(); state.settings = null; state.hasSkills = false })
 
 describe('configurable original homepage and market boundary', () => {
-  it('preserves the original introduction and live sections by default', () => {
+  it('shows the introduction and populated live sections by default', () => {
+    state.hasSkills = true
     render(<LandingPage />)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('landing.experience.heroTitle')
     expect(screen.getByText('landing-quick-start')).toBeTruthy()
@@ -42,12 +43,12 @@ describe('configurable original homepage and market boundary', () => {
     state.settings = defaultSitePresentation()
     state.settings.sections.capabilities.items = Object.fromEntries(PRESENTATION_ITEMS.capabilities.map((item, index) => [item, index < count]))
     render(<LandingPage />)
-    const section = screen.getByText('landing.experience.capabilities.title').closest('section')!
-    const grid = section.querySelector('.grid')
+    const section = screen.queryByText('landing.experience.capabilities.title')?.closest('section')
     if (count === 0) {
-      expect(grid).toBeNull()
+      expect(section).toBeUndefined()
       return
     }
+    const grid = section?.querySelector('.grid')
     expect(grid?.children).toHaveLength(count)
     expect(grid?.classList.contains(mediumColumns)).toBe(true)
     expect(grid?.classList.contains(largeColumns)).toBe(true)
@@ -88,6 +89,7 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy()
   })
   it('can hide every homepage section without changing the skills marketplace', () => {
+    state.hasSkills = true
     state.settings = defaultSitePresentation()
     state.settings.siteName = 'Team Library'
     Object.values(state.settings.sections).forEach(section => { section.enabled = false })
@@ -102,6 +104,7 @@ describe('configurable original homepage and market boundary', () => {
     expect(state.search).toHaveBeenLastCalledWith({ sort: 'newest', size: 6, source: 'platform' }, true)
   })
   it('binds visible landing text slots, item switches and shared external links', () => {
+    state.hasSkills = true
     const settings = defaultSitePresentation()
     for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
       for (const slot of Object.keys(PRESENTATION_CONTENT[section])) settings.sections[section].texts[slot] = { zh: `${section}-${slot}` }

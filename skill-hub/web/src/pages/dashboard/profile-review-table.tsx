@@ -1,3 +1,4 @@
+import { Pagination } from '@/shared/components/pagination'
 import { useState } from 'react'
 import { Clock3, ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -191,26 +192,8 @@ export function ProfileReviewTable() {
     return (
       <div className="flex flex-col gap-3 border-t border-border/60 px-6 py-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <p>{t('profileReview.pageSummary', { total: totalElements, page: currentPage + 1 })}</p>
-        <div className="flex items-center gap-2">
-          <Button data-analytics-id="review.profile.previous"
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 0}
-            onClick={() => changePage(status, currentPage - 1)}
-          >
-            {t('profileReview.prevPage')}
-          </Button>
-          <Button data-analytics-id="review.profile.next"
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => changePage(status, currentPage + 1)}
-          >
-            {t('profileReview.nextPage')}
-          </Button>
-        </div>
+        <Pagination previousAnalyticsId="review.profile.previous" nextAnalyticsId="review.profile.next"
+          compact page={currentPage} totalPages={totalPages} onPageChange={next => changePage(status, next)} />
       </div>
     )
   }

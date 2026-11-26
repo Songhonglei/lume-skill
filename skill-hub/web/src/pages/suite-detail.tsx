@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { AlertTriangle, Boxes, CheckCircle2, Copy, Download } from 'lucide-react'
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { AlertTriangle, ArrowLeft, Boxes, CheckCircle2, Copy, Download } from 'lucide-react'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { getBaseUrl, isPortableSkillVersion } from '@/features/skill/install-command'
@@ -15,7 +15,7 @@ import { SkeletonList } from '@/shared/components/skeleton-loader'
 import { toast } from '@/shared/lib/toast'
 import { copyToClipboard } from '@/shared/lib/clipboard'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { APP_SHELL_PAGE_CLASS_NAME } from '@/app/page-shell-style'
 
@@ -30,9 +30,13 @@ export function SuiteDetailPage() {
   const submitMutation = useSubmitSuite()
   const registryUrl = useMemo(() => getBaseUrl(), [])
 
+  const backLink = <Link to={search.returnTo || '/suites'} className={buttonVariants({ variant: 'ghost', size: 'sm', className: '-ml-2.5' })}>
+    <ArrowLeft className="size-4" aria-hidden="true" />{t('suite.backToCatalog')}
+  </Link>
+
   if (isLoading) return <div className={APP_SHELL_PAGE_CLASS_NAME}><SkeletonList count={3} /></div>
   if (!suite || error) {
-    return <div className={APP_SHELL_PAGE_CLASS_NAME}><p className="text-destructive">{t('suite.notFound')}</p></div>
+    return <div className={APP_SHELL_PAGE_CLASS_NAME}>{backLink}<p className="text-destructive">{t('suite.notFound')}</p></div>
   }
 
   const suitePath = `/suite/${encodeURIComponent(namespace)}/${encodeURIComponent(slug)}`
@@ -67,6 +71,7 @@ export function SuiteDetailPage() {
 
   return (
     <div className={cn(APP_SHELL_PAGE_CLASS_NAME, 'space-y-5')}>
+      {backLink}
       <header className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 max-w-3xl space-y-3">
@@ -223,7 +228,7 @@ export function SuiteDetailPage() {
               versions={versions}
               currentSuite={suite}
               returnTo={returnTo}
-              onSelectVersion={(version) => navigate({ to: suitePath, search: { version } })}
+              onSelectVersion={(version) => navigate({ to: suitePath, search: { version, returnTo: search.returnTo } })}
             />
           ) : <p className="text-sm text-muted-foreground">{t('suite.noVersions')}</p>}
         </TabsContent>
