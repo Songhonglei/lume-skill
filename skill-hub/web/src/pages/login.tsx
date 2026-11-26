@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -21,6 +22,7 @@ import { resolveAuthReturnTo } from '@/shared/lib/auth-route'
  */
 export function LoginPage() {
   const { t } = useTranslation()
+  const siteName = useSiteName()
   const navigate = useNavigate()
   const search = useSearch({ from: '/login' })
   const loginMutation = usePasswordLogin()
@@ -69,7 +71,7 @@ export function LoginPage() {
     <AuthShell>
       <div className="flex flex-col gap-5 animate-fade-up">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('login.title')}</h1>
+          <h1 className="break-words text-2xl font-semibold tracking-tight text-foreground">{t('login.title', { siteName })}</h1>
         </div>
 
         {disabledMessage ? (

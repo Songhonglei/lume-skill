@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, ChevronRight, Copy, FileText, Search } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-import { PRODUCT_NAME } from '@/shared/lib/product-brand'
+import { PRODUCT_NAME, useSiteName } from '@/shared/lib/product-brand'
 import { copyToClipboard, useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
 import { toast } from '@/shared/lib/toast'
@@ -36,10 +36,11 @@ function getRegistryUrl(): string {
 
 function AgentAccessPanel() {
   const { t } = useTranslation()
+  const siteName = useSiteName()
   const [activeView, setActiveView] = useState<AgentView>('registry')
   const [copied, copy] = useCopyToClipboard()
   const registryUrl = useMemo(getRegistryUrl, [])
-  const instruction = t('landing.experience.quickStart.agent.instruction', { url: `${registryUrl}/registry/skill.md` })
+  const instruction = t('landing.experience.quickStart.agent.instruction', { url: `${registryUrl}/registry/skill.md`, siteName })
 
   return (
     <div className="">
@@ -74,7 +75,7 @@ function AgentAccessPanel() {
           <div className="flex flex-col gap-5 border-y border-border/70 py-5 sm:flex-row sm:items-start">
             <span className="mt-1 hidden h-12 w-1 flex-shrink-0 bg-foreground sm:block" aria-hidden />
             <p className="min-w-0 flex-1 text-sm leading-7 text-foreground">
-              {t('landing.experience.quickStart.agent.instructionPrefix')} <span className="break-all text-blue-600 underline decoration-blue-300 underline-offset-4">{registryUrl}/registry/skill.md</span> {t('landing.experience.quickStart.agent.instructionSuffix')}
+              {t('landing.experience.quickStart.agent.instructionPrefix')} <span className="break-all text-blue-600 underline decoration-blue-300 underline-offset-4">{registryUrl}/registry/skill.md</span> {t('landing.experience.quickStart.agent.instructionSuffix', { siteName })}
             </p>
             <button data-analytics-id="guide.prompt.copy"
               type="button"
@@ -110,7 +111,7 @@ function AgentAccessPanel() {
           <div className="relative space-y-0 pl-7 before:absolute before:bottom-3 before:left-[5px] before:top-3 before:w-px before:bg-border">
             {[
               [t('landing.experience.quickStart.agent.discovery.intentTitle'), t('landing.experience.quickStart.agent.discovery.intentDescription')],
-              [t('landing.experience.quickStart.agent.discovery.searchTitle'), t('landing.experience.quickStart.agent.discovery.searchDescription')],
+              [t('landing.experience.quickStart.agent.discovery.searchTitle', { siteName }), t('landing.experience.quickStart.agent.discovery.searchDescription')],
               [t('landing.experience.quickStart.agent.discovery.readTitle'), t('landing.experience.quickStart.agent.discovery.readDescription')],
             ].map(([title, description], index) => (
               <div key={title} className={`relative grid grid-cols-1 gap-1 border-b border-border/60 py-3.5 sm:grid-cols-[9rem_1fr] animate-fade-up delay-${index + 1}`}>
@@ -150,13 +151,13 @@ function CliAccessPanel() {
     <div className="flex  flex-col overflow-hidden rounded-lg border border-border/70 shadow-sm">
       {/* Terminal title bar */}
       <div className="flex items-center justify-between border-b border-border/60 bg-card px-4 py-3 ">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex shrink-0 gap-1.5">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
             <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />
           </div>
-          <span className="ml-2 font-mono text-xs text-muted-foreground">Terminal — {settings.siteName ?? PRODUCT_NAME}</span>
+          <span className="ml-2 truncate font-mono text-xs text-muted-foreground" title={settings.siteName ?? PRODUCT_NAME}>Terminal — {settings.siteName ?? PRODUCT_NAME}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] text-muted-foreground">zsh</span>

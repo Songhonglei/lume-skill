@@ -29,12 +29,12 @@ export function useSitePresentation() {
 }
 
 /** The allowlist has one authoritative fallback for both the homepage and its settings editor. */
-export function presentationText(settings: SitePresentationSettings, section: PresentationSection, slot: string, language: string | undefined, translate: (key: string) => string): string {
+export function presentationText(settings: SitePresentationSettings, section: PresentationSection, slot: string, language: string | undefined, translate: (key: string, options: { siteName: string }) => string): string {
   const override = localizedPresentationText(settings.sections[section].texts[slot] ?? {}, language)
   if (override) return override
   const defaults: Record<string, string> = PRESENTATION_CONTENT[section]
   const fallback = defaults[slot]
   if (!fallback) return ''
-  if (section === 'enterprise' && slot === 'registryLabel') return `${settings.siteName ?? PRODUCT_NAME}\nRegistry`
-  return fallback.startsWith('=') ? fallback.slice(1) : translate(fallback)
+  if (section === 'enterprise' && slot === 'registryLabel') return `${settings.siteName || PRODUCT_NAME}\n${fallback.slice(1)}`
+  return fallback.startsWith('=') ? fallback.slice(1) : translate(fallback, { siteName: settings.siteName || PRODUCT_NAME })
 }

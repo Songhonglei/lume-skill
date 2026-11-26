@@ -10,11 +10,16 @@ export function PresentationDocument() {
     document.title = settings.siteName || PRODUCT_NAME
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
     if (!icon) return
-    icon.href = presentationAssetUrl(settings.faviconUrl) ?? withBasePath('/favicon.svg')
-    icon.type = settings.faviconUrl ? '' : 'image/svg+xml'
+    const customIcon = presentationAssetUrl(settings.faviconUrl) ?? presentationAssetUrl(settings.logoUrl)
     const fallback = () => { icon.href = withBasePath('/favicon.svg'); icon.type = 'image/svg+xml' }
+    if (customIcon) {
+      icon.type = ''
+      icon.href = customIcon
+    } else {
+      fallback()
+    }
     icon.addEventListener('error', fallback, { once: true })
     return () => icon.removeEventListener('error', fallback)
-  }, [settings.siteName, settings.faviconUrl])
+  }, [settings.siteName, settings.faviconUrl, settings.logoUrl])
   return null
 }

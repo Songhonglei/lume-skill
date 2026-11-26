@@ -3572,6 +3572,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/system-config/presentation/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a public site logo (PNG or JPEG, under 1 MB, center-cropped to a square) */
+        post: operations["uploadLogo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/system-config/presentation/assets": {
         parameters: {
             query?: never;
@@ -3581,7 +3598,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload a public branding image (PNG or JPEG, up to 2 MiB and 1024 pixels per side) */
+        /** Upload a public presentation image (PNG or JPEG, up to 2 MiB and 1024 pixels per side) */
         post: operations["upload_2"];
         delete?: never;
         options?: never;
@@ -20217,6 +20234,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseRecommendationAdminResponse"];
+                };
+            };
+        };
+    };
+    uploadLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSitePresentationAssetResponse"];
                 };
             };
         };

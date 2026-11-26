@@ -29,17 +29,22 @@ async function loadPublicPresentation(): Promise<SitePresentationResponse> {
   }
 }
 
+function uploadImage(file: File, resource: 'assets' | 'logo') {
+  const body = new FormData()
+  body.append('file', file)
+  return fetchJson<components['schemas']['SitePresentationAssetResponse']>(`/api/v1/admin/system-config/presentation/${resource}`, {
+    method: 'POST', headers: getCsrfHeaders(), body,
+  })
+}
+
 export const sitePresentationApi = {
   get: loadPublicPresentation,
   getAdmin: () => fetchJson<SitePresentationResponse>('/api/v1/admin/system-config/presentation'),
   update: (value: components['schemas']['SitePresentationUpdateRequest']) => fetchJson<SitePresentationResponse>('/api/v1/admin/system-config/presentation', {
     method: 'PUT', headers: getCsrfHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(value),
   }),
-  upload: (file: File) => {
-    const body = new FormData()
-    body.append('file', file)
-    return fetchJson<components['schemas']['SitePresentationAssetResponse']>('/api/v1/admin/system-config/presentation/assets', { method: 'POST', headers: getCsrfHeaders(), body })
-  },
+  upload: (file: File) => uploadImage(file, 'assets'),
+  uploadLogo: (file: File) => uploadImage(file, 'logo'),
 }
 
 /** Only the application's public branding resource route can be rendered as configured media. */

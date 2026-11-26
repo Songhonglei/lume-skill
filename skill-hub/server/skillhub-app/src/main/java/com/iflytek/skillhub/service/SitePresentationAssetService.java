@@ -17,8 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class SitePresentationAssetService {
     private static final String URL_PREFIX = "/api/v1/site-presentation/assets/";
     private static final String STORAGE_PREFIX = "site-presentation/assets/";
+    private static final String LOGO_PREFIX = "logo-";
     private static final Pattern ASSET_ID = Pattern.compile(
-            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+            "(?:logo-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
     private final ObjectStorageService storage;
     private final SkillAvatarImageProcessor images;
 
@@ -28,17 +29,24 @@ public class SitePresentationAssetService {
     }
 
     public SitePresentationAssetResponse upload(MultipartFile file) {
-        if (file.isEmpty() || file.getSize() > SkillAvatarImageProcessor.MAX_BYTES) {
-            throw invalidImage();
-        }
+        return upload(file, false);
+    }
+
+    public SitePresentationAssetResponse uploadLogo(MultipartFile file) {
+        return upload(file, true);
+    }
+
+    private SitePresentationAssetResponse upload(MultipartFile file, boolean logo) {
+        int maxBytes = logo ? SkillAvatarImageProcessor.LOGO_MAX_BYTES - 1 : SkillAvatarImageProcessor.MAX_BYTES;
+        if (file.isEmpty() || file.getSize() > maxBytes) throw invalidImage(logo);
         byte[] normalized;
         try (var input = file.getInputStream()) {
-            byte[] bytes = input.readNBytes(SkillAvatarImageProcessor.MAX_BYTES + 1);
-            normalized = images.normalize(bytes, false);
+            byte[] bytes = input.readNBytes(maxBytes + 1);
+            normalized = logo ? images.normalizeLogo(bytes) : images.normalize(bytes, false);
         } catch (IOException | DomainBadRequestException failure) {
-            throw invalidImage();
+            throw invalidImage(logo);
         }
-        String id = UUID.randomUUID().toString();
+        String id = (logo ? LOGO_PREFIX : "") + UUID.randomUUID();
         storage.putObject(key(id), new ByteArrayInputStream(normalized), normalized.length, "image/png");
         return new SitePresentationAssetResponse(URL_PREFIX + id);
     }
@@ -48,6 +56,13 @@ public class SitePresentationAssetService {
         if (!url.startsWith(URL_PREFIX)) throw invalidReference();
         String id = url.substring(URL_PREFIX.length());
         if (!ASSET_ID.matcher(id).matches() || !storage.exists(key(id))) throw invalidReference();
+    }
+
+    public void validateLogoReference(String url, String previous) {
+        if (url != null && !url.equals(previous) && !url.startsWith(URL_PREFIX + LOGO_PREFIX)) {
+            throw new DomainBadRequestException("error.site.presentation.uploadLogo");
+        }
+        validateReference(url);
     }
 
     public byte[] read(String id) {
@@ -66,8 +81,8 @@ public class SitePresentationAssetService {
     }
 
     private String key(String id) { return STORAGE_PREFIX + id + ".png"; }
-    private DomainBadRequestException invalidImage() {
-        return new DomainBadRequestException("error.site.presentation.invalidImage");
+    private DomainBadRequestException invalidImage(boolean logo) {
+        return new DomainBadRequestException(logo ? "error.site.presentation.invalidLogo" : "error.site.presentation.invalidImage");
     }
     private DomainBadRequestException invalidReference() {
         return new DomainBadRequestException("error.site.presentation.invalidAsset");

@@ -113,7 +113,7 @@ export function Layout() {
         {!isSplitAuthRoute ? (
           <Link data-analytics-id="navigation.home.open" to="/" aria-label={presentation.siteName ?? PRODUCT_NAME} className="luma-wordmark flex min-w-0 max-w-[min(44vw,18rem)] items-center gap-2 rounded-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
             <BrandMark className="h-8 w-8 shrink-0" alt="" />
-            <span className="truncate" title={presentation.siteName ?? PRODUCT_NAME}>{presentation.siteName ?? <>Luma Skill<span className="hidden sm:inline"> Hub</span></>}</span>
+            <span className="truncate" title={presentation.siteName ?? PRODUCT_NAME}>{presentation.siteName ?? PRODUCT_NAME}</span>
           </Link>
         ) : null}
 

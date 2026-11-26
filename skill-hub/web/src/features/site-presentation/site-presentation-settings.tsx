@@ -28,13 +28,14 @@ const settingsSnapshot = (value: SitePresentationSettings) => JSON.stringify(nor
 const sameSettings = (left: SitePresentationSettings, right: SitePresentationSettings) => settingsSnapshot(left) === settingsSnapshot(right)
 type Draft = SitePresentationResponse & { original: SitePresentationSettings }
 
-function AssetUpload({ name, value, disabled, onChange, onBusy }: { name: 'logoUrl' | 'faviconUrl'; value: string | null | undefined; disabled: boolean; onChange: (value: string | null) => void; onBusy: (busy: boolean) => void }) {
+function AssetUpload({ name, value, logoUrl, disabled, onChange, onBusy }: { name: 'logoUrl' | 'faviconUrl'; value: string | null | undefined; logoUrl?: string | null; disabled: boolean; onChange: (value: string | null) => void; onBusy: (busy: boolean) => void }) {
   const { t } = useTranslation()
+  const isLogo = name === 'logoUrl'
   const input = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   const [failedUrl, setFailedUrl] = useState<string>()
   const upload = useMutation({
-    mutationFn: sitePresentationApi.upload,
+    mutationFn: isLogo ? sitePresentationApi.uploadLogo : sitePresentationApi.upload,
     onMutate: () => { onBusy(true); setError('') },
     onSuccess: (response) => onChange(response.url),
     onError: (cause) => setError(cause instanceof Error ? cause.message : t('sitePresentation.uploadFailed')),
@@ -42,21 +43,30 @@ function AssetUpload({ name, value, disabled, onChange, onBusy }: { name: 'logoU
   })
   const receive = (file: File | undefined) => {
     if (!file || disabled || upload.isPending) return
-    if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > 2 * 1024 * 1024) { setError(t('sitePresentation.assetHelp')); return }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { setError(t('sitePresentation.logoInvalidType')); return }
+    if (isLogo && file.size >= 1_000_000) { setError(t('sitePresentation.logoInvalidSize')); return }
+    if (!isLogo && file.size > 2 * 1024 * 1024) { setError(t('sitePresentation.assetHelp')); return }
     upload.mutate(file)
   }
   const changeFile = (event: ChangeEvent<HTMLInputElement>) => { receive(event.target.files?.[0]); event.target.value = '' }
-  const src = presentationAssetUrl(value)
-  return <div className="min-w-0 space-y-2">
+  const src = presentationAssetUrl(value) ?? presentationAssetUrl(logoUrl)
+  const fallback = isLogo ? '/lumaskill-mark.svg' : '/favicon.svg'
+  const status = value ? 'currentImage' : logoUrl ? 'usesSiteLogo' : 'defaultImage'
+  const helpId = `presentation-${name}-help`
+  return <div className="flex min-w-0 flex-col gap-2">
     <Label htmlFor={`presentation-${name}`}>{t(`sitePresentation.${name}`)}</Label>
-    <div className="flex min-h-28 items-center gap-3 rounded-xl border border-dashed border-border bg-secondary/30 p-4" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); receive(event.dataTransfer.files[0]) }}>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-background">
-        <img src={src && failedUrl !== src ? src : withBasePath('/favicon.svg')} alt={t(`sitePresentation.${name}`)} className="h-9 w-9 object-contain" onError={() => setFailedUrl(src)} />
+    <div className="flex min-h-32 flex-1 items-start gap-3 rounded-xl border border-dashed border-border bg-secondary/30 p-4" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); receive(event.dataTransfer.files[0]) }}>
+      <div className="grid size-14 shrink-0 place-items-center rounded-lg border bg-background">
+        <img src={src && failedUrl !== src ? src : withBasePath(fallback)} alt={t(`sitePresentation.${name}`)} className="size-11 rounded-md object-contain" onError={() => setFailedUrl(src)} />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
-        <input ref={input} id={`presentation-${name}`} aria-label={t(`sitePresentation.${name}`)} type="file" accept="image/png,image/jpeg" disabled={disabled || upload.isPending} onChange={changeFile} className="sr-only" />
-        <p className="text-sm font-medium">{value ? t('sitePresentation.currentImage') : t('sitePresentation.defaultImage')}</p><p className="text-xs text-muted-foreground">{t('sitePresentation.assetTypes')}</p><Button type="button" size="sm" variant="outline" disabled={disabled || upload.isPending} onClick={() => input.current?.click()}><Upload aria-hidden className="h-4 w-4" />{upload.isPending ? t('sitePresentation.uploading') : t('sitePresentation.uploadImage')}</Button>
-        {value && <Button type="button" variant="ghost" size="sm" disabled={disabled || upload.isPending} onClick={() => onChange(null)}>{t('sitePresentation.removeAsset')}</Button>}
+        <input ref={input} id={`presentation-${name}`} aria-describedby={helpId} type="file" accept="image/png,image/jpeg" disabled={disabled || upload.isPending} onChange={changeFile} className="sr-only" />
+        <p className="text-sm font-medium">{t(`sitePresentation.${status}`)}</p>
+        <p id={helpId} className="text-xs leading-relaxed text-muted-foreground">{t(isLogo ? 'sitePresentation.logoHelp' : 'sitePresentation.faviconHelp')}</p>
+        <div className="flex flex-wrap items-center gap-1">
+          <Button type="button" size="sm" variant="outline" disabled={disabled || upload.isPending} onClick={() => input.current?.click()}><Upload aria-hidden className="h-4 w-4" />{upload.isPending ? t('sitePresentation.uploading') : t('sitePresentation.uploadImage')}</Button>
+          {value && <Button type="button" variant="ghost" size="sm" disabled={disabled || upload.isPending} onClick={() => { setError(''); onChange(null) }}>{t('sitePresentation.removeAsset')}</Button>}
+        </div>
       </div>
     </div>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -150,8 +160,11 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
           <div hidden={tab !== 'identity'} className="space-y-6">
             <SettingsSection title={t('sitePresentation.brandTitle')} help={t('sitePresentation.brandHelp')}>
               <div className="space-y-2"><Label htmlFor="presentation-name">{t('sitePresentation.siteName')}</Label><Input id="presentation-name" maxLength={80} value={value.siteName ?? ''} placeholder={PRODUCT_NAME} onChange={(event) => edit({ siteName: event.target.value || null })} /><p className="text-xs text-muted-foreground">{t('sitePresentation.defaultHelp')}</p></div>
-              <div className="grid gap-5 sm:grid-cols-2"><AssetUpload name="logoUrl" value={value.logoUrl} disabled={busy} onBusy={setUploading} onChange={(logoUrl) => edit({ logoUrl })} /><AssetUpload name="faviconUrl" value={value.faviconUrl} disabled={busy} onBusy={setUploading} onChange={(faviconUrl) => edit({ faviconUrl })} /></div>
-              <p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.assetHelp')}</p>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <AssetUpload name="logoUrl" value={value.logoUrl} disabled={busy} onBusy={setUploading} onChange={(logoUrl) => edit({ logoUrl })} />
+                <AssetUpload name="faviconUrl" value={value.faviconUrl} logoUrl={value.logoUrl} disabled={busy} onBusy={setUploading} onChange={(faviconUrl) => edit({ faviconUrl })} />
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.publicImageHelp')}</p>
             </SettingsSection>
             <SettingsSection title={t('sitePresentation.commonLinksTitle')} help={t('sitePresentation.commonLinksHelp')}>
               <div className="grid min-w-0 gap-4 sm:grid-cols-2">{(['documentation', 'repository'] as const).map(slot => <div key={slot} className="min-w-0 space-y-2"><Label htmlFor={`presentation-link-${slot}`}>{t(`sitePresentation.linkLabels.${slot}`)}</Label><Input id={`presentation-link-${slot}`} maxLength={2048} placeholder={PRESENTATION_LINKS[slot]} value={value.links[slot] ?? ''} onChange={(event) => edit({ links: { ...value.links, [slot]: event.target.value } })} /></div>)}</div>
