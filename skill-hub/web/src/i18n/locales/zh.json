@@ -644,7 +644,7 @@
     "admin": "管理员",
     "governance": "治理中心",
     "reports": "举报管理",
-    "githubSync": "技能同步",
+    "githubSync": "GitHub 同步",
     "deepDiscovery": "深度探索"
   },
   "deepDiscovery": {
@@ -2681,6 +2681,8 @@
   },
   "user": {
     "menu": {
+      "settings": "设置",
+      "adminSettings": "管理设置",
       "dashboard": "控制台",
       "mySkills": "我的技能",
       "mySuites": "我的套件",
@@ -4261,7 +4263,7 @@
     "title": "站点与首页",
     "intro": "调整品牌与首页内容，保存后对访客生效。",
     "brandTitle": "站点品牌",
-    "brandHelp": "统一用于导航、首页、页脚和浏览器标题。",
+    "brandHelp": "用于导航和浏览器标题。",
     "siteName": "站点名称",
     "defaultHelp": "留空时使用默认名称 Luma Skill Hub。",
     "logoUrl": "站点 Logo",
@@ -4396,14 +4398,14 @@
     "siteInformationHelp": "设置名称、图片和常用链接。",
     "commonLinksHelp": "留空使用原有链接。可填写完整网址或 /guide 这样的站内路径。",
     "introductionTitle": "首页介绍",
-    "introductionHelp": "修改首页顶部的标题和说明，留空使用原有文案。",
+    "introductionHelp": "修改首页标题。留空时使用默认标题。",
     "introductionHeading": "标题",
     "introductionDescription": "说明",
     "homeContentTitle": "首页模块",
     "homeContentHelp": "控制现有模块显隐，保留默认首页结构与顺序；页脚开关影响全站。",
     "restorePage": "恢复本页默认",
     "restorePageTitle": "恢复本页默认设置？",
-    "restorePageHelp": "重置站点名称和图片、首页标题与说明（所有语言）、本页的显示开关以及文档和源码链接。其他已保存的文案、卡片设置和链接不会改变。保存后才生效。",
+    "restorePageHelp": "重置站点名称和图片、首页标题（所有语言）、本页的显示开关以及文档和源码链接。其他已保存的文案、卡片设置和链接不会改变。保存后才生效。",
     "saveBeforeViewing": "保存后可在首页查看效果。",
     "viewHomepage": "查看已保存的首页",
     "previewReadOnly": "只读草稿预览",

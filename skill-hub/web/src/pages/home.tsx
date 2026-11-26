@@ -45,12 +45,6 @@ export function HomePage() {
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold leading-tight [overflow-wrap:anywhere]" style={{ color: 'hsl(var(--foreground))' }}>
             {settings.siteName ?? PRODUCT_NAME}
           </h1>
-          <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ color: 'hsl(var(--text-secondary))' }}>
-            {t('home.subtitle')}
-          </p>
-          <p className="text-base max-w-xl mx-auto" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            {t('home.description')}
-          </p>
         </div>
 
         <div className="max-w-2xl mx-auto animate-fade-up delay-1">

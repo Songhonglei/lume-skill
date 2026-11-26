@@ -109,20 +109,18 @@ describe('UserMenu navigation', () => {
     expect(html).not.toContain('user.menu.security')
   })
 
-  it('keeps administrator links available to administrators', () => {
-    const html = renderToStaticMarkup(
-      <UserMenu
-        user={{
-          displayName: 'Administrator',
-          platformRoles: ['SUPER_ADMIN'],
-        }}
-      />,
-    )
+  it.each([
+    ['SUPER_ADMIN', '/admin/system-config'],
+    ['USER_ADMIN', '/admin/users'],
+    ['AUDITOR', '/admin/audit-log'],
+    ['SKILL_ADMIN', '/dashboard/governance'],
+  ])('shows personal settings and the appropriate admin entry for %s', (role, entry) => {
+    const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Staff', platformRoles: [role] }} />)
 
-    expect(html).toContain('user.menu.users')
-    expect(html).toContain('user.menu.labels')
-    expect(html).toContain('user.menu.namespacesAdmin')
-    expect(html).toContain('user.menu.auditLog')
+    expect(html).toContain('user.menu.settings')
+    expect(html).toContain('href="/settings/profile"')
+    expect(html).toContain('user.menu.adminSettings')
+    expect(html).toContain(`href="${entry}"`)
   })
 
   it.each(['SKILL_ADMIN', 'USER_ADMIN', 'SUPER_ADMIN'])(
@@ -145,16 +143,11 @@ describe('UserMenu navigation', () => {
     expect(html).not.toContain('href="/dashboard/reviews"')
   })
 
-  it('shows security settings only for accounts that can change a password', () => {
-    const enabledHtml = renderToStaticMarkup(
-      <UserMenu user={{ displayName: 'Local User', platformRoles: ['USER'], canChangePassword: true }} />,
-    )
-    const disabledHtml = renderToStaticMarkup(
-      <UserMenu user={{ displayName: 'OAuth User', platformRoles: ['USER'], canChangePassword: false }} />,
-    )
-
-    expect(enabledHtml).toContain('user.menu.security')
-    expect(disabledHtml).not.toContain('user.menu.security')
+  it('shows personal settings without an administration link for a member', () => {
+    const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Member', platformRoles: ['USER'] }} />)
+    expect(html).toContain('href="/settings/profile"')
+    expect(html).toContain('user.menu.settings')
+    expect(html).not.toContain('user.menu.adminSettings')
   })
 
   it('always keeps logout available', () => {

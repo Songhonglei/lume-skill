@@ -51,7 +51,7 @@ export function MySuitesPage() {
 
   return (
     <div className="space-y-4 animate-fade-up">
-      <SuiteWorkspaceHeader title={t('suite.myTitle')} description={t('suite.workspace.description')}
+      <SuiteWorkspaceHeader title={t('suite.myTitle')}
         actions={<Button data-analytics-id="suite.create.open" size="sm" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>} />
       <div className="flex flex-wrap items-center gap-2">
         <form data-analytics-id="suite.owned.search" className="flex w-full items-center gap-2 sm:w-auto" onSubmit={event => { event.preventDefault(); update({ query: queryInput.trim() }) }}>

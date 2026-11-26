@@ -33,7 +33,7 @@ export function GovernancePage() {
     </section>
   }
   return <div className="space-y-9">
-    <DashboardPageHeader title={t('reviewCenter.governanceTitle')} subtitle={t('reviewCenter.governanceDescription')} actions={<Link to="/dashboard/reviews" className="inline-flex min-h-9 items-center rounded-lg border border-border/60 px-3 text-sm hover:bg-secondary">{t('reviewCenter.governanceReviewLink')}</Link>} />
+    <DashboardPageHeader title={t('reviewCenter.governanceTitle')} actions={<Link to="/dashboard/reviews" className="inline-flex min-h-9 items-center rounded-lg border border-border/60 px-3 text-sm hover:bg-secondary">{t('reviewCenter.governanceReviewLink')}</Link>} />
     {section('REPORT', reports, reportPage, setReportPage)}
     {section('PROMOTION', promotions, promotionPage, setPromotionPage)}
     <details className="rounded-lg border border-border p-5">

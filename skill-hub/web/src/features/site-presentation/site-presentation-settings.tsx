@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBlocker } from '@tanstack/react-router'
@@ -12,7 +13,6 @@ import { Switch } from '@/shared/ui/switch'
 import { SitePresentationPreview } from './site-presentation-preview'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
-import { Textarea } from '@/shared/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { withBasePath } from '@/shared/lib/base-path'
@@ -109,7 +109,6 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
     for (const section of sectionIds) sections[section] = { ...value.sections[section], enabled: defaults.sections[section].enabled }
     const texts = { ...sections.hero.texts }
     delete texts.title
-    delete texts.description
     sections.hero = { ...sections.hero, texts }
     const links = { ...value.links }
     delete links.documentation
@@ -117,10 +116,10 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
     edit({ siteName: defaults.siteName, logoUrl: defaults.logoUrl, faviconUrl: defaults.faviconUrl, sections, links })
     setResetOpen(false)
   }
-  const editIntroduction = (slot: 'title' | 'description', text: string) => {
+  const editIntroduction = (text: string) => {
     if (!value) return
     const hero = value.sections.hero
-    edit({ sections: { ...value.sections, hero: { ...hero, texts: { ...hero.texts, [slot]: { ...hero.texts[slot], [locale]: text } } } } })
+    edit({ sections: { ...value.sections, hero: { ...hero, texts: { ...hero.texts, title: { ...hero.texts.title, [locale]: text } } } } })
   }
   const busy = uploading || save.isPending || query.isFetching
   const callbacks = useRef({ onDirtyChange, onBusyChange })
@@ -150,7 +149,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
         <fieldset disabled={busy} className="min-w-0 space-y-6">
           <div hidden={tab !== 'identity'} className="space-y-6">
             <SettingsSection title={t('sitePresentation.brandTitle')} help={t('sitePresentation.brandHelp')}>
-              <div className="space-y-2"><Label htmlFor="presentation-name">{t('sitePresentation.siteName')}</Label><Input id="presentation-name" maxLength={80} value={value.siteName ?? ''} placeholder="SkillHub" onChange={(event) => edit({ siteName: event.target.value || null })} /><p className="text-xs text-muted-foreground">{t('sitePresentation.defaultHelp')}</p></div>
+              <div className="space-y-2"><Label htmlFor="presentation-name">{t('sitePresentation.siteName')}</Label><Input id="presentation-name" maxLength={80} value={value.siteName ?? ''} placeholder={PRODUCT_NAME} onChange={(event) => edit({ siteName: event.target.value || null })} /><p className="text-xs text-muted-foreground">{t('sitePresentation.defaultHelp')}</p></div>
               <div className="grid gap-5 sm:grid-cols-2"><AssetUpload name="logoUrl" value={value.logoUrl} disabled={busy} onBusy={setUploading} onChange={(logoUrl) => edit({ logoUrl })} /><AssetUpload name="faviconUrl" value={value.faviconUrl} disabled={busy} onBusy={setUploading} onChange={(faviconUrl) => edit({ faviconUrl })} /></div>
               <p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.assetHelp')}</p>
             </SettingsSection>
@@ -161,8 +160,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
           <div hidden={tab !== 'home'} className="space-y-6">
             <SettingsSection title={t('sitePresentation.introductionTitle')} help={t('sitePresentation.introductionHelp')}>
               <div className="space-y-2"><Label htmlFor="presentation-language">{t('sitePresentation.textLanguage')}</Label><Select value={locale} onValueChange={setLocale}><SelectTrigger id="presentation-language" className="w-full sm:max-w-48"><SelectValue /></SelectTrigger><SelectContent>{LOCALES.map(language => <SelectItem key={language} value={language}>{t(`sitePresentation.language.${language}`)}</SelectItem>)}</SelectContent></Select><p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.languageHelp')}</p></div>
-              <div className="space-y-2"><Label htmlFor="presentation-hero-title">{t('sitePresentation.introductionHeading')}</Label><Input id="presentation-hero-title" maxLength={160} value={value.sections.hero.texts.title?.[locale] ?? ''} placeholder={presentationText(defaultSitePresentation(), 'hero', 'title', locale, key => t(key, { lng: locale }))} onChange={event => editIntroduction('title', event.target.value)} /></div>
-              <div className="space-y-2"><Label htmlFor="presentation-hero-description">{t('sitePresentation.introductionDescription')}</Label><Textarea id="presentation-hero-description" maxLength={1000} className="min-h-24" value={value.sections.hero.texts.description?.[locale] ?? ''} placeholder={presentationText(defaultSitePresentation(), 'hero', 'description', locale, key => t(key, { lng: locale }))} onChange={event => editIntroduction('description', event.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="presentation-hero-title">{t('sitePresentation.introductionHeading')}</Label><Input id="presentation-hero-title" maxLength={160} value={value.sections.hero.texts.title?.[locale] ?? ''} placeholder={presentationText(defaultSitePresentation(), 'hero', 'title', locale, key => t(key, { lng: locale }))} onChange={event => editIntroduction(event.target.value)} /></div>
             </SettingsSection>
             <SettingsSection title={t('sitePresentation.homeContentTitle')} help={t('sitePresentation.homeContentHelp')}>
               <div className="grid overflow-hidden rounded-xl border sm:grid-cols-2">{sectionIds.map((section, index) => <div key={section} className="flex min-w-0 items-center gap-3 border-b px-4 py-4 last:border-b-0 sm:odd:border-r">

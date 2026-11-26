@@ -86,7 +86,6 @@ export function MyNamespacesPage() {
     <div className="space-y-8 animate-fade-up">
       <DashboardPageHeader
         title={t('myNamespaces.title')}
-        subtitle={t('myNamespaces.subtitle')}
         actions={canCreateNamespace ? (
           <CreateNamespaceDialog>
             <Button data-analytics-id="namespace.create.open">{t('myNamespaces.create')}</Button>

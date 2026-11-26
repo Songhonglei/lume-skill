@@ -119,7 +119,7 @@ export function GithubDeepDiscoveryPage() {
   return <div className="github-sync-surface space-y-5 animate-fade-up">
     <div className="sync-hero flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-3"><Compass className="mt-1 h-6 w-6 shrink-0" style={{ color: 'var(--sync-teal)' }} aria-hidden="true" /><div>
-        <DashboardPageHeader title={t('deepDiscovery.title')} subtitle={t('deepDiscovery.subtitle')} />
+        <DashboardPageHeader title={t('deepDiscovery.title')} />
         <span className="mt-2 inline-flex rounded border px-2 py-0.5 text-xs text-muted-foreground">@github</span>
       </div></div>
       <div className="flex items-center gap-2">

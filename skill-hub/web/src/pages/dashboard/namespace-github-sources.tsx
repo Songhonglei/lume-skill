@@ -74,7 +74,7 @@ export function NamespaceGithubSourcesPage() {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      <DashboardPageHeader title={t('githubSync.teamTitle', { slug })} subtitle={t('githubSync.teamSubtitle')} />
+      <DashboardPageHeader title={t('githubSync.teamTitle', { slug })} />
       <Card className="p-5 space-y-3">
         <h2 className="text-lg font-semibold">{t('githubSync.addRepository')}</h2>
         <form data-analytics-id="github.namespace.create" onSubmit={create} className="flex flex-wrap items-end gap-3">

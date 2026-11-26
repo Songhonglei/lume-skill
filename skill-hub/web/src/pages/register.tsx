@@ -177,7 +177,6 @@ export function RegisterPage() {
       <div className="space-y-6 animate-fade-up">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('register.title')}</h1>
-          <p className="text-sm text-muted-foreground sm:text-base">{t('register.subtitle')}</p>
         </div>
 
         {capabilitiesError ? <p role="alert" className="text-sm text-red-600">{t('systemConfig.capabilitiesUnavailable')}</p> : null}

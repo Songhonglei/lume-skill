@@ -4,3 +4,6 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    environment:
+      SKILLHUB_WEB_ANALYTICS_CONFIG: ${LUMA_SKILL_HUB_ANALYTICS_CONFIG:-}
+      SKILLHUB_WEB_ANALYTICS_UPSTREAM: ${LUMA_SKILL_HUB_ANALYTICS_UPSTREAM:-}

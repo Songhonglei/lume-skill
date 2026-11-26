@@ -368,7 +368,7 @@ export function PublishPage() {
       />}
       <div hidden={!!submissionState} inert={!!submissionState} className="space-y-8">
         <div id="publish-form-heading" tabIndex={-1}>
-          <DashboardPageHeader title={t(isUpdate ? 'publish.updateTitle' : 'publish.title')} subtitle={t(isUpdate ? 'publish.updateSubtitle' : 'publish.subtitle')} />
+          <DashboardPageHeader title={t(isUpdate ? 'publish.updateTitle' : 'publish.title')} />
         </div>
 
         {attempted && !avatarOnly && missingFields.length > 0 && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-destructive">

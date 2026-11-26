@@ -9,6 +9,13 @@ export const CONSOLE_CONTENT_CLASS_NAME = `${APP_FRAME_CLASS_NAME} min-h-[calc(1
 export const CONSOLE_SIDEBAR_ROW_CLASS_NAME = 'flex flex-col lg:flex-row gap-0 [&>aside]:py-3 lg:[&>aside]:pr-5 lg:[&>aside]:pt-7 lg:[&>aside]:pb-6 lg:[&>aside]:border-r lg:[&>aside]:border-border'
 export const CONSOLE_SIDEBAR_CONTENT_CLASS_NAME = 'flex-1 min-w-0 pb-7 pt-[18px] lg:pl-8 lg:pt-7'
 
+export function consoleArea(pathname: string) {
+  if (pathname.startsWith('/settings/') || pathname === '/dashboard/tokens') return 'personal'
+  if (pathname.startsWith('/admin/') || pathname === '/github'
+    || ['/dashboard/governance', '/dashboard/reports', '/dashboard/promotions', '/dashboard/github-sync'].includes(pathname)) return 'admin'
+  return 'workspace'
+}
+
 export const DASHBOARD_PATH_PREFIXES = ['/dashboard', '/settings/'] as const
 export const AUTH_ENTRY_PATHS = ['/login', '/register', '/reset-password'] as const
 export const SPLIT_AUTH_PATHS = ['/login', '/register'] as const
@@ -39,7 +46,7 @@ export function getAppMainContentLayout(pathname: string): AppMainContentLayout 
   }
 
   if (pathname !== '/dashboard/publish' && (
-    pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/settings/')
+    pathname === '/dashboard' || pathname.startsWith('/dashboard/') || consoleArea(pathname) !== 'workspace'
   )) {
     return {
       mainClassName: CONSOLE_MAIN_CLASS_NAME,

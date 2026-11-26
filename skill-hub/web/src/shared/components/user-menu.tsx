@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
+import { getAdminSettingsEntry } from '@/shared/lib/admin-settings'
 import { canAccessGlobalReviewCenter } from '@/features/review/review-paths'
 import { withBasePath } from '@/shared/lib/base-path'
 import { cn } from '@/shared/lib/utils'
@@ -13,7 +14,6 @@ interface User {
   avatarUrl?: string
   platformRoles?: string[]
   oauthProvider?: string
-  canChangePassword?: boolean
 }
 
 interface UserMenuProps {
@@ -29,10 +29,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isClickOpen, setIsClickOpen] = useState(false)
 
-  const hasRole = (role: string) => user.platformRoles?.includes(role) ?? false
-  const isUserAdmin = hasRole('USER_ADMIN') || hasRole('SUPER_ADMIN')
-  const isAuditor = hasRole('AUDITOR') || hasRole('SUPER_ADMIN')
-  const isSuperAdmin = hasRole('SUPER_ADMIN')
+  const adminEntry = getAdminSettingsEntry(user.platformRoles)
   const canReview = canAccessGlobalReviewCenter(user.platformRoles)
   const open = isHovered || isClickOpen
 
@@ -161,40 +158,17 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
             <Link data-analytics-id="navigation.dashboard.open" to="/dashboard" className={menuItemClassName} onClick={closeMenu}>
               {t('user.menu.dashboard')}
             </Link>
-            {user.canChangePassword === true ? (
-              <Link data-analytics-id="account.security.open" to="/settings/security" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.security')}
-              </Link>
-            ) : null}
+            <Link data-analytics-id="account.profile.open" to="/settings/profile" className={menuItemClassName} onClick={closeMenu}>
+              {t('user.menu.settings')}
+            </Link>
             {canReview ? (
               <Link data-analytics-id="review.queue.open" to="/dashboard/reviews" className={menuItemClassName} onClick={closeMenu}>
                 {t('reviewCenter.title')}
               </Link>
             ) : null}
-            {canReview || isUserAdmin || isAuditor || isSuperAdmin ? <div className="-mx-1 my-1 h-px bg-muted" /> : null}
-            {isUserAdmin ? (
-              <Link data-analytics-id="admin.users.open" to="/admin/users" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.users')}
-              </Link>
-            ) : null}
-            {isSuperAdmin ? (
-              <Link data-analytics-id="admin.labels.open" to="/admin/labels" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.labels')}
-              </Link>
-            ) : null}
-            {isSuperAdmin ? (
-              <Link data-analytics-id="admin.settings.open" to="/admin/system-config" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.systemConfig')}
-              </Link>
-            ) : null}
-            {isSuperAdmin ? (
-              <Link data-analytics-id="admin.namespaces.open" to="/admin/namespaces" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.namespacesAdmin')}
-              </Link>
-            ) : null}
-            {isAuditor ? (
-              <Link data-analytics-id="admin.audit.open" to="/admin/audit-log" className={menuItemClassName} onClick={closeMenu}>
-                {t('user.menu.auditLog')}
+            {adminEntry ? (
+              <Link data-analytics-id="admin.settings.open" to={adminEntry} className={menuItemClassName} onClick={closeMenu}>
+                {t('user.menu.adminSettings')}
               </Link>
             ) : null}
             <div className="-mx-1 my-1 h-px bg-muted" />

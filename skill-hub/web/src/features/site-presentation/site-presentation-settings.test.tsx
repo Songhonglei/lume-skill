@@ -136,7 +136,7 @@ describe('site presentation settings', () => {
     vi.mocked(sitePresentationApi.update).mockImplementation(async request => ({ ...request, version: 8 }))
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.save' }))
     const sections = Object.fromEntries(Object.entries(settings.sections).map(([id, config]) => [id, { ...config, enabled: true }]))
-    sections.hero = { ...sections.hero, texts: { badge: { en: 'Preserve badge' } } }
+    sections.hero = { ...sections.hero, texts: { description: settings.sections.hero.texts.description, badge: { en: 'Preserve badge' } } }
     await waitFor(() => expect(sitePresentationApi.update).toHaveBeenCalledWith({ settings: { ...settings, siteName: null, logoUrl: null, faviconUrl: null, sections, links: { cliPackage: 'https://team.example/cli', community: '/community' } }, version: 7 }))
   })
 

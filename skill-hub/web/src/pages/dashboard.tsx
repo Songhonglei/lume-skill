@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/features/auth/use-auth'
+import type { useAuth } from '@/features/auth/use-auth'
 import { APP_SHELL_PAGE_CLASS_NAME } from '@/app/page-shell-style'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import {
   Star, Heart, Package, Boxes, Key, Shield, Flag, Globe,
-  UserCog, Lock, Bell, Clock, ChevronDown, ChevronRight, Github,
+  UserCog, Lock, Bell, Clock, ChevronDown, ChevronRight, Github, Settings, Tags, ClipboardList, Users,
 } from 'lucide-react'
 
 /**
@@ -24,7 +24,7 @@ interface SidebarItem {
   analyticsId?: string
   review?: boolean
   admin?: boolean
-  superAdmin?: boolean
+  roles?: readonly string[]
   passwordCapability?: boolean
   badge?: string
 }
@@ -34,15 +34,19 @@ interface SidebarGroup {
   items: SidebarItem[]
 }
 
-export const SIDEBAR_GROUPS: SidebarGroup[] = [
+export const PERSONAL_SETTINGS_GROUPS: SidebarGroup[] = [
   {
-    label: 'sidebar.account',
+    label: 'user.menu.settings',
     items: [
       { key: 'profile', icon: UserCog, label: 'sidebar.profile', to: '/settings/profile', analyticsId: 'account.profile.open' },
       { key: 'security', icon: Lock, label: 'sidebar.security', to: '/settings/security', analyticsId: 'account.security.open', passwordCapability: true },
+      { key: 'tokens', icon: Key, label: 'sidebar.tokens', to: '/dashboard/tokens', analyticsId: 'account.tokens.open' },
       { key: 'notifications', icon: Bell, label: 'sidebar.notifications', to: '/settings/notifications', analyticsId: 'notification.settings.open' },
     ],
   },
+]
+
+export const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'sidebar.skillsAndData',
     items: [
@@ -51,34 +55,31 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { key: 'namespaces', icon: Globe, label: 'sidebar.namespaces', to: '/dashboard/namespaces', analyticsId: 'namespace.list.open' },
       { key: 'stars', icon: Star, label: 'sidebar.stars', to: '/dashboard/stars', analyticsId: 'navigation.starred.open' },
       { key: 'subscriptions', icon: Heart, label: 'sidebar.subscriptions', to: '/dashboard/subscriptions', analyticsId: 'navigation.subscriptions.open' },
-      { key: 'tokens', icon: Key, label: 'sidebar.tokens', to: '/dashboard/tokens', analyticsId: 'account.tokens.open' },
       { key: 'reviewProgress', icon: Clock, label: 'sidebar.reviewProgress', to: '/dashboard/review-progress', analyticsId: 'review.progress.open' },
     ],
   },
   {
-    label: 'sidebar.admin',
     items: [
       { key: 'reviewCenter', icon: Shield, label: 'reviewCenter.title', to: '/dashboard/reviews', analyticsId: 'review.queue.open', review: true },
-      { key: 'governance', icon: Flag, label: 'sidebar.governance', to: '/dashboard/governance', analyticsId: 'governance.center.open', admin: true },
-      { key: 'githubSync', icon: Github, label: 'sidebar.githubSync', to: '/dashboard/github-sync', analyticsId: 'github.sync.open', superAdmin: true },
     ],
   },
 ]
 
-// Flatten for backward compatibility with layout.tsx
-const SIDEBAR_NAV_ITEMS = SIDEBAR_GROUPS.flatMap((g) => g.items)
-
-export const SIDEBAR_NAV = SIDEBAR_NAV_ITEMS.map(({ key, icon, label, to, review, admin, superAdmin, passwordCapability }) => ({
-  key,
-  icon,
-  label,
-  to,
-  review,
-  admin,
-  superAdmin,
-  passwordCapability,
-  exact: false,
-}))
+export const ADMIN_SETTINGS_GROUPS: SidebarGroup[] = [
+  {
+    label: 'user.menu.adminSettings',
+    items: [
+      { key: 'systemConfig', icon: Settings, label: 'user.menu.systemConfig', to: '/admin/system-config', analyticsId: 'admin.settings.open', roles: ['SUPER_ADMIN'] },
+      { key: 'users', icon: Users, label: 'user.menu.users', to: '/admin/users', analyticsId: 'admin.users.open', roles: ['USER_ADMIN', 'SUPER_ADMIN'] },
+      { key: 'labels', icon: Tags, label: 'user.menu.labels', to: '/admin/labels', analyticsId: 'admin.labels.open', roles: ['SUPER_ADMIN'] },
+      { key: 'namespacesAdmin', icon: Globe, label: 'user.menu.namespacesAdmin', to: '/admin/namespaces', analyticsId: 'admin.namespaces.open', roles: ['SUPER_ADMIN'] },
+      { key: 'governance', icon: Flag, label: 'sidebar.governance', to: '/dashboard/governance', analyticsId: 'governance.center.open', admin: true },
+      { key: 'githubSync', icon: Github, label: 'sidebar.githubSync', to: '/dashboard/github-sync', analyticsId: 'github.sync.open', roles: ['SUPER_ADMIN'] },
+      { key: 'githubCatalog', icon: Github, label: 'nav.githubSkills', to: '/github', analyticsId: 'navigation.github.open', roles: ['SUPER_ADMIN'] },
+      { key: 'audit', icon: ClipboardList, label: 'user.menu.auditLog', to: '/admin/audit-log', analyticsId: 'admin.audit.open', roles: ['AUDITOR', 'SUPER_ADMIN'] },
+    ],
+  },
+]
 
 /**
  * Overview cards for the Dashboard home.
@@ -87,10 +88,7 @@ export const SIDEBAR_NAV = SIDEBAR_NAV_ITEMS.map(({ key, icon, label, to, review
 const OVERVIEW_CARDS = [
   { key: 'skills', icon: Package, label: 'overview.mySkills', to: '/dashboard/skills', analyticsId: 'navigation.owned.skills', desc: 'overview.mySkillsDesc' },
   { key: 'suites', icon: Boxes, label: 'overview.mySuites', to: '/dashboard/suites', analyticsId: 'navigation.owned.suites', desc: 'overview.mySuitesDesc' },
-  { key: 'tokens', icon: Key, label: 'overview.tokens', to: '/dashboard/tokens', analyticsId: 'account.tokens.open', desc: 'overview.tokensDesc' },
   { key: 'stars', icon: Star, label: 'overview.stars', to: '/dashboard/stars', analyticsId: 'navigation.starred.open', desc: 'overview.starsDesc' },
-  { key: 'profile', icon: UserCog, label: 'overview.profile', to: '/settings/profile', analyticsId: 'account.profile.open', desc: 'overview.profileDesc' },
-  { key: 'security', icon: Lock, label: 'overview.security', to: '/settings/security', analyticsId: 'account.security.open', desc: 'overview.securityDesc' },
 ] as const
 
 /**
@@ -98,12 +96,11 @@ const OVERVIEW_CARDS = [
  */
 export function DashboardPage() {
   const { t } = useTranslation()
-  const { user } = useAuth()
   return (
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
-      <DashboardPageHeader title={t('dashboard.title')} subtitle={t('dashboard.subtitle')} />
+      <DashboardPageHeader title={t('dashboard.title')} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {OVERVIEW_CARDS.filter((card) => card.key !== 'security' || user?.canChangePassword === true).map((card) => {
+      {OVERVIEW_CARDS.map((card) => {
         const Icon = card.icon
         return (
           <Link data-analytics-id={card.analyticsId}
@@ -158,7 +155,7 @@ export function DashboardSidebar({
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(open => !open)}
         >
-          <span>{t('dashboard.navigation')}</span>
+          <span>{groups[0]?.label === 'user.menu.settings' || groups[0]?.label === 'user.menu.adminSettings' ? t(groups[0].label) : t('dashboard.navigation')}</span>
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             {activeItem ? t(activeItem.label) : null}
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} aria-hidden="true" />

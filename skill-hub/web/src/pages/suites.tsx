@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Boxes } from 'lucide-react'
 import { ResourceCard } from '@/features/suite/resource-card'
 import { useResourceSearch } from '@/shared/hooks/use-suite-queries'
 import { useVisibleLabels } from '@/shared/hooks/use-label-queries'
@@ -35,11 +34,7 @@ export function SuitesPage() {
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-primary">
-            <Boxes className="h-4 w-4" /> {t('suite.listTitle')}
-          </div>
-          <h1 className="text-4xl font-bold">{t('suite.listTitle')}</h1>
-          <p className="mt-2 text-muted-foreground">{t('suite.listDescription')}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('suite.listTitle')}</h1>
         </div>
         <Button data-analytics-id="suite.create.open" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>
       </div>

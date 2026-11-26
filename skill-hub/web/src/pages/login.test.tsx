@@ -123,7 +123,7 @@ describe('LoginPage', () => {
     const html = renderToStaticMarkup(<LoginPage />)
 
     expect(html).toContain('login.title')
-    expect(html).toContain('login.subtitle')
+    expect(html).not.toContain('login.subtitle')
     expect(html).toContain('login.submit')
     expect(html).not.toContain('login.tabEnterprise')
     expect(html).toContain('login.register')

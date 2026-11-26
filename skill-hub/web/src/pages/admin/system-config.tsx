@@ -110,8 +110,20 @@ export function SystemConfigPage() {
   }
   const ruleBusy = createRule.isPending || updateRule.isPending
 
-  return <div className="grid items-start gap-8 pb-12 lg:grid-cols-[180px_minmax(0,1fr)]">
-    <aside className="space-y-6 border-b pb-5 lg:sticky lg:top-24 lg:border-b-0 lg:border-r lg:pr-5"><div className="space-y-2"><h1 className="text-2xl font-semibold">{t('systemConfig.title')}</h1><p className="text-sm leading-5 text-muted-foreground">{t('systemConfig.intro')}</p></div><nav aria-label={t('recommendations.settingsNavigation')} className="flex flex-wrap gap-1 lg:flex-col lg:items-stretch">{sections.map(id => { const Icon = { site: Globe, recommendations: Tags, access: ShieldCheck, operations: Send }[id]; return <Button key={id} variant={section === id ? 'secondary' : 'ghost'} className="justify-start" aria-pressed={section === id} disabled={busy} onClick={() => changeSection(id)}><Icon aria-hidden className="h-4 w-4 shrink-0" />{t(`recommendations.navigation.${id}`)}</Button> })}</nav><p className="hidden border-t pt-4 text-xs leading-5 text-muted-foreground lg:block">{t('systemConfig.independentSettings')}</p></aside>
+  return <div className="space-y-6 pb-12">
+    <header className="space-y-4">
+      <h1 className="text-2xl font-semibold">{t('systemConfig.title')}</h1>
+      <nav aria-label={t('recommendations.settingsNavigation')} className="flex flex-wrap gap-1 border-b pb-2">
+        {sections.map(id => {
+          const Icon = { site: Globe, recommendations: Tags, access: ShieldCheck, operations: Send }[id]
+          return (
+            <Button key={id} variant={section === id ? 'soft' : 'ghost'} aria-pressed={section === id} disabled={busy} onClick={() => changeSection(id)}>
+              <Icon aria-hidden className="h-4 w-4 shrink-0" />{t(`recommendations.navigation.${id}`)}
+            </Button>
+          )
+        })}
+      </nav>
+    </header>
     <div className="min-w-0 space-y-6">
       {error && <p role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
       {message && <p role="status" className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">{message}</p>}

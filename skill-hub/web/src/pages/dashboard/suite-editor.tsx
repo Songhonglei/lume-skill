@@ -302,7 +302,6 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           : creatingVersion
             ? t('suite.newVersionTitle')
             : t('suite.createTitle')}
-        description={t('suite.editorDescription')}
         eyebrow={existing ? `@${existing.namespace}/${existing.slug}@${existing.version}` : undefined}
         backLabel={t(existing ? 'suite.bundle.backToSuite' : 'suite.management.backToSuites')}
         onBack={goBack}

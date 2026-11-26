@@ -356,7 +356,6 @@ export function MySkillsPage() {
     <div className={`${styles.page} animate-fade-up`}>
       <DashboardPageHeader
         title={t('mySkills.title')}
-        subtitle={t('mySkills.subtitle')}
         actions={<Button size="sm" className={styles.publishButton} onClick={() => navigate({ to: '/dashboard/publish' })}>
           <Plus aria-hidden="true" className="h-4 w-4" />{t('mySkills.publishNew')}
         </Button>}
