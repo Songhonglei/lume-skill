@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ArrowDown, ArrowUp, CircleDot, Plus, Search, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus, Search, Trash2, X } from 'lucide-react'
 import type { SkillSuiteDraftInput, SkillSuiteMemberCandidate, SkillSuiteMemberInput } from '@/api/types'
 import {
   useCreateSuite,
@@ -18,6 +18,7 @@ import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Textarea } from '@/shared/ui/textarea'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { toast } from '@/shared/lib/toast'
 import {
@@ -295,7 +296,7 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
   }
 
   return (
-    <div className="space-y-5 pb-28 animate-fade-up">
+    <div className="mx-auto w-full max-w-5xl space-y-5 pb-20 animate-fade-up">
       <SuiteWorkspaceHeader
         title={editing
           ? t('suite.editTitle')
@@ -344,7 +345,8 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
       ) : (
         <>
 
-      <Card className="grid gap-4 p-4 md:grid-cols-2">
+      <Card className="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
+        <h2 className="text-base font-semibold md:col-span-2">{t('suite.management.basicInfo')}</h2>
         <div className="space-y-2">
           <Label htmlFor="suite-namespace">{t('suite.namespace')}</Label>
           <Select value={namespace} onValueChange={(value) => {
@@ -360,7 +362,6 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           <Label htmlFor="suite-slug">{t('suite.slug')}</Label>
           <Input
             ref={slugInputRef}
-            className="h-9"
             id="suite-slug"
             value={slug}
             disabled={loadingSource}
@@ -377,7 +378,6 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           <Label htmlFor="suite-name">{t('suite.name')}</Label>
           <Input
             ref={nameInputRef}
-            className="h-9"
             id="suite-name"
             value={displayName}
             aria-invalid={nameRequired || undefined}
@@ -394,7 +394,6 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           <Input
             ref={versionInputRef}
             id="suite-version"
-            className="h-9"
             value={version}
             disabled={editing}
             aria-invalid={versionRequired || undefined}
@@ -443,40 +442,29 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
               · {t('suite.requiredForPublish')}
             </span>
           </Label>
-          <p className="text-xs text-muted-foreground">{t('suite.overviewHint')}</p>
-          <div className="grid gap-1.5 rounded-lg border border-border/60 bg-secondary/20 p-2.5 text-xs text-muted-foreground sm:grid-cols-2">
-            {[
-              'suite.overviewPromptScenario',
-              'suite.overviewPromptPreparation',
-              'suite.overviewPromptSequence',
-              'suite.overviewPromptInputsOutputs',
-              'suite.overviewPromptBoundaries',
-            ].map(prompt => (
-              <span key={prompt} className="flex gap-1.5">
-                <CircleDot className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden="true" />
-                {t(prompt)}
-              </span>
-            ))}
-          </div>
           <Textarea
             id="suite-overview"
             aria-label={t('suite.overview')}
             value={overview}
             onChange={(event) => setOverview(event.target.value)}
             maxLength={20000}
-            rows={8}
+            rows={5}
           />
+          <details className="text-xs text-muted-foreground">
+            <summary className="w-fit cursor-pointer rounded-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">{t('suite.overviewGuide')}</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {['Scenario', 'Preparation', 'Sequence', 'InputsOutputs', 'Boundaries'].map(prompt => (
+                <li key={prompt}>{t(`suite.overviewPrompt${prompt}`)}</li>
+              ))}
+            </ul>
+          </details>
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="suite-changelog">{t('suite.changelog')}</Label>
           <Textarea id="suite-changelog" value={changelog} onChange={(event) => setChangelog(event.target.value)} rows={2} />
         </div>
-      </Card>
-
-      <Card className="p-4" aria-live="polite">
-        <h2 className="text-sm font-semibold">{t('suite.publishReadinessTitle')}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t('suite.publishReadinessDescription')}</p>
-        <div className="mt-2.5 flex flex-wrap gap-2 text-xs">
+        <div aria-live="polite" className="flex flex-wrap items-center gap-2 border-t pt-3 text-xs md:col-span-2">
+          <span className="font-medium">{t('suite.publishReadinessTitle')}</span>
           <span className={summary.trim() ? 'text-emerald-600' : 'text-amber-700 dark:text-amber-400'}>
             {summary.trim() ? t('suite.summaryComplete') : t('suite.summaryIncomplete')}
           </span>
@@ -500,15 +488,7 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
 
       <Card className="overflow-hidden">
         <div className="border-b p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">{t('suite.selectSkills')}</h2>
-              <p className="mt-1 text-xs text-muted-foreground">{t('suite.memberSearchDescription')}</p>
-            </div>
-            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-700 dark:text-blue-300">
-              {t('suite.searchOnSubmitHint')}
-            </span>
-          </div>
+          <h2 className="text-base font-semibold">{t('suite.selectSkills')}</h2>
           <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label={t('suite.memberSearchScope')}>
             {([
               ['namespace', 'suite.scopeNamespace'],
@@ -537,9 +517,9 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="relative min-w-0 flex-1">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input data-analytics-id="suite.candidate.search"
-                className="h-9 pl-9"
+                className="pl-9"
                 value={candidateInput}
                 onChange={(event) => setCandidateInput(event.target.value)}
                 onKeyDown={(event) => {
@@ -548,7 +528,7 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
                 placeholder={candidateScope === 'coordinate' ? '@global/skill-name' : t('suite.searchSkills')}
               />
             </div>
-            <Button data-analytics-id="suite.candidate.search" size="sm" className="h-9 px-5" disabled={marketSearchRequiresKeyword} onClick={runCandidateSearch}>
+            <Button data-analytics-id="suite.candidate.search" disabled={marketSearchRequiresKeyword} onClick={runCandidateSearch}>
               {t('suite.search')}
             </Button>
           </div>
@@ -557,60 +537,61 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           </p>
         </div>
 
-        <div className="min-h-[220px]">
-          {isLoadingCandidates ? (
-            <div className="m-4 h-28 animate-shimmer rounded-lg" />
-          ) : !candidateSearchStarted ? (
-            <div className="flex min-h-[210px] flex-col items-center justify-center px-6 py-8 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              </div>
-              <h3 className="mt-3 text-sm font-semibold">{t('suite.memberSearchEmptyTitle')}</h3>
-              <p className="mt-1.5 max-w-md text-xs leading-5 text-muted-foreground">{t('suite.memberSearchEmptyDescription')}</p>
-            </div>
-          ) : filteredCandidates.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">{t('suite.noCandidates')}</p>
-          ) : (
-            <div className="max-h-[420px] overflow-auto">
-              <div className="sticky top-0 z-10 grid min-w-[760px] grid-cols-[minmax(220px,1.2fr)_minmax(180px,1fr)_120px_120px] border-b bg-muted/95 px-4 py-2 text-xs font-medium text-muted-foreground backdrop-blur">
-                <span>{t('suite.memberSkillColumn')}</span>
-                <span>{t('suite.memberDescriptionColumn')}</span>
-                <span>{t('suite.memberVersionColumn')}</span>
-                <span className="text-right">{t('suite.memberActionColumn')}</span>
-              </div>
-              {filteredCandidates.map((candidate) => {
-                const alreadySelected = selectedIds.has(candidate.skillVersionId)
-                const sameSkillDifferentVersion = selectedSkillIds.has(candidate.skillId) && !alreadySelected
-                return (
-                  <button data-analytics-id={sameSkillDifferentVersion ? 'suite.member.version.replace' : 'suite.member.add'}
-                    key={candidate.skillVersionId}
-                    type="button"
-                    className="grid min-w-[760px] w-full grid-cols-[minmax(220px,1.2fr)_minmax(180px,1fr)_120px_120px] items-center gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-55"
-                    disabled={alreadySelected}
-                    onClick={() => sameSkillDifferentVersion
-                      ? setPendingVersionUpdate(candidate)
-                      : addCandidate(candidate)}
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{candidate.displayName}</span>
-                      <span className="block truncate text-xs text-muted-foreground">@{candidate.namespace}/{candidate.slug}</span>
-                    </span>
-                    <span className="min-w-0 text-xs text-muted-foreground">
-                      <span className="inline-flex rounded-full bg-purple-500/10 px-2 py-0.5 text-purple-700 dark:text-purple-300">{candidate.visibility}</span>
-                      {candidate.recommended ? <span className="ml-1 inline-flex rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-700 dark:text-emerald-300">{t('suite.recommendedCandidate')}</span> : null}
-                    </span>
-                    <span className="font-mono text-xs">v{candidate.version}</span>
-                    <span className="flex justify-end">
-                      <span className={sameSkillDifferentVersion ? 'text-xs text-primary' : 'inline-flex items-center gap-1 rounded-md border border-primary/30 px-2 py-1 text-xs text-primary'}>
-                        {sameSkillDifferentVersion ? t('suite.updatePinnedVersion') : <><Plus className="h-3.5 w-3.5" aria-hidden="true" />{t('suite.addMember')}</>}
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        {isLoadingCandidates ? (
+          <div role="status" aria-label={t('common.loading')} className="m-4 h-24 animate-shimmer rounded-lg" />
+        ) : !candidateSearchStarted ? (
+          <p className="px-4 py-5 text-center text-xs text-muted-foreground">{t('suite.memberSearchEmptyTitle')}</p>
+        ) : filteredCandidates.length === 0 ? (
+          <p className="px-4 py-5 text-center text-sm text-muted-foreground">{t('suite.noCandidates')}</p>
+        ) : (
+          <div data-density="compact" className="[&>div]:max-h-[25rem]">
+            <Table aria-label={t('suite.selectSkills')}>
+              <TableHeader className="sticky top-0 z-10 bg-muted max-sm:sr-only">
+                <TableRow>
+                  <TableHead scope="col">{t('suite.memberSkillColumn')}</TableHead>
+                  <TableHead scope="col" className="w-28">{t('suite.visibility')}</TableHead>
+                  <TableHead scope="col" className="w-28">{t('suite.memberVersionColumn')}</TableHead>
+                  <TableHead scope="col" className="w-32 text-right">{t('suite.memberActionColumn')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCandidates.map(candidate => {
+                  const alreadySelected = selectedIds.has(candidate.skillVersionId)
+                  const replaceVersion = !alreadySelected && selectedSkillIds.has(candidate.skillId)
+                  const action = t(alreadySelected ? 'suite.memberAdded' : replaceVersion ? 'suite.updatePinnedVersion' : 'suite.addMember')
+                  const visibilityLabel = t(candidate.visibility === 'PUBLIC' ? 'suite.visibilityPublic' : candidate.visibility === 'PRIVATE' ? 'suite.visibilityPrivate' : 'suite.visibilityNamespace')
+                  return (
+                    <TableRow key={candidate.skillVersionId} className="max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-x-2 max-sm:px-3 max-sm:py-1">
+                      <TableCell className="min-w-0 max-sm:p-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                          <span className="font-medium [overflow-wrap:anywhere]">{candidate.displayName}</span>
+                          {candidate.recommended && <span className="text-xs text-muted-foreground">{t('suite.recommendedCandidate')}</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">@{candidate.namespace}/{candidate.slug}</p>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-sm:order-3 max-sm:p-1">{visibilityLabel}</TableCell>
+                      <TableCell className="font-mono text-xs [overflow-wrap:anywhere] max-sm:order-4 max-sm:p-1">{candidate.version}</TableCell>
+                      <TableCell className="text-right max-sm:order-2 max-sm:p-1">
+                        <Button
+                          data-analytics-id={replaceVersion ? 'suite.member.version.replace' : 'suite.member.add'}
+                          type="button"
+                          size="sm"
+                          variant={alreadySelected ? 'ghost' : 'outline'}
+                          aria-label={`${action} · ${candidate.displayName}`}
+                          disabled={alreadySelected}
+                          onClick={() => replaceVersion ? setPendingVersionUpdate(candidate) : addCandidate(candidate)}
+                        >
+                          {!alreadySelected && !replaceVersion && <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
+                          {action}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </Card>
 
       {membersSettingsOpen || membersRequired ? (
@@ -652,8 +633,8 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
 
       <div className="sticky bottom-0 z-20 -mx-4 border-t bg-background/95 px-4 py-3 shadow-[0_-8px_24px_-20px_rgb(0_0_0/0.45)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-sm font-medium">
+          <div className="min-w-0 basis-full sm:flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
               <span>{t('suite.selectedMembers', { count: selected.length })}</span>
               {selectedEntry ? <span className="rounded-full bg-amber-200/80 px-2 py-0.5 text-xs text-amber-900">{t('suite.entrySkill')}: {selectedEntry.displayName}</span> : null}
             </div>
@@ -670,15 +651,17 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
               ))}
             </div>
           </div>
-          <Button data-analytics-id="suite.members.toggle" size="sm" variant="outline" onClick={() => setMembersSettingsOpen((open) => !open)}>
-            {membersSettingsOpen ? t('suite.collapseMembers') : t('suite.expandMembers')}
-          </Button>
-          <Button data-analytics-id="suite.draft.cancel" size="sm" variant="outline" onClick={goBack}>{t('suite.cancel')}</Button>
-          <Button data-analytics-id={editing ? 'suite.draft.edit.save' : creatingVersion ? 'suite.version.draft.save' : 'suite.draft.create.save'}
-            size="sm"
-            disabled={createMutation.isPending || createVersionMutation.isPending || updateMutation.isPending}
-            onClick={save}
-          >{t('suite.saveDraft')}</Button>
+          <div className="ml-auto flex flex-wrap justify-end gap-2">
+            <Button data-analytics-id="suite.members.toggle" size="sm" variant="outline" onClick={() => setMembersSettingsOpen((open) => !open)}>
+              {membersSettingsOpen ? t('suite.collapseMembers') : t('suite.expandMembers')}
+            </Button>
+            <Button data-analytics-id="suite.draft.cancel" size="sm" variant="outline" onClick={goBack}>{t('suite.cancel')}</Button>
+            <Button data-analytics-id={editing ? 'suite.draft.edit.save' : creatingVersion ? 'suite.version.draft.save' : 'suite.draft.create.save'}
+              size="sm"
+              disabled={createMutation.isPending || createVersionMutation.isPending || updateMutation.isPending}
+              onClick={save}
+            >{t('suite.saveDraft')}</Button>
+          </div>
         </div>
       </div>
 

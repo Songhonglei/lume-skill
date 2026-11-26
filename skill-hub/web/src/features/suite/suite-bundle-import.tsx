@@ -364,7 +364,7 @@ export function SuiteBundleImport({ expectedMode, expectedCoordinate, returnToSu
             </label>
           ) : null}
 
-          <div className="flex justify-end gap-2 border-t pt-3">
+          <div className="flex flex-wrap justify-end gap-2 border-t pt-3">
             <Button data-analytics-id="suite.bundle.reset" size="sm" variant="outline" onClick={() => { setPreview(null); setFileName('') }}>
               {t('suite.bundle.chooseAgain')}
             </Button>

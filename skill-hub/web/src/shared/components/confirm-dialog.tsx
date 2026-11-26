@@ -70,9 +70,9 @@ export function ConfirmDialog({
       <DialogContent onCloseAutoFocus={onCloseAutoFocus} closeAnalyticsId={cancelAnalyticsId} data-testid={contentTestId} aria-label={title} hideClose={pending}>
         <DialogHeader className="min-w-0 text-center sm:text-center">
           <DialogTitle className="text-center">{title}</DialogTitle>
-          {description && <DialogDescription className="text-center break-all">{description}</DialogDescription>}
+          {description && <DialogDescription className="text-center [overflow-wrap:anywhere]">{description}</DialogDescription>}
         </DialogHeader>
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter className="justify-end border-t pt-3 max-sm:grid max-sm:grid-cols-2 max-sm:items-stretch max-sm:[&>button]:h-auto max-sm:[&>button]:min-h-[var(--control-height)] max-sm:[&>button]:whitespace-normal max-sm:[&>button]:px-2 max-sm:[&>button]:py-1">
           <Button data-analytics-id={cancelAnalyticsId} variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
             {resolvedCancelText}
           </Button>

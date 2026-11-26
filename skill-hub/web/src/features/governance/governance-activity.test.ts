@@ -1,6 +1,9 @@
+/** @vitest-environment jsdom */
+
 import { renderToStaticMarkup } from 'react-dom/server'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { createElement } from 'react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
 import type { GovernanceActivityItem } from '@/api/types'
 
 const { formatLocalDateTimeMock } = vi.hoisted(() => ({
@@ -27,7 +30,7 @@ import { GovernanceActivity } from './governance-activity'
 function createItem(overrides: Partial<GovernanceActivityItem> = {}): GovernanceActivityItem {
   return {
     id: 1,
-    action: 'Skill approved',
+    action: 'REVIEW_APPROVE',
     actorUserId: 'user-1',
     actorDisplayName: 'Alice',
     targetType: 'SKILL',
@@ -39,6 +42,7 @@ function createItem(overrides: Partial<GovernanceActivityItem> = {}): Governance
 }
 
 describe('governance-activity module', () => {
+  afterEach(cleanup)
   beforeEach(() => {
     formatLocalDateTimeMock.mockClear()
   })
@@ -55,16 +59,25 @@ describe('governance-activity module', () => {
     expect(html).toContain('governance.emptyActivity')
   })
 
-  it('renders the activity item with formatted time, actor display name, and details', () => {
-    const html = renderToStaticMarkup(
-      createElement(GovernanceActivity, { isLoading: false, items: [createItem()] })
-    )
+  it('shows compact translated rows and keeps the original record available in details', () => {
+    render(createElement(GovernanceActivity, {
+      isLoading: false,
+      items: [createItem({ details: '{"comment":"Approved by governance team"}' })],
+    }))
 
-    expect(html).toContain('Skill approved')
-    expect(html).toContain('Alice')
-    expect(html).toContain('Approved by governance team')
-    expect(html).toContain('2026-03-23 12:00')
+    const table = screen.getByRole('table', { name: 'reviewCenter.governanceActivity' })
+    expect(within(table).getByText('auditLog.filterReviewApprove')).toBeTruthy()
+    expect(within(table).getByText('Alice')).toBeTruthy()
+    expect(within(table).getByText('governance.target.skill · skill-1')).toBeTruthy()
+    expect(within(table).getByText('2026-03-23 12:00')).toBeTruthy()
+    expect(table.textContent).not.toContain('REVIEW_APPROVE')
+    expect(table.textContent).not.toContain('Approved by governance team')
     expect(formatLocalDateTimeMock).toHaveBeenCalledWith('2026-03-23T04:00:00Z', 'en')
+
+    fireEvent.click(within(table).getByRole('button', { name: 'list.details' }))
+    const detail = screen.getByRole('dialog', { name: 'governance.activityDetail' })
+    expect(within(detail).getByText('REVIEW_APPROVE')).toBeTruthy()
+    expect(detail.querySelector('pre')?.textContent).toBe(JSON.stringify({ comment: 'Approved by governance team' }, null, 2))
   })
 
   it('falls back to actor user id and unknown actor text when needed', () => {
@@ -82,11 +95,16 @@ describe('governance-activity module', () => {
     expect(html).toContain('governance.unknownActor')
   })
 
-  it('omits the details block when details are missing', () => {
-    const html = renderToStaticMarkup(
-      createElement(GovernanceActivity, { isLoading: false, items: [createItem({ details: undefined })] })
-    )
+  it('keeps an unrecognized action and historical plain text in the detail view', () => {
+    render(createElement(GovernanceActivity, {
+      isLoading: false,
+      items: [createItem({ action: 'HISTORICAL_ACTION' }), createItem({ id: 2, details: undefined })],
+    }))
 
-    expect(html).not.toContain('Approved by governance team')
+    expect(screen.getByText('governance.otherAction')).toBeTruthy()
+    fireEvent.click(screen.getAllByRole('button', { name: 'list.details' })[0])
+    const detail = screen.getByRole('dialog', { name: 'governance.activityDetail' })
+    expect(within(detail).getByText('HISTORICAL_ACTION')).toBeTruthy()
+    expect(detail.querySelector('pre')?.textContent).toBe('Approved by governance team')
   })
 })

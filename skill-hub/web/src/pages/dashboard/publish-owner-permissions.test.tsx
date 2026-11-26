@@ -36,7 +36,7 @@ describe.each(['update', 'resubmit'])('%s package rejection refreshes current pe
     render(<QueryClientProvider client={client}><PublishPage /></QueryClientProvider>)
     await waitFor(() => expect(api.detail).toHaveBeenCalledTimes(1))
     fireEvent.click(screen.getByText('choose package'))
-    const submit = screen.getByRole('button', { name: 'publish.nextConfirm' })
+    const submit = await screen.findByRole('button', { name: 'publish.nextConfirm' })
     await waitFor(() => expect(submit.hasAttribute('disabled')).toBe(false))
     fireEvent.click(submit)
     fireEvent.click(screen.getByRole('button', { name: 'publish.confirm' }))

@@ -217,8 +217,8 @@ describe('Publish avatar submission', () => {
     mocks.search.updateSkill = ''
     if (mode === 'resubmit') mocks.search.resubmitSkill = 'foo'
     render(<PublishPage />)
-    fireEvent.click(screen.getByText('image uploaded'))
-    fireEvent.click(screen.getByRole('button', {name:'publish.nextConfirm'}))
+    expect(screen.queryByRole('button', { name: 'publish.nextConfirm' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'publish.saveAvatar' })).toBeNull()
     expect(mocks.publish).not.toHaveBeenCalled()
     expect(mocks.submit).not.toHaveBeenCalled()
   })

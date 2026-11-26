@@ -131,8 +131,8 @@ export function UploadZone({
     <Button
       data-analytics-id={unavailable ? undefined : pickerAnalyticsId}
       type="button"
-      variant="link"
-      className="relative z-10 h-10 whitespace-normal px-2"
+      variant={selectedFile ? 'ghost' : 'outline'}
+      size="sm"
       disabled={unavailable}
       onClick={() => folderInputRef.current?.click()}
     >{t('upload.folderHint')}</Button>
@@ -146,7 +146,7 @@ export function UploadZone({
         data-analytics-event={!unavailable && analyticsId ? 'click+keydown+drop' : undefined}
         aria-busy={reading}
         className={cn(
-          'relative rounded-xl border bg-background transition-colors',
+          'relative rounded-lg border bg-background transition-colors',
           dragging ? 'border-primary bg-primary/5' : 'border-border',
           showError && 'border-destructive/60',
           unavailable && 'opacity-60',
@@ -156,16 +156,16 @@ export function UploadZone({
         {!selectedFile && <button
           type="button"
           aria-label={t('upload.dragHint')}
-          aria-describedby={showError ? errorId : selectedFile ? undefined : hintId}
+          aria-describedby={showError ? errorId : hintId}
           disabled={unavailable}
           onClick={open}
-          className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+          className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed"
         />}
         {selectedFile ? (
-          <div className="pointer-events-none flex items-start gap-4 p-5 sm:p-6">
-            <div className="flex h-14 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted/30 text-muted-foreground"><FileArchive className="h-6 w-6" aria-hidden="true" /></div>
+          <div className="pointer-events-none flex items-start gap-3 p-3 sm:p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-muted/30 text-muted-foreground"><FileArchive className="h-4 w-4" aria-hidden="true" /></div>
             <div className="min-w-0 flex-1 space-y-2">
-              <p className="break-all text-sm font-medium sm:text-base">{selectedFile.name}</p>
+              <p className="text-sm font-medium [overflow-wrap:anywhere]">{selectedFile.name}</p>
               <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024).toFixed(1)} KB</p>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <p id={inlinePreviewError ? errorId : undefined} role={inlinePreviewError ? 'alert' : 'status'} className={cn('flex min-w-0 items-center gap-2 text-xs text-muted-foreground', previewStatus === 'ready' && !isPackaging && 'text-emerald-700 dark:text-emerald-400', inlinePreviewError && 'text-destructive')}>
@@ -181,18 +181,21 @@ export function UploadZone({
             </div>
           </div>
         ) : (
-          <div className="pointer-events-none flex min-h-[260px] flex-col items-center justify-center gap-3 px-5 py-6 text-center sm:px-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/70 text-muted-foreground"><Upload className="h-6 w-6" aria-hidden="true" /></div>
-            <p className="text-lg font-semibold">{t(isPackaging ? 'upload.packaging' : dragging ? 'upload.dropHint' : 'upload.dragHint')}</p>
-            <p id={hintId} className="text-sm text-muted-foreground">{formatHint ?? t('upload.formatHint')}</p>
-            <div className="pointer-events-auto relative z-10 mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-              <Button type="button" className="h-10" disabled={unavailable} onClick={open}>{t('upload.selectZip')}</Button>
+          <div className="pointer-events-none flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-4">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Upload className="h-4 w-4" aria-hidden="true" /></div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{t(isPackaging ? 'upload.packaging' : dragging ? 'upload.dropHint' : 'upload.dragHint')}</p>
+                <p id={hintId} className="mt-0.5 text-xs leading-5 text-muted-foreground">{formatHint ?? t('upload.formatHint')}</p>
+              </div>
+            </div>
+            <div className="pointer-events-auto relative z-10 flex flex-wrap items-center gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={unavailable} onClick={open}>{t('upload.selectZip')}</Button>
               {folderAction}
             </div>
-            {onFolderSelect && folderSelectionSupported && <p className="text-xs leading-5 text-muted-foreground">{t('upload.folderPackagingHint')}</p>}
           </div>
         )}
-        {reading && <div role="progressbar" aria-label={status} className="mx-5 mb-3 h-0.5 overflow-hidden rounded-full bg-muted sm:mx-6"><div className="h-full w-1/3 bg-muted-foreground/60" /></div>}
+        {reading && <div role="progressbar" aria-label={status} className="mx-3 mb-2 h-0.5 overflow-hidden rounded-full bg-muted sm:mx-4"><div className="h-full w-1/3 bg-muted-foreground/60" /></div>}
       </div>
       {showError && !inlinePreviewError && <p id={errorId} role="alert" className="text-sm text-destructive">{showError}</p>}
       {onFolderSelect && <input data-analytics-id={folderAnalyticsId} ref={folderInputRef} type="file" className="hidden" multiple onChange={handleFolderChange} disabled={unavailable} />}

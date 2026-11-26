@@ -177,7 +177,7 @@ export function ProfileSettingsPage() {
   })
 
   return (
-    <div className="space-y-8 animate-fade-up">
+    <div className="max-w-3xl space-y-5 animate-fade-up">
       <DashboardPageHeader title={t('profile.title')} actions={!isEditing ? (
         <div className="flex flex-wrap items-center gap-2">
           {user?.canChangePassword === true ? (
@@ -193,15 +193,15 @@ export function ProfileSettingsPage() {
         </div>
       ) : null} />
       <Card>
-        <CardContent className="space-y-6 p-5 sm:p-6">
+        <CardContent className="space-y-5 p-4 sm:p-5">
           {profileData ? <ProfileAvatarPicker avatarUrl={effectiveAvatarUrl} name={effectiveDisplayName} /> : null}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('profile.userId')}</label>
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">{t('profile.userId')}</p>
             <p className="text-sm text-muted-foreground">{user?.userId || '-'}</p>
           </div>
 
-          <form data-analytics-id="account.profile.save" className="max-w-3xl space-y-4" onSubmit={handleSubmit}>
+          <form data-analytics-id="account.profile.save" className="space-y-4 border-t pt-4" onSubmit={handleSubmit}>
             {/* Dynamic fields */}
             {Object.entries(fieldPolicies).map(([field, policy]) => {
               const label = t(`profile.${field}`)
@@ -219,6 +219,8 @@ export function ProfileSettingsPage() {
                       type="text"
                       maxLength={field === 'displayName' ? 32 : undefined}
                       value={formValues[field] ?? ''}
+                      aria-invalid={!!errors[field]}
+                      aria-describedby={errors[field] ? `field-${field}-error` : undefined}
                       onChange={(e) => handleFieldChange(field, e.target.value)}
                       autoFocus={field === 'displayName'}
                     />
@@ -229,13 +231,13 @@ export function ProfileSettingsPage() {
                   )}
 
                   {errors[field] ? (
-                    <p className="text-sm text-red-600">{errors[field]}</p>
+                    <p id={`field-${field}-error`} role="alert" className="text-xs text-destructive">{errors[field]}</p>
                   ) : null}
                 </div>
               )
             })}
 
-            {errors._form ? <p className="text-sm text-red-600">{errors._form}</p> : null}
+            {errors._form ? <p role="alert" className="text-sm text-destructive">{errors._form}</p> : null}
 
             {/* Review hint */}
             {hasReviewFields ? (
@@ -243,12 +245,12 @@ export function ProfileSettingsPage() {
             ) : null}
 
             {isEditing ? (
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? t('profile.saving') : t('profile.save')}
-                </Button>
+              <div className="flex flex-wrap justify-end gap-2 border-t pt-4">
                 <Button data-analytics-id="account.profile.cancel" type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                   {t('profile.cancel')}
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? t('profile.saving') : t('profile.save')}
                 </Button>
               </div>
             ) : null}

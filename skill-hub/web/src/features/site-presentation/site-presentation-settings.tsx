@@ -51,9 +51,9 @@ function LogoUpload({ value, disabled, onChange, onBusy }: { value: string | nul
   const src = presentationAssetUrl(value)
   return <div className="flex min-w-0 flex-col gap-2">
     <Label htmlFor="presentation-logo">{t('sitePresentation.logoUrl')}</Label>
-    <div className="flex min-h-32 flex-1 items-start gap-3 rounded-xl border border-dashed border-border bg-secondary/30 p-4" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); receive(event.dataTransfer.files[0]) }}>
-      <div className="grid size-14 shrink-0 place-items-center rounded-lg border bg-background">
-        <img src={src && failedUrl !== src ? src : withBasePath(DEFAULT_BRAND_MARK)} alt={t('sitePresentation.logoUrl')} className="size-11 rounded-md object-contain" onError={() => setFailedUrl(src)} />
+    <div className="flex min-w-0 items-start gap-3 rounded-xl border border-dashed border-border bg-secondary/30 p-4" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); receive(event.dataTransfer.files[0]) }}>
+      <div className="grid size-12 shrink-0 place-items-center rounded-lg border bg-background">
+        <img src={src && failedUrl !== src ? src : withBasePath(DEFAULT_BRAND_MARK)} alt={t('sitePresentation.logoUrl')} className="size-9 rounded-md object-contain" onError={() => setFailedUrl(src)} />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
         <input ref={input} id="presentation-logo" aria-describedby="presentation-logo-help" type="file" accept="image/png,image/jpeg" disabled={disabled || upload.isPending} onChange={changeFile} className="sr-only" />
@@ -178,14 +178,14 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
   return <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
     <section aria-labelledby="site-presentation-title" className="min-w-0 space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1"><h2 id="site-presentation-title" className="text-2xl font-semibold">{t('sitePresentation.title')}</h2><p className="text-sm text-muted-foreground">{t('sitePresentation.intro')}</p></div>
+        <h2 id="site-presentation-title" className="text-base font-semibold">{t('sitePresentation.title')}</h2>
         <DialogTrigger asChild><Button type="button" variant="outline" disabled={!value || busy}><Eye aria-hidden className="h-4 w-4" />{t('sitePresentation.preview')}</Button></DialogTrigger>
       </header>
       {query.isPending && <p role="status">{t('common.loading')}</p>}
       {query.isError && <div role="alert" className="space-y-3"><p>{t('sitePresentation.loadFailed')}</p><Button variant="outline" onClick={() => void query.refetch()}>{t('sitePresentation.retry')}</Button></div>}
       {value && <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); if (draft && dirty && !busy && !conflict && !incompleteLinks) save.mutate({ settings: draft.settings, version: draft.version }) }}>
-        <div role="group" aria-label={t('sitePresentation.settingsContent')} className="inline-flex max-w-full gap-1 rounded-full border bg-secondary/60 p-1">
-          {(['identity', 'home'] as const).map(id => <Button key={id} type="button" variant="ghost" aria-pressed={tab === id} disabled={busy} onClick={() => setTab(id)} className={`rounded-full px-4 ${tab === id ? 'border bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground'}`}>{t(`sitePresentation.tabs.${id}`)}</Button>)}
+        <div role="group" aria-label={t('sitePresentation.settingsContent')} className="flex flex-wrap gap-2">
+          {(['identity', 'home'] as const).map(id => <Button key={id} type="button" size="sm" variant={tab === id ? 'soft' : 'outline'} aria-pressed={tab === id} disabled={busy} onClick={() => setTab(id)}>{t(`sitePresentation.tabs.${id}`)}</Button>)}
         </div>
         <fieldset disabled={busy} className="min-w-0 space-y-6">
           <div hidden={tab !== 'identity'} className="space-y-6">
@@ -204,8 +204,8 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
               <div className="space-y-2"><Label htmlFor="presentation-hero-title">{t('sitePresentation.introductionHeading')}</Label><Input id="presentation-hero-title" maxLength={160} value={value.sections.hero.texts.title?.[locale] ?? ''} placeholder={presentationText(defaultSitePresentation(), 'hero', 'title', locale, key => t(key, { lng: locale }))} onChange={event => editIntroduction(event.target.value)} /></div>
             </SettingsSection>
             <SettingsSection title={t('sitePresentation.homeContentTitle')} help={t('sitePresentation.homeContentHelp')}>
-              <div className="grid overflow-hidden rounded-xl border sm:grid-cols-2">{sectionIds.map((section, index) => <div key={section} className="flex min-w-0 items-center gap-3 border-b px-4 py-4 last:border-b-0 sm:odd:border-r">
-                <span aria-hidden className="text-xs tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span><span id={`presentation-section-${section}`} className="min-w-0 flex-1 text-sm font-medium">{t(`sitePresentation.regions.${section}`)}</span><span className="text-xs text-muted-foreground">{t(value.sections[section].enabled ? 'sitePresentation.visible' : 'sitePresentation.hidden')}</span><Switch aria-labelledby={`presentation-section-${section}`} checked={value.sections[section].enabled} onCheckedChange={enabled => edit({ sections: { ...value.sections, [section]: { ...value.sections[section], enabled } } })} />
+              <div className="grid overflow-hidden rounded-xl border sm:grid-cols-2">{sectionIds.map(section => <div key={section} className="flex min-w-0 items-center gap-3 border-b px-4 py-4 last:border-b-0 sm:odd:border-r">
+                <span id={`presentation-section-${section}`} className="min-w-0 flex-1 text-sm font-medium">{t(`sitePresentation.regions.${section}`)}</span><span className="text-xs text-muted-foreground">{t(value.sections[section].enabled ? 'sitePresentation.visible' : 'sitePresentation.hidden')}</span><Switch aria-labelledby={`presentation-section-${section}`} checked={value.sections[section].enabled} onCheckedChange={enabled => edit({ sections: { ...value.sections, [section]: { ...value.sections[section], enabled } } })} />
               </div>)}</div>
               <p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.curatedVisibilityHelp')}</p>
             </SettingsSection>
