@@ -488,14 +488,7 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
 
       <Card className="overflow-hidden">
         <div className="border-b p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">{t('suite.selectSkills')}</h2>
-            </div>
-            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs text-blue-700 dark:text-blue-300">
-              {t('suite.searchOnSubmitHint')}
-            </span>
-          </div>
+          <h2 className="text-base font-semibold">{t('suite.selectSkills')}</h2>
           <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label={t('suite.memberSearchScope')}>
             {([
               ['namespace', 'suite.scopeNamespace'],
