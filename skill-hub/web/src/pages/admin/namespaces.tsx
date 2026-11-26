@@ -393,7 +393,7 @@ export function AdminNamespacesPage() {
           ) : (
             <>
               <Table>
-                <TableHeader>
+                <TableHeader className="whitespace-nowrap">
                   <TableRow>
                     <TableHead>{t('adminNamespaces.colNamespace')}</TableHead>
                     <TableHead>{t('adminNamespaces.colType')}</TableHead>
@@ -775,7 +775,7 @@ function MembersTable({
 
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="whitespace-nowrap">
         <TableRow>
           <TableHead>{t('members.colUsername')}</TableHead>
           <TableHead>{t('members.colRole')}</TableHead>
