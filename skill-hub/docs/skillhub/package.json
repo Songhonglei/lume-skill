@@ -1,0 +1,20 @@
+{
+  "name": "skillhub-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  },
+  "overrides": {
+    "vite": "^6.4.4",
+    "postcss": "^8.5.23",
+    "esbuild": "^0.28.1",
+    "vue": "^3.5.42",
+    "source-map-js": "^1.2.2"
+  }
+}

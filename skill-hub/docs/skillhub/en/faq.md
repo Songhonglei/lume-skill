@@ -1,0 +1,387 @@
+# FAQ
+
+## Q: What is the difference between SkillHub and ClawHub?
+
+A: SkillHub provides a self-hosted registry, namespace permissions, publication review, scanning and audit. Third-party capabilities change; do not assume another service lacks review or scanning. See [OpenClaw integration](https://github.com/iflytek/skillhub/blob/main/docs/openclaw-integration-en.md) for compatibility.
+
+## Q: How do I back up data?
+
+A: Back up PostgreSQL, the configured skill storage, and deployment configuration. Release Compose defaults to local storage in the `skillhub_storage` volume; S3 deployments need the corresponding bucket/objects. Keep database and object snapshots consistent and verify restoration in an isolated environment. See [deployment](./guide/deployment.html).
+
+## Q: What authentication methods are supported?
+
+A: Local accounts and configured OAuth2 providers are supported. Preset registrations include GitHub, GitLab, Feishu, and DingTalk; the login page and `/api/v1/auth/methods` describe available methods on your instance. Extensibility does not mean LDAP/SAML are built in. See the [private SSO contract](https://github.com/iflytek/skillhub/blob/main/docs/11-auth-extensibility-and-private-sso.md).
+
+## Q: Is there a size limit for skill packages?
+
+A: The default limit is **100MB**. This can be adjusted via configuration:
+
+```yaml
+# application.yml
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+skillhub:
+  publish:
+    max-package-size: 104857600
+```
+
+Also check proxy body and Scanner upload limits; multipart settings alone do not bypass package validation.
+
+## Q: How do I use the CLI tool to manage skill packages?
+
+A: Use the first-party CLI:
+
+```bash
+npm install -g @astron-team/skillhub
+skillhub search pdf
+```
+
+Follow [Quick Start](./quickstart.html) to select a registry, scope, and Agent. Publishing and restricted resources require login. See [OpenClaw integration](https://github.com/iflytek/skillhub/blob/main/docs/openclaw-integration-en.md) for compatibility boundaries; do not mix its publish protocol with SkillHub CLI.
+
+## Q: How do I configure HTTPS?
+
+A: Terminate TLS at an external proxy forwarding to the published Web port (`WEB_PORT=80` by default in release Compose). Web already proxies backend routes. Set the real `SKILLHUB_PUBLIC_BASE_URL`, preserve the original Host and forwarded protocol, and validate login and cookies. See [deployment](./guide/deployment.html).
+
+## Q: How do I monitor SkillHub?
+
+A: The base configuration exposes `/actuator/health` and `/actuator/info`. `/actuator/metrics` is not the Prometheus text endpoint; neither that endpoint nor Prometheus export is enabled by default in the base configuration. Correlate logs and audit events using `requestId`. See the [observability guide](https://github.com/iflytek/skillhub/blob/main/docs/observability-developer-guide.md) for explicit integration configuration.
+
+## Q: Does it support multi-tenancy?
+
+A: SkillHub achieves logical multi-tenant isolation through namespaces. Each namespace acts as a tenant with its own members, permissions, and skill packages.
+
+For physical isolation, you can deploy a separate SkillHub instance for each tenant.
+
+## Q: How do I upgrade SkillHub?
+
+A: Follow the [deployment guide](./guide/deployment.html), select a target version, and back up the database, skill storage, and configuration. After upgrading, verify health, login, and representative skill operations. Flyway migrations mean that rolling back an image alone is not necessarily a database rollback.
+
+## Q: Why can't administrators (admin) and regular users create namespaces?
+
+A: Inspect the actual error and `requestId`, then check permissions, name validation, and instance restrictions. Do not assume an old version is the cause. See [namespace management](./guide/namespace.html).
+
+## Q: How do I search for or operate on a skill package within a specific namespace?
+
+A: Select the namespace in the UI. To install with the CLI, use `skillhub install @team/example-skill`, replacing the coordinate with a real resource. `skillhub search` searches skills; `skillhub suite install` installs suites. Exporting and reimporting is not a search troubleshooting step.
+
+## Q: What is the recommended deployment method? Can I pull the images and deploy manually?
+
+A: Choose the runtime script, release Compose, Kubernetes Kustomize, or the Helm Chart. The script and Compose paths are covered by [Docker deployment](./guide/deployment.html). Kustomize uses `deploy/k8s`; follow [Kubernetes deployment](./guide/kubernetes.html). Helm uses the separate `charts/skillhub` directory and values; follow the [Chart README (Chinese)](https://github.com/iflytek/skillhub/blob/main/charts/skillhub/README.md). Do not mix configuration or upgrade commands between the two Kubernetes paths. Preserve the configuration and data directory for the selected path. Starting an application image alone does not verify database, Redis, storage, authentication, or proxy behavior.
+
+## Q: What Kubernetes version does the Kubernetes deployment require?
+
+A: The official [Kubernetes deployment guide](./guide/kubernetes.html) requires Kubernetes **v1.24 or later**, a configured `kubectl`, and a default StorageClass for PVCs; an nginx ingress controller is needed if you want domain-based access. Older clusters have not been validated, so upgrade the cluster before deploying.
+
+## Q: After deployment, I enter the correct username and password but get redirected back to the login page?
+
+A: Inspect the login and subsequent identity requests in browser developer tools. Check the public URL, proxy forwarding, cookies, and backend session configuration, then correlate `requestId` with server logs. This symptom alone does not identify a password or database failure. Do not clear PostgreSQL volumes as a login troubleshooting step. See [deployment](./guide/deployment.html).
+
+## Q: How do I change the admin password? Why don't my config changes take effect?
+
+A: `BOOTSTRAP_ADMIN_PASSWORD` initializes an account. `BootstrapAdminInitializer` preserves existing credentials, so changing this variable or recreating containers does not reset an existing password. Use the instance password-change/reset flow and configure SMTP for email verification. Do not delete users or database contents to reinitialize credentials.
+
+## Q: Is an email verification code required to change / reset a password?
+
+A: The web password-reset flow uses email verification; the authenticated change-password endpoint uses the current password instead. Email reset requires [SMTP configuration](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md). Bootstrap environment variables do not reset existing passwords.
+
+## Q: Can a skill have a Chinese name?
+
+A: The `name`/slug remains a validated identifier. The user-facing display name supports Chinese through `metadata.display-name`. Changing it does not change the coordinate or installation directory. See [publishing](./guide/skill-publish.html).
+
+## Q: Can unreviewed skills be downloaded?
+
+A: Normal installation requires a published version that the caller can access. Visibility of a detail page does not grant downloads for every version state. Author/reviewer preview permissions differ from distribution permissions. See [review](./guide/review.html).
+
+## Q: How do I hide or remove third-party SSO login options on the login page?
+
+A: Login entries are config-driven: `/api/v1/auth/methods` only returns registrations that have a real client id. When a client id is empty or contains `placeholder`, that entry never reaches the login page.
+
+So there are two ways to hide one:
+
+- Leave the matching environment variable unset (for example, omit `OAUTH2_FEISHU_CLIENT_ID`). No config file change needed.
+- Or edit `application.yml` and comment out or delete the relevant registration block (`github`, `gitlab`, `feishu`, `dingtalk`) under `spring.security.oauth2.client.registration`, along with its `provider` section. Spring Boot then won't create that registration at startup.
+
+## Q: Can skills still be uploaded or published with scanning disabled?
+
+A: `runtime.sh --no-scanner` disables registry scanning and does not start the scanner container. For **ordinary new uploads**, `PUBLIC` or `NAMESPACE_ONLY` is rejected while scanning is disabled. A `PRIVATE` upload can remain in `UPLOADED` and still requires confirmation to publish. Upload success does not mean publication; do not repeatedly upload the same version to bypass this prerequisite.
+
+Expanding the visibility of an already published private skill is a separate path. A qualifying scan report for its latest version may be reused, allowing visibility review even while the scanner is disabled. Without a reusable report, scanning must be restored first. See [scanning](./guide/scanner.html) for report conditions and diagnostics; disabling the scanner does not imply that every action on an existing version is unavailable.
+
+Sources: [runtime script](https://github.com/iflytek/skillhub/blob/main/scripts/runtime.sh), [new-upload rules](https://github.com/iflytek/skillhub/blob/main/server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillPublishService.java), and [visibility-change rules](https://github.com/iflytek/skillhub/blob/main/server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillVisibilityService.java).
+
+## Q: Is SkillHub's security scanning (Skill Scanner) developed in-house by iFLYTEK? What license does it use?
+
+A: SkillHub has built-in security scanning. The scanner integration, task orchestration, audit persistence, and deployment integration are implemented by the iFLYTEK team; the underlying scanning service uses Cisco's [cisco-ai-skill-scanner](https://github.com/cisco-ai-defense/skill-scanner) (Apache License 2.0, copyright Cisco).
+
+## Q: Which version of cisco-ai-skill-scanner does SkillHub use?
+
+A: `scanner/Dockerfile` pins `cisco-ai-skill-scanner==2.1.0`. The Scanner image uses glibc Linux and supports `linux/amd64` and `linux/arm64`.
+
+## Q: Should the Scanner use upload mode or local mode?
+
+A: The official Compose and Kubernetes deployments use `upload` mode and send skill packages through `POST /scan-upload`. `SKILLHUB_SCANNER_MAX_UPLOAD_SIZE_BYTES` controls the upload limit; its default is `110100480` bytes (105 MiB).
+
+Use `local` mode only when the Server and Scanner can see the same directory at the **same path**. Both services must share the mount, and the Scanner must allow that root; for the standard path, set `SKILL_SCANNER_ALLOWED_ROOTS=/tmp/skillhub-scans`.
+
+## Q: Does “No high-risk findings” mean that a security scan returned no findings?
+
+A: No. A Scanner response with `is_safe=true`, rendered in the UI as “No high-risk findings,” only means that no high-risk issue was found. Lower-severity findings may still exist and `findingsCount` may be greater than zero. Review the finding details instead of treating this state as an unconditional safety guarantee.
+
+## Q: How should I roll out the Scanner 2.1.0 upgrade?
+
+A: First deploy the Server release that is compatible with the 2.1.0 protocol. While the old Scanner is still running, drain and remove every old Server instance and its in-flight scans. Then upgrade the Scanner and verify `/health` plus one upload-mode scan. Do not connect an old Server to Scanner 2.1.0.
+
+During the mixed-version window, keep AI Defense disabled in both upload and local modes (the default is `SKILLHUB_SCANNER_USE_AI_DEFENSE=false`). If AI Defense must remain enabled before the upgrade, configure its credential directly in the old Scanner environment using the variable supported by that Scanner version; never put an AI Defense key in URL query parameters or request bodies.
+
+## Q: How do I troubleshoot a `registry returned 400` error from `skillhub publish` (CLI)?
+
+A: A 400 usually means backend validation failed. Common causes:
+
+- `SKILL.md` is not in the package root directory;
+- `SKILL.md` frontmatter is missing `name` / `description` or is malformed;
+- name or version conflict (e.g. `error.skill.publish.nameConflict`, meaning a skill with the same name is already published in that namespace) — change `name` in `SKILL.md`, use another namespace, or have an admin handle the existing skill;
+- the namespace does not exist, or you are not a member of it;
+- the package contains suspected tokens/secrets that the CLI cannot confirm skipping;
+- file type / size / path is not allowed.
+
+You can inspect the server logs to locate the cause:
+
+```bash
+docker logs --tail=300 <skillhub-server container> 2>&1 | grep -Ei 'publish|SKILL.md|namespace|400|BadRequest'
+```
+
+## Q: What directory structure does a skill package require?
+
+A: The package root directory must contain a `SKILL.md` file, whose frontmatter must include fields such as `name` and `description`.
+
+## Q: Can a skill package contain API keys, tokens or other credentials?
+
+A: It is not recommended. Pre-publish validation detects what look like hard-coded tokens or secrets and blocks the publish or asks for confirmation (see the `registry returned 400` checklist above). Since v0.2.20, false positives for ordinary identifiers, function results, property access and string expressions have been reduced. This is a heuristic check covering only some file types and credential formats: it cannot guarantee that all real secrets are detected and does not automatically redact them. Check for and remove real credentials yourself before publishing.
+
+Instead, reference only the environment variable names or placeholders the skill needs, document the required credentials in `SKILL.md`, and let users configure the real values in the agent environment that runs the skill. SkillHub does not currently store or inject secrets for skills.
+
+## Q: Publishing fails with "package validation failed / malformed input" — what do I do?
+
+A: This error occurs while unzipping and reading file names, usually because the archive is not UTF-8 encoded (e.g. created with the built-in Windows compression tool) or contains Chinese/non-ASCII paths. Repackage using UTF-8 encoding and avoid Chinese / special-character paths.
+
+## Q: How many files can a skill package contain? What if I hit the file-count limit?
+
+A: The default limit is **100 files** (this is separate from the 100MB size limit). To raise it, change the `skillhub.publish.max-file-count` setting, or override it via an environment variable at deploy time:
+
+```bash
+SKILLHUB_PUBLISH_MAX_FILE_COUNT=500
+```
+
+Recreate the containers for the change to take effect; `restart` alone does not re-inject environment variables. Note that `compose.release.yml` must also reference this variable; older versions (e.g. v0.2.6) may hard-code the value, so upgrading to the latest version is recommended.
+
+## Q: Is there a server version requirement for using the CLI (publish / download, etc.)?
+
+A: Compatibility depends on the command. Basic CLI support does not imply support for Device Flow, Suites or sync. Check CLI version and target-server release notes. Suites require the server to advertise `skill-suite-v1`. See [CLI](./guide/cli.html).
+
+## Q: Which PostgreSQL versions does SkillHub support?
+
+A: Compose, the one-click installer and the Kustomize manifests (`deploy/k8s/`) default to PostgreSQL 16 (`postgres:16-alpine`). The Helm chart pins its bundled Bitnami PostgreSQL image by digest; that digest is currently PostgreSQL 18.4, which is outside the verified range below. For a verified version, use an external PostgreSQL 16/17 instance or override `postgresql.image` accordingly.
+
+- Verified: PostgreSQL 16 and 17. The backend tests run on each version: fresh Flyway migrations, `validate`, compatibility with migration history and checksums written by Flyway 9.22.3 in earlier releases, an upgrade of a populated older schema, application startup and the database-backed workflow tests.
+- Not verified: PostgreSQL 15 and earlier, and PostgreSQL 18 and later.
+
+To use PostgreSQL 17, set `POSTGRES_IMAGE` (for example `postgres:17-alpine`) or connect to an external PostgreSQL 17 instance. An existing PostgreSQL 16 data directory cannot be reused by 17; a major-version move needs `pg_dump`/`pg_restore` or `pg_upgrade`, rehearsed on a copy first.
+
+## Q: Does SkillHub support MySQL?
+
+A: Currently only PostgreSQL is supported; MySQL is not supported.
+
+## Q: Can SkillHub be used to distribute Plugins?
+
+A: Not supported for now.
+
+## Q: How do I check the SkillHub version? How do I customize it (e.g. change the logo)?
+
+A:
+
+- Check the server image version:
+
+```bash
+docker image inspect ghcr.io/iflytek/skillhub-server:latest --format '{{index .Config.Labels "org.opencontainers.image.version"}}'
+```
+
+- Check the CLI version: `skillhub version`.
+- For customization (e.g. changing the logo), it is recommended to fork the latest code, modify it, and build your own Docker image.
+
+## Q: The page loads, but the login / register APIs return 502?
+
+A: The page is served by the `web` container, while login, register and other APIs are proxied by `web` to `server` (default `SKILLHUB_API_UPSTREAM=http://server:8080`). When the page works but the API returns 502, check whether `server` started correctly first; a wrong upstream, DNS, or container-network problem can also produce a 502.
+
+Troubleshooting order:
+
+```bash
+# 1. Check whether server is running
+docker compose --env-file .env.release -f compose.release.yml ps
+
+# 2. Look at the first error in the server startup log
+docker compose --env-file .env.release -f compose.release.yml logs server | head -50
+```
+
+One common startup failure is:
+
+```
+SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET must not use the default placeholder
+```
+
+This means `server` still reads the placeholder from the template. Replace it in `.env.release` with your own random string (**at least 32 characters**) and recreate the containers:
+
+```bash
+SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET=<your own random string, at least 32 characters>
+```
+
+Running `make validate-release-config` before startup validates `.env.release` and surfaces placeholders and missing values early.
+
+## Q: Why doesn't my configuration change take effect?
+
+A: Two common causes:
+
+1. **Edited the wrong file**: `.env.release.example` is only a template; Compose reads the file passed via `--env-file`, i.e. `.env.release`. Run `cp .env.release.example .env.release` first, then edit `.env.release`.
+2. **Restarted instead of recreated**: environment variables are injected when the container is created, and `restart` does not re-inject them. Recreate the containers after a config change:
+
+```bash
+docker compose --env-file .env.release -f compose.release.yml up -d --force-recreate
+```
+
+## Q: Startup fails with `bind: address already in use` (port 80 is taken). What should I do?
+
+A: The official Compose file maps the web entry point to host port `80` and the API to port `8080`. When a port is taken, find the process with `netstat -tlnp` or `lsof -i :80`. If you cannot stop it, change the published ports in `.env.release` (the one-click script uses `${TMPDIR:-/tmp}/skillhub-runtime/.env.release`; if you set `SKILLHUB_HOME` or pass `--home`, use that directory instead):
+
+```bash
+WEB_PORT=8081
+# if 8080 is also taken
+API_PORT=18080
+```
+
+After changing ports, also set `SKILLHUB_PUBLIC_BASE_URL` to the real access URL including the new port (for example `http://your-host:8081`); otherwise login callbacks and other redirects may break. Then change to the actual runtime directory containing `.env.release` and `compose.release.yml`, and recreate the containers with `up -d --force-recreate` as described in the previous answer.
+
+## Q: What external dependencies does SkillHub require at runtime?
+
+A: PostgreSQL and Redis are required. Object storage supports both `local` and S3, controlled by `SKILLHUB_STORAGE_PROVIDER`. `.env.release.example` explicitly selects `local`, but if the variable is completely unset when using `compose.release.yml`, the Compose fallback is `s3`. Set it explicitly; S3 is recommended for production (configured via `SKILLHUB_STORAGE_S3_*`). Only PostgreSQL is supported as the database — MySQL is not.
+
+The release Compose file already bundles PostgreSQL and Redis, bound to `127.0.0.1` by default.
+
+## Q: What should I do when PostgreSQL reports `operation not permitted` while writing `postmaster.pid` or `pg_wal`?
+
+A: SkillHub's default Compose and `runtime.sh` use a Docker named volume (`postgres_data`), so host-directory permissions normally do not need manual changes. This error is more common after replacing that volume with a host bind mount, such as `/data/skillhub/postgres:/var/lib/postgresql/data`.
+
+Check the following in order:
+
+1. Prefer switching back to a Docker named volume, or use the official `runtime.sh` to avoid missing permission settings in a hand-written Compose file.
+2. If a bind mount is required, first identify the effective `POSTGRES_IMAGE` selected by `.env.release` or the `runtime.sh` options. Export that value in the current shell, then run `docker run --rm "$POSTGRES_IMAGE" id postgres`. Change the data-directory owner to the reported UID/GID, for example `chown -R <uid>:<gid> <data-dir>`. Do not assume the image is `postgres:16-alpine`, or that every environment uses `999:999`.
+3. Check SELinux on RHEL/CentOS. With AppArmor, rootless Docker, NFS, CIFS, or NAS storage, also verify that the host filesystem permits PostgreSQL to write, lock files, and change permissions.
+4. Avoid placing PostgreSQL `PGDATA` on network filesystems without full POSIX permission semantics. For production, prefer local disks, Docker named volumes, block storage, or an external PostgreSQL service.
+
+## Q: How does an account created through OAuth (GitHub / GitLab, etc.) get admin rights?
+
+A: External sign-in first follows the existing admission policy. A newly created external account with status `ACTIVE` can receive a configured platform role when the provider supplies a verified email and an enabled initial-role rule matches it. Without a matching rule, no platform-management role is granted automatically. Rules apply only during new-account creation; they do not update existing accounts or merge accounts with the same email. Existing accounts use user management with the required platform permissions; only a super administrator (`SUPER_ADMIN`) may grant that role.
+
+For account and credential concepts, see [Accounts and access tokens](./guide/account-access.html). The applicable rule conditions are defined by the [initial-role service](https://github.com/iflytek/skillhub/blob/main/server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/settings/InitialExternalRoleGrantService.java), and the [account creation flow](https://github.com/iflytek/skillhub/blob/main/server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/identity/IdentityBindingService.java).
+
+A `USER_ADMIN` can manage user status and assign platform roles other than `SUPER_ADMIN`, but cannot grant `SUPER_ADMIN` to any account or change the role of an existing `SUPER_ADMIN`. Only a `SUPER_ADMIN` can perform those two operations.
+
+## Q: How do I install multiple skills in bulk?
+
+A: Use [Suites](./guide/skill-suites.html) and `skillhub suite install` for pinned members managed together, `skillhub sync pull` for team workspaces, or separate `skillhub install` commands for unrelated skills. Suite Bundle is an authoring import format, not a local installation command.
+
+## Q: Where do I submit a saved Skill Suite draft for review, and why is the button missing or disabled?
+
+A: Open the management page for that Suite version and use the publishing checklist on its Overview tab. Public (`PUBLIC`) and namespace-visible (`NAMESPACE_ONLY`) Suites require Suite-level review; private (`PRIVATE`) Suites show Publish directly. This is separate from the scanning and review of each member Skill.
+
+- **No button:** confirm that you are managing a version you can operate on, rather than viewing its marketplace preview. The action appears only when the server allows your account to submit or publish that version; both permissions and version state affect available actions.
+- **Disabled button:** complete the summary and overview, select an available entry Skill, and resolve blocked member versions. Every checklist item must be ready, with no submission already pending.
+
+See [creating and managing Skill Suites](./guide/skill-suites.html). If an older installation differs from the guide, report the Server/Web versions, Suite state and a redacted screenshot. Skill or Agent publishing pages are not substitutes for the Suite publishing page.
+
+## Q: Does a Suite overview become a callable skill after installation?
+
+A: No. The overview explains the intended tasks, member responsibilities and boundaries to reviewers and users. Installation delivers separate member skill directories; it does not combine the overview into a new Suite `SKILL.md`, and there is no universal `suite run` command.
+
+Put execution order, member-call instructions and result validation in the **entry and member `SKILL.md` files**. In the installation target project, confirm that the Agent has discovered the entry Skill, then ask it to use that entry for the task. The Suite coordinate manages installation; actual use starts with the entry Skill. Installing member files does not configure their required tools or services. Follow the [Skill Suite usage guide](./guide/skill-suites.html).
+
+## Q: What should I do if I encounter issues?
+
+A: You can get help through the following channels:
+
+- **GitHub Issues**: https://github.com/iflytek/skillhub/issues
+- **Online Docs**: [SkillHub](./index.html)
+- **Documentation**: Refer to the project README.md
+- **Community Discussions**: https://github.com/iflytek/skillhub/discussions
+
+## Q: What should I do if local development fails to start?
+
+A: When `make dev-all` fails to start the backend, detailed error messages will be displayed. Common issues:
+
+### 1. Maven dependency download failed (network timeout)
+
+**Symptoms**: Backend logs show `Could not transfer artifact` or connection timeout
+
+**Solution**: Configure Aliyun mirror
+
+```bash
+# Copy the project's built-in mirror configuration to user directory
+mkdir -p ~/.m2
+cp server/.mvn/settings.xml ~/.m2/settings.xml
+```
+
+Or manually create `~/.m2/settings.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <mirrors>
+    <mirror>
+      <id>aliyun</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
+```
+
+Reference: [Aliyun Maven Mirror Configuration Guide](https://maven.aliyun.com/mvn/guide)
+
+### 2. Java version mismatch
+
+**Symptoms**: `Unsupported class file major version` or `java.lang.NoSuchMethodError`
+
+**Solution**: Install Java 21+
+
+```bash
+# macOS
+brew install openjdk@21
+
+# Verify version
+java -version
+```
+
+### 3. Port already in use
+
+**Symptoms**: `Port 8080 already in use`
+
+**Solution**:
+
+```bash
+# Find the process using the port
+lsof -i :8080
+
+# Terminate the process
+# Identify the process owner and stop it through its service manager
+```
+
+### 4. View detailed logs
+
+If the above solutions don't help, check the backend logs:
+
+```bash
+make dev-logs SERVICE=backend
+# Or view directly
+cat .dev/server.log
+```

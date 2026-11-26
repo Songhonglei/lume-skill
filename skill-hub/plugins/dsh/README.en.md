@@ -1,0 +1,298 @@
+# SkillHub for DeepSeek Harness
+
+[中文](README.md)
+
+A native DSH plugin for anonymous skill browsing, conversation search and installation, and local upgrade/removal. Open **技能中心** (Skill Center) in the DSH sidebar. The installation core is bundled; a separate SkillHub CLI installation is unnecessary.
+
+Version `0.2.0` adds source-aware installation status to catalog cards and conversation results, including recorded versions, user/project scopes and abnormal records. Conversation status is a query-time snapshot. No matching record does not exclude manual or other-source installations, and file presence does not prove DSH activation. Matching uses Registry source, namespace and slug; a same-named directory from another source is not claimed.
+
+Version `0.2.1` defaults to `https://skill.xfyun.cn` when `registryUrl` is omitted. An explicit empty or whitespace-only value still disconnects; existing custom addresses are preserved. CLI defaults and credentials are not inherited.
+
+Version `0.4.0` uses the independent `dsh-v0.4.0` tag. It adds versioned examples and native composer handoff, conversational installation management, and per-location installed versions while retaining the dual-RC compatibility of `0.3.1`. Check npm for public availability; locally built tarballs can be verified independently as described below.
+
+`0.5.0` adds read-only skill availability diagnosis in installed cards and conversations, with separate integrity, discovery and invocation-policy results. It retains the compatibility and inventory format of `0.4.0`.
+
+`0.6.1` includes managed enable/disable, unified read-only update checks, and compact horizontal installed cards with a More menu. Shared inventory remains v2 without a coordinated CLI upgrade. Compatibility acceptance with the actual CLI 0.2.0 package has passed. Check npm for public availability.
+
+`0.6.2` is publicly released and includes source-isolated updates, release-change previews and local-file handling, single-skill ZIP transfer, local favorites, and DSH `0.2.1-rc.5` compatibility. Shared inventory remains v2 without a coordinated CLI upgrade.
+
+`0.6.3` is publicly released, delivering the compact workbench, bounded read-only file tree, local-change entry fixes and upgraded-detail return from [#1080](https://github.com/iflytek/skillhub/pull/1080). It preserves the source and inventory semantics of `0.6.2` and adds exact DSH `0.2.2-rc.1` compatibility with its own Node/Cordis family.
+
+`0.6.4` is the current patch candidate, fixing installation rejection caused solely by an unlisted DSH RC. It uses minimum-version DSH admission without an upper DSH bound, while retaining actual dependency-graph, required-capability, permission and filesystem transaction checks. Development dependencies and regression targets remain separately pinned. The interface and inventory format are unchanged. Candidate and public-package acceptance remain separate; npm availability is not claimed before publication.
+
+## Compact interface and file preview (0.6.3)
+
+Discovery, My skills, details and settings share compact controls and light/dark themes. The Files tab provides a collapsible directory tree and keeps its selection and folded state within the current detail reference. It uses the full content width; Manage installations returns to the existing overview management panel. Line numbers share the text scroll area, while Copy copies only the original file content. The Files tab reads a fixed-version directory, then loads only the selected body: at most 500 entries and 256 KiB per text preview. Oversized or binary files show metadata only. Text is read-only and copyable; HTML and remote resources in its body do not execute or load. Unsupported listings, anonymous denial and failures have distinct states. Switching sources invalidates old references. This reuses existing Registry GET endpoints and adds only local read-only Host RPC, without changing SaaS HTTP APIs or shared inventory.
+
+Reviews retain the existing skill-level API and distinguish loading, empty results and read failures. Both market and installed details open local changes for the selected installation. After an upgrade, “返回详情” refreshes the actual inventory and opens the upgraded detail; refresh failures can be retried without repeating the upgrade. Skill cards provide subtle hover and keyboard focus feedback. File bodies currently show plain text and line numbers, without language syntax highlighting.
+
+## Use an installed skill
+
+Market, installed and everyday conversation lists show one card per skill. “使用技能” asks the Host to verify the unique installation actually usable in the current session. Catalog use creates a conversation in the same workspace; conversation use keeps the current session. Choose an example or custom task to insert an editable draft. This never sends a message, invokes a model or overwrites the original draft.
+
+In the installed card’s More menu, “管理安装” opens skill details, where the inline installation panel shows each location’s version, state and explicit use/update/enable/disable/removal actions. Disabled or unverified skills lead to management. Installation scope is directly visible in confirmation, with the current-user default unchanged.
+
+An active session is required. Shadowed skills, modified files, disabled user invocation or changed context are reported without modifying the draft. Historical receipts are not proof of current installation. This feature is available from `0.4.0`.
+
+
+## Local package transfer (0.6.2)
+
+Use **Import skill package** in the installed view to select a ZIP containing a root `SKILL.md`, preview it, choose the current project or all projects, and confirm. Existing same-name directories are never overwritten. The first version accepts one skill per archive, up to 8 MiB compressed; existing expanded-size, file-count and per-file limits still apply.
+
+Imports are identified as local packages, support use, diagnosis, activation and removal, and never receive Registry update checks. Import does not require Registry login or connectivity and does not execute packaged scripts. Import records remain in DSH-private state without extending the shared CLI inventory; older versions do not list these records.
+
+In the detail's installation management panel, each location's Manage menu exports that exact installation directly, without an extra location dialog. The ZIP contains its actual contents, including local edits, resources and `.skillhub/examples.json`, while excluding installer metadata. Exporting a disabled installation normalizes the entry inside the ZIP without enabling the original. Review authored files before sharing; export does not automatically redact private content.
+
+## Requirements and validation scope
+
+| Component | Requirement or scope |
+| --- | --- |
+| DSH | The `0.6.4` candidate admits `>=0.2.0-rc.2` without an upper DSH bound; actual Host/Client ownership and required capabilities are still checked |
+| Cordis | `>=4.0.4`; Loader/Include/Timer follow the real Host declarations and resolution graph, not a historical patch-family allowlist |
+| Host Node | DSH 0.2.0/0.2.1: `>=24.2.0`; DSH 0.2.2 and later: `>=24.9.0`; the Host may impose a higher minimum |
+| Build package manager | Bun `1.3.13`, using frozen lockfiles |
+| UI | Chinese, DSH light/dark themes and narrow layouts |
+| Verified environments | See existing records for `0.6.3` and earlier compatibility acceptance; `0.6.4` candidate, platform and public-package results are recorded separately |
+| Validation boundary | Historical feature evidence does not replace final-package acceptance; CI, native Host, browser, real-model and SaaS results are recorded separately |
+
+This is the unreleased `0.6.4` candidate policy; published `0.6.3` retains its original exact version declarations. `testedDshVersions` records regression targets/evidence, not an admission allowlist. A future RC is not rejected merely because it is unlisted, and admission is not an acceptance claim. Missing required capabilities, inconsistent or changed manifests, and insufficient permissions still stop the relevant operation. Development dependencies remain pinned; plugin peer copies must not mask the actual Host graph.
+
+Windows browser acceptance does not establish complete native Windows Host filesystem support. CI results do not replace desktop, model, or target-instance acceptance. See the repository's [compatibility design](../../openspec/changes/add-dsh-native-plugin/compatibility-design.md) and [acceptance criteria](../../openspec/changes/add-dsh-native-plugin/acceptance.md).
+
+Version `0.3.1` includes the merged [Issue #981 compatibility fix](https://github.com/iflytek/skillhub/pull/988). Published plugin `0.3.0` does not include it. Those historical releases reject unlisted runtimes and mixed Host/Client graphs; current source instead uses the minimum-version and actual-graph checks above. Optional `userQuestions` is enabled by Host service availability; it is not part of the mandatory write-version gate. Historical acceptance covered its existing API across the enumerated RCs; that evidence does not establish acceptance of current source on a newer Host. An absent service falls back to the plugin confirmation dialog.
+
+Starting with `0.6.2`, the plugin supports `0.2.1-rc.5`; compatibility and acceptance are tracked in the [compatibility design](../../openspec/changes/add-dsh-native-plugin/compatibility-design.md) and task 53 verification. This does not extend the published npm `0.6.1` support declaration. `0.6.3` additionally targets `0.2.2-rc.1` with its own Node/Cordis family; platform, Node boundary, browser, model and this release acceptance remain separate.
+
+## Build and package
+
+From the repository root:
+
+```sh
+cd cli
+bun install --frozen-lockfile
+cd ../plugins/dsh
+bun install --frozen-lockfile
+bun run check
+npm pack --dry-run --ignore-scripts
+```
+
+`dsh-typert-generator` remains pinned to `0.2.0-rc.2` to emit the common RPC contract for the enumerated Hosts; other DSH development modules use `0.2.1-rc.2` for type checking. This compiler pin does not bypass the runtime release guard.
+
+`check` builds Host/Client, generated Remote bindings and declarations, then runs type checking, lint and tests. Lint uses the locked tools in `cli/`. Bun is a build dependency; the packaged Host runs under Node. React and React DOM are supplied by DSH.
+
+Create a separate output directory outside the checkout, then generate the candidate:
+
+```sh
+npm pack --ignore-scripts --pack-destination /absolute/path/to/candidate-output
+```
+
+A dry run does not produce an installable package. Retain each candidate and its checksum; do not overwrite packages used for acceptance or rollback.
+
+The following combinations are historical acceptance records for `0.6.3` and earlier, not the `0.6.4` runtime allowlist. The new candidate does not reject an unlisted patch solely by version; it still checks Host declarations against the actual resolution graph and rejects inconsistent copies. Pinning the DSH main package does not lock its transitive `~` dependencies.
+
+| Combination | Cordis | Loader | Include | Timer |
+| --- | --- | --- | --- | --- |
+| Retained baseline | `4.0.4` | `1.0.5` | `1.0.9` | `1.1.6` |
+| Retained patch combination | `4.0.5` | `1.0.6` | `1.0.10` | `1.1.7` |
+| DSH `0.2.2-rc.1` | `4.1.0` | `1.1.0` | `1.1.0` | `1.2.0` |
+
+Published `0.1.0` still requires the original Cordis `4.0.4` baseline and does not include these fixes. Historical receipts use a freshly verified read-only context; expired installation references and plans never regain write authorization.
+
+## Install from npm
+
+This section targets `0.6.4`. First use `npm view` to confirm that the exact version is available; use a local tarball while the candidate is unpublished. This candidate uses the minimum DSH version policy above; admission is not an acceptance claim for every future release.
+
+Query the exact npm version first and install only after confirming availability. Check the DSH/Node minimum requirements and actual Host dependency graph, stop the target Web Profile Host, then install the plugin. A verified local tarball can also be installed using the next section:
+
+```sh
+npm view @astron-team/skillhub-dsh@0.6.4 version
+dsh plugin --profile skillhub-test add @astron-team/skillhub-dsh@0.6.4 --ignore-scripts
+dsh --profile skillhub-test --host 127.0.0.1 --port 0 --no-open
+```
+
+Replace `skillhub-test` with the intended Web Profile; initial creation is documented below. When `registryUrl` is omitted, the plugin uses `https://skill.xfyun.cn`. To use a self-hosted instance, change, test and save the source in plugin settings. Explicitly saving an empty address disconnects. Diagnose npm query/download failures separately from plugin loading errors.
+
+## Upgrade from an older version
+
+Shared inventory remains strict v2 without a persisted `installationState`; activation is derived from trusted `SKILL.md` / `SKILL.md.disabled` entries. A coordinated CLI upgrade is not required. Published CLI `0.2.0` must retain normal queries and ordinary-target management; default update, sync and Suite paths must not unintentionally enable disabled targets. Historical explicit force install, upgrade and sync retain their overwrite semantics and may restore the standard entry; explicit remove retains deletion semantics. New readers must reflect these actual file changes.
+
+Reading v1/v2 does not migrate it. Any v3 inventory from unpublished builds requires identity, entry and pending-transaction validation, an original-byte backup under the same lock, and safe conversion to v2. Never restore a stale backup over newer records. Ordinary journals remain readable by historical DSH; toggle journals isolate compatibility impact. Compatibility acceptance using alternating operations with actual historical packages has passed; check npm for public availability.
+
+Authors provide examples at the fixed `.skillhub/examples.json` path inside each skill package. The file keeps its location after installation and follows the skill's version and fingerprint; no separate global example copy is created. Skills without examples use a custom task; invalid declarations remain ordinary files without exposing invalid examples.
+
+## Install a local candidate
+
+These commands target the specified DSH Web release. Use the same Profile and DSH home for installation, startup and maintenance. `skillhub-test` is an example Profile. Skill-write testing requires a dedicated test account/container, workspace and test skills: a separate Profile or `DSH_HOME` alone does not isolate the shared inventory.
+
+Create a new Web Profile once:
+
+```sh
+dsh --profile skillhub-test --from-default-profile web --dump-config
+```
+
+Stop the Host using that Profile, install the tarball, and start it:
+
+```sh
+dsh plugin --profile skillhub-test add /absolute/path/to/candidate.tgz --ignore-scripts
+dsh --profile skillhub-test --host 127.0.0.1 --port 0 --no-open
+```
+
+Open the local entry printed by the Host. It may contain an access credential; do not include it in reports, screenshots or commits. The example binds loopback. Remote access requires the environment's existing access controls.
+
+Skip Profile creation for an existing Web Profile. The base Profile automatically created by `plugin add` does not supply the Web Client. If `dsh` is not on PATH, replace it with `node /absolute/path/to/@deepseek-ai/dsh/lib/bin.js` from the installed target release.
+
+The Loader entry ID is `astron-skillhub`; `skillhub` is the Host/Remote service name. Custom patches must target the owning plugin's correct Loader ID, without changing another plugin's entry.
+
+## Configure a Registry
+
+Open DSH **Plugins → @astron-team/skillhub-dsh → SkillHub 设置**.
+
+1. Select, add or edit a source in the **技能来源** card. Use an HTTP(S) instance base address. A deployment subpath is allowed; credentials, query parameters, fragments and API endpoint suffixes are not.
+2. Select **测试连接** (Test connection) to test the current draft URL without saving it. The result reports public catalog or basic-search availability and elapsed time. Requests have a 10-second timeout; failures can be retried. Editing the address clears the previous result. Success does not establish download or all optional-module availability.
+3. Open **页面显示** (Page display) to choose visibility for versions, security audit and reviews. Switching tabs retains the draft and does not save it.
+4. Select **保存配置** (Save). After the saved confirmation, open **技能中心** and search for a public test skill.
+
+Configure and switch sources under the **技能来源** tab in SkillHub settings. Selection and management share a single list; adding or editing reveals inline fields. Disconnecting takes effect only after saving and preserves installed skills. Both tabs share Save and Reset, applying all pending edits together. Select a saved source and save to apply it; the Skill Center header does not show a source selector. The active source is shared across pages and conversations of the same Profile/plugin instance. Configuration revision checks reject conflicting edits rather than overwriting another page.
+
+Switching preserves existing installations. Installed skills from other trusted sources remain locally usable and manageable, including availability checks, enable/disable and removal; only the current source participates in update checks and upgrades. Same-name skills from different sources remain distinct. Removing the active saved source disconnects without deleting installations; old-source details never borrow current-market content.
+
+**当前使用** identifies the saved active source; **待保存** identifies a pending selection. Neither indicates a successful connection test. Choose **不连接技能来源** and save to disconnect. **重置修改** (Reset changes) restores the current Host snapshot without a network reload or save. Read-only connections cannot edit configuration. On a revision conflict, reset the draft before editing the current values.
+
+| Field | Meaning |
+| --- | --- |
+| `registryUrl` | Registry base URL; defaults to `https://skill.xfyun.cn` when omitted; explicit empty/whitespace disconnects without fallback; custom values are preserved |
+| `savedRegistries` | Optional named sources `[{ name, url }]`; defaults to an empty list. `registryUrl` remains the sole active source |
+| `detailTabs.versions` | Version history visibility |
+| `detailTabs.securityAudit` | Security audit visibility |
+| `detailTabs.reviews` | Read-only review visibility |
+
+Each visibility setting accepts `auto`, `show` or `hide`. Auto detects actual anonymous availability. Show does not grant server access. Hide does not request the module. Anonymous audit access is currently denied; this must not be presented as a successful audit. A SaaS instance without reviews can hide that tab.
+
+## Browse, install and manage skills
+
+- Browse supports search, server sorting, real labels and explicit **Load more**, normally 12 results per page. A first-page 404/405 can fall back to bounded legacy search, with an explicit pagination/sorting limitation. A failed label filter never silently returns unfiltered results.
+- Details show fixed-version documentation and optional tabs. Select a downloadable version before confirming installation. Existing-target protection remains; skill downgrades are not supported.
+- Installed skills are grouped by identity and support keyword filtering. Compact horizontal cards use two columns on desktop and one on narrow screens. Click a card to open details; usable skills keep the primary use action. The more menu opens installation management or checks only this skill’s installation locations without applying updates. Cards show locally installed names, one-line summaries and actual installed versions, marking differing copies as multiple versions. Up to two semantic badges show disabled/unverified installation and update status (blue for updates, gray for disabled, amber for warnings), without a redundant installed label. Details provide independent location rows and precise confirmed operations; missing directories retain stale-record cleanup.
+- `astron_skillhub_search` only searches. Result cards provide a detail action; the drawer offers explicit installation confirmation.
+- An explicit request to install a uniquely selected result does not require opening the drawer first. `astron_skillhub_install` verifies the search-time version and content snapshot. It accepts a `selectionRef` or a full coordinate, exclusively, and a `user`/`project` scope. Expired or ambiguous references are rejected without switching to current latest.
+
+Local operations require an active conversation so that the Host can resolve trusted roots. Files are written on the Host machine, not the browser machine. There is no login, review-submission or permission-management flow.
+
+Acceptance, completed file writes, DSH discovery and model use are distinct states. Expand **安装记录** to inspect verification, current inventory and the original operation. A historical completion does not prove that version is still installed or has been executed. After a Host restart, historical searches require explicit **重新查看详情** to revalidate the record; old references do not regain write permission.
+
+## Verify a candidate
+
+From `plugins/dsh`:
+
+```sh
+node scripts/smoke-native-host.mjs --artifact /absolute/path/to/candidate.tgz --report /absolute/path/to/host-smoke-summary.json --dsh-version 0.2.1-rc.2
+```
+
+This uses an isolated Web Profile to test installation and Host loading. It makes no model calls and does not replace UI or full skill lifecycle acceptance. Source-only browser and transaction probes are documented in the [integration guide](test/integration/README.md).
+
+Check an anonymously downloadable, published test skill at an exact version:
+
+```sh
+bun run probe:registry --registry 'https://registry.example' --namespace 'demo' --slug 'test-skill' --version '1.0.0' --output /absolute/path/to/registry-report.json
+```
+
+Replace example values and use a new output file. The probe checks search, resolution, metadata, documentation, optional modules and archive fingerprints. Extraction is temporary; it does not install or execute skills. Directory pagination, labels, sorting and actual DSH pages require separate tests. Required failures return a nonzero exit code; audit HTTP success does not establish a validated public audit schema.
+
+Manual checks should include configuration save/reset, search/details, user/project installation, upgrades/removal, history, themes/narrow layouts, failure retries and source changes. Model acceptance requires separate configuration and call-budget authorization.
+
+## Update, rollback and refresh
+
+1. Stop new operations and finish or recover accepted transactions in the original compatible environment.
+2. Retain the current tarball and stop the Host using the Profile.
+3. Install the replacement with the same `plugin ... add` command. Preserve the Profile, Registry, conversations and model settings.
+4. Restart the Host and open its valid entry. If the browser still shows old UI, hard-refresh it (Windows: Ctrl+Shift+R).
+5. Check Skill Center, configuration, existing records and historical queries before exercising a test skill.
+
+Browser refresh does not reload Node modules. Dependency changes require a full Host restart; disabling/re-enabling the plugin is insufficient. Official RC.2 may leave the original browser tab blank after a same-port Host restart. Re-enter using a valid entry and preserve operation records; do not resubmit installation to recover the UI.
+
+Rollback uses a retained, verified compatible tarball and the same procedure. Replacement between development candidates is not a promise of cross-release journal compatibility. Never delete journals or replace the package to bypass pending recovery. Plugin rollback is separate from skill-version downgrade.
+
+Disable/re-enable the package using its switch in DSH Plugins. To remove it:
+
+```sh
+dsh plugin --profile skillhub-test remove @astron-team/skillhub-dsh
+```
+
+`remove` does not accept `--ignore-scripts`. Package removal does not uninstall skills or delete inventory and operation logs. For an uncertain result, query the original request; use **核验并恢复** when recovery is required.
+
+## Server synchronization and independent release
+
+The plugin Host calls anonymous Registry HTTP APIs; local file transactions stay on the Host. SaaS does not need a new API that controls user filesystems. Define and verify contracts in open source first, then synchronize missing routes, fields, anonymous policy and tests to SaaS. Public npm `0.2.0` has verified catalog, search, documentation, version selection and fixed-version project installation against `https://skill.xfyun.cn`, including files/fingerprint, inventory and DSH discovery. Each version’s built artifacts and public package require separate acceptance. Non-SemVer versions with no reliable ordering, including date-based versions, remain blocked from automatic upgrades; no executable upgrade action is offered. Verified first-time fixed-version installation remains available. Real model execution of SaaS skills is unverified. See the [Registry contract](../../openspec/changes/add-dsh-native-plugin/registry-api-contract.md).
+
+The plugin uses independent `dsh-v<version>` tags. `check-dsh-plugin.yml` runs normal clean-install checks on Linux/macOS/Windows × Node 24.2.0/current Node 24, plus an isolated retained-Cordis baseline regression. `release-dsh-plugin.yml` is manual and defaults to candidate-only operation. Publishing requires an approved version, publishable manifest, candidate acceptance and explicit release authorization; configured environment protection rules must also be satisfied. Version updates are explicit commits; npm publication uses the dedicated workflow after release authorization.
+
+See the [release guide](../../openspec/changes/add-dsh-native-plugin/release-guide.md) and [release notes](../../openspec/changes/add-dsh-native-plugin/release-notes.md). OpenSpec and integration links refer to the source repository; those documents are not included in the tarball.
+
+### Marketplace interaction and installation management
+
+Market cards prioritize skill use. Their management action opens details with a separate inline section for each installation location. Explicit management actions retain their exact target. After an explicit install request, an omitted scope defaults to current user; project scope must be explicitly selected. Market install actions open the same dialog without detail-page navigation. Current user is preselected, with project scope in advanced options; the dialog never submits automatically. A later explicit user scope may start a new call. Details omit complete leading frontmatter and reuse public reads for 60 seconds without bypassing write validation. The versions tab requests `downloadableOnly=true`, requiring the updated open-source backend; SaaS synchronization and acceptance remain separate.
+
+After confirmation, the installation dialog expands to the right, keeping the skill, version, and scope on the left and concise real progress on the right. Narrow screens stack the sections. Progress remains indeterminate until completion; closing the dialog does not cancel a submitted installation.
+
+Management reads current inventory, not historical success. Project scope is the current project directory; all-project scope is this Host’s current user directory. “安装其他位置” opens installation confirmation; changing scope never installs automatically.
+
+Removal from market cards, installed rows, and detail controls opens an in-place confirmation. It shows the skill, version, selected scope, and impact. Opening only prepares a plan; confirmation executes it. Cancel and Escape never remove files, and existing expiry, identity, and local-file checks still apply.
+
+Version selection is read-only. A verifiable newer selected version offers an explicit exact-version upgrade; equal versions do not upgrade again, older versions cannot downgrade, and unorderable versions are blocked. Confirmation lists only the selected installation location. Latest-update checks remain available, with in-place confirmation, local-change protection, and recovery.
+
+
+### Conversation management
+
+`astron_skillhub_list_installed` lists current-source managed records in the current user/project roots, not every skill on the machine. `astron_skillhub_check_update` checks the latest or an explicitly requested newer version. `astron_skillhub_upgrade` and `astron_skillhub_uninstall` require an exact installed reference and real human confirmation, including explicitly selected scopes. Without a native question provider they return a confirmation card. Models cannot authorize operations using paths, plan IDs or confirmation flags. `astron_skillhub_operation` reads the original session-owned receipt without resubmitting a mutation.
+
+New conversational installs default to user scope after an explicit install request. Project installation is explicit/advanced. Updating one location preserves other locations' versions. Local edits and stale references block mutations. Shared inventory remains compatible with published CLI 0.2.0; historical explicit overwrite and removal retain their original semantics.
+
+
+### Skill availability diagnosis (0.5.0)
+
+Choose “管理安装 → 检查可用性” on a conversational installed-skill card to inspect its selected location. A conversation can also use the read-only `astron_skillhub_check_availability` tool to explain why a skill cannot be used.
+
+The result distinguishes local integrity, current-session discovery, and user/model invocation policies. Shadowing, local modifications and unknown Host state are separate outcomes. A name-only lookup reports Host observations without proving installation ownership or integrity. Diagnosis never modifies, removes or enables/disables a skill, edits a draft, or sends a message. A historical result is not a guarantee about a later invocation.
+
+
+## Managed skill enable/disable (0.6.1)
+
+Open “管理安装” and choose enable or disable on the explicit location row. User and project copies are independent: disabling the user copy does not disable a project copy. UI and conversation mutations require real human confirmation. `astron_skillhub_disable` / `astron_skillhub_enable` accept fresh installation references, never arbitrary paths.
+
+Disabling changes only the entry from `SKILL.md` to `SKILL.md.disabled`, keeping directory, resources and version. Enabling restores the entry without overwriting an occupied destination. Modified, shared or untrusted installations are blocked. DSH can still check, update or uninstall a disabled installation; updates preserve disabled state.
+
+This does not revoke loaded conversation content or stop tasks. Another same-named installation can remain available. Unverified Host cache observations remain unknown; the older RC may need a new session to observe a fallback copy. Removing this plugin does not enable its disabled installations.
+
+Protocol and real historical-package interoperability remain release gates; see above.
+
+The detail-header website link uses only the detail API’s optional `webUrl`. Missing, null, blank or unsafe values hide the action without breaking skill details or installation. There is no plugin website setting, route construction or Registry fallback; legacy `websiteUrl` settings are ignored. The open-source server uses its trusted `SKILLHUB_PUBLIC_BASE_URL` to supply an absolute link, or null when no valid website base is configured. SaaS must provide this additive API field separately.
+
+Installation locations in the detail view expose secondary actions through a More menu. Disabled locations retain Enable. The menu supports arrow keys and Escape without expanding the location card. Closing it preserves the selected installation’s in-flight use request.
+
+Detail installation checks use a dismissible top-right notification. Ordinary success expires after five seconds; conflicts and failures remain dismissible. Repeated checks replace the notification, and leaving the skill clears it. Upgrade candidates and safety blocks stay in the installation row.
+
+Check notifications use a scope/version heading and one concise conclusion. Installation scope is directly visible without an advanced disclosure. Confirmation, progress and completion share a stable two-column layout (stacked on narrow screens), with a separate use action after completion. Default scope selection is unchanged.
+
+The installed page supports an explicit update check with up to three concurrent read-only requests and a 30-second timeout per installation. Progress, distinct upgradable skill counts, failed installation counts, filters, and failed-only retry are shown progressively. Opening details or leaving the list cancels pending checks; returning from details retains valid completed results. Source, session, workspace, or installation-reference changes invalidate old results. Details show checked target versions per location; execution still revalidates the target. Updates still require confirmation for the exact installation in details.
+
+### Release changes and local file modifications
+
+Installed skill details expose local changes before starting an upgrade. Comparisons use the original content from the installation's exact source, version and release fingerprint. An unavailable or invalid original is reported explicitly; another registry's same-named skill is never substituted.
+
+Upgrades check local changes first. Discard selected changes after confirmation, or choose **Back up changes and continue**. A successful backup opens a separate release preview; only **Confirm upgrade** replaces the installation. Cancelling leaves the installation intact and retains any completed backup. File differences load on demand, have bounded previews and independently scrollable content.
+
+Discarding changes restores files from the currently installed release: modified files are restored, local additions deleted and deleted release files recovered. Version, ownership and enabled/disabled state remain unchanged. Version downgrades and post-upgrade version rollback are not provided. Further file changes invalidate the prepared operation.
+
+Persistent backups live under `skillhub/backups` in DSH Home, outside skill directories. Limits are 100 MiB per backup, 1 GiB in total and 20 backups. Reaching a limit rejects the new backup; backups are not automatically deleted. Failed backups never authorize overwriting, and edits after backup require a fresh check. Local files are compared and backed up on the Host, never uploaded to the Registry.
+
+Manual update actions on conversation cards also open the change preview. Model tools retain their existing confirmation semantics for unmodified installations and cannot authorize backup-and-overwrite; local modifications still require handling in the page.
+
+## Local favorites
+
+The heart-shaped favorite button in details adds or removes a local favorite; ordinary discovery cards do not show a favorite button. The browse view's “仅看收藏” filter reads the complete current-source list, whose cards allow direct removal from favorites. It searches this list locally, independently of loaded market pages. Favorites require no login, install nothing, and do not change the website's star count. Opening an item resolves its current downloadable version; offline or missing items stay saved without automatically installing an old version.
+
+Favorites use `$DSH_HOME/skillhub/favorites.json`, with DSH_HOME resolved by the Host's path rules. Profiles and projects sharing that home share favorites; Registry sources and different DSH_HOME values remain isolated. Removing a favorite does not uninstall a skill, and switching or removing a source does not delete its favorites. Read/write failures are reported without silently clearing the list or overwriting unknown formats. This is available starting with the published `0.6.2` package and is not included in npm `0.6.1`.
+
+After a successful removal, a dismissible top-right notice names the skill and can undo the latest removal. Failed undo retains its retry action. Leaving the page, switching sources, or manually saving that skill again clears the old notice. Empty search results offer a clear-search action. A new search cancels an unfinished open request so late results cannot override the new intent.
+
+Successful writes use the complete list returned by the Host without an immediate extra read. Filtering and searching add no network requests. Re-entry, window focus, and reconnection can refresh changes from another Host; there is no polling or real-time multi-window push.

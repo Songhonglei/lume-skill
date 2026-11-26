@@ -1,0 +1,378 @@
+import { afterEach, expect, test } from 'bun:test';
+import { realpath, access, chmod, mkdir, stat, symlink, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+// Node-only CI entry; keep its helpers importable without starting a Host or downloading dependencies.
+// @ts-expect-error The development-only Node entry has no TypeScript declarations.
+import { safeAvailabilityCheckpoint, summarizeNpmPreparation, prepareDownloadCache, scenarioProbes, assertHostNodeVersion, hostInstallManifest, selectDshVersion, testedDshVersions, isolatedEnvironment, profileInstallManifest, retainedCordisFamily, runBounded, selectTarball } from '../scripts/smoke-native-host.mjs';
+
+const roots: string[] = [];
+async function root() {
+  const path = await realpath(await mkdtemp(join(tmpdir(), 'skillhub-smoke-test-')));
+  roots.push(path);
+  return path;
+}
+async function removeFixture(path: string) {
+  const deadline = Date.now() + 2000;
+  for (;;) {
+    try { await rm(path, { recursive: true, force: true }); return; }
+    catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if ((code !== 'EBUSY' && code !== 'EPERM') || Date.now() >= deadline) throw error;
+      // A killed Windows Job can release its cwd handles shortly after the wrapper emits exit.
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+  }
+}
+afterEach(async () => { await Promise.all(roots.splice(0).map(removeFixture)); });
+
+test('Node loads smoke with only CLI-declared dependencies and no plugin node_modules', async () => {
+  const directory = await root();
+  const scriptDirectory = join(directory, 'plugins/dsh/scripts');
+  const cliDirectory = join(directory, 'cli');
+  await mkdir(scriptDirectory, { recursive: true });
+  await mkdir(join(cliDirectory, 'node_modules'), { recursive: true });
+  const cliManifest = JSON.parse(await readFile(new URL('../../../cli/package.json', import.meta.url), 'utf8'));
+  await writeFile(join(cliDirectory, 'package.json'), JSON.stringify({
+    private: true, dependencies: { semver: cliManifest.dependencies.semver },
+  }));
+  const require = createRequire(new URL('../../../cli/package.json', import.meta.url));
+  await symlink(dirname(require.resolve('semver/package.json')), join(cliDirectory, 'node_modules/semver'),
+    process.platform === 'win32' ? 'junction' : 'dir');
+  await writeFile(join(scriptDirectory, 'smoke-native-host.mjs'), await readFile(new URL('../scripts/smoke-native-host.mjs', import.meta.url)));
+  await expect(access(join(directory, 'plugins/dsh/node_modules'))).rejects.toThrow();
+  await writeFile(join(directory, 'probe.mjs'), `
+import assert from 'node:assert/strict';
+import { selectDshVersion, assertHostNodeVersion } from './plugins/dsh/scripts/smoke-native-host.mjs';
+assert.equal(selectDshVersion('0.2.2-rc.3+desktop.1'), '0.2.2-rc.3+desktop.1');
+assertHostNodeVersion('0.2.2-rc.3', '24.9.0');
+console.log('smoke dependency layout verified');
+`);
+  const child = Bun.spawn(['node', 'probe.mjs'], { cwd: directory, stdout: 'pipe', stderr: 'pipe',
+    env: { ...process.env, NODE_PATH: '', NODE_OPTIONS: '' } });
+  const [stdout, stderr, code] = await Promise.all([
+    new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited,
+  ]);
+  expect(code, stderr).toBe(0);
+  expect(stdout.trim()).toBe('smoke dependency layout verified');
+}, 10000);
+
+test('isolates user configuration and strips model credentials and Node preload hooks', () => {
+  const directory = join(tmpdir(), 'skillhub-environment');
+  const env = isolatedEnvironment(directory, { Path: 'system-bin', DSH_HOME: '/personal',
+    DEEPSEEK_API_KEY: 'must-not-pass', OPENAI_API_KEY: 'must-not-pass', NODE_OPTIONS: '--require personal',
+    npm_config_userconfig: '/personal/npmrc', SystemRoot: 'C:\\Windows', HTTPS_PROXY: 'http://proxy.invalid' });
+  expect(env.DSH_HOME).toBe(join(directory, 'home'));
+  expect(env.DSH_AGENTS_HOME).toBe(join(directory, 'agents'));
+  expect(env.HOME).toBe(join(directory, 'native-install-home'));
+  expect(env.USERPROFILE).toBe(env.HOME);
+  expect(env.npm_config_userconfig).toBe(join(directory, 'empty.npmrc'));
+  expect(env.NODE_OPTIONS).toBeUndefined();
+  expect(env.DEEPSEEK_API_KEY).toBeUndefined();
+  expect(env.OPENAI_API_KEY).toBeUndefined();
+  expect(env.Path).toBeUndefined();
+  expect(env.PATH).toContain('system-bin');
+  expect(env.SystemRoot).toBe('C:\\Windows');
+});
+
+test('accepts exactly one candidate and rejects ambiguous directories', async () => {
+  const directory = await root();
+  await expect(selectTarball(directory)).rejects.toThrow('exactly one');
+  const artifact = join(directory, 'candidate.tgz');
+  await writeFile(artifact, 'fixture');
+  expect(await selectTarball(directory)).toBe(artifact);
+  await writeFile(join(directory, 'other.tgz'), 'fixture');
+  await expect(selectTarball(directory)).rejects.toThrow('exactly one');
+  await writeFile(join(directory, 'plain.txt'), 'fixture');
+  await expect(selectTarball(join(directory, 'plain.txt'))).rejects.toThrow('.tgz');
+});
+
+test('bounded process runner keeps raw output private and cancels a running process tree', async () => {
+  const directory = await root();
+  const script = join(directory, 'child.mjs');
+  const log = join(directory, 'private.log');
+  const ready = join(directory, 'grandchild-ready');
+  const orphanMarker = join(directory, 'orphan-survived');
+  const grandchild = join(directory, 'grandchild.mjs');
+  await writeFile(grandchild, `import { writeFileSync } from 'node:fs';
+    writeFileSync(${JSON.stringify(ready)}, 'ready');
+    setTimeout(() => writeFileSync(${JSON.stringify(orphanMarker)}, 'unexpected'), 3000);`);
+  await writeFile(script, `import { spawn } from 'node:child_process';
+    console.log('private-output');
+    spawn(process.execPath, [${JSON.stringify(grandchild)}], { stdio: 'ignore' });
+    setInterval(() => {}, 1000);`);
+  // The first Windows runner also starts PowerShell and compiles windows-job.ps1's
+  // Add-Type Job wrapper before Node can create the readiness marker. Budget that
+  // cold startup separately; the test deadline also covers 10s cleanup and the
+  // unchanged 3.5s orphan observation after real cancellation.
+  const readinessTimeoutMs = process.platform === 'win32' ? 30000 : 10000;
+  const controller = new AbortController();
+  const result = runBounded([script], { cwd: directory, env: process.env, log,
+    timeoutMs: readinessTimeoutMs + 5000, signal: controller.signal }).then(() => undefined, (error: unknown) => error);
+  try {
+    const deadline = Date.now() + readinessTimeoutMs;
+    let started = false;
+    while (Date.now() < deadline) {
+      try { await access(ready); started = true; break; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    expect(started).toBe(true);
+    controller.abort();
+    const error = await result;
+    if (!(error instanceof Error)) throw new Error('Expected process cancellation to reject');
+    expect(error.message).toContain('deadline');
+    expect(await readFile(log, 'utf8')).toContain('private-output');
+    await new Promise(resolve => setTimeout(resolve, 3500));
+    await expect(access(orphanMarker)).rejects.toThrow();
+  } finally { controller.abort(); await result; }
+}, process.platform === 'win32' ? 60000 : 30000);
+
+test('failed tree termination cannot make the runner wait indefinitely for child exit', async () => {
+  const directory = await root();
+  const script = join(directory, 'unresponsive.mjs');
+  await writeFile(script, 'setInterval(() => {}, 1000);');
+  let exited: Promise<void> | undefined;
+  const started = Date.now();
+  await expect(runBounded([script], { cwd: directory, env: process.env,
+    log: join(directory, 'cleanup.log'), timeoutMs: 100, cleanupTimeoutMs: 100,
+    terminateProcess: (child: import('node:child_process').ChildProcess) => {
+      exited = new Promise(resolve => child.once('exit', () => resolve()));
+    },
+  })).rejects.toThrow('cleanup deadline');
+  expect(Date.now() - started).toBeLessThan(3000);
+  // The deadline rejects before the forced kill emits exit; fixture cleanup also bounds delayed handle release.
+  await exited;
+}, 5000);
+
+test('successful parent exit still cleans remaining descendants', async () => {
+  const directory = await root();
+  const marker = join(directory, 'orphan-survived');
+  const grandchild = join(directory, 'orphan.mjs');
+  const parent = join(directory, 'parent.mjs');
+  await writeFile(grandchild, `import { writeFileSync } from 'node:fs';
+    setTimeout(() => writeFileSync(${JSON.stringify(marker)}, 'unexpected'), 1000);`);
+  await writeFile(parent, `import { spawn } from 'node:child_process';
+    spawn(process.execPath, [${JSON.stringify(grandchild)}], { stdio: 'ignore' }).unref();`);
+  await runBounded([parent], { cwd: directory, env: process.env,
+    log: join(directory, 'parent.log'), timeoutMs: 10000 });
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  await expect(access(marker)).rejects.toThrow();
+}, 10000);
+
+test('passes Unicode and shell-looking arguments literally without a shell', async () => {
+  const directory = await root();
+  const script = join(directory, 'arguments.mjs');
+  const log = join(directory, 'arguments.log');
+  const args = ['with space', 'quoted"value', 'C:\\space dir\\', '$(echo injected)', '; & []中文'];
+  await writeFile(script, 'console.log(JSON.stringify(process.argv.slice(2)));');
+  await runBounded([script, ...args], { cwd: directory, env: process.env, log, timeoutMs: 10000 });
+  expect(JSON.parse((await readFile(log, 'utf8')).trim())).toEqual(args);
+}, 15000);
+
+test('fresh smoke uses ordinary resolution and retained smoke pins the entire validated Cordis family', () => {
+  expect(hostInstallManifest('fresh')).toEqual({ private: true, type: 'module' });
+  expect(hostInstallManifest('retained')).toEqual({ private: true, type: 'module', overrides: retainedCordisFamily });
+  expect(retainedCordisFamily).toEqual({
+    '@deepseek-ai/cordis': '4.0.4', '@deepseek-ai/cordis-plugin-loader': '1.0.5',
+    '@deepseek-ai/cordis-plugin-include': '1.0.9', '@deepseek-ai/cordis-plugin-timer': '1.1.6',
+  });
+  expect(() => hostInstallManifest('unknown')).toThrow('Unknown Cordis family');
+});
+
+test('retained profile pins pnpm separately while fresh profile preserves ordinary configuration', () => {
+  const profile = { private: true, dependencies: { fixture: '1.0.0' },
+    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base'] } },
+    pnpm: { supportedArchitectures: { os: ['current'] }, overrides: { unrelated: '2.0.0' } } };
+  expect(profileInstallManifest(profile, 'fresh')).toBe(profile);
+  expect(profileInstallManifest(profile, 'retained')).toEqual({ ...profile, pnpm: {
+    ...profile.pnpm, overrides: { unrelated: '2.0.0', ...retainedCordisFamily },
+  } });
+  expect(profile.pnpm.overrides).toEqual({ unrelated: '2.0.0' });
+  expect(profileInstallManifest({ private: true }, 'retained')).toEqual({
+    private: true, pnpm: { overrides: retainedCordisFamily },
+  });
+  expect(() => profileInstallManifest(profile, 'unknown')).toThrow('Unknown Cordis family');
+});
+
+test('native smoke uses a minimum release instead of a tested-version allowlist', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  expect(manifest.engines.dsh).toBe('>=0.2.0-rc.2');
+  expect(testedDshVersions).toContain('0.2.2-rc.3');
+  for (const version of [...testedDshVersions, '0.2.1', '0.2.1-rc.3', '0.2.2-rc.4', '0.2.2-rc.5', '0.3.0-alpha.1', '1.0.0', '0.2.2-rc.3+desktop.1', '1.0.0+build.2']) {
+    expect(selectDshVersion(version)).toBe(version);
+  }
+  for (const version of ['latest', 'next', 'alpha', '0.1.9', '0.2.0-rc.1', 'v0.2.2-rc.3', ' 0.2.2-rc.3', '0.2.2-rc.3 ', '=0.2.2-rc.3', '0.2.1-rc.2 --ignore-scripts', '0.2.1-rc.5 --ignore-scripts']) {
+    expect(() => selectDshVersion(version)).toThrow('exact DSH release at or above');
+  }
+  expect(selectDshVersion('0.2.0-rc.2', 'retained')).toBe('0.2.0-rc.2');
+  expect(selectDshVersion('0.2.0-rc.2+desktop.1', 'retained')).toBe('0.2.0-rc.2+desktop.1');
+  for (const version of ['0.2.1-rc.2', '0.2.1-rc.5', '0.2.2-rc.1', '0.2.2-rc.3', '0.2.2-rc.4']) {
+    expect(() => selectDshVersion(version, 'retained')).toThrow('requires the current Cordis family');
+  }
+  expect(() => selectDshVersion('0.2.2-rc.3', 'unknown')).toThrow('Unknown Cordis family');
+});
+
+
+test('installation scenarios select a fresh smoke invocation without availability leftovers', () => {
+  expect(scenarioProbes()).toEqual(['runtime-baseline', 'plugin-lifecycle', 'skill-availability']);
+  expect(scenarioProbes('skill-toggle')).toEqual(['runtime-baseline', 'skill-toggle']);
+  expect(scenarioProbes('skill-toggle-watch-off')).toEqual(['runtime-baseline', 'skill-toggle-watch-off']);
+  expect(() => scenarioProbes('unknown')).toThrow('Unsupported Host scenario');
+});
+
+
+test('explicit public download cache shares content but never Host state or credentials', async () => {
+  const directory = await root();
+  const shared = join(directory, 'downloads');
+  expect((await prepareDownloadCache(shared)).populated).toBe(false);
+  await mkdir(join(shared, '_cacache'));
+  await writeFile(join(shared, '_cacache', 'content'), 'public-tarball');
+  expect((await prepareDownloadCache(shared)).populated).toBe(true);
+  const first = isolatedEnvironment(join(directory, 'first'), { npm_config_cache: '/personal', NPM_TOKEN: 'private', npm_config__auth: 'private' });
+  const second = isolatedEnvironment(join(directory, 'second'), first);
+  for (const key of ['HOME', 'USERPROFILE', 'DSH_HOME', 'DSH_AGENTS_HOME', 'npm_config_userconfig', 'npm_config_logs_dir', 'npm_config_cache']) {
+    expect(first[key]).not.toBe(second[key]);
+    expect(first[key]).not.toContain(shared);
+  }
+  expect(first.NPM_TOKEN).toBeUndefined();
+  expect(first.npm_config__auth).toBeUndefined();
+  expect(await readFile(join(shared, '_cacache', 'content'), 'utf8')).toBe('public-tarball');
+});
+
+test('download cache rejects relative, temp-root, outside and linked directories', async () => {
+  const directory = await root();
+  await expect(prepareDownloadCache('relative')).rejects.toThrow();
+  await expect(prepareDownloadCache(tmpdir())).rejects.toThrow();
+  await expect(prepareDownloadCache(process.cwd())).rejects.toThrow();
+  const actual = join(directory, 'actual');
+  await mkdir(actual);
+  const linked = join(directory, 'linked');
+  await symlink(actual, linked, process.platform === 'win32' ? 'junction' : 'dir');
+  await expect(prepareDownloadCache(join(linked, 'nested'))).rejects.toThrow();
+  await expect(access(join(actual, 'nested'))).rejects.toThrow();
+  const content = join(directory, 'content-cache');
+  await mkdir(content);
+  await symlink(actual, join(content, '_cacache'), process.platform === 'win32' ? 'junction' : 'dir');
+  await expect(prepareDownloadCache(content)).rejects.toThrow();
+});
+
+
+test('explicit CI runner temp is trusted without inheriting it into Host state', async () => {
+  const directory = await root();
+  const previous = { CI: process.env.CI, RUNNER_TEMP: process.env.RUNNER_TEMP, TMPDIR: process.env.TMPDIR, TEMP: process.env.TEMP, TMP: process.env.TMP };
+  const alternate = join(directory, 'ordinary-temp');
+  await mkdir(alternate);
+  try {
+    process.env.CI = 'true';
+    process.env.RUNNER_TEMP = directory;
+    process.env.TMPDIR = alternate;
+    process.env.TEMP = alternate;
+    process.env.TMP = alternate;
+    expect(tmpdir()).toBe(alternate);
+    const target = join(directory, 'runner-downloads');
+    expect((await prepareDownloadCache(target)).path).toBe(target);
+    expect(isolatedEnvironment(join(directory, 'host')).RUNNER_TEMP).toBeUndefined();
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+
+test.skipIf(process.platform === 'win32')('download cache rejects writable intermediate directories without changing their mode', async () => {
+  const directory = await root();
+  const parent = join(directory, 'shared-parent');
+  await mkdir(parent);
+  await chmod(parent, 0o777);
+  await expect(prepareDownloadCache(join(parent, 'cache'))).rejects.toThrow();
+  await expect(access(join(parent, 'cache'))).rejects.toThrow();
+  expect((await stat(parent)).mode & 0o777).toBe(0o777);
+});
+
+
+test('trusted temporary base aliases accept lexical and canonical children but never anchors or descendant links', async () => {
+  const directory = await root();
+  const actual = join(directory, 'actual-temp');
+  const alias = join(directory, 'temp-alias');
+  await mkdir(actual);
+  await symlink(actual, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  const previous = { CI: process.env.CI, RUNNER_TEMP: process.env.RUNNER_TEMP, TMPDIR: process.env.TMPDIR, TEMP: process.env.TEMP, TMP: process.env.TMP };
+  try {
+    process.env.TMPDIR = alias; process.env.TEMP = alias; process.env.TMP = alias;
+    delete process.env.RUNNER_TEMP;
+    expect((await prepareDownloadCache(join(actual, 'canonical'))).path).toBe(join(actual, 'canonical'));
+    expect((await prepareDownloadCache(join(alias, 'lexical'))).path).toBe(join(actual, 'lexical'));
+    await expect(prepareDownloadCache(alias)).rejects.toThrow();
+    await expect(prepareDownloadCache(actual)).rejects.toThrow();
+    const descendant = join(actual, 'linked');
+    await symlink(directory, descendant, process.platform === 'win32' ? 'junction' : 'dir');
+    await expect(prepareDownloadCache(join(alias, 'linked', 'escape'))).rejects.toThrow();
+    await expect(prepareDownloadCache(join(actual, 'linked', 'escape'))).rejects.toThrow();
+    const unrelated = join(directory, 'other-temp'); await mkdir(unrelated);
+    process.env.TMPDIR = unrelated; process.env.TEMP = unrelated; process.env.TMP = unrelated;
+    process.env.CI = 'true'; process.env.RUNNER_TEMP = alias;
+    expect((await prepareDownloadCache(join(actual, 'runner'))).path).toBe(join(actual, 'runner'));
+    await expect(prepareDownloadCache(actual)).rejects.toThrow();
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
+
+test('npm preparation diagnostics retain only bounded known timing and cache observations', () => {
+  const result = summarizeNpmPreparation([
+    'npm timing idealTree:init Completed in 12ms',
+    'npm timing idealTree:buildDeps Completed in 345ms',
+    'npm timing reify:unpack Completed in 500ms',
+    'npm timing secret/token Completed in 8ms',
+    'npm http fetch GET 200 https://private.invalid/token 23ms (cache miss)',
+    'npm http fetch GET 200 https://private.invalid/token 4ms (cache hit)',
+    'npm http fetch GET 200 https://private.invalid/token 5ms (cache revalidated)',
+    'npm timing reify Completed in 99999999999999999ms',
+    'npm http cache diagnostic-fixture@http://private.invalid/package.tgz 0ms (cache hit)',
+  ].join('\n'));
+  expect(result).toEqual({ completedTimingsMs: { 'idealTree:init': 12, 'idealTree:buildDeps': 345, 'reify:unpack': 500 },
+    lastCompletedPhase: 'reify:unpack', cacheObservations: { hit: 2, miss: 1, revalidated: 1 }, truncated: false });
+  expect(JSON.stringify(result)).not.toMatch(/secret|token|private/);
+  expect(summarizeNpmPreparation('x'.repeat(1024 * 1024 + 1)).truncated).toBe(true);
+});
+
+
+test('truncated npm diagnostic tails discard the partial first line', () => {
+  const result = summarizeNpmPreparation('npm timing reify Completed in 1ms\nnpm timing idealTree Completed in 2ms', true);
+  expect(result.completedTimingsMs).toEqual({ idealTree: 2 });
+  expect(result.lastCompletedPhase).toBe('idealTree');
+});
+
+
+test('availability summary allows only fixed context reasons without messages or IDs', () => {
+  const checkpoint = { scenario: 'user-install', checkpoint: 'assertion', assertion: 'accepted',
+    install: { status: 'not-confirmed', code: 'CONTEXT_STALE', reason: 'FS', path: '/private/token', message: 'secret', operationId: 'private-id' } };
+  expect(safeAvailabilityCheckpoint(checkpoint)).toEqual({ scenario: 'user-install', checkpoint: 'assertion', assertion: 'accepted',
+    install: { status: 'not-confirmed', code: 'CONTEXT_STALE', reason: 'FS' } });
+  for (const reason of ['/private/token', 'secret', 'constructor', undefined, {}]) {
+    expect(safeAvailabilityCheckpoint({ ...checkpoint, install: { ...checkpoint.install, reason } }).install.reason).toBeUndefined();
+  }
+  expect(safeAvailabilityCheckpoint({ ...checkpoint, install: { ...checkpoint.install, code: 'UNCONFIRMED' } }).install.reason).toBeUndefined();
+});
+
+
+test('release-series Node floors retain older Hosts and accept newer Node majors', () => {
+  for (const release of [...testedDshVersions, '0.2.2-rc.3+desktop.1', '0.2.2-rc.4', '0.2.2-rc.5', '0.2.3-alpha.1', '0.3.0', '1.0.0']) {
+    for (const node of ['24.9.0', '24.10.0', '24.20.1', '25.0.0', '26.1.0', '24.9.0+vendor.1']) expect(() => assertHostNodeVersion(release, node)).not.toThrow();
+    for (const node of ['22.20.0', '24.1.9', '24.9.0-rc.1', '24.invalid.0', 'v24.9.0', '24.9.0 ']) {
+      expect(() => assertHostNodeVersion(release, node)).toThrow('smoke requires Node');
+    }
+    for (const node of ['24.2.0', '24.8.9']) {
+      if (['0.2.0-rc.2', '0.2.1-rc.2', '0.2.1-rc.5'].includes(release)) expect(() => assertHostNodeVersion(release, node)).not.toThrow();
+      else expect(() => assertHostNodeVersion(release, node)).toThrow('>=24.9.0');
+    }
+  }
+  expect(() => assertHostNodeVersion('0.2.0-rc.1', '24.9.0')).toThrow('exact DSH release at or above');
+});
