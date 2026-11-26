@@ -14,7 +14,7 @@ import java.util.Map;
 public record SitePresentationSettings(
         @Schema(nullable = true) @Size(max = 80) @Pattern(regexp = "[^\\p{Cntrl}]*") String siteName,
         @Schema(nullable = true) @Size(max = 256) String logoUrl,
-        @Schema(nullable = true) @Size(max = 256) String faviconUrl,
+        @Schema(nullable = true, description = "Browser icon derived from the platform logo. Accepted for compatibility and ignored on update.") @Size(max = 256) String faviconUrl,
         @NotEmpty @Size(max = 9) Map<@Pattern(regexp = "hero|curated|capabilities|quickStart|popular|latest|enterprise|cta|footer") String,
                 @NotNull @Valid SitePresentationSection> sections,
         @NotNull @Size(max = 9) Map<@Pattern(regexp = "repository|documentation|cliDocumentation|cliPackage|license|contributing|changelog|codeOfConduct|community") String,

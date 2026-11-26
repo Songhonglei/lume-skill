@@ -39,7 +39,8 @@ class RouteSecurityPolicyRegistryTest {
 
     @Test
     void sitePresentationIsPublicReadOnlyAndManagementIsNeverAnApiTokenCapability() {
-        for (String route : List.of("/api/v1/site-presentation", "/api/v1/site-presentation/assets/asset-id")) {
+        for (String route : List.of("/api/v1/site-presentation", "/api/v1/site-presentation/assets/asset-id",
+                "/api/v1/site-presentation/assets/asset-id/favicon")) {
             assertEquals(RouteSecurityPolicyRegistry.AccessLevel.PERMIT_ALL, registry.accessLevel("GET", route));
             assertEquals(RouteSecurityPolicyRegistry.AccessLevel.AUTHENTICATED, registry.accessLevel("PUT", route));
             assertTrue(registry.authorizeApiToken("GET", route, Set.of()).allowed());

@@ -56,14 +56,11 @@ public class SitePresentationService {
         }
         var settings = request.settings();
         String logo = nullableText(settings.logoUrl());
-        String favicon = nullableText(settings.faviconUrl());
         Map<String, Object> previous = stored.getValue();
         assets.validateLogoReference(logo, text(previous.get("logoUrl"), 256));
-        assets.validateReference(favicon);
         Map<String, Object> next = new LinkedHashMap<>();
         putText(next, "siteName", settings.siteName());
         putText(next, "logoUrl", logo);
-        putText(next, "faviconUrl", favicon);
         Map<String, Object> sections = new LinkedHashMap<>();
         for (String id : SitePresentationSettings.SECTION_IDS) {
             SitePresentationSection section = settings.sections().getOrDefault(id, SitePresentationSection.defaults());
@@ -140,8 +137,9 @@ public class SitePresentationService {
                 if (safe != null) links.put(slot, safe);
             }
         }
+        String logo = text(values.get("logoUrl"), 256);
         var settings = new SitePresentationSettings(text(values.get("siteName"), 80),
-                text(values.get("logoUrl"), 256), text(values.get("faviconUrl"), 256),
+                logo, SitePresentationAssetService.faviconUrl(logo),
                 Map.copyOf(sections), Map.copyOf(links));
         return new SitePresentationResponse(settings, stored.getVersion());
     }

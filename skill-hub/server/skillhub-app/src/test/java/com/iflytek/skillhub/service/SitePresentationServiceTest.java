@@ -95,6 +95,19 @@ class SitePresentationServiceTest {
     }
 
     @Test
+    void logoDeterminesTheFaviconEvenWithAnOlderIndependentIcon() {
+        String logo = "/api/v1/site-presentation/assets/15e3ed2a-79fa-450c-986a-cc04c9b790c4";
+        String oldIcon = "/api/v1/site-presentation/assets/96dd90e1-71c7-4844-b6df-e7281cd3480a";
+        stored = new SystemSetting(SitePresentationService.SETTING_KEY, Map.of("logoUrl", logo, "faviconUrl", oldIcon));
+        when(repository.findBySettingKey(SitePresentationService.SETTING_KEY)).thenReturn(Optional.of(stored));
+        assertThat(service.current().settings().faviconUrl()).isEqualTo(logo + "/favicon");
+
+        var request = new SitePresentationSettings("Internal Skills", logo, oldIcon, SitePresentationSettings.defaults().sections(), Map.of());
+        assertThat(update(request).settings().faviconUrl()).isEqualTo(logo + "/favicon");
+        assertThat(stored.getValue()).doesNotContainKey("faviconUrl");
+    }
+
+    @Test
     void existingSectionSettingsDefaultCuratedToVisibleWithoutWriting() {
         Map<String, Object> original = Map.of("sections", Map.of(
                 "hero", Map.of("enabled", true, "texts", Map.of()),

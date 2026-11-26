@@ -5,10 +5,14 @@ import com.iflytek.skillhub.domain.shared.exception.DomainNotFoundException;
 import com.iflytek.skillhub.dto.SitePresentationAssetResponse;
 import com.iflytek.skillhub.storage.ObjectStorageService;
 import com.iflytek.skillhub.storage.StorageAccessException;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +22,7 @@ public class SitePresentationAssetService {
     private static final String URL_PREFIX = "/api/v1/site-presentation/assets/";
     private static final String STORAGE_PREFIX = "site-presentation/assets/";
     private static final String LOGO_PREFIX = "logo-";
+    private static final int FAVICON_SIDE = 64;
     private static final Pattern ASSET_ID = Pattern.compile(
             "(?:logo-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
     private final ObjectStorageService storage;
@@ -75,6 +80,33 @@ public class SitePresentationAssetService {
                 throw new StorageAccessException("read", key(id), new IOException("Invalid branding asset size"));
             }
             return bytes;
+        } catch (IOException failure) {
+            throw new StorageAccessException("read", key(id), failure);
+        }
+    }
+
+    static String faviconUrl(String logo) {
+        return logo == null ? null : logo + "/favicon";
+    }
+
+    public byte[] readFavicon(String id) {
+        try {
+            var source = ImageIO.read(new ByteArrayInputStream(read(id)));
+            if (source == null) throw new IOException("Invalid branding asset");
+            var icon = new BufferedImage(FAVICON_SIDE, FAVICON_SIDE, BufferedImage.TYPE_INT_ARGB);
+            double scale = (double) FAVICON_SIDE / Math.max(source.getWidth(), source.getHeight());
+            int width = Math.max(1, (int) Math.round(source.getWidth() * scale));
+            int height = Math.max(1, (int) Math.round(source.getHeight() * scale));
+            var graphics = icon.createGraphics();
+            try {
+                graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                graphics.drawImage(source, (FAVICON_SIDE - width) / 2, (FAVICON_SIDE - height) / 2, width, height, null);
+            } finally {
+                graphics.dispose();
+            }
+            var output = new ByteArrayOutputStream();
+            if (!ImageIO.write(icon, "png", output)) throw new IOException("Could not encode browser icon");
+            return output.toByteArray();
         } catch (IOException failure) {
             throw new StorageAccessException("read", key(id), failure);
         }

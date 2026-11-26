@@ -52,3 +52,8 @@ export function presentationAssetUrl(path: string | null | undefined): string | 
   if (!path || !/^\/api\/v1\/site-presentation\/assets\/[a-zA-Z0-9-]+$/.test(path)) return undefined
   return buildApiUrl(path)
 }
+
+export function presentationFaviconUrl(logoUrl: string | null | undefined): string | undefined {
+  const logo = presentationAssetUrl(logoUrl)
+  return logo ? `${logo}/favicon` : undefined
+}
