@@ -21,7 +21,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggleTheme}
       className={cn('luma-header-icon inline-grid', className)}
     >
-      <Icon aria-hidden="true" className="h-4 w-4" />
+      <Icon aria-hidden="true" className="size-[18px]" />
     </button>
   )
 }
