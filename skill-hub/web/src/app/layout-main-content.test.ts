@@ -23,7 +23,7 @@ describe('getAppMainContentLayout', () => {
   it.each([
     '/search', '/suites', '/suites/team/example', '/space/acme/demo',
     '/space/acme/demo/compare', '/namespaces/acme', '/notifications', '/privacy',
-    '/reset-password', '/device', '/dashboard/publish',
+    '/reset-password', '/device', '/dashboard/publish', '/dashboard/reviews', '/dashboard/reviews/42',
   ])('gives %s the shared public frame without console navigation', (pathname) => {
     expect(getAppMainContentLayout(pathname)).toEqual({
       mainClassName: DEFAULT_MAIN_CLASS_NAME,
@@ -35,9 +35,9 @@ describe('getAppMainContentLayout', () => {
   it.each([
     '/dashboard', '/dashboard/skills', '/dashboard/tokens', '/dashboard/stars',
     '/github', '/admin/system-config', '/dashboard/github-sync',
-    '/dashboard/namespaces', '/dashboard/suites', '/dashboard/reviews', '/dashboard/governance',
+    '/dashboard/namespaces', '/dashboard/suites', '/dashboard/governance',
     '/settings/profile', '/settings/security', '/settings/notifications', '/settings/accounts',
-    '/dashboard/reviews/42', '/dashboard/namespaces/team/reviews/42',
+    '/dashboard/namespaces/team/reviews/42',
   ])('shares the same console frame and sidebar gutters on %s', (pathname) => {
     expect(getAppMainContentLayout(pathname)).toEqual({
       mainClassName: CONSOLE_MAIN_CLASS_NAME,

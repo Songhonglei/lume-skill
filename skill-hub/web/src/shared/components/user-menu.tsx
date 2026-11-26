@@ -5,7 +5,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/client'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
 import { getAdminSettingsEntry } from '@/shared/lib/admin-settings'
-import { canAccessGlobalReviewCenter } from '@/features/review/review-paths'
+import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
+import { canAccessGlobalReviewCenter, canAccessReviewCenter } from '@/features/review/review-paths'
 import { withBasePath } from '@/shared/lib/base-path'
 import { cn } from '@/shared/lib/utils'
 
@@ -30,7 +31,9 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
   const [isClickOpen, setIsClickOpen] = useState(false)
 
   const adminEntry = getAdminSettingsEntry(user.platformRoles)
-  const canReview = canAccessGlobalReviewCenter(user.platformRoles)
+  const globalReviewer = canAccessGlobalReviewCenter(user.platformRoles)
+  const { data: managedNamespaces } = useMyNamespaces(!globalReviewer)
+  const canReview = canAccessReviewCenter(user.platformRoles, managedNamespaces)
   const open = isHovered || isClickOpen
 
   const clearCloseTimer = () => {
@@ -149,17 +152,8 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
             role="menu"
             className="overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
           >
-            <Link data-analytics-id="navigation.owned.skills" to="/dashboard/skills" className={menuItemClassName} onClick={closeMenu}>
-              {t('user.menu.mySkills')}
-            </Link>
-            <Link data-analytics-id="navigation.owned.suites" to="/dashboard/suites" className={menuItemClassName} onClick={closeMenu}>
-              {t('user.menu.mySuites')}
-            </Link>
             <Link data-analytics-id="navigation.dashboard.open" to="/dashboard" className={menuItemClassName} onClick={closeMenu}>
-              {t('user.menu.dashboard')}
-            </Link>
-            <Link data-analytics-id="account.profile.open" to="/settings/profile" className={menuItemClassName} onClick={closeMenu}>
-              {t('user.menu.settings')}
+              {t('dashboard.title')}
             </Link>
             {canReview ? (
               <Link data-analytics-id="review.queue.open" to="/dashboard/reviews" className={menuItemClassName} onClick={closeMenu}>

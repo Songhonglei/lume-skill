@@ -10,7 +10,6 @@ export const CONSOLE_SIDEBAR_ROW_CLASS_NAME = 'flex flex-col lg:flex-row gap-0 [
 export const CONSOLE_SIDEBAR_CONTENT_CLASS_NAME = 'flex-1 min-w-0 pb-7 pt-[18px] lg:pl-8 lg:pt-7'
 
 export function consoleArea(pathname: string) {
-  if (pathname.startsWith('/settings/') || pathname === '/dashboard/tokens') return 'personal'
   if (pathname.startsWith('/admin/') || pathname === '/github'
     || ['/dashboard/governance', '/dashboard/reports', '/dashboard/promotions', '/dashboard/github-sync'].includes(pathname)) return 'admin'
   return 'workspace'
@@ -45,8 +44,11 @@ export function getAppMainContentLayout(pathname: string): AppMainContentLayout 
     return { mainClassName: SPLIT_AUTH_MAIN_CLASS_NAME, contentClassName: '' }
   }
 
-  if (pathname !== '/dashboard/publish' && (
-    pathname === '/dashboard' || pathname.startsWith('/dashboard/') || consoleArea(pathname) !== 'workspace'
+  const standalone = pathname === '/dashboard/publish'
+    || pathname === '/dashboard/reviews' || pathname.startsWith('/dashboard/reviews/')
+  if (!standalone && (
+    pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname.startsWith('/settings/')
+    || consoleArea(pathname) === 'admin'
   )) {
     return {
       mainClassName: CONSOLE_MAIN_CLASS_NAME,

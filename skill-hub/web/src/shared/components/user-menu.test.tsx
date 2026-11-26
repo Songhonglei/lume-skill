@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as mod from './user-menu'
 import { UserMenu } from './user-menu'
 
@@ -62,9 +62,15 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
+const namespace = vi.hoisted(() => ({ role: undefined as 'OWNER' | 'ADMIN' | 'MEMBER' | undefined }))
+
 vi.mock('@/shared/hooks/use-namespace-queries', () => ({
-  useMyNamespaces: () => ({ data: [] }),
+  useMyNamespaces: () => ({ data: namespace.role ? [
+    { type: 'TEAM', currentUserRole: namespace.role, status: 'ACTIVE', slug: 'team' },
+  ] : [] }),
 }))
+
+afterEach(() => { namespace.role = undefined })
 
 /**
  * UserMenu is a React component that renders a hover/click dropdown menu with
@@ -77,36 +83,14 @@ describe('user-menu module exports', () => {
 })
 
 describe('UserMenu navigation', () => {
-  it('lists personal destinations in the requested order', () => {
-    const html = renderToStaticMarkup(
-      <UserMenu
-        user={{
-          displayName: 'Skill Author',
-          platformRoles: ['USER'],
-        }}
-      />,
-    )
+  it('offers one entry for the personal console', () => {
+    const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Skill Author', platformRoles: ['USER'] }} />)
 
-    expect(html).toContain('user.menu.mySkills')
-    expect(html).toContain('user.menu.mySuites')
-    expect(html).toContain('user.menu.dashboard')
-    expect(html.indexOf('user.menu.mySkills')).toBeLessThan(html.indexOf('user.menu.mySuites'))
-    expect(html.indexOf('user.menu.mySuites')).toBeLessThan(html.indexOf('user.menu.dashboard'))
-  })
-
-  it('keeps dashboard-only personal links out of the compact avatar menu', () => {
-    const html = renderToStaticMarkup(
-      <UserMenu
-        user={{
-          displayName: 'Skill Author',
-          platformRoles: ['USER'],
-        }}
-      />,
-    )
-
-    expect(html).toContain('user.menu.dashboard')
-    expect(html).not.toContain('user.menu.reviewProgress')
-    expect(html).not.toContain('user.menu.security')
+    expect(html.match(/href="\/dashboard"/g)).toHaveLength(1)
+    expect(html).toContain('dashboard.title')
+    for (const path of ['/dashboard/skills', '/dashboard/suites', '/settings/profile', '/dashboard/review-progress']) {
+      expect(html).not.toContain(`href="${path}"`)
+    }
   })
 
   it.each([
@@ -114,11 +98,10 @@ describe('UserMenu navigation', () => {
     ['USER_ADMIN', '/admin/users'],
     ['AUDITOR', '/admin/audit-log'],
     ['SKILL_ADMIN', '/dashboard/governance'],
-  ])('shows personal settings and the appropriate admin entry for %s', (role, entry) => {
+  ])('shows the personal console and the appropriate administration entry for %s', (role, entry) => {
     const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Staff', platformRoles: [role] }} />)
 
-    expect(html).toContain('user.menu.settings')
-    expect(html).toContain('href="/settings/profile"')
+    expect(html).toContain('href="/dashboard"')
     expect(html).toContain('user.menu.adminSettings')
     expect(html).toContain(`href="${entry}"`)
   })
@@ -135,18 +118,13 @@ describe('UserMenu navigation', () => {
     },
   )
 
-  it('does not show the global review center to regular users', () => {
-    const html = renderToStaticMarkup(
-      <UserMenu user={{ displayName: 'Regular User', platformRoles: ['USER'] }} />,
-    )
+  it.each([
+    ['OWNER', true], ['ADMIN', true], ['MEMBER', false], [undefined, false],
+  ] as const)('limits the independent review menu to eligible namespace roles (%s)', (role, allowed) => {
+    namespace.role = role
+    const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Skill User', platformRoles: ['USER'] }} />)
 
-    expect(html).not.toContain('href="/dashboard/reviews"')
-  })
-
-  it('shows personal settings without an administration link for a member', () => {
-    const html = renderToStaticMarkup(<UserMenu user={{ displayName: 'Member', platformRoles: ['USER'] }} />)
-    expect(html).toContain('href="/settings/profile"')
-    expect(html).toContain('user.menu.settings')
+    expect(html.includes('href="/dashboard/reviews"')).toBe(allowed)
     expect(html).not.toContain('user.menu.adminSettings')
   })
 

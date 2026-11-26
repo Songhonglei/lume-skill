@@ -9,6 +9,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => k
 vi.mock('@/api/client', () => ({ authApi: { logout: vi.fn() } }))
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({}) }))
 vi.mock('@tanstack/react-router', () => ({ Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => <a href={to} {...props}>{children}</a> }))
+vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: [] }) }))
 vi.mock('@/features/auth/use-auth', () => ({ useAuth: () => ({ user: { userId: 'local-admin' } }) }))
 vi.mock('@/features/notification/use-notifications', () => ({ useUnreadCount: () => ({ data: { count: 0 } }) }))
 vi.mock('@/features/notification/notification-dropdown', () => ({ NotificationDropdown: () => <div>Notification list</div> }))
