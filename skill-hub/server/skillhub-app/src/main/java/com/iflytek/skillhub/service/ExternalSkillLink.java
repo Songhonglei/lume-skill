@@ -54,9 +54,17 @@ record ExternalSkillLink(URI page, URI download, boolean githubArchive, String d
         if (parts.size() < 4) throw invalid();
         boolean blob = parts.get(2).equals("blob");
         if (!blob && !parts.get(2).equals("tree")) throw invalid();
-        if (blob && (parts.size() < 5 || !parts.getLast().equalsIgnoreCase("SKILL.md"))) throw invalid();
-        int end = parts.size() - (blob ? 1 : 0);
-        return github(page, parts.get(0), parts.get(1), parts.get(3), !blob && end == 4 ? null : String.join("/", parts.subList(4, end)), null);
+        if (blob && parts.size() < 5) throw invalid();
+
+        boolean skillFile = blob && parts.getLast().equalsIgnoreCase("SKILL.md");
+        int end = parts.size() - (skillFile ? 1 : 0);
+        String directory = parts.size() == 4 ? null : String.join("/", parts.subList(4, end));
+        if (blob && !skillFile) {
+            // The archive must still contain SKILL.md at this exact directory.
+            page = URI.create("https://github.com/" + parts.get(0) + "/" + parts.get(1) + "/tree/"
+                    + parts.get(3) + "/" + directory);
+        }
+        return github(page, parts.get(0), parts.get(1), parts.get(3), directory, null);
     }
 
     static ExternalSkillLink github(URI page, String owner, String repo, String ref, String directory, String skillName) {
