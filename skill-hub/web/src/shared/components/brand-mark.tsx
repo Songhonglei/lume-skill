@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { withBasePath } from '@/shared/lib/base-path'
 import { useState } from 'react'
 import { presentationAssetUrl } from '@/api/site-presentation'
@@ -11,19 +12,19 @@ interface BrandMarkProps {
 }
 
 /**
- * 统一展示 SkillHub 项目头像，复用 public/favicon.svg 避免首页、页脚重复绘制字母占位图标。
+ * Uses the shared LumaSkill mark when the site has no usable logo override.
  */
 export function BrandMark({ className, imageClassName, alt }: BrandMarkProps) {
   const { settings } = useSitePresentation()
   const configured = presentationAssetUrl(settings.logoUrl)
   const [failedUrl, setFailedUrl] = useState<string>()
-  const src = configured && configured !== failedUrl ? configured : withBasePath('/favicon.svg')
+  const src = configured && configured !== failedUrl ? configured : withBasePath('/lumaskill-mark.svg')
   return (
     <span className={cn('inline-flex items-center justify-center overflow-hidden rounded-xl', className)}>
       <img
         src={src}
         onError={() => setFailedUrl(configured)}
-        alt={alt ?? settings.siteName ?? 'SkillHub'}
+        alt={alt ?? settings.siteName ?? PRODUCT_NAME}
         className={cn('h-full w-full object-contain', imageClassName)}
       />
     </span>

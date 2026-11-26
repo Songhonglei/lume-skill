@@ -18,7 +18,7 @@ describe('site document metadata', () => {
     expect(icon.type).toBe('')
     state.settings = { siteName: null, faviconUrl: null }
     rerender(<PresentationDocument />)
-    expect(document.title).toBe('SkillHub')
+    expect(document.title).toBe('Luma Skill Hub')
     expect(icon.getAttribute('href')).toBe('/skillhub/favicon.svg')
     expect(icon.type).toBe('image/svg+xml')
   })

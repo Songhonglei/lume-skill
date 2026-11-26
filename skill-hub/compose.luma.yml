@@ -1,0 +1,6 @@
+services:
+  web:
+    image: ${LUMA_SKILL_HUB_WEB_IMAGE:-localhost/lumaskill-hub-web:v0.2.28}
+    build:
+      context: ./web
+      dockerfile: Dockerfile

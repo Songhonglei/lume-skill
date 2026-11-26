@@ -54,14 +54,12 @@ describe('configurable original homepage and market boundary', () => {
     const last = grid?.lastElementChild
     expect(last?.classList.contains('md:col-span-2')).toBe(count === 3 || count === 5)
     if (lastSpan) expect(last?.classList.contains(lastSpan)).toBe(true)
-    if (count === 6) expect(grid?.className).toBe('grid grid-cols-1 overflow-hidden rounded-2xl border border-border/70 bg-border/70 md:grid-cols-2 lg:grid-cols-3')
+    if (count === 6) expect(grid?.classList.contains('gap-px')).toBe(true)
   })
-  it('retains the fixed example notice when the preview caption is customized', () => {
-    state.settings = defaultSitePresentation()
-    state.settings.sections.hero.texts.previewCaption = { zh: '我们的团队工具' }
+  it('uses a real search field without demo records', () => {
     render(<LandingPage />)
-    expect(screen.getByText('我们的团队工具')).toBeTruthy()
-    expect(screen.getByText('landing.experience.demoSkills.caption')).toBeTruthy()
+    expect(screen.getByRole('searchbox')).toBeTruthy()
+    expect(screen.queryByText('landing.experience.demoSkills.caption')).toBeNull()
   })
   it('renders custom text safely and disables hidden sections and requests', () => {
     const settings = defaultSitePresentation()
@@ -103,7 +101,7 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.getByText('market-quick-start')).toBeTruthy()
     expect(state.search).toHaveBeenLastCalledWith({ sort: 'newest', size: 6, source: 'platform' }, true)
   })
-  it('binds all landing text slots, item switches and shared external links', () => {
+  it('binds visible landing text slots, item switches and shared external links', () => {
     const settings = defaultSitePresentation()
     for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
       for (const slot of Object.keys(PRESENTATION_CONTENT[section])) settings.sections[section].texts[slot] = { zh: `${section}-${slot}` }
@@ -113,6 +111,7 @@ describe('configurable original homepage and market boundary', () => {
     const { container } = render(<LandingPage />)
     for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
       for (const slot of Object.keys(PRESENTATION_CONTENT[section])) {
+        if (['badge', 'eyebrow', 'previewTitle', 'previewCaption', 'previewPublishTitle', 'previewPublishDescription'].includes(slot) || slot.startsWith('highlight')) continue
         if (slot === 'searchPlaceholder') expect(screen.getByPlaceholderText(`${section}-${slot}`)).toBeTruthy()
         else expect(container.textContent).toContain(`${section}-${slot}`)
       }

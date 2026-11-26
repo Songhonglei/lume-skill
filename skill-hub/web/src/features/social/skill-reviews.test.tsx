@@ -3,8 +3,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import en from '@/i18n/locales/en.json'
-import ko from '@/i18n/locales/ko.json'
-import ru from '@/i18n/locales/ru.json'
+import ko from '../../../test/fixtures/locales/ko.json'
+import ru from '../../../test/fixtures/locales/ru.json'
 import zh from '@/i18n/locales/zh.json'
 
 const mocks = vi.hoisted(() => ({

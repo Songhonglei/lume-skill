@@ -176,8 +176,7 @@ export function RegisterPage() {
     <AuthShell>
       <div className="space-y-6 animate-fade-up">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{t('register.eyebrow')}</p>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('register.title')}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('register.title')}</h1>
           <p className="text-sm text-muted-foreground sm:text-base">{t('register.subtitle')}</p>
         </div>
 

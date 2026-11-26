@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, expect, it, vi } from 'vitest'
 import en from '@/i18n/locales/en.json'
 import zh from '@/i18n/locales/zh.json'
-import ko from '@/i18n/locales/ko.json'
-import ru from '@/i18n/locales/ru.json'
+import ko from '../../test/fixtures/locales/ko.json'
+import ru from '../../test/fixtures/locales/ru.json'
 
 const api = vi.hoisted(() => ({
   getCurrentUser: vi.fn().mockResolvedValue({ userId: 'user', displayName: 'User' }),

@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { PRESENTATION_LINKS } from '@/shared/lib/presentation-content'
 
 interface InstallCommandProps {
   analyticsId?: string
@@ -55,7 +56,7 @@ export function buildSkillhubInstallCommand(
   }
   const coordinate = buildSkillhubCoordinate(namespace, slug)
   const versionArg = version ? ` --version ${version}` : ''
-  return `npx @astron-team/skillhub@latest install ${coordinate}${versionArg} --registry ${baseUrl}`
+  return `skillhub install ${coordinate}${versionArg} --registry ${baseUrl}`
 }
 
 interface CommandBlockProps {
@@ -120,10 +121,13 @@ export function InstallCommand({ namespace, slug, version, analyticsId, skillhub
           {t('skillDetail.installMethodClawhub')}
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="skillhub">
+      <TabsContent value="skillhub" className="space-y-2">
         {skillhubCommand
           ? <CommandBlock analyticsId={analyticsId} command={skillhubCommand} />
           : <p role="alert" className="text-sm text-destructive">{t('skillDetail.installCommandUnsafeVersion')}</p>}
+        <a href={PRESENTATION_LINKS.cliPackage} target="_blank" rel="noreferrer" className="inline-flex text-xs font-medium text-primary hover:underline">
+          {t('landing.experience.quickStart.cli.docs')}
+        </a>
       </TabsContent>
       <TabsContent value="clawhub">
         <CommandBlock analyticsId={analyticsId} command={clawhubCommand} />

@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createInstance } from 'i18next'
@@ -5,7 +6,7 @@ import { I18nextProvider, useTranslation } from 'react-i18next'
 import type { SitePresentationSettings } from '@/api/site-presentation'
 import { presentationAssetUrl } from '@/api/site-presentation'
 import { LandingPage } from '@/pages/landing'
-import { SitePresentationPreviewContext, presentationText } from '@/shared/hooks/use-site-presentation'
+import { SitePresentationPreviewContext } from '@/shared/hooks/use-site-presentation'
 import { BrandMark } from '@/shared/components/brand-mark'
 import { withBasePath } from '@/shared/lib/base-path'
 
@@ -34,11 +35,10 @@ function PreviewPage({ settings }: { settings: SitePresentationSettings }) {
     }
   }
   return <div data-homepage-preview lang={i18n.resolvedLanguage} className="overflow-hidden rounded-lg border bg-background text-foreground">
-    <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground"><span aria-hidden className="flex gap-1"><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /></span><img alt="" className="ml-2 h-3.5 w-3.5 object-contain" src={presentationAssetUrl(settings.faviconUrl) ?? withBasePath('/favicon.svg')} /><span>{settings.siteName || 'SkillHub'} · {t('nav.landing')}</span></div>
+    <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground"><span aria-hidden className="flex gap-1"><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /></span><img alt="" className="ml-2 h-3.5 w-3.5 object-contain" src={presentationAssetUrl(settings.faviconUrl) ?? withBasePath('/favicon.svg')} /><span>{settings.siteName || PRODUCT_NAME} · {t('nav.landing')}</span></div>
     <div aria-label={t('sitePresentation.previewReadOnly')} onClickCapture={preventNavigation} onAuxClickCapture={preventNavigation} onKeyDownCapture={preventActivation} onSubmitCapture={event => event.preventDefault()} className="[&_.scroll-fade-up]:!translate-y-0 [&_.scroll-fade-up]:!opacity-100 [&_.animate-fade-up]:animate-none [&_.animate-pulse]:animate-none">
-      <header className="flex items-center justify-between gap-4 border-b px-5 py-4 sm:px-8"><div className="flex min-w-0 items-center gap-2"><BrandMark className="h-8 w-8 shrink-0" /><strong className="truncate text-xl">{settings.siteName || 'SkillHub'}</strong></div><div className="flex gap-4 text-xs text-muted-foreground"><span>{t('nav.landing')}</span><span>{t('nav.marketplace')}</span></div></header>
+      <header className="flex items-center justify-between gap-4 border-b px-5 py-4 sm:px-8"><div className="flex min-w-0 items-center gap-2"><BrandMark className="h-8 w-8 shrink-0" /><strong className="truncate text-xl">{settings.siteName || PRODUCT_NAME}</strong></div><div className="flex gap-4 text-xs text-muted-foreground"><span>{t('nav.landing')}</span><span>{t('nav.marketplace')}</span></div></header>
       <LandingPage />
-      {settings.sections.footer.enabled && <footer className="space-y-2 border-t px-5 py-6 text-sm text-muted-foreground sm:px-8"><div className="flex items-center gap-2"><BrandMark className="h-6 w-6" /><strong className="text-foreground">{settings.siteName || 'SkillHub'}</strong></div><p>{presentationText(settings, 'footer', 'description', i18n.resolvedLanguage, t)}</p><div className="flex gap-4 text-xs"><span>{presentationText(settings, 'footer', 'documentationLabel', i18n.resolvedLanguage, t)}</span><span>{presentationText(settings, 'footer', 'repositoryLabel', i18n.resolvedLanguage, t)}</span></div></footer>}
     </div>
   </div>
 }

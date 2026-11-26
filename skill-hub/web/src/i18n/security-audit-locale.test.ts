@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import en from './locales/en.json'
-import ko from './locales/ko.json'
+import ko from '../../test/fixtures/locales/ko.json'
 import zh from './locales/zh.json'
-import ru from './locales/ru.json'
+import ru from '../../test/fixtures/locales/ru.json'
 
 describe('security audit locales', () => {
   it('defines the scanning label in both locales', () => {

@@ -30,8 +30,6 @@ function isAccountDisabledError(error: ApiError): boolean {
   const accountDisabledMessages = [
     i18n.t('error.auth.local.accountDisabled'),
     i18n.getFixedT('en')('error.auth.local.accountDisabled'),
-    i18n.getFixedT('ko')('error.auth.local.accountDisabled'),
-    i18n.getFixedT('ru')('error.auth.local.accountDisabled'),
     i18n.getFixedT('zh')('error.auth.local.accountDisabled'),
   ]
   const normalizedServerMessage = (error.serverMessage ?? '').toLowerCase()

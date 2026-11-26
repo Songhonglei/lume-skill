@@ -88,11 +88,10 @@ export function MarketSearchControls(props: MarketSearchControlsProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <section aria-label={t('search.market.filters')} className="rounded-lg border border-border bg-card p-4 sm:p-6">
-        <h1 className="sr-only">{t('nav.marketplace')}</h1>
         <SearchBar variant="market" analyticsId="search.query.submit" value={props.query} onChange={props.onQueryChange} onSearch={props.onSearch}
           placeholder={t('search.market.placeholder')} isSearching={props.isUpdating} />
 
-        <div className="mt-7 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
           {!props.starredOnly ? (
             <>
               <span className="text-xs text-muted-foreground" id="market-source-label">{t('search.source.label')}</span>

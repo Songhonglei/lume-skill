@@ -49,19 +49,19 @@ describe('handleApiError', () => {
     expect(window.location.href).toBe('/login?reason=accountDisabled')
   })
 
-  it('recognizes a Korean disabled-account message after switching to English', async () => {
+  it('recognizes a Chinese disabled-account message after switching to English', async () => {
     const { ApiError, handleApiError } = await import('./api-error')
     await i18n.changeLanguage('en')
-    handleApiError(new ApiError('비활성화된 계정입니다', 401, '비활성화된 계정입니다'))
+    handleApiError(new ApiError('该账号已被禁用', 401, '该账号已被禁用'))
     expect(errorSpy).not.toHaveBeenCalled()
     expect(window.location.href).toBe('/login?reason=accountDisabled')
   })
 
-  it('shows localized network errors in Korean', async () => {
+  it('shows localized network errors in English', async () => {
     const { ApiError, handleApiError } = await import('./api-error')
-    await i18n.changeLanguage('ko')
+    await i18n.changeLanguage('en')
     handleApiError(new ApiError('Network error', 0))
-    expect(errorSpy).toHaveBeenLastCalledWith('네트워크 연결에 실패했습니다. 네트워크를 확인하세요')
+    expect(errorSpy).toHaveBeenLastCalledWith('Network connection failed, please check your network')
   })
 
   it('falls back to the server message for non-standard api errors', async () => {

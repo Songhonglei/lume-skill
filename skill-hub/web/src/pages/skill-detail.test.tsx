@@ -807,7 +807,7 @@ describe('SkillDetailPage', () => {
 
     const html = renderToStaticMarkup(<SkillDetailPage />)
 
-    expect(html).toContain('text-balance break-words text-4xl')
+    expect(html).toContain('text-balance break-words text-2xl')
     expect(html).toContain('[overflow-wrap:anywhere]')
   })
 

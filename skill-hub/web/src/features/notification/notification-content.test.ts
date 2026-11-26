@@ -5,8 +5,6 @@ describe('resolveNotificationDisplay', () => {
   it.each([
     ['zh-CN', '套件审核提交'],
     ['en', 'Suite review submitted'],
-    ['ko-KR', '스킬 모음 검토 제출'],
-    ['ru', 'Набор отправлен на проверку'],
   ])('renders a Suite submission with its own title and bound version in %s', (language, title) => {
     const display = resolveNotificationDisplay({
       id: 1,
@@ -28,8 +26,6 @@ describe('resolveNotificationDisplay', () => {
     ['zh', 'SUITE_REVIEW_APPROVED', '套件审核通过'],
     ['zh', 'SUITE_REVIEW_REJECTED', '套件审核未通过'],
     ['en', 'SUITE_REVIEW_APPROVED', 'Suite review approved'],
-    ['ko', 'SUITE_REVIEW_REJECTED', '스킬 모음 검토 반려'],
-    ['ru', 'SUITE_REVIEW_APPROVED', 'Проверка набора одобрена'],
   ])('renders a Suite result with its submitted version in %s', (language, eventType, title) => {
     const display = resolveNotificationDisplay({
       id: 2, category: 'REVIEW', eventType, title: 'Server title',
@@ -74,34 +70,34 @@ describe('resolveNotificationDisplay', () => {
   })
 
   it.each([
-    ['REVIEW_SUBMITTED', '스킬 검토 제출'],
-    ['REVIEW_APPROVED', '스킬 검토 승인'],
-    ['REVIEW_REJECTED', '스킬 검토 반려'],
-    ['PROMOTION_SUBMITTED', '스킬 승격 제출'],
-    ['PROMOTION_APPROVED', '스킬 승격 승인'],
-    ['PROMOTION_REJECTED', '스킬 승격 반려'],
-    ['REPORT_SUBMITTED', '스킬 신고 접수'],
-    ['REPORT_RESOLVED', '스킬 신고 처리 완료'],
-    ['SKILL_PUBLISHED', '스킬 게시 완료'],
-    ['SUBSCRIPTION_NEW_VERSION', '구독한 스킬 업데이트'],
-    ['SUBSCRIPTION_VERSION_YANKED', '구독한 스킬 버전 배포 철회'],
-  ])('localizes %s in Korean', (eventType, title) => {
+    ['REVIEW_SUBMITTED', '技能审核提交'],
+    ['REVIEW_APPROVED', '技能审核通过'],
+    ['REVIEW_REJECTED', '技能审核驳回'],
+    ['PROMOTION_SUBMITTED', '技能推广提交'],
+    ['PROMOTION_APPROVED', '技能推广通过'],
+    ['PROMOTION_REJECTED', '技能推广驳回'],
+    ['REPORT_SUBMITTED', '技能举报提交'],
+    ['REPORT_RESOLVED', '技能举报已处理'],
+    ['SKILL_PUBLISHED', '技能发布成功'],
+    ['SUBSCRIPTION_NEW_VERSION', '订阅技能更新'],
+    ['SUBSCRIPTION_VERSION_YANKED', '订阅技能版本撤回'],
+  ])('localizes %s in Chinese', (eventType, title) => {
     const display = resolveNotificationDisplay({
       id: 1, category: 'REVIEW', eventType, title: 'Server title', status: 'UNREAD',
       createdAt: '2026-03-20T00:00:00Z',
       bodyJson: JSON.stringify({ skillName: 'Calendar', version: '1.0.0' }),
-    }, 'ko-KR')
+    }, 'zh-CN')
     expect(display.title).toBe(title)
     expect(display.description).toContain('Calendar')
-    expect(display.description).toMatch(/[가-힣]/)
-    if (!eventType.startsWith('REPORT_')) expect(display.description).toContain('(1.0.0)')
+    expect(display.description).toMatch(/[一-鿿]/)
+    if (!eventType.startsWith('REPORT_')) expect(display.description).toContain('1.0.0')
   })
 
   it.each([undefined, 'invalid JSON', '{}', 'null'])('keeps a localized title with an absent or malformed body (%s)', (bodyJson) => {
     expect(resolveNotificationDisplay({
       id: 1, category: 'REVIEW', eventType: 'REVIEW_APPROVED', title: 'Server title',
       status: 'UNREAD', createdAt: '2026-03-20T00:00:00Z', bodyJson,
-    }, 'ko')).toEqual({ title: '스킬 검토 승인', description: '' })
+    }, 'zh')).toEqual({ title: '技能审核通过', description: '' })
   })
 
   it('omits version parentheses when a notification has no version', () => {
@@ -109,8 +105,8 @@ describe('resolveNotificationDisplay', () => {
       id: 1, category: 'REVIEW', eventType: 'REVIEW_APPROVED', title: 'Server title',
       status: 'UNREAD', createdAt: '2026-03-20T00:00:00Z',
       bodyJson: JSON.stringify({ skillName: 'Calendar' }),
-    }, 'ko')
-    expect(display.description).toBe('Calendar의 검토가 승인되었습니다.')
+    }, 'zh')
+    expect(display.description).toBe('Calendar 已审核通过。')
   })
 
   it('falls back to the backend title when the event type is unsupported', () => {

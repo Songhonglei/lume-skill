@@ -37,7 +37,7 @@ describe('homepage draft preview isolation', () => {
     client.setQueryData(SITE_PRESENTATION_QUERY_KEY, { settings: saved, version: 7 })
     render(<I18nextProvider i18n={i18n}><QueryClientProvider client={client}><SitePresentationPreview settings={draft} locale="zh" /></QueryClientProvider></I18nextProvider>)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('中文草稿')
-    expect(screen.getAllByText('Draft brand', { selector: 'strong' })).toHaveLength(2)
+    expect(screen.getAllByText('Draft brand', { selector: 'strong' })).toHaveLength(1)
     expect(i18n.language).toBe('en')
     expect(events.languageCache).not.toHaveBeenCalled()
     expect(client.getQueryData(SITE_PRESENTATION_QUERY_KEY)).toEqual({ settings: saved, version: 7 })

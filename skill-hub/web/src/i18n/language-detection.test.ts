@@ -20,10 +20,10 @@ describe('browser language detection with real i18next', () => {
     localStorage.clear()
   })
 
-  it('resolves a Korean browser locale to the Korean resource', async () => {
+  it('falls back to English for a Korean browser locale', async () => {
     const i18n = await initialize()
-    expect(i18n.resolvedLanguage).toBe('ko')
-    expect(i18n.t('nav.home')).toBe('스킬 센터')
+    expect(i18n.resolvedLanguage).toBe('en')
+    expect(i18n.t('nav.home')).toBe('Skill Center')
   })
 
   it('respects an explicit English preference over the Korean browser', async () => {
@@ -32,17 +32,17 @@ describe('browser language detection with real i18next', () => {
     expect(i18n.resolvedLanguage).toBe('en')
   })
 
-  it('persists a Korean selection and restores it on a fresh initialization', async () => {
+  it('persists a Chinese selection and restores it on a fresh initialization', async () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US'])
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
     const i18n = await initialize()
     expect(i18n.resolvedLanguage).toBe('en')
-    await i18n.changeLanguage('ko')
-    expect(localStorage.getItem('i18nextLng')).toBe('ko')
+    await i18n.changeLanguage('zh')
+    expect(localStorage.getItem('i18nextLng')).toBe('zh')
     vi.resetModules()
     const restored = await initialize()
-    expect(restored.resolvedLanguage).toBe('ko')
-    expect(restored.t('nav.home')).toBe('스킬 센터')
+    expect(restored.resolvedLanguage).toBe('zh')
+    expect(restored.t('nav.home')).toBe('技能中心')
   })
 
   it('keeps English fallback for an unsupported language', async () => {

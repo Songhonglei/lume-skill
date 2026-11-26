@@ -24,7 +24,7 @@
     "landing": "首页",
     "home": "技能中心",
     "search": "搜索",
-    "marketplace": "技能市场",
+    "marketplace": "技能库",
     "githubSkills": "开源技能",
     "skillDetail": "技能详情",
     "explore": "探索",
@@ -85,7 +85,7 @@
     "repositoryFirstPage": "返回第一页",
     "title": "开源技能",
     "sourceLabel": "GITHUB 公开仓库",
-    "description": "浏览来自公开 GitHub 仓库、经过 SkillHub 审核发布的技能。每项技能均可查看来源仓库、路径、固定提交和许可证信息。",
+    "description": "浏览来自公开 GitHub 仓库、经过 Luma Skill Hub 审核发布的技能。每项技能均可查看来源仓库、路径、固定提交和许可证信息。",
     "explore": "浏览开源技能",
     "allSkills": "查看全部技能",
     "publishedCount": "已发布的 GitHub 技能",
@@ -109,7 +109,7 @@
       "title": "发现与分享 AI 技能",
       "subtitle": "使用社区驱动的技能构建强大的 AI 代理",
       "searchPlaceholder": "搜索技能...",
-      "exploreSkills": "探索技能",
+      "exploreSkills": "浏览技能库",
       "publishSkill": "发布技能"
     },
     "features": {
@@ -144,7 +144,7 @@
       "teams": "团队"
     },
     "whySkillHub": {
-      "title": "为什么选择 SkillHub",
+      "title": "为什么选择 Luma Skill Hub",
       "subtitle": "专为企业打造的私有化 Agent 技能管理平台"
     },
     "badge": "企业级技能注册中心",
@@ -186,7 +186,7 @@
     "ctaTitle": "准备好开始了吗？",
     "ctaDescription": "一条命令即可启动本地开发环境，体验完整的技能管理流程",
     "ctaButton": "立即体验",
-    "footerLicense": "© 2026 SkillHub。Apache License 2.0。",
+    "footerLicense": "© 2026 Luma Skill Hub。Apache License 2.0。",
     "footerDocs": "文档",
     "footerGithub": "GitHub",
     "footerCommunity": "社区",
@@ -201,23 +201,23 @@
         "cli": "CLI"
       },
       "cli": {
-        "description": "安装 SkillHub CLI 到本地，后续可运行 skillhub install 安装技能",
-        "command": "npm i -g @astron-team/skillhub"
+        "description": "安装 Luma Skill Hub CLI 到本地，后续可运行 skillhub install 安装技能",
+        "command": "skillhub --version"
       },
       "agent": {
         "description": "发送提示词给你的 Agent，以设置SkillHub Registry",
-        "command": "请根据 https://www.example.com/registry/skill.md 接入 SkillHub",
-        "commandTemplate": "请根据 {{url}} 接入 SkillHub"
+        "command": "请根据 https://www.example.com/registry/skill.md 接入 Luma Skill Hub",
+        "commandTemplate": "请根据 {{url}} 接入 Luma Skill Hub"
       },
       "human": {
-        "description": "使用 SkillHub CLI 搜索和安装技能",
-        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
+        "description": "使用 Luma Skill Hub CLI 搜索和安装技能",
+        "command": "skillhub search <keyword> --registry https://www.example.com",
+        "commandTemplate": "skillhub search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
           "title": "1. 配置环境变量",
-          "description": "设置 ClawHub CLI 连接到 SkillHub"
+          "description": "设置 ClawHub CLI 连接到 Luma Skill Hub"
         },
         "installSkills": {
           "title": "2. 安装技能",
@@ -233,10 +233,10 @@
     },
     "experience": {
       "heroBadge": "Agent 技能管理平台",
-      "heroTitle": "把团队的专业能力，沉淀成 Agent 可用的技能",
-      "heroDescription": "让 AI 能力从个人经验变成可复用、可管理、可信赖的组织资产。",
+      "heroTitle": "企业技能库",
+      "heroDescription": "搜索团队已发布的技能，查看版本或下载使用。",
       "browseAll": "浏览全部",
-      "marketplace": "技能市场",
+      "marketplace": "技能库",
       "latest": "最新发布",
       "demoSkills": {
         "weather": "查询全球城市实时天气",
@@ -265,7 +265,7 @@
         "networkBoundary": "部署在企业环境中，自主管理 Registry 数据",
         "deployment": {
           "title": "自托管部署",
-          "description": "使用 Docker Compose 或仓库提供的 Kubernetes 清单部署 SkillHub，并选择本地或 S3 兼容对象存储。"
+          "description": "使用 Docker Compose 或仓库提供的 Kubernetes 清单部署 Luma Skill Hub，并选择本地或 S3 兼容对象存储。"
         },
         "security": {
           "title": "校验与审核",
@@ -290,7 +290,7 @@
       },
       "cta": {
         "title": "构建团队自己的技能 Registry",
-        "description": "查看源代码和部署文档，然后在自己的环境中运行 SkillHub。",
+        "description": "查看源代码和部署文档，然后在自己的环境中运行 Luma Skill Hub。",
         "deploy": "查看源码",
         "docs": "查看文档"
       },
@@ -319,10 +319,10 @@
           "registryTab": "Registry 配置",
           "discoveryTab": "隐式发现",
           "live": "Agent 实时",
-          "instruction": "阅读 {{url}}，并按照说明完成 SkillHub Skills Registry 的配置",
+          "instruction": "阅读 {{url}}，并按照说明完成 Luma Skill Hub Skills Registry 的配置",
           "instructionLead": "复制以下指令，发送给 Agent 即可完成配置",
           "instructionPrefix": "阅读",
-          "instructionSuffix": "，并按照说明完成 SkillHub Skills Registry 的配置。",
+          "instructionSuffix": "，并按照说明完成 Luma Skill Hub Skills Registry 的配置。",
           "copyInstruction": "复制指令",
           "copyErrorDescription": "请手动选择并复制这条 Registry 配置指令。",
           "steps": {
@@ -334,7 +334,7 @@
           "discovery": {
             "intentTitle": "识别任务意图",
             "intentDescription": "需要实时天气与出行建议",
-            "searchTitle": "检索 SkillHub Registry",
+            "searchTitle": "检索 Luma Skill Hub Registry",
             "searchDescription": "匹配 @global/weather · v1.3.0",
             "readTitle": "读取技能说明",
             "readDescription": "确认输入格式和调用方式"
@@ -351,7 +351,7 @@
           "docs": "CLI 文档"
         },
         "web": {
-          "marketplace": "技能市场",
+          "marketplace": "技能库",
           "publicSkills": "公开技能",
           "search": "搜索技能",
           "status": "公开 · 可用",
@@ -375,20 +375,21 @@
     "description": "为开发者提供高效的技能管理、分发和协作平台",
     "browseSkills": "浏览技能",
     "publishSkill": "发布技能",
+    "noVisibleSkills": "没有可查看的技能",
     "popularTitle": "热门下载",
-    "popularDescription": "社区最受欢迎的技能",
+    "popularDescription": "按下载量排序",
     "latestTitle": "最新发布",
     "latestDescription": "刚刚发布的新技能",
     "viewAll": "查看全部 →",
     "quickStart": {
       "title": "快速开始",
       "subtitle": "Quick Start",
-      "description": "只需几个简单步骤，即可开始使用 SkillHub",
+      "description": "只需几个简单步骤，即可开始使用 Luma Skill Hub",
       "tip": "💡 提示：访问技能详情页可获取带环境变量的一键复制安装命令",
       "steps": {
         "configureEnv": {
           "title": "1. 配置环境变量",
-          "description": "设置 ClawHub CLI 连接到 SkillHub"
+          "description": "设置 ClawHub CLI 连接到 Luma Skill Hub"
         },
         "installSkills": {
           "title": "2. 安装技能",
@@ -470,7 +471,7 @@
     "clear": "清空搜索"
   },
   "login": {
-    "title": "登录 SkillHub",
+    "title": "登录 Luma Skill Hub",
     "subtitle": "一个账号，开启更高效的技能协作",
     "eyebrow": "欢迎回来",
     "tabEnterprise": "组织登录",
@@ -481,7 +482,7 @@
     "enterpriseConfigHint": "企业登录入口由管理员开通。",
     "noEnterpriseMethods": "当前还没有可用的企业登录入口。你可以先使用个人账号登录，或联系管理员开通。",
     "personalTitle": "账号密码登录",
-    "personalHint": "使用 SkillHub 用户名和密码登录。",
+    "personalHint": "使用 Luma Skill Hub 用户名和密码登录。",
     "otherMethods": "或使用以下方式登录",
     "orgLoginHint": "适用于已配置企业单点登录的组织",
     "externalIdentityMethods": "外部身份源",
@@ -503,7 +504,7 @@
     "register": "立即注册",
     "oauthHint": "使用 OAuth 登录时，认证完成后会自动返回当前站点。",
     "enterpriseSsoTitle": "企业单点登录",
-    "enterpriseSsoHint": "当前部署已启用兼容接入层。若浏览器中已存在 {{name}} 会话，可直接尝试建立 SkillHub 登录态。",
+    "enterpriseSsoHint": "当前部署已启用兼容接入层。若浏览器中已存在 {{name}} 会话，可直接尝试建立 Luma Skill Hub 登录态。",
     "enterpriseSsoAutoHint": "当前部署已启用自动 {{name}} 探测。若未成功，你仍可继续使用现有登录方式。",
     "enterpriseSsoAction": "尝试 {{name}} 登录",
     "enterpriseSsoSubmitting": "正在尝试 {{name}} 登录...",
@@ -1893,7 +1894,7 @@
     "suiteMembershipMore": "已显示 {{shown}} 个，共 {{total}} 个所属套件；其余结果可通过分页接口读取。",
     "suiteMembershipUnavailable": "当前不可安装",
     "installMethodClawhub": "ClawHub CLI",
-    "installMethodSkillhub": "SkillHub CLI",
+    "installMethodSkillhub": "Luma Skill Hub CLI",
     "installCommandUnsafeVersion": "该版本号无法安全地生成跨平台命令，请联系发布者修正版本号。",
     "download": "下载",
     "labelsSectionTitle": "标签管理",
@@ -2104,7 +2105,7 @@
     "installForAgent": {
       "button": "安装到 Agent",
       "copied": "安装指令已复制",
-      "prompt": "请根据 {{guideUrl}} 接入 SkillHub，并从该 SkillHub 安装 {{skill}} 的 {{version}} 版本。"
+      "prompt": "请根据 {{guideUrl}} 接入 Luma Skill Hub，并从该 Luma Skill Hub 安装 {{skill}} 的 {{version}} 版本。"
     }
   },
   "skillCompare": {
@@ -2449,13 +2450,13 @@
     "loginWith": "使用 {{name}} 登录"
   },
   "authShell": {
-    "eyebrow": "SkillHub",
+    "eyebrow": "Luma Skill Hub",
     "backHome": "返回首页",
     "heroTitle": "让团队的技能\n被发现、被沉淀、被复用",
     "heroSubtitle": "从一份 SKILL.md 开始，\n把经验转化为可共享的团队能力。",
     "heroFooter": "汇聚团队智慧，释放技能价值",
     "shortTagline": "让技能\n连接团队",
-    "capabilities": "SkillHub 的能力",
+    "capabilities": "Luma Skill Hub 的能力",
     "discoverTitle": "发现技能",
     "discoverDescription": "找到团队可复用的技能包与实践。",
     "shareTitle": "沉淀共享",
@@ -2708,7 +2709,7 @@
     "contributing": "参与贡献",
     "changelog": "更新日志",
     "product": "产品",
-    "marketplace": "技能市场",
+    "marketplace": "技能库",
     "publish": "发布技能",
     "developers": "开发者",
     "project": "项目",
@@ -2719,7 +2720,7 @@
     "community": "社区",
     "privacy": "隐私政策",
     "terms": "服务条款",
-    "copyright": "© 2026 SkillHub. Apache-2.0."
+    "copyright": "© 2026 Luma Skill Hub. Apache-2.0."
   },
   "publish": {
     "packageFormatHint": "ZIP 根目录需包含 SKILL.md",
@@ -2750,7 +2751,7 @@
     "examplesInvalid": "未识别案例格式，文件将保留为普通文件，不影响发布。",
     "packagePreviewFailed": "无法读取技能包，请检查 SKILL.md 后重新选择，或重试。",
     "title": "发布技能",
-    "subtitle": "上传技能包到 SkillHub",
+    "subtitle": "上传技能包到 Luma Skill Hub",
     "reviewNotice": {
       "title": "发布审核说明",
       "description": "提交后的处理取决于可见性和安全扫描策略。请以本次提交回执及版本状态为准。"
@@ -3635,7 +3636,7 @@
       },
       "noMembers": "暂无成员进度。",
       "cancelConfirmTitle": "停止创建这个套件？",
-      "cancelConfirmDescription": "停止后，SkillHub 不再等待成员或创建套件草稿。已经创建的技能版本和已经提交的审核任务不会撤回，仍可在技能审核中继续处理。",
+      "cancelConfirmDescription": "停止后，Luma Skill Hub 不再等待成员或创建套件草稿。已经创建的技能版本和已经提交的审核任务不会撤回，仍可在技能审核中继续处理。",
       "cancelConfirmAction": "停止创建套件",
       "cancelledTitle": "套件创建已停止",
       "cancelledDescription": "任务记录会保留。已创建的技能版本和审核任务仍然存在，不会自动撤回或删除。",
@@ -3699,7 +3700,7 @@
     "searchSkills": "搜索可用技能",
     "memberSearchDescription": "先选择查找范围，再按关键词或筛选条件添加成员。",
     "memberSearchScope": "成员技能查找范围",
-    "scopeMarket": "技能市场",
+    "scopeMarket": "技能库",
     "scopeNamespace": "当前命名空间",
     "scopeCoordinate": "精确坐标",
     "searchOnSubmitHint": "点击搜索后才查询，不会默认加载全部技能",
@@ -4192,15 +4193,15 @@
     "back": "返回通知设置",
     "batchState": {
       "signInTitle": "登录后查看邮件明细",
-      "signInDescription": "请使用接收这封邮件时的 SkillHub 账号登录，登录后将返回此页。",
+      "signInDescription": "请使用接收这封邮件时的 Luma Skill Hub 账号登录，登录后将返回此页。",
       "signIn": "登录查看",
       "unavailableTitle": "暂时无法查看这封邮件的明细",
-      "unavailableDescription": "可能登录了不同的 SkillHub 账号，或记录已被清理。请核对当前账号；若账号无误，可重新加载。",
+      "unavailableDescription": "可能登录了不同的 Luma Skill Hub 账号，或记录已被清理。请核对当前账号；若账号无误，可重新加载。",
       "currentAccount": "当前账号：{{account}}",
       "switchAccount": "退出并切换账号",
       "switchingAccount": "正在退出…",
       "switchFailed": "退出失败，尚未切换账号。请重试或从右上角账号菜单退出。",
-      "accountHint": "邮件明细仅对接收该邮件的 SkillHub 账号开放。两个账号使用同一邮箱，也不能互相查看邮件明细。",
+      "accountHint": "邮件明细仅对接收该邮件的 Luma Skill Hub 账号开放。两个账号使用同一邮箱，也不能互相查看邮件明细。",
       "failureTitle": "邮件明细加载失败",
       "failureDescription": "暂时无法连接服务。请稍后重新加载，或返回通知设置查看当前收件账号。"
     },
@@ -4262,7 +4263,7 @@
     "brandTitle": "站点品牌",
     "brandHelp": "统一用于导航、首页、页脚和浏览器标题。",
     "siteName": "站点名称",
-    "defaultHelp": "留空时使用默认名称 SkillHub。",
+    "defaultHelp": "留空时使用默认名称 Luma Skill Hub。",
     "logoUrl": "站点 Logo",
     "faviconUrl": "浏览器图标",
     "assetHelp": "拖放图片或选择文件。支持 PNG、JPEG，最大 2 MB，尺寸不超过 1024 × 1024。浏览器图标也使用上述格式。仅上传可公开展示的品牌图片；上传后文件即可公开读取，无需等待保存设置。",
@@ -4366,7 +4367,7 @@
       "registryLabel": "架构服务名称",
       "networkBoundary": "部署边界说明",
       "copyright": "版权说明",
-      "marketLabel": "技能市场",
+      "marketLabel": "技能库",
       "publishLabel": "发布技能",
       "consoleLabel": "控制台",
       "documentationLabel": "文档",

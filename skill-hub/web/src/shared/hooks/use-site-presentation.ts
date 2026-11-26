@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { createContext, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { PRESENTATION_CONTENT, type PresentationSection } from '@/shared/lib/presentation-content'
@@ -34,6 +35,6 @@ export function presentationText(settings: SitePresentationSettings, section: Pr
   const defaults: Record<string, string> = PRESENTATION_CONTENT[section]
   const fallback = defaults[slot]
   if (!fallback) return ''
-  if (section === 'enterprise' && slot === 'registryLabel') return `${settings.siteName ?? 'SkillHub'}\nRegistry`
+  if (section === 'enterprise' && slot === 'registryLabel') return `${settings.siteName ?? PRODUCT_NAME}\nRegistry`
   return fallback.startsWith('=') ? fallback.slice(1) : translate(fallback)
 }

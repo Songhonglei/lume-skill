@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronRight, Copy, Download, FileText, Search } from 'lucide-react'
-import { buildApiUrl, WEB_API_PREFIX } from '@/api/client'
+import { Check, ChevronRight, Copy, FileText, Search } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { copyToClipboard, useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
 import { toast } from '@/shared/lib/toast'
@@ -14,20 +15,17 @@ type AgentView = 'registry' | 'discovery'
 
 interface AccessModeOption {
   id: AccessMode
-  number: string
-  titleKey: string
-  descriptionKey: string
 }
 
 const ACCESS_MODES: AccessModeOption[] = [
-  { id: 'agent', number: '01', titleKey: 'agent.title', descriptionKey: 'agent.description' },
-  { id: 'cli', number: '02', titleKey: 'cli.title', descriptionKey: 'cli.description' },
-  { id: 'web', number: '03', titleKey: 'web.title', descriptionKey: 'web.description' },
+  { id: 'agent' },
+  { id: 'cli' },
+  { id: 'web' },
 ]
 
 function getRegistryUrl(): string {
   if (typeof window === 'undefined') {
-    return 'https://skill.xfyun.cn'
+    return ''
   }
 
   return resolvePublicRegistryUrl(
@@ -44,7 +42,7 @@ function AgentAccessPanel() {
   const instruction = t('landing.experience.quickStart.agent.instruction', { url: `${registryUrl}/registry/skill.md` })
 
   return (
-    <div className="min-h-[340px]">
+    <div className="">
       <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex w-fit items-center gap-1 border-b border-border/70" role="tablist" aria-label={t('landing.experience.quickStart.agent.tablist')}>
           {([
@@ -60,7 +58,7 @@ function AgentAccessPanel() {
               className={`relative px-4 py-2.5 text-xs font-semibold transition-[color,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeView === id ? 'bg-background/70 text-foreground' : 'text-muted-foreground hover:bg-background/40 hover:text-foreground'}`}
             >
               {label}
-              <span className={`absolute inset-x-0 -bottom-px h-0.5 origin-center bg-foreground transition-transform duration-200 ${activeView === id ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden />
+              <span className={`absolute inset-x-0 -bottom-px h-0.5 origin-center bg-primary transition-transform duration-200 ${activeView === id ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden />
             </button>
           ))}
         </div>
@@ -85,7 +83,7 @@ function AgentAccessPanel() {
                   toast.error(t('landing.experience.quickStart.copyErrorTitle'), t('landing.experience.quickStart.agent.copyErrorDescription'))
                 })
               }}
-              className="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-xs font-semibold text-background shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none"
+              className="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.agent.copyInstruction')}
@@ -149,16 +147,16 @@ function CliAccessPanel() {
   }
 
   return (
-    <div className="flex min-h-[380px] flex-col overflow-hidden rounded-2xl border border-border/70 shadow-sm">
+    <div className="flex  flex-col overflow-hidden rounded-lg border border-border/70 shadow-sm">
       {/* Terminal title bar */}
-      <div className="flex items-center justify-between border-b border-border/60 bg-white px-4 py-3 dark:bg-neutral-900">
+      <div className="flex items-center justify-between border-b border-border/60 bg-card px-4 py-3 ">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
             <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
             <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />
           </div>
-          <span className="ml-2 font-mono text-xs text-muted-foreground">Terminal — {settings.siteName ?? 'skillhub'}</span>
+          <span className="ml-2 font-mono text-xs text-muted-foreground">Terminal — {settings.siteName ?? PRODUCT_NAME}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] text-muted-foreground">zsh</span>
@@ -174,10 +172,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 --version</span>
+              <span className="text-foreground">skillhub --version</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
-                onClick={() => handleCopy('npx -y @astron-team/skillhub@0.1.12 --version', 0)}
+                onClick={() => handleCopy('skillhub --version', 0)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 0 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -193,10 +191,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 search weather \</span>
+              <span className="text-foreground">skillhub search weather \</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
-                onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 search weather --registry ${registryUrl} --limit 5`, 1)}
+                onClick={() => handleCopy(`skillhub search weather --registry ${registryUrl} --limit 5`, 1)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 1 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -204,25 +202,25 @@ function CliAccessPanel() {
               </button>
             </div>
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --registry'} </span>
             <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span> \
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --limit'} </span>
-            <span className="text-neutral-800 dark:text-neutral-200">5</span>
+            <span className="text-foreground">5</span>
           </div>
           <div className="mt-1 space-y-0.5 pl-5">
             <div className="text-[11px] text-muted-foreground">{t('landing.experience.quickStart.cli.skillsFound')}</div>
             <div className="flex gap-4">
               <span className="text-blue-600 dark:text-blue-400">@global/weather</span>
               <span className="text-muted-foreground">v1.3.0</span>
-              <span className="text-neutral-600 dark:text-neutral-400">{t('landing.experience.demoSkills.weather')}</span>
+              <span className="text-muted-foreground">{t('landing.experience.demoSkills.weather')}</span>
             </div>
             <div className="flex gap-4">
               <span className="text-blue-600 dark:text-blue-400">@global/forecast</span>
               <span className="text-muted-foreground">v2.1.0</span>
-              <span className="text-neutral-600 dark:text-neutral-400">{t('landing.experience.quickStart.cli.forecastSummary')}</span>
+              <span className="text-muted-foreground">{t('landing.experience.quickStart.cli.forecastSummary')}</span>
             </div>
           </div>
         </div>
@@ -232,10 +230,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 install @global/weather \</span>
+              <span className="text-foreground">skillhub install @global/weather \</span>
               <button data-analytics-id="guide.command.copy"
                 type="button"
-                onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
+                onClick={() => handleCopy(`skillhub install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 2 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -243,11 +241,11 @@ function CliAccessPanel() {
               </button>
             </div>
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --dir'} </span>
-            <span className="text-neutral-800 dark:text-neutral-200">./skills</span> \
+            <span className="text-foreground">./skills</span> \
           </div>
-          <div className="pl-5 text-neutral-600 dark:text-neutral-400">
+          <div className="pl-5 text-muted-foreground">
             <span className="text-muted-foreground">{'  --registry'} </span>
             <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span>
           </div>
@@ -265,7 +263,7 @@ function CliAccessPanel() {
       </div>
 
       {/* Bottom status bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-white px-4 py-2.5 text-[11px] dark:bg-neutral-900">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-card px-4 py-2.5 text-[11px] ">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -287,68 +285,20 @@ function WebAccessPanel() {
   const { t } = useTranslation()
 
   return (
-    <div className="min-h-[340px]">
-      <div className="grid gap-6 md:grid-cols-[11rem_minmax(0,1fr)]">
-        <div className="border-b border-border/70 pb-5 md:border-b-0 md:border-r md:pb-0 md:pr-5">
-          <div className="mb-4 flex items-center justify-between">
-            <strong className="text-xs font-semibold text-foreground">{t('landing.experience.quickStart.web.marketplace')}</strong>
-            <span className="text-[10px] text-muted-foreground">{t('landing.experience.quickStart.web.publicSkills')}</span>
-          </div>
-          <div className="mb-3 flex items-center gap-2 border-b border-border/70 pb-2.5 text-[11px] text-muted-foreground">
-            <Search className="h-3.5 w-3.5" />
-            {t('landing.experience.quickStart.web.search')}
-          </div>
-          {[
-            ['W', 'weather', '@global'],
-            ['G', 'git-helper', '@devtools'],
-            ['D', 'diagram-maker', '@global'],
-          ].map(([letter, name, namespace], index) => (
-            <div key={name} className={`flex items-center gap-2.5 border-b border-border/50 py-3 ${index === 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
-              <span className={`flex h-7 w-7 items-center justify-center rounded-md text-[10px] font-bold ${index === 0 ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300' : 'bg-secondary'}`}>{letter}</span>
-              <span className="min-w-0">
-                <strong className="block truncate text-[11px] font-semibold">{name}</strong>
-                <span className="font-mono text-[9px]">{namespace}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="py-1">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t('landing.experience.quickStart.web.status')}
-              </span>
-              <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">weather <span className="font-mono text-xs font-normal text-muted-foreground">@global</span></h3>
-              <p className="mt-1 text-xs text-muted-foreground">{t('landing.experience.quickStart.web.summary')}</p>
-            </div>
-            <a data-analytics-id="guide.package.download" href={buildApiUrl(`${WEB_API_PREFIX}/skills/global/weather/download`)} className="inline-flex w-fit items-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-xs font-semibold text-background shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none">
-              <Download className="h-3.5 w-3.5" />{t('landing.experience.quickStart.web.download')}
-            </a>
-          </div>
-
-          <div className="mt-6 grid gap-5 border-t border-border/70 pt-5 sm:grid-cols-[minmax(0,1fr)_8rem]">
-            <div>
-              <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
-                <FileText className="h-3.5 w-3.5" />
-                {t('landing.experience.quickStart.web.readTitle')}
-              </div>
-              <p className="text-[11px] leading-6 text-muted-foreground">
-                {t('landing.experience.quickStart.web.readDescription')}
-              </p>
-            </div>
-            <dl className="space-y-3 text-[10px]">
-              <div className="flex justify-between border-b border-border/60 pb-2"><dt className="text-muted-foreground">{t('landing.experience.quickStart.web.version')}</dt><dd className="font-mono text-foreground">v1.3.0</dd></div>
-              <div className="flex justify-between border-b border-border/60 pb-2"><dt className="text-muted-foreground">{t('landing.experience.quickStart.web.files')}</dt><dd className="text-foreground">3</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">{t('landing.experience.quickStart.web.format')}</dt><dd className="text-foreground">ZIP</dd></div>
-            </dl>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
-            <span>{t('landing.experience.quickStart.web.browse')}</span><span>{t('landing.experience.quickStart.web.preview')}</span><span>{t('landing.experience.quickStart.web.versions')}</span><span>{t('landing.experience.quickStart.web.favorites')}</span>
-          </div>
+    <div className="space-y-4 py-2">
+      <div className="flex items-start gap-2.5">
+        <FileText aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div>
+          <h3 className="text-sm font-semibold">{t('landing.experience.quickStart.web.readTitle')}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t('landing.experience.quickStart.web.readDescription')}</p>
         </div>
       </div>
+      <Link data-analytics-id="navigation.skills.open" to="/search" search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }}
+        className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-accent"
+      >
+        <Search aria-hidden="true" className="h-4 w-4" />
+        {t('landing.hero.exploreSkills')}
+      </Link>
     </div>
   )
 }
@@ -363,16 +313,14 @@ export function LandingQuickStartSection() {
   if (!activeMode) return null
 
   return (
-    <section id="quickstart" className="relative z-10 w-full overflow-hidden bg-secondary/70 py-16 md:py-20">
-      <div className="absolute inset-0 bg-dots opacity-40" aria-hidden />
+    <section id="quickstart" className="relative z-10 w-full py-7 md:py-9">
       <div className={`relative ${APP_FRAME_CLASS_NAME}`}>
-        <div className="mb-12 max-w-3xl">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('landing.quickStart.title')}</p>
-          <h2 className="mb-4 text-3xl font-medium tracking-tight text-foreground md:text-4xl">{text('title')}</h2>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{text('description')}</p>
+        <div className="mb-4 max-w-3xl">
+          <h2 className="mb-1 text-xl font-semibold tracking-tight text-foreground">{text('title')}</h2>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{text('description')}</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12">
+        <div className="grid grid-cols-1 gap-5 rounded-xl border border-border bg-card p-4 sm:p-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
           <div className="border-t border-border/70">
             {modes.map((mode) => {
               const active = activeMode === mode.id
@@ -382,10 +330,9 @@ export function LandingQuickStartSection() {
                   type="button"
                   aria-pressed={active}
                   onClick={() => setActiveMode(mode.id)}
-                  className={`group relative flex w-full items-center gap-4 border-b border-border/70 px-2 py-5 text-left transition-[background-color,transform] duration-200 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${active ? 'bg-background/65' : 'hover:bg-background/35 active:translate-x-px'}`}
+                  className={`group relative flex w-full items-center gap-4 border-b border-border/70 px-3 py-3 text-left transition-[background-color,transform] duration-200 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${active ? 'bg-accent' : 'hover:bg-secondary'}`}
                 >
-                  <span className={`absolute inset-y-3 left-0 w-0.5 origin-center bg-foreground transition-transform duration-200 ${active ? 'scale-y-100' : 'scale-y-0'}`} aria-hidden />
-                  <span className={`font-mono text-[11px] font-semibold transition-colors duration-200 ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{mode.number}</span>
+                  <span className={`absolute inset-y-3 left-0 w-0.5 origin-center bg-primary transition-transform duration-200 ${active ? 'scale-y-100' : 'scale-y-0'}`} aria-hidden />
                   <span className="min-w-0 flex-1">
                     <strong className={`block text-sm font-semibold transition-colors ${active ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{text(`${mode.id}Title`)}</strong>
                     <span className="mt-1 block text-[11px] text-muted-foreground">{text(`${mode.id}Description`)}</span>

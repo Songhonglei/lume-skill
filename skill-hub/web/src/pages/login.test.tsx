@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { createInstance } from 'i18next'
 import { I18nextProvider } from 'react-i18next'
-import ko from '@/i18n/locales/ko.json'
+import ko from '../../test/fixtures/locales/ko.json'
 import { afterEach } from 'vitest'
 import { describe, expect, it, vi } from 'vitest'
 

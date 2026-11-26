@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import en from './locales/en.json'
-import ru from './locales/ru.json'
+import ru from '../../test/fixtures/locales/ru.json'
 import zh from './locales/zh.json'
 
 describe('Skill card Suite membership locales', () => {

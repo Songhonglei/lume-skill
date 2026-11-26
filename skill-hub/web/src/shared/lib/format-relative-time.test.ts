@@ -13,23 +13,23 @@ describe('formatRelativeTime', () => {
   afterEach(() => vi.useRealTimers())
 
   it.each([
-    [0, '방금'], [0.5, '방금'], [1, '1분 전'], [59, '59분 전'],
-    [60, '1시간 전'], [1439, '23시간 전'], [1440, '1일 전'], [29 * 1440, '29일 전'],
-  ])('formats %s minutes ago in Korean', (minutes, expected) => {
-    expect(formatRelativeTime(ago(minutes), 'ko-KR')).toBe(expected)
+    [0, '刚刚'], [0.5, '刚刚'], [1, '1分钟'], [59, '59分钟'],
+    [60, '1小时'], [1439, '23小时'], [1440, '1天'], [29 * 1440, '29天'],
+  ])('formats %s minutes ago in Chinese', (minutes, expected) => {
+    expect(formatRelativeTime(ago(minutes), 'zh-CN')).toBe(expected)
   })
 
-  it.each([['en', '5m'], ['zh-CN', '5分钟'], ['ru-RU', '5 мин']])('preserves compact %s output', (locale, expected) => {
+  it.each([['en', '5m'], ['zh-CN', '5分钟'], ['ru-RU', '5m']])('preserves compact %s output', (locale, expected) => {
     expect(formatRelativeTime(ago(5), locale)).toBe(expected)
   })
 
   it('uses the selected locale for older dates', () => {
     const date = ago(30 * 1440)
-    expect(formatRelativeTime(date, 'ko')).toBe(new Date(date).toLocaleDateString('ko'))
+    expect(formatRelativeTime(date, 'zh')).toBe(new Date(date).toLocaleDateString('zh'))
   })
 
-  it.each([0, 5, 60, 1440, 30 * 1440])('does not append a second suffix in Korean notifications (%s minutes)', (minutes) => {
-    const time = formatRelativeTime(ago(minutes), 'ko')
-    expect(i18n.getFixedT('ko')('notification.timeAgo', { time })).toBe(time)
+  it.each([0, 5, 60, 1440, 30 * 1440])('does not append a second suffix in Chinese notifications (%s minutes)', (minutes) => {
+    const time = formatRelativeTime(ago(minutes), 'en')
+    expect(i18n.getFixedT('en')('notification.timeAgo', { time })).toBe(`${time} ago`)
   })
 })

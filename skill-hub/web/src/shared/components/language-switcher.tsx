@@ -24,8 +24,6 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const languages = [
     { code: 'zh', name: '中文' },
     { code: 'en', name: 'English' },
-    { code: 'ko', name: '한국어' },
-    { code: 'ru', name: 'Русский' },
   ]
 
   const fallbackLanguage = languages.find((lang) => lang.code === 'en') ?? languages[0]
@@ -63,10 +61,11 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         size="sm"
         aria-expanded={open}
         aria-haspopup="menu"
-        className={cn('cursor-pointer gap-1.5 text-muted-foreground hover:text-foreground transition-colors', className)}
+        aria-label={currentLanguage.name}
+        className={cn('luma-header-control cursor-pointer gap-1.5', className)}
         onClick={() => setOpen((current) => !current)}
       >
-        <Globe className="h-4 w-4" />
+        <Globe aria-hidden="true" className="h-4 w-4" />
         <span className="hidden text-sm font-medium text-inherit sm:inline">{currentLanguage.name}</span>
         <ChevronDown className={cn('hidden h-3.5 w-3.5 transition-transform duration-200 sm:block', open && 'rotate-180')} />
       </Button>

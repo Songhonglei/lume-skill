@@ -8,7 +8,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: translation.t }) }
 import { SkillAvatarEditor } from './skill-avatar-editor'
 import en from '@/i18n/locales/en.json'
 import zh from '@/i18n/locales/zh.json'
-import ru from '@/i18n/locales/ru.json'
+import ru from '../../../test/fixtures/locales/ru.json'
 
 async function selectImage() {
   fireEvent.change(screen.getByLabelText('skillAvatar.choose'), { target: { files: [new File(['image'], 'avatar.png', { type: 'image/png' })] } })

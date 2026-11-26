@@ -7,13 +7,13 @@ describe('getAppHeaderClassName', () => {
     const className = getAppHeaderClassName(false)
 
     expect(className).not.toContain(APP_HEADER_ELEVATED_CLASS_NAME)
-    expect(className).toContain('bg-background/70')
+    expect(className).toContain('bg-card')
     expect(className).not.toContain('bg-white')
   })
 
   it('keeps the header background full bleed and its controls inside the common frame', () => {
     expect(APP_HEADER_CONTENT_CLASS_NAME).toContain(APP_FRAME_CLASS_NAME)
-    expect(APP_HEADER_CONTENT_CLASS_NAME).toContain('min-h-[56px]')
+    expect(APP_HEADER_CONTENT_CLASS_NAME).toContain('min-h-16')
     expect(getAppHeaderClassName(false)).not.toContain('max-w-')
     expect(getAppHeaderClassName(false)).not.toMatch(/\b(?:sm:|md:|lg:)?px-/)
   })

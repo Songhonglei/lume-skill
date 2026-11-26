@@ -131,6 +131,7 @@ export function SearchPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">{t('nav.marketplace')}</h1>
       <MarketSearchControls query={queryInput} onQueryChange={setQueryInput} onSearch={handleSearch}
         source={source} onSourceChange={handleSourceChange} labels={labels ?? []} selectedLabel={selectedLabel}
         onLabelChange={label => applyFilters({ ...current, label: label === selectedLabel ? '' : label })}
@@ -141,7 +142,7 @@ export function SearchPage() {
         <div className="text-center" role="alert"><EmptyState title={t('search.source.loadFailed')} /><Button data-analytics-id="search.source.retry" variant="outline" onClick={retry}>{t('search.source.retry')}</Button></div>
       ) : displayItems.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3" aria-busy={isFetchingMore}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy={isFetchingMore}>
             {displayItems.map(skill => <SkillCard key={skill.id} variant="market" analyticsId="skill.card.open" skill={skill} highlightStarred onClick={() => {
               saveMarketScroll(scrollKey, favoritesVisible)
               navigate({ to: `/space/${skill.namespace}/${encodeURIComponent(skill.slug)}`, search: { returnTo: toRouterPath(window.location.pathname, window.location.search) } })

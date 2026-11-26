@@ -78,7 +78,7 @@ export const PRESENTATION_CONTENT = {
     "serviceLayer": "landing.experience.enterprise.serviceLayer",
     "storageLayer": "landing.experience.enterprise.storageLayer",
     "networkBoundary": "landing.experience.enterprise.networkBoundary",
-    "registryLabel": "=SkillHub\nRegistry"
+    "registryLabel": "=Luma Skill Hub\nRegistry"
   },
   "cta": {
     "title": "landing.experience.cta.title",
@@ -153,15 +153,15 @@ export const PRESENTATION_ITEMS = {
   ]
 } as const
 export const PRESENTATION_LINKS = {
-  "repository": "https://github.com/iflytek/skillhub",
-  "documentation": "https://iflytek.github.io/skillhub/",
-  "cliDocumentation": "https://github.com/iflytek/skillhub/tree/main/cli",
-  "cliPackage": "https://www.npmjs.com/package/@astron-team/skillhub",
-  "license": "https://github.com/iflytek/skillhub/blob/main/LICENSE",
-  "contributing": "https://github.com/iflytek/skillhub/blob/main/CONTRIBUTING.md",
-  "changelog": "https://github.com/iflytek/skillhub/releases",
-  "codeOfConduct": "https://github.com/iflytek/skillhub/blob/main/CODE_OF_CONDUCT.md",
-  "community": "https://github.com/iflytek/skillhub/discussions"
+  "repository": "https://github.com/Songhonglei/lume-skill",
+  "documentation": "https://github.com/Songhonglei/lume-skill/blob/main/skill-hub/README.md",
+  "cliDocumentation": "https://github.com/Songhonglei/lume-skill/tree/main/skill-hub/cli",
+  "cliPackage": "https://github.com/Songhonglei/lume-skill/blob/main/skill-hub/README.md#cli",
+  "license": "https://github.com/Songhonglei/lume-skill/blob/main/skill-hub/LICENSE",
+  "contributing": "https://github.com/Songhonglei/lume-skill/blob/main/skill-hub/CONTRIBUTING.md",
+  "changelog": "https://github.com/Songhonglei/lume-skill/releases",
+  "codeOfConduct": "https://github.com/Songhonglei/lume-skill/blob/main/skill-hub/CODE_OF_CONDUCT.md",
+  "community": "https://github.com/Songhonglei/lume-skill/discussions"
 } as const
 export type PresentationLink = keyof typeof PRESENTATION_LINKS
 

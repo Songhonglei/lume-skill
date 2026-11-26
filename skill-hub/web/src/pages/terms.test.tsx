@@ -25,15 +25,9 @@ describe('TermsOfServicePage', () => {
     expect(html).toContain('These terms apply')
   })
 
-  it.each(['ko', 'ko-KR'])('renders the complete Korean policy for %s', (language) => {
+  it.each(['ko', 'ko-KR'])('falls back to English for %s', (language) => {
     mockI18n.resolvedLanguage = language
-    const html = renderToStaticMarkup(<TermsOfServicePage />)
-    expect(html).toContain('이용약관')
-    expect(html).toContain('9. 종료, 변경 및 문의')
-    expect(html).toContain('2026년 3월 14일')
-    mockI18n.resolvedLanguage = 'en'
-    const english = renderToStaticMarkup(<TermsOfServicePage />)
-    expect((html.match(/<li>/g) ?? []).length).toBe((english.match(/<li>/g) ?? []).length)
+    expect(renderToStaticMarkup(<TermsOfServicePage />)).toContain('Terms of Service')
   })
 
   it('preserves the English fallback for other languages', () => {

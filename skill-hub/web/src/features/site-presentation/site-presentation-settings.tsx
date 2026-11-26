@@ -19,7 +19,7 @@ import { withBasePath } from '@/shared/lib/base-path'
 import { PRESENTATION_CONTENT, PRESENTATION_LINKS, type PresentationSection } from '@/shared/lib/presentation-content'
 
 const ADMIN_QUERY_KEY = ['system-config', 'presentation'] as const
-const LOCALES = ['zh', 'en', 'ko', 'ru'] as const
+const LOCALES = ['zh', 'en'] as const
 const normalizeSettings = (value: SitePresentationSettings): SitePresentationSettings => ({ ...value, sections: { ...defaultSitePresentation().sections, ...value.sections } })
 const settingsSnapshot = (value: SitePresentationSettings) => JSON.stringify(normalizeSettings(value), (_key, entry: unknown) =>
   entry !== null && typeof entry === 'object' && !Array.isArray(entry)

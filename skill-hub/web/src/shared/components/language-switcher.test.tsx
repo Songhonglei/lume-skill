@@ -49,21 +49,22 @@ describe('LanguageSwitcher', () => {
     expect(screen.getByRole('button', { name: /English/i })).toBeTruthy()
   })
 
-  it('selects Korean and closes the menu', () => {
+  it('selects Chinese and closes the menu', () => {
     mockI18n.language = 'en'
     mockI18n.resolvedLanguage = 'en'
     render(<LanguageSwitcher />)
     fireEvent.click(screen.getByRole('button', { name: /English/i }))
-    fireEvent.click(screen.getByRole('menuitem', { name: '한국어' }))
-    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('ko')
-    expect(screen.getByRole('button', { name: /한국어/ })).toBeTruthy()
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['中文', 'English'])
+    fireEvent.click(screen.getByRole('menuitem', { name: '中文' }))
+    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('zh')
+    expect(screen.getByRole('button', { name: /中文/ })).toBeTruthy()
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('shows Korean for the regional locale ko-KR', () => {
+  it('falls back to English for a legacy Korean preference', () => {
     mockI18n.language = 'ko-KR'
     render(<LanguageSwitcher />)
-    expect(screen.getByRole('button', { name: /한국어/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /English/ })).toBeTruthy()
   })
 
   it('updates the displayed language after selecting English', () => {

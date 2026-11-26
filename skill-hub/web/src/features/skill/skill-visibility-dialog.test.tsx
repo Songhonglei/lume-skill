@@ -7,7 +7,7 @@ import { createInstance } from 'i18next'
 import { I18nextProvider } from 'react-i18next'
 import zh from '@/i18n/locales/zh.json'
 import en from '@/i18n/locales/en.json'
-import ru from '@/i18n/locales/ru.json'
+import ru from '../../../test/fixtures/locales/ru.json'
 
 const api = vi.hoisted(() => ({ getVisibility: vi.fn(), changeVisibility: vi.fn() }))
 vi.mock('@/api/client', () => ({ skillLifecycleApi: api }))

@@ -17,7 +17,7 @@ test.describe('Auth Entry', () => {
     })
     await page.goto('/login?returnTo=%2Fdashboard%2Ftokens')
 
-    await expect(page.getByRole('heading', { name: 'Login to SkillHub' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Login to Luma Skill Hub' })).toBeVisible()
     await expect(page.getByText(/password compatibility layer/i)).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Login' }).click()
@@ -150,7 +150,7 @@ test.describe('Auth Entry', () => {
       await page.setViewportSize(viewport)
       await page.goto('/login')
       await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }' })
-      const title = page.getByRole('heading', { name: 'Login to SkillHub' })
+      const title = page.getByRole('heading', { name: 'Login to Luma Skill Hub' })
       const registerLink = page.getByRole('link', { name: 'Sign up now' })
       await expect(title).toBeVisible()
       await expect(registerLink).toBeVisible()
@@ -166,16 +166,14 @@ test.describe('Auth Entry', () => {
 
       const themeSwitch = page.getByRole('switch', { name: 'Dark theme' })
       if (await themeSwitch.getAttribute('aria-checked') === 'true') await themeSwitch.click()
-      const lightArtwork = page.locator('img[src$="/login-skill-art-light.png"]')
-      const darkArtwork = page.locator('img[src$="/login-skill-art-dark.png"]')
-      await expect(lightArtwork).toBeVisible()
-      await expect.poll(() => lightArtwork.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-      await expect(page.locator('img[src$="/login-skill-art-dark.png"]')).toBeHidden()
+      const logo = page.locator('img[src$="/lumaskill-mark.svg"]')
+      await expect(logo).toBeVisible()
+      await expect.poll(() => logo.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
       await page.screenshot({ path: testInfo.outputPath(`login-${viewport.width}-light.png`) })
       await themeSwitch.click()
-      await expect(darkArtwork).toBeVisible()
-      await expect.poll(() => darkArtwork.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
-      await expect(page.locator('img[src$="/login-skill-art-light.png"]')).toBeHidden()
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+      await expect(logo).toBeVisible()
       await page.screenshot({ path: testInfo.outputPath(`login-${viewport.width}-dark.png`) })
 
       const dimensions = await page.evaluate(() => ({

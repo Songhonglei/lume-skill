@@ -48,10 +48,10 @@ describe('getAppMainContentLayout', () => {
   })
 
   it('uses one responsive gutter instead of adding a second set around console content', () => {
-    expect(APP_FRAME_CLASS_NAME).toContain('max-w-[1440px]')
-    expect(APP_FRAME_CLASS_NAME).toContain('px-4 sm:px-6 lg:px-10')
+    expect(APP_FRAME_CLASS_NAME).toContain('max-w-[1600px]')
+    expect(APP_FRAME_CLASS_NAME).toContain('px-4 sm:px-6 lg:px-8')
     expect(CONSOLE_SIDEBAR_CONTENT_CLASS_NAME).not.toMatch(/\b(?:lg:)?px-/)
-    expect(CONSOLE_SIDEBAR_CONTENT_CLASS_NAME).toContain('lg:pl-10')
+    expect(CONSOLE_SIDEBAR_CONTENT_CLASS_NAME).toContain('lg:pl-8')
   })
 
   it.each(['/login', '/register'])('preserves the separate split-auth composition on %s', (pathname) => {

@@ -2,7 +2,7 @@ import { startTransition, useCallback, useEffect, useRef, useState, type MouseEv
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Folder, Globe, Lock, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
+import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Download, Folder, Globe, Lock, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
 import { SkillInstructions } from '@/features/skill/skill-instructions'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { SkillVisibilityDialog } from '@/features/skill/skill-visibility-dialog'
@@ -966,7 +966,7 @@ export function SkillDetailPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-4"><SkillAvatar name={selectedDisplayName ?? skill.displayName} url={skill.avatarUrl} size="h-16 w-16 text-2xl" /><h1 className="text-balance break-words text-4xl font-bold font-heading text-foreground [overflow-wrap:anywhere]">{selectedDisplayName}</h1></div>
+          <div className="flex items-center gap-4"><SkillAvatar name={selectedDisplayName ?? skill.displayName} url={skill.avatarUrl} size="h-12 w-12 text-xl" /><h1 className="text-balance break-words text-2xl font-semibold tracking-tight sm:text-3xl text-foreground [overflow-wrap:anywhere]">{selectedDisplayName}</h1></div>
           <div className="flex min-w-0 items-center gap-2">
             <code className="min-w-0 break-all text-sm text-muted-foreground">@{skill.namespace}/{skill.slug}</code>
             <CopyButton analyticsId="skill.coordinate.copy" text={`@${skill.namespace}/${skill.slug}`} ariaLabel={t('skillDetail.copyCoordinate')} className="shrink-0" />
@@ -986,7 +986,7 @@ export function SkillDetailPage() {
             </div>
           )}
           {selectedSummary && (
-            <p className="text-lg text-muted-foreground leading-relaxed">{selectedSummary}</p>
+            <p className="text-sm text-muted-foreground leading-6">{selectedSummary}</p>
           )}
           {(skill.labels?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -1007,6 +1007,15 @@ export function SkillDetailPage() {
               ))}
             </div>
           )}
+          <Button
+            data-analytics-id="skill.download.request"
+            size="lg"
+            onClick={handleDownload}
+            disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
+          >
+            <Download aria-hidden="true" className="h-4 w-4" />
+            {t('skillDetail.download')}
+          </Button>
           {showingUnpublishedPreview && (
             <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{t('skillDetail.unpublishedPreviewTitle')}</div>
@@ -1261,6 +1270,23 @@ export function SkillDetailPage() {
           </Card>
         )}
 
+        {selectedVersionEntry && isVersionInstallable && canInteract && (
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.install')}</span>
+            </div>
+            {skill.status === 'ARCHIVED' && (
+              <p className="text-sm text-muted-foreground">{t('skillDetail.archivedInstallHint')}</p>
+            )}
+            <InstallCommand analyticsId="skill.command.copy"
+              namespace={namespace}
+              slug={slug}
+              version={selectedVersionEntry.version} skillhubAnalyticsId="skill.command.skillhub.select" clawhubAnalyticsId="skill.command.clawhub.select"
+            />
+          </Card>
+        )}
+
         <Card className="p-5 space-y-5">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">{t('skillDetail.version')}</div>
@@ -1419,23 +1445,6 @@ export function SkillDetailPage() {
           )}
         </Card>
 
-        {selectedVersionEntry && isVersionInstallable && canInteract && (
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.install')}</span>
-            </div>
-            {skill.status === 'ARCHIVED' && (
-              <p className="text-sm text-muted-foreground">{t('skillDetail.archivedInstallHint')}</p>
-            )}
-            <InstallCommand analyticsId="skill.command.copy"
-              namespace={namespace}
-              slug={slug}
-              version={selectedVersionEntry.version} skillhubAnalyticsId="skill.command.skillhub.select" clawhubAnalyticsId="skill.command.clawhub.select"
-            />
-          </Card>
-        )}
-
         {hasPublishedPendingReview && ownerPreviewVersion && (
           <Card className="border-amber-500/30 bg-amber-500/5 p-5 space-y-4">
             <div className="space-y-1">
@@ -1478,18 +1487,6 @@ export function SkillDetailPage() {
           </Card>
         )}
 
-        <Button data-analytics-id="skill.download.request"
-          className="w-full"
-          variant="outline"
-          size="lg"
-          onClick={handleDownload}
-          disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-          </svg>
-          {t('skillDetail.download')}
-        </Button>
 
         <ShareButton
           namespace={namespace}

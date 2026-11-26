@@ -65,7 +65,7 @@ describe('HomePage', () => {
   it('renders the hero section with brand name', () => {
     const html = renderToStaticMarkup(<HomePage />)
 
-    expect(html).toContain('SkillHub')
+    expect(html).toContain('Luma Skill Hub')
     expect(html).toContain('home.subtitle')
   })
 })

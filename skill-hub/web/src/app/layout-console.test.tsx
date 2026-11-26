@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { SitePresentationSettings } from '@/api/site-presentation'
 import { defaultSitePresentation } from '@/shared/hooks/use-site-presentation'
-import { PRESENTATION_CONTENT } from '@/shared/lib/presentation-content'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 let presentationSettings: SitePresentationSettings | undefined
@@ -40,21 +39,13 @@ beforeEach(() => { presentationSettings = undefined; pathname = '/dashboard'; re
 afterEach(cleanup)
 
 describe('shared console layout composition', () => {
-  it('binds footer copy and hides groups without empty desktop columns', () => {
+  it('omits the public footer even for a previously configured site', () => {
     presentationSettings = defaultSitePresentation()
-    for (const slot of Object.keys(PRESENTATION_CONTENT.footer)) presentationSettings.sections.footer.texts[slot] = { en: `footer-${slot}` }
-    presentationSettings.links.repository = 'https://team.example/source'
-    const view = render(<Layout />)
-    const footer = screen.getByRole('contentinfo')
-    for (const slot of Object.keys(PRESENTATION_CONTENT.footer)) expect(footer.textContent).toContain(`footer-${slot}`)
-    expect(within(footer).getByRole('link', { name: 'footer-repositoryLabel' }).getAttribute('href')).toBe('https://team.example/source')
-    presentationSettings = { ...presentationSettings, sections: { ...presentationSettings.sections, footer: { ...presentationSettings.sections.footer, items: { developers: false, project: false, resources: false } } } }
-    view.rerender(<Layout />)
-    expect(within(footer).queryByText('footer-developersTitle')).toBeNull()
-    expect(footer.querySelector('.md\\:grid-cols-2')).toBeTruthy()
-    presentationSettings.sections.footer.enabled = false
-    view.rerender(<Layout />)
+    presentationSettings.sections.footer.enabled = true
+    presentationSettings.sections.footer.texts.description = { en: 'Previous footer' }
+    render(<Layout />)
     expect(screen.queryByRole('contentinfo')).toBeNull()
+    expect(screen.queryByText('Previous footer')).toBeNull()
   })
 
   it.each(['/dashboard', '/dashboard/skills', '/dashboard/tokens', '/settings/profile'])('renders exactly one sidebar beside the content on %s', (path) => {
@@ -73,20 +64,19 @@ describe('shared console layout composition', () => {
     expect(screen.queryByRole('complementary')).toBeNull()
   })
 
-  it.each(['/search', '/github', '/suites', '/settings/profile', '/dashboard/reviews/42', '/dashboard/publish'])('aligns the header, main frame and footer on %s', (path) => {
+  it.each(['/search', '/github', '/suites', '/settings/profile', '/dashboard/reviews/42', '/dashboard/publish'])('aligns the header and main frame on %s', (path) => {
     pathname = path
     resolvedPathname = path
     render(<Layout />)
     for (const frame of [
       screen.getByRole('banner').firstElementChild,
       screen.getByRole('main').firstElementChild,
-      screen.getByRole('contentinfo').firstElementChild,
     ]) {
       for (const token of APP_FRAME_CLASS_NAME.split(' ')) {
         expect(frame?.classList.contains(token)).toBe(true)
       }
     }
-    expect(screen.getByRole('banner').classList.contains('max-w-[1440px]')).toBe(false)
+    expect(screen.getByRole('banner').classList.contains('max-w-[1600px]')).toBe(false)
   })
 
   it('keeps global navigation collapsible on intermediate screens without changing the console breakpoint', () => {
@@ -155,11 +145,11 @@ describe('shared console layout composition', () => {
     resolvedPathname = '/settings/profile'
     const view = render(<Layout />)
     const main = screen.getByRole('main')
-    expect(main.firstElementChild?.classList.contains('max-w-[1440px]')).toBe(true)
+    expect(main.firstElementChild?.classList.contains('max-w-[1600px]')).toBe(true)
     expect(within(screen.getByRole('complementary')).getByRole('link', { name: 'sidebar.profile' }).classList.contains('bg-accent')).toBe(true)
     resolvedPathname = pathname
     view.rerender(<Layout />)
-    expect(main.firstElementChild?.classList.contains('max-w-[1440px]')).toBe(true)
+    expect(main.firstElementChild?.classList.contains('max-w-[1600px]')).toBe(true)
     expect(screen.getAllByRole('complementary')).toHaveLength(1)
   })
 

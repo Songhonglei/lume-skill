@@ -54,7 +54,7 @@ describe('landing-quick-start module exports', () => {
     expect(screen.getByRole('button', { name: /Use our CLI/ }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.queryByText('landing.experience.quickStart.modes.agent.title')).toBeNull()
     expect(screen.queryByText('landing.experience.quickStart.modes.web.title')).toBeNull()
-    expect(screen.getByText('npx -y @astron-team/skillhub@0.1.12 --version')).toBeTruthy()
+    expect(screen.getByText('skillhub --version')).toBeTruthy()
   })
 
   it('uses the self-hosted Registry URL in displayed and copied CLI commands', async () => {
@@ -83,11 +83,11 @@ describe('landing-quick-start module exports', () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenNthCalledWith(
         1,
-        'npx -y @astron-team/skillhub@0.1.12 search weather --registry https://registry.internal.example/skills --limit 5',
+        'skillhub search weather --registry https://registry.internal.example/skills --limit 5',
       )
       expect(writeText).toHaveBeenNthCalledWith(
         2,
-        'npx -y @astron-team/skillhub@0.1.12 install @global/weather --dir ./skills --registry https://registry.internal.example/skills',
+        'skillhub install @global/weather --dir ./skills --registry https://registry.internal.example/skills',
       )
     })
   })

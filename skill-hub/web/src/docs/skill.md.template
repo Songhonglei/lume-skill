@@ -1,13 +1,13 @@
 ---
 name: skillhub-cli
-description: Connect an Agent to a SkillHub registry and use the official SkillHub CLI to search, install, list, or explicitly upgrade SkillHub skills. Use when a user asks to connect SkillHub, install a SkillHub skill, or manage skills previously installed from SkillHub.
+description: Connect an Agent to a Luma Skill Hub registry and use the compatible skillhub CLI to search, install, list, or explicitly upgrade SkillHub skills. Use when a user asks to connect Luma Skill Hub, install a skill, or manage skills previously installed from this registry.
 version: 2.0.2
 license: Apache-2.0
 ---
 
-# SkillHub CLI
+# Luma Skill Hub CLI
 
-Use the registry that supplied this guide to connect the current Agent and manage SkillHub packages with the first-party `@astron-team/skillhub` CLI.
+Use the registry that supplied this guide to connect the current Agent and manage Luma Skill Hub packages with the first-party `@astron-team/skillhub` CLI.
 
 ## Resolve The Registry
 
@@ -15,8 +15,9 @@ Resolve `<registry>` once before composing commands. For an already installed Sk
 
 1. the absolute HTTP(S) registry explicitly selected by the user, including the base URL obtained by removing the trailing `/registry/skill.md` from the URL used to fetch this guide;
 2. `SKILLHUB_REGISTRY`;
-3. the `registry` field in `~/.skillhub/config.json`;
-4. `https://skill.xfyun.cn`.
+3. the `registry` field in `~/.skillhub/config.json`.
+
+Ask for the registry URL if none of these sources provides one.
 
 Use only an absolute HTTP(S) URL. Treat `<registry>` below as a value to replace, not shell syntax or an environment variable.
 

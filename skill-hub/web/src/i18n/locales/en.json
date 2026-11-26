@@ -24,7 +24,7 @@
     "landing": "Home",
     "home": "Skill Center",
     "search": "Search",
-    "marketplace": "Skill Marketplace",
+    "marketplace": "Skill Library",
     "githubSkills": "Open-source Skills",
     "skillDetail": "Skill Detail",
     "explore": "Explore Skills",
@@ -85,7 +85,7 @@
     "repositoryFirstPage": "Go to first page",
     "title": "Open-source Skills",
     "sourceLabel": "PUBLIC GITHUB REPOSITORIES",
-    "description": "Explore skills from public GitHub repositories, reviewed and published by SkillHub. Each skill page shows its source, path, pinned commit, and license details.",
+    "description": "Explore skills from public GitHub repositories, reviewed and published by Luma Skill Hub. Each skill page shows its source, path, pinned commit, and license details.",
     "explore": "Browse open-source skills",
     "allSkills": "View all skills",
     "publishedCount": "Published GitHub skills",
@@ -109,7 +109,7 @@
       "title": "Discover & Share AI Skills",
       "subtitle": "Build powerful AI agents with community-driven skills",
       "searchPlaceholder": "Search skills...",
-      "exploreSkills": "Explore Skills",
+      "exploreSkills": "Browse skills",
       "publishSkill": "Publish Skill"
     },
     "features": {
@@ -144,7 +144,7 @@
       "teams": "Teams"
     },
     "whySkillHub": {
-      "title": "Why SkillHub",
+      "title": "Why Luma Skill Hub",
       "subtitle": "A private Agent skill platform designed for enterprise teams"
     },
     "badge": "Enterprise Skill Registry",
@@ -186,7 +186,7 @@
     "ctaTitle": "Ready to Get Started?",
     "ctaDescription": "Start your local development environment with a single command and experience the complete skill management workflow",
     "ctaButton": "Try Now",
-    "footerLicense": "© 2026 SkillHub. Apache License 2.0.",
+    "footerLicense": "© 2026 Luma Skill Hub. Apache License 2.0.",
     "footerDocs": "Docs",
     "footerGithub": "GitHub",
     "footerCommunity": "Community",
@@ -201,23 +201,23 @@
         "cli": "CLI"
       },
       "cli": {
-        "description": "Install the SkillHub CLI locally to run skillhub install for skills.",
-        "command": "npm i -g @astron-team/skillhub"
+        "description": "Install the Luma Skill Hub CLI locally to run skillhub install for skills.",
+        "command": "skillhub --version"
       },
       "agent": {
-        "description": "Send a prompt to your Agent to set up the SkillHub Registry",
-        "command": "Connect SkillHub using https://www.example.com/registry/skill.md",
-        "commandTemplate": "Connect SkillHub using {{url}}"
+        "description": "Send a prompt to your Agent to set up the Luma Skill Hub Registry",
+        "command": "Connect Luma Skill Hub using https://www.example.com/registry/skill.md",
+        "commandTemplate": "Connect Luma Skill Hub using {{url}}"
       },
       "human": {
-        "description": "Use the SkillHub CLI to search for and install Skills",
-        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
+        "description": "Use the Luma Skill Hub CLI to search for and install Skills",
+        "command": "skillhub search <keyword> --registry https://www.example.com",
+        "commandTemplate": "skillhub search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
           "title": "1. Configure Environment Variables",
-          "description": "Configure ClawHub CLI to connect to SkillHub"
+          "description": "Configure ClawHub CLI to connect to Luma Skill Hub"
         },
         "installSkills": {
           "title": "2. Install Skills",
@@ -233,8 +233,8 @@
     },
     "experience": {
       "heroBadge": "Agent skill management platform",
-      "heroTitle": "Turn team expertise into Agent-ready skills",
-      "heroDescription": "Make individual AI know-how reusable, manageable, and trusted across the organization.",
+      "heroTitle": "Skill Library",
+      "heroDescription": "Find skills your teams have published, check their versions, and download them.",
       "browseAll": "Browse all",
       "marketplace": "Marketplace",
       "latest": "Latest",
@@ -265,7 +265,7 @@
         "networkBoundary": "Deploy inside your organization and retain control of registry data",
         "deployment": {
           "title": "Self-hosted deployment",
-          "description": "Run SkillHub on your infrastructure with Docker Compose or the provided Kubernetes manifests, using local or S3-compatible object storage."
+          "description": "Run Luma Skill Hub on your infrastructure with Docker Compose or the provided Kubernetes manifests, using local or S3-compatible object storage."
         },
         "security": {
           "title": "Validation and review",
@@ -290,7 +290,7 @@
       },
       "cta": {
         "title": "Build your team skill registry",
-        "description": "Review the source and deployment guide, then run SkillHub in your own environment.",
+        "description": "Review the source and deployment guide, then run Luma Skill Hub in your own environment.",
         "deploy": "View source",
         "docs": "Read the docs"
       },
@@ -319,10 +319,10 @@
           "registryTab": "Registry setup",
           "discoveryTab": "Implicit discovery",
           "live": "Agent live",
-          "instruction": "Read {{url}} and follow it to configure the SkillHub Skills Registry",
+          "instruction": "Read {{url}} and follow it to configure the Luma Skill Hub Skills Registry",
           "instructionLead": "Copy this instruction and send it to your Agent",
           "instructionPrefix": "Read",
-          "instructionSuffix": "and follow it to configure the SkillHub Skills Registry.",
+          "instructionSuffix": "and follow it to configure the Luma Skill Hub Skills Registry.",
           "copyInstruction": "Copy instruction",
           "copyErrorDescription": "Select and copy the Registry setup instruction manually.",
           "steps": {
@@ -334,7 +334,7 @@
           "discovery": {
             "intentTitle": "Identify the task",
             "intentDescription": "Real-time weather and travel advice are needed",
-            "searchTitle": "Search SkillHub Registry",
+            "searchTitle": "Search Luma Skill Hub Registry",
             "searchDescription": "Match @global/weather · v1.3.0",
             "readTitle": "Read skill instructions",
             "readDescription": "Confirm the input and invocation contract"
@@ -351,7 +351,7 @@
           "docs": "CLI docs"
         },
         "web": {
-          "marketplace": "Skill marketplace",
+          "marketplace": "Skill library",
           "publicSkills": "Public skills",
           "search": "Search skills",
           "status": "Public · Available",
@@ -375,20 +375,21 @@
     "description": "Efficient skill management, distribution, and collaboration platform for developers",
     "browseSkills": "Browse Skills",
     "publishSkill": "Publish Skill",
+    "noVisibleSkills": "No skills available to view",
     "popularTitle": "Popular Downloads",
-    "popularDescription": "Most popular skills in the community",
+    "popularDescription": "Sorted by downloads",
     "latestTitle": "Latest Releases",
     "latestDescription": "Freshly published skills",
     "viewAll": "View All →",
     "quickStart": {
       "title": "Quick Start",
       "subtitle": "快速开始",
-      "description": "Get started with SkillHub in just a few simple steps",
+      "description": "Get started with Luma Skill Hub in just a few simple steps",
       "tip": "💡 Tip: Visit the skill detail page for one-click install commands with environment variables",
       "steps": {
         "configureEnv": {
           "title": "1. Configure Environment Variables",
-          "description": "Configure ClawHub CLI to connect to SkillHub"
+          "description": "Configure ClawHub CLI to connect to Luma Skill Hub"
         },
         "installSkills": {
           "title": "2. Install Skills",
@@ -470,7 +471,7 @@
     "clear": "Clear search"
   },
   "login": {
-    "title": "Login to SkillHub",
+    "title": "Login to Luma Skill Hub",
     "subtitle": "One account for better skill collaboration",
     "eyebrow": "Welcome back",
     "tabEnterprise": "Organization login",
@@ -481,7 +482,7 @@
     "enterpriseConfigHint": "Work login entries are enabled by administrators.",
     "noEnterpriseMethods": "No work account login is available yet. Use a personal account for now, or contact your administrator.",
     "personalTitle": "Password login",
-    "personalHint": "Use your SkillHub username and password.",
+    "personalHint": "Use your Luma Skill Hub username and password.",
     "otherMethods": "Or continue with",
     "orgLoginHint": "For organizations with single sign-on configured",
     "externalIdentityMethods": "External identity sources",
@@ -503,7 +504,7 @@
     "register": "Sign up now",
     "oauthHint": "After OAuth authentication, you will be automatically redirected back to this site.",
     "enterpriseSsoTitle": "Enterprise SSO",
-    "enterpriseSsoHint": "This deployment has the compatibility layer enabled. If your browser already has a {{name}} session, you can try establishing a SkillHub session directly.",
+    "enterpriseSsoHint": "This deployment has the compatibility layer enabled. If your browser already has a {{name}} session, you can try establishing a Luma Skill Hub session directly.",
     "enterpriseSsoAutoHint": "This deployment has automatic {{name}} probing enabled. If it does not succeed, you can continue with the standard login methods.",
     "enterpriseSsoAction": "Try {{name}}",
     "enterpriseSsoSubmitting": "Trying {{name}}...",
@@ -1894,7 +1895,7 @@
     "suiteMembershipMore": "Showing {{shown}} of {{total}} suite memberships. Remaining results are available through the paginated API.",
     "suiteMembershipUnavailable": "Currently unavailable",
     "installMethodClawhub": "ClawHub CLI",
-    "installMethodSkillhub": "SkillHub CLI",
+    "installMethodSkillhub": "Luma Skill Hub CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
     "download": "Download",
     "labelsSectionTitle": "Labels",
@@ -2105,7 +2106,7 @@
     "installForAgent": {
       "button": "Install for Agent",
       "copied": "Agent prompt copied",
-      "prompt": "Follow {{guideUrl}} to connect SkillHub and install {{skill}} version {{version}} from this SkillHub."
+      "prompt": "Follow {{guideUrl}} to connect Luma Skill Hub and install {{skill}} version {{version}} from this Luma Skill Hub."
     }
   },
   "skillCompare": {
@@ -2450,13 +2451,13 @@
     "loginWith": "Login with {{name}}"
   },
   "authShell": {
-    "eyebrow": "SkillHub",
+    "eyebrow": "Luma Skill Hub",
     "backHome": "Back to home",
     "heroTitle": "Discover, preserve, and reuse\nyour team's skills",
     "heroSubtitle": "Start with a SKILL.md.\nTurn experience into a capability your team can share.",
     "heroFooter": "Bring team knowledge together and unlock skill value",
     "shortTagline": "Skills\nBuild\nTogether",
-    "capabilities": "What you can do with SkillHub",
+    "capabilities": "What you can do with Luma Skill Hub",
     "discoverTitle": "Discover skills",
     "discoverDescription": "Find reusable skills and practices across your team.",
     "shareTitle": "Share knowledge",
@@ -2710,7 +2711,7 @@
     "contributing": "Contributing",
     "changelog": "Changelog",
     "product": "Product",
-    "marketplace": "Skill marketplace",
+    "marketplace": "Skill library",
     "publish": "Publish skill",
     "developers": "Developers",
     "project": "Project",
@@ -2721,7 +2722,7 @@
     "community": "Community",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "copyright": "© 2026 SkillHub. Apache-2.0."
+    "copyright": "© 2026 Luma Skill Hub. Apache-2.0."
   },
   "publish": {
     "packageFormatHint": "The ZIP root must contain SKILL.md",
@@ -2752,7 +2753,7 @@
     "examplesInvalid": "Examples format not recognized. The file is kept as an ordinary file and publishing remains available.",
     "packagePreviewFailed": "Unable to read the package. Check SKILL.md and select the package again, or retry.",
     "title": "Publish Skill",
-    "subtitle": "Upload skill package to SkillHub",
+    "subtitle": "Upload skill package to Luma Skill Hub",
     "reviewNotice": {
       "title": "Review Notice",
       "description": "Processing depends on visibility and the security scanning policy. Check the submission receipt and version status for the next step."
@@ -3533,7 +3534,7 @@
       "cancelFailed": "Failed to cancel the Bundle operation",
       "openingTask": "Opening the publishing task…",
       "taskListTitle": "Suite publishing tasks",
-      "taskListDescription": "Handle tasks that need your input first; SkillHub advances the rest automatically.",
+      "taskListDescription": "Handle tasks that need your input first; Luma Skill Hub advances the rest automatically.",
       "taskDetailTitle": "Suite publishing task",
       "taskDetailDescription": "Track member publishing and Suite draft creation outside the authoring page.",
       "backToTasks": "Back to publishing tasks",
@@ -3637,7 +3638,7 @@
       },
       "noMembers": "No member progress yet.",
       "cancelConfirmTitle": "Stop creating this Suite?",
-      "cancelConfirmDescription": "SkillHub will stop waiting for members and will not create the Suite draft. Skill versions and review tasks already created remain available and are not withdrawn.",
+      "cancelConfirmDescription": "Luma Skill Hub will stop waiting for members and will not create the Suite draft. Skill versions and review tasks already created remain available and are not withdrawn.",
       "cancelConfirmAction": "Stop creating Suite",
       "cancelledTitle": "Suite creation stopped",
       "cancelledDescription": "This task remains in history. Existing Skill versions and review tasks are not withdrawn or deleted.",
@@ -4194,15 +4195,15 @@
     "back": "Back to notification settings",
     "batchState": {
       "signInTitle": "Sign in to view email details",
-      "signInDescription": "Use the SkillHub account that received this email. After signing in, you will return to this page.",
+      "signInDescription": "Use the Luma Skill Hub account that received this email. After signing in, you will return to this page.",
       "signIn": "Sign in",
       "unavailableTitle": "These email details are unavailable",
-      "unavailableDescription": "A different SkillHub account may be signed in, or the record may have been removed. Check the current account, then reload if it is correct.",
+      "unavailableDescription": "A different Luma Skill Hub account may be signed in, or the record may have been removed. Check the current account, then reload if it is correct.",
       "currentAccount": "Current account: {{account}}",
       "switchAccount": "Sign out and switch account",
       "switchingAccount": "Signing out…",
       "switchFailed": "Sign-out failed; the account has not changed. Retry or sign out from the account menu.",
-      "accountHint": "Email details are private to the receiving SkillHub account. Accounts sharing an email address cannot view each other’s records.",
+      "accountHint": "Email details are private to the receiving Luma Skill Hub account. Accounts sharing an email address cannot view each other’s records.",
       "failureTitle": "Email details could not be loaded",
       "failureDescription": "The service is temporarily unavailable. Reload later, or return to notification settings to check the receiving account."
     },
@@ -4264,7 +4265,7 @@
     "brandTitle": "Site brand",
     "brandHelp": "Used in the navigation, homepage, footer and browser title.",
     "siteName": "Site name",
-    "defaultHelp": "Leave empty to use the default SkillHub name.",
+    "defaultHelp": "Leave empty to use the default Luma Skill Hub name.",
     "logoUrl": "Site logo",
     "faviconUrl": "Browser icon",
     "assetHelp": "Drop an image here or choose a file. PNG or JPEG, up to 2 MB and 1024 × 1024 pixels. Browser icons also use these formats. Only upload branding images suitable for public access; uploaded files are publicly readable before settings are saved.",

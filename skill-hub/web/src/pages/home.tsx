@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { useSitePresentation } from '@/shared/hooks/use-site-presentation'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -42,7 +43,7 @@ export function HomePage() {
         <div className="space-y-4">
           <BrandMark className="mx-auto h-16 w-16 rounded-2xl bg-background shadow-sm ring-1 ring-border/70 md:h-20 md:w-20" />
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold leading-tight [overflow-wrap:anywhere]" style={{ color: 'hsl(var(--foreground))' }}>
-            {settings.siteName ?? 'SkillHub'}
+            {settings.siteName ?? PRODUCT_NAME}
           </h1>
           <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ color: 'hsl(var(--text-secondary))' }}>
             {t('home.subtitle')}

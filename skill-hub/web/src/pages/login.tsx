@@ -67,10 +67,9 @@ export function LoginPage() {
 
   return (
     <AuthShell>
-      <div className="flex flex-col gap-5 animate-fade-up xl:min-h-[calc(100svh-12rem)]">
+      <div className="flex flex-col gap-5 animate-fade-up">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{t('login.eyebrow')}</p>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('login.title')}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('login.title')}</h1>
           <p className="text-sm text-muted-foreground">
             {t('login.subtitle')}
           </p>
@@ -159,7 +158,7 @@ export function LoginPage() {
               {loginMutation.error ? (
                 <p className="text-sm text-red-600">{loginMutation.error.message}</p>
               ) : null}
-              <Button className="h-11 w-full bg-[#315b86] text-white hover:bg-[#25496d] dark:bg-sky-300 dark:text-sky-950 dark:hover:bg-sky-200 xl:h-10" disabled={loginMutation.isPending} type="submit">
+              <Button className="h-11 w-full xl:h-10" disabled={loginMutation.isPending} type="submit">
                 {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
                 <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
               </Button>

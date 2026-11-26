@@ -1,7 +1,7 @@
 import en from '@/i18n/locales/en.json'
 import zh from '@/i18n/locales/zh.json'
-import ko from '@/i18n/locales/ko.json'
-import ru from '@/i18n/locales/ru.json'
+import ko from '../../../test/fixtures/locales/ko.json'
+import ru from '../../../test/fixtures/locales/ru.json'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultSitePresentation, presentationText } from '@/shared/hooks/use-site-presentation'
 import { PRESENTATION_CONTENT, presentationItemVisible, presentationLinkUrl } from './presentation-content'
@@ -51,7 +51,7 @@ describe('presentation allowlist and safe links', () => {
     expect(presentationLinkUrl(value, 'repository')).toBe('/skillhub/source')
     for (const unsafe of ['javascript:alert(1)', '//evil.test', '/\\evil.test', 'https://user:pass@host.test', 'https://team.test/\npath', 'data:text/html,test', '/../docs', '/%2e%2e/docs', '/%252e%252e/docs', '/a/../docs', '/%255c%255cevil.test']) {
       value.links.repository = unsafe
-      expect(presentationLinkUrl(value, 'repository')).toBe('https://github.com/iflytek/skillhub')
+      expect(presentationLinkUrl(value, 'repository')).toBe('https://github.com/Songhonglei/lume-skill')
     }
     value.links.repository = 'https://team.example/source'
     expect(presentationLinkUrl(value, 'repository')).toBe('https://team.example/source')

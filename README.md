@@ -6,3 +6,4 @@ Skill 管理、评测与运营相关项目合集。各项目在独立子目录�
 
 - [Skill Manage](skill-manage/)：自托管的 Skill 管理工作台，包含注册、审计、授权修复与版本管理。
 - [Skill Eval](skill-eval/)：自托管的 Skill 评测工作台，当前为开发候选。
+- [Luma Skill Hub](./skill-hub/README.md)：自托管企业技能库，支持空间权限、发布审核、版本分发与审计。

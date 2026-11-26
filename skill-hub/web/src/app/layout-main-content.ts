@@ -3,11 +3,11 @@ import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
 export const LANDING_MAIN_CLASS_NAME = 'flex-1 relative z-10'
 export const SPLIT_AUTH_MAIN_CLASS_NAME = 'flex-1 relative z-10'
 export const DEFAULT_MAIN_CLASS_NAME = 'flex-1 relative z-10'
-export const DEFAULT_CONTENT_CLASS_NAME = `${APP_FRAME_CLASS_NAME} py-8 lg:py-10`
-export const CONSOLE_MAIN_CLASS_NAME = 'flex-1 relative z-10 bg-background'
-export const CONSOLE_CONTENT_CLASS_NAME = `${APP_FRAME_CLASS_NAME} min-h-[calc(100vh-11rem)]`
-export const CONSOLE_SIDEBAR_ROW_CLASS_NAME = 'flex flex-col lg:flex-row gap-0 [&>aside]:py-4 lg:[&>aside]:pr-5 lg:[&>aside]:pt-8 lg:[&>aside]:pb-6 lg:[&>aside]:border-r lg:[&>aside]:border-border/40'
-export const CONSOLE_SIDEBAR_CONTENT_CLASS_NAME = 'flex-1 min-w-0 pb-7 pt-[18px] lg:pl-10 lg:pt-9'
+export const DEFAULT_CONTENT_CLASS_NAME = `${APP_FRAME_CLASS_NAME} py-6 lg:py-8`
+export const CONSOLE_MAIN_CLASS_NAME = 'flex-1 relative z-10'
+export const CONSOLE_CONTENT_CLASS_NAME = `${APP_FRAME_CLASS_NAME} min-h-[calc(100svh-4rem)]`
+export const CONSOLE_SIDEBAR_ROW_CLASS_NAME = 'flex flex-col lg:flex-row gap-0 [&>aside]:py-3 lg:[&>aside]:pr-5 lg:[&>aside]:pt-7 lg:[&>aside]:pb-6 lg:[&>aside]:border-r lg:[&>aside]:border-border'
+export const CONSOLE_SIDEBAR_CONTENT_CLASS_NAME = 'flex-1 min-w-0 pb-7 pt-[18px] lg:pl-8 lg:pt-7'
 
 export const DASHBOARD_PATH_PREFIXES = ['/dashboard', '/settings/'] as const
 export const AUTH_ENTRY_PATHS = ['/login', '/register', '/reset-password'] as const

@@ -25,15 +25,9 @@ describe('PrivacyPolicyPage', () => {
     expect(html).toContain('This policy explains')
   })
 
-  it.each(['ko', 'ko-KR'])('renders the complete Korean policy for %s', (language) => {
+  it.each(['ko', 'ko-KR'])('falls back to English for %s', (language) => {
     mockI18n.resolvedLanguage = language
-    const html = renderToStaticMarkup(<PrivacyPolicyPage />)
-    expect(html).toContain('개인정보처리방침')
-    expect(html).toContain('8. 방침 업데이트 및 문의')
-    expect(html).toContain('2026년 3월 14일')
-    mockI18n.resolvedLanguage = 'en'
-    const english = renderToStaticMarkup(<PrivacyPolicyPage />)
-    expect((html.match(/<li>/g) ?? []).length).toBe((english.match(/<li>/g) ?? []).length)
+    expect(renderToStaticMarkup(<PrivacyPolicyPage />)).toContain('Privacy Policy')
   })
 
   it('preserves the English fallback for other languages', () => {

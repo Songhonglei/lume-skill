@@ -17,7 +17,8 @@ vi.mock('react-i18next', async () => {
 })
 
 vi.mock('lucide-react', () => ({
-  ArrowRight: () => null,
+  LayoutGrid: () => null,
+  Upload: () => null,
   CheckCircle2: () => null,
   Clock3: () => null,
   Copy: () => null,
@@ -71,6 +72,7 @@ vi.mock('@/shared/lib/search-query', () => ({
 
 vi.mock('@/shared/ui/button', () => ({
   Button: ({ children }: { children: unknown }) => children,
+  buttonVariants: () => '',
 }))
 
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -81,10 +83,11 @@ describe('LandingPage', () => {
     expect(typeof LandingPage).toBe('function')
   })
 
-  it('renders the brand name in the hero section', () => {
+  it('renders the Hub and a search field', () => {
     const html = renderToStaticMarkup(<LandingPage />)
 
-    expect(html).toContain('SkillHub')
+    expect(html).toContain('Luma Skill Hub')
     expect(html).toContain('landing.experience.heroTitle')
+    expect(html).toContain('type="search"')
   })
 })
