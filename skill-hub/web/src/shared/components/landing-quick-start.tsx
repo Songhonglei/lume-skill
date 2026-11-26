@@ -1,0 +1,355 @@
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Check, ChevronRight, Copy, FileText, Search } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { PRODUCT_NAME } from '@/shared/lib/product-brand'
+import { copyToClipboard, useCopyToClipboard } from '@/shared/lib/clipboard'
+import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { toast } from '@/shared/lib/toast'
+import { useSitePresentation, presentationText } from '@/shared/hooks/use-site-presentation'
+import { presentationItemVisible, presentationLinkUrl } from '@/shared/lib/presentation-content'
+import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
+
+type AccessMode = 'agent' | 'cli' | 'web'
+type AgentView = 'registry' | 'discovery'
+
+interface AccessModeOption {
+  id: AccessMode
+}
+
+const ACCESS_MODES: AccessModeOption[] = [
+  { id: 'agent' },
+  { id: 'cli' },
+  { id: 'web' },
+]
+
+function getRegistryUrl(): string {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return resolvePublicRegistryUrl(
+    window.__SKILLHUB_RUNTIME_CONFIG__?.appBaseUrl,
+    `${window.location.protocol}//${window.location.host}`,
+  )
+}
+
+function AgentAccessPanel() {
+  const { t } = useTranslation()
+  const [activeView, setActiveView] = useState<AgentView>('registry')
+  const [copied, copy] = useCopyToClipboard()
+  const registryUrl = useMemo(getRegistryUrl, [])
+  const instruction = t('landing.experience.quickStart.agent.instruction', { url: `${registryUrl}/registry/skill.md` })
+
+  return (
+    <div className="">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex w-fit items-center gap-1 border-b border-border/70" role="tablist" aria-label={t('landing.experience.quickStart.agent.tablist')}>
+          {([
+            ['registry', t('landing.experience.quickStart.agent.registryTab')],
+            ['discovery', t('landing.experience.quickStart.agent.discoveryTab')],
+          ] as const).map(([id, label]) => (
+            <button data-analytics-id="guide.view.select"
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={activeView === id}
+              onClick={() => setActiveView(id)}
+              className={`relative px-4 py-2.5 text-xs font-semibold transition-[color,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeView === id ? 'bg-background/70 text-foreground' : 'text-muted-foreground hover:bg-background/40 hover:text-foreground'}`}
+            >
+              {label}
+              <span className={`absolute inset-x-0 -bottom-px h-0.5 origin-center bg-primary transition-transform duration-200 ${activeView === id ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden />
+            </button>
+          ))}
+        </div>
+        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          {t('landing.experience.quickStart.agent.live')}
+        </span>
+      </div>
+
+      {activeView === 'registry' ? (
+        <div className="animate-fade-up py-9">
+          <p className="mb-5 text-xs text-muted-foreground">{t('landing.experience.quickStart.agent.instructionLead')}</p>
+          <div className="flex flex-col gap-5 border-y border-border/70 py-5 sm:flex-row sm:items-start">
+            <span className="mt-1 hidden h-12 w-1 flex-shrink-0 bg-foreground sm:block" aria-hidden />
+            <p className="min-w-0 flex-1 text-sm leading-7 text-foreground">
+              {t('landing.experience.quickStart.agent.instructionPrefix')} <span className="break-all text-blue-600 underline decoration-blue-300 underline-offset-4">{registryUrl}/registry/skill.md</span> {t('landing.experience.quickStart.agent.instructionSuffix')}
+            </p>
+            <button data-analytics-id="guide.prompt.copy"
+              type="button"
+              onClick={() => {
+                void copy(instruction).catch(() => {
+                  toast.error(t('landing.experience.quickStart.copyErrorTitle'), t('landing.experience.quickStart.agent.copyErrorDescription'))
+                })
+              }}
+              className="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-[transform,opacity,box-shadow] duration-150 hover:-translate-y-px hover:opacity-90 hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transform-none"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.agent.copyInstruction')}
+            </button>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {[
+              t('landing.experience.quickStart.agent.steps.read'),
+              t('landing.experience.quickStart.agent.steps.configure'),
+              t('landing.experience.quickStart.agent.steps.discover'),
+            ].map((step, index) => (
+              <div key={step} className="flex items-center gap-2">
+                {index > 0 ? <span className="h-px w-6 bg-border" /> : null}
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="animate-fade-up py-8">
+          <div className="mb-7 flex justify-end">
+            <span className="border-b border-foreground pb-2 text-sm text-foreground">{t('landing.experience.quickStart.agent.prompt')}</span>
+          </div>
+          <div className="relative space-y-0 pl-7 before:absolute before:bottom-3 before:left-[5px] before:top-3 before:w-px before:bg-border">
+            {[
+              [t('landing.experience.quickStart.agent.discovery.intentTitle'), t('landing.experience.quickStart.agent.discovery.intentDescription')],
+              [t('landing.experience.quickStart.agent.discovery.searchTitle'), t('landing.experience.quickStart.agent.discovery.searchDescription')],
+              [t('landing.experience.quickStart.agent.discovery.readTitle'), t('landing.experience.quickStart.agent.discovery.readDescription')],
+            ].map(([title, description], index) => (
+              <div key={title} className={`relative grid grid-cols-1 gap-1 border-b border-border/60 py-3.5 sm:grid-cols-[9rem_1fr] animate-fade-up delay-${index + 1}`}>
+                <span className="absolute -left-[26px] top-[20px] h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground ring-1 ring-border" />
+                <strong className="text-xs font-semibold text-foreground">{title}</strong>
+                <span className="text-xs text-muted-foreground">{description}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 border-t-2 border-foreground pt-5 text-sm leading-7 text-foreground">
+            <strong className="text-emerald-700 dark:text-emerald-400">{t('landing.experience.quickStart.agent.answerLead')}</strong>{t('landing.experience.quickStart.agent.answerTail')}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CliAccessPanel() {
+  const { settings } = useSitePresentation()
+  const { t } = useTranslation()
+  const [copiedIdx, setCopiedIdx] = useState(-1)
+  const registryUrl = useMemo(getRegistryUrl, [])
+
+  const handleCopy = (text: string, idx: number) => {
+    void copyToClipboard(text)
+      .then(() => {
+        setCopiedIdx(idx)
+        window.setTimeout(() => setCopiedIdx((prev) => (prev === idx ? -1 : prev)), 2000)
+      })
+      .catch(() => {
+        toast.error(t('landing.experience.quickStart.copyErrorTitle'), t('landing.experience.quickStart.cli.copyErrorDescription'))
+      })
+  }
+
+  return (
+    <div className="flex  flex-col overflow-hidden rounded-lg border border-border/70 shadow-sm">
+      {/* Terminal title bar */}
+      <div className="flex items-center justify-between border-b border-border/60 bg-card px-4 py-3 ">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+            <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+            <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+          </div>
+          <span className="ml-2 font-mono text-xs text-muted-foreground">Terminal — {settings.siteName ?? PRODUCT_NAME}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-muted-foreground">zsh</span>
+          <span className="text-[10px] text-border">·</span>
+          <span className="font-mono text-[10px] text-muted-foreground">80×24</span>
+        </div>
+      </div>
+
+      {/* Terminal content */}
+      <div className="flex-1 overflow-auto bg-[#fafafa] p-4 font-mono text-[12px] leading-[1.7] dark:bg-neutral-950">
+        {/* Version check */}
+        <div className="mb-3">
+          <div className="flex items-start gap-2">
+            <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
+            <div className="flex-1">
+              <span className="text-foreground">skillhub --version</span>
+              <button data-analytics-id="guide.command.copy"
+                type="button"
+                onClick={() => handleCopy('skillhub --version', 0)}
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+              >
+                {copiedIdx === 0 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copiedIdx === 0 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
+              </button>
+            </div>
+          </div>
+          <div className="pl-5 text-muted-foreground">SkillHub CLI 0.1.12</div>
+        </div>
+
+        {/* Search */}
+        <div className="mb-3">
+          <div className="flex items-start gap-2">
+            <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
+            <div className="flex-1">
+              <span className="text-foreground">skillhub search weather \</span>
+              <button data-analytics-id="guide.command.copy"
+                type="button"
+                onClick={() => handleCopy(`skillhub search weather --registry ${registryUrl} --limit 5`, 1)}
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+              >
+                {copiedIdx === 1 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copiedIdx === 1 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
+              </button>
+            </div>
+          </div>
+          <div className="pl-5 text-muted-foreground">
+            <span className="text-muted-foreground">{'  --registry'} </span>
+            <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span> \
+          </div>
+          <div className="pl-5 text-muted-foreground">
+            <span className="text-muted-foreground">{'  --limit'} </span>
+            <span className="text-foreground">5</span>
+          </div>
+          <div className="mt-1 space-y-0.5 pl-5">
+            <div className="text-[11px] text-muted-foreground">{t('landing.experience.quickStart.cli.skillsFound')}</div>
+            <div className="flex gap-4">
+              <span className="text-blue-600 dark:text-blue-400">@global/weather</span>
+              <span className="text-muted-foreground">v1.3.0</span>
+              <span className="text-muted-foreground">{t('landing.experience.demoSkills.weather')}</span>
+            </div>
+            <div className="flex gap-4">
+              <span className="text-blue-600 dark:text-blue-400">@global/forecast</span>
+              <span className="text-muted-foreground">v2.1.0</span>
+              <span className="text-muted-foreground">{t('landing.experience.quickStart.cli.forecastSummary')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Install */}
+        <div className="mb-3">
+          <div className="flex items-start gap-2">
+            <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
+            <div className="flex-1">
+              <span className="text-foreground">skillhub install @global/weather \</span>
+              <button data-analytics-id="guide.command.copy"
+                type="button"
+                onClick={() => handleCopy(`skillhub install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
+                className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
+              >
+                {copiedIdx === 2 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copiedIdx === 2 ? t('landing.experience.quickStart.copied') : t('landing.experience.quickStart.copy')}
+              </button>
+            </div>
+          </div>
+          <div className="pl-5 text-muted-foreground">
+            <span className="text-muted-foreground">{'  --dir'} </span>
+            <span className="text-foreground">./skills</span> \
+          </div>
+          <div className="pl-5 text-muted-foreground">
+            <span className="text-muted-foreground">{'  --registry'} </span>
+            <span className="break-all text-blue-600 dark:text-blue-400">{registryUrl}</span>
+          </div>
+          <div className="mt-1 flex items-center gap-1.5 pl-5 text-[11px] text-emerald-600 dark:text-emerald-400">
+            <Check className="h-3 w-3" strokeWidth={2.5} />
+            <span>{t('landing.experience.quickStart.cli.installed')}</span>
+          </div>
+        </div>
+
+        {/* Cursor */}
+        <div className="flex items-center gap-2">
+          <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
+          <span className="inline-block h-3.5 w-2 animate-pulse bg-neutral-700 dark:bg-neutral-400" />
+        </div>
+      </div>
+
+      {/* Bottom status bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-card px-4 py-2.5 text-[11px] ">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            {t('landing.experience.quickStart.cli.connected')}
+          </span>
+          <span className="text-border">·</span>
+          <span className="break-all font-mono">registry: {registryUrl}</span>
+        </div>
+        <a data-analytics-id="navigation.cli.open" href={presentationLinkUrl(settings, 'cliDocumentation')} target="_blank" rel="noreferrer" className="group flex items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-blue-400 dark:hover:text-blue-300">
+          {t('landing.experience.quickStart.cli.docs')}
+          <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none" />
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function WebAccessPanel() {
+  const { t } = useTranslation()
+
+  return (
+    <div className="space-y-4 py-2">
+      <div className="flex items-start gap-2.5">
+        <FileText aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div>
+          <h3 className="text-sm font-semibold">{t('landing.experience.quickStart.web.readTitle')}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t('landing.experience.quickStart.web.readDescription')}</p>
+        </div>
+      </div>
+      <Link data-analytics-id="navigation.skills.open" to="/search" search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }}
+        className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-accent"
+      >
+        <Search aria-hidden="true" className="h-4 w-4" />
+        {t('landing.hero.exploreSkills')}
+      </Link>
+    </div>
+  )
+}
+
+export function LandingQuickStartSection() {
+  const { t, i18n } = useTranslation()
+  const { settings } = useSitePresentation()
+  const text = (slot: string) => presentationText(settings, 'quickStart', slot, i18n.resolvedLanguage, t)
+  const [selectedMode, setActiveMode] = useState<AccessMode>('agent')
+  const modes = ACCESS_MODES.filter(mode => presentationItemVisible(settings, 'quickStart', mode.id))
+  const activeMode = modes.some(mode => mode.id === selectedMode) ? selectedMode : modes[0]?.id
+  if (!activeMode) return null
+
+  return (
+    <section id="quickstart" className="relative z-10 w-full py-7 md:py-9">
+      <div className={`relative ${APP_FRAME_CLASS_NAME}`}>
+        <div className="mb-4 max-w-3xl">
+          <h2 className="mb-1 text-xl font-semibold tracking-tight text-foreground">{text('title')}</h2>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{text('description')}</p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 rounded-xl border border-border bg-card p-4 sm:p-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <div className="border-t border-border/70">
+            {modes.map((mode) => {
+              const active = activeMode === mode.id
+              return (
+                <button data-analytics-id="guide.mode.select"
+                  key={mode.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setActiveMode(mode.id)}
+                  className={`group relative flex w-full items-center gap-4 border-b border-border/70 px-3 py-3 text-left transition-[background-color,transform] duration-200 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${active ? 'bg-accent' : 'hover:bg-secondary'}`}
+                >
+                  <span className={`absolute inset-y-3 left-0 w-0.5 origin-center bg-primary transition-transform duration-200 ${active ? 'scale-y-100' : 'scale-y-0'}`} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <strong className={`block text-sm font-semibold transition-colors ${active ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{text(`${mode.id}Title`)}</strong>
+                    <span className="mt-1 block text-[11px] text-muted-foreground">{text(`${mode.id}Description`)}</span>
+                  </span>
+                  <span className={`h-1.5 w-1.5 rounded-full transition-colors ${active ? 'bg-foreground' : 'bg-border'}`} />
+                </button>
+              )
+            })}
+          </div>
+
+          <div key={activeMode} className="animate-fade-up border-t border-border/70 pt-5">
+            {activeMode === 'agent' ? <AgentAccessPanel /> : null}
+            {activeMode === 'cli' ? <CliAccessPanel /> : null}
+            {activeMode === 'web' ? <WebAccessPanel /> : null}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

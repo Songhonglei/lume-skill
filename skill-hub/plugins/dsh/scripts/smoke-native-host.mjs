@@ -1,0 +1,449 @@
+import { spawn } from 'node:child_process';
+import { createHash, randomUUID } from 'node:crypto';
+import { closeSync, openSync } from 'node:fs';
+import { access, chmod, open, lstat, mkdir, mkdtemp, readFile, readdir, realpath, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
+import { createRequire } from 'node:module';
+
+// Host-only CI lanes install CLI fixture dependencies, not the plugin development SDK.
+const semver = createRequire(new URL('../../../cli/package.json', import.meta.url))('semver');
+
+// Regression targets are evidence, not the admission policy for future Hosts.
+export const testedDshVersions = ['0.2.0-rc.2', '0.2.1-rc.2', '0.2.1-rc.5', '0.2.2-rc.1', '0.2.2-rc.3'];
+export const minimumDshVersion = '0.2.0-rc.2';
+function isExactVersion(version) {
+  return typeof version === 'string' && /^[0-9]/.test(version) && !/\s/.test(version) && semver.valid(version) !== null;
+}
+export function selectDshVersion(version, family = 'fresh') {
+  if (!isExactVersion(version) || semver.lt(version, minimumDshVersion)) {
+    throw new Error('Specify an exact DSH release at or above ' + minimumDshVersion + '.');
+  }
+  if (!['fresh', 'retained'].includes(family)) throw new Error('Unknown Cordis family.');
+  if (!semver.eq(version, minimumDshVersion) && family === 'retained') throw new Error(`DSH ${version} requires the current Cordis family.`);
+  return version;
+}
+/** Match the release-series Node floor without rejecting newer Node majors. */
+export function assertHostNodeVersion(dshVersion, nodeVersion = process.versions.node) {
+  selectDshVersion(dshVersion);
+  const minimum = semver.gte(dshVersion, '0.2.2-0') ? '24.9.0' : '24.2.0';
+  if (!isExactVersion(nodeVersion)
+    || semver.prerelease(nodeVersion) !== null || semver.lt(nodeVersion, minimum)) {
+    throw new Error(`DSH ${dshVersion} smoke requires Node >=${minimum}.`);
+  }
+}
+
+export function scenarioProbes(scenario = 'smoke') {
+  if (scenario === 'smoke') return ['runtime-baseline', 'plugin-lifecycle', 'skill-availability'];
+  if (scenario === 'skill-toggle' || scenario === 'skill-toggle-watch-off') return ['runtime-baseline', scenario];
+  throw new Error('Unsupported Host scenario');
+}
+
+const PNPM_VERSION = '10.33.0';
+
+export const retainedCordisFamily = {
+  '@deepseek-ai/cordis': '4.0.4',
+  '@deepseek-ai/cordis-plugin-loader': '1.0.5',
+  '@deepseek-ai/cordis-plugin-include': '1.0.9',
+  '@deepseek-ai/cordis-plugin-timer': '1.1.6',
+};
+
+export function hostInstallManifest(family) {
+  if (!['fresh', 'retained'].includes(family)) throw new Error('Unknown Cordis family.');
+  return { private: true, type: 'module', ...(family === 'retained' ? { overrides: retainedCordisFamily } : {}) };
+}
+
+export function profileInstallManifest(manifest, family) {
+  hostInstallManifest(family); // Reject unknown modes before writing any fixture configuration.
+  return family === 'retained' ? { ...manifest, pnpm: { ...manifest.pnpm,
+    overrides: { ...manifest.pnpm?.overrides, ...retainedCordisFamily } } } : manifest;
+}
+
+// No shell or .cmd invocation: npm and the probe run with this exact Node binary.
+// On Windows taskkill attempts tree termination while the parent still exists;
+// the independent cleanup deadline also covers a failed/hung taskkill process.
+function terminateTree(child) {
+  if (!child.pid) return;
+  if (process.platform === 'win32') {
+    const fallback = () => { try { child.kill('SIGKILL'); } catch { /* The cleanup deadline still rejects. */ } };
+    const killer = spawn(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32/taskkill.exe'),
+      ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true, timeout: 5000 });
+    killer.once('error', fallback);
+    killer.once('exit', code => { if (code !== 0) fallback(); });
+  } else {
+    try { process.kill(-child.pid, 'SIGKILL'); }
+    catch (error) { if (error.code !== 'ESRCH') child.kill('SIGKILL'); }
+  }
+}
+
+export async function runBounded(args, { cwd, env, log, timeoutMs, signal,
+  terminateProcess = terminateTree, cleanupTimeoutMs = 10000 }) {
+  signal?.throwIfAborted();
+  let executable = process.execPath;
+  let launchArgs = args;
+  if (process.platform === 'win32') {
+    const configuration = join(dirname(log), `job-${randomUUID()}.json`);
+    await writeFile(configuration, JSON.stringify({ executable, arguments: args, cwd }), { flag: 'wx', mode: 0o600 });
+    executable = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32/WindowsPowerShell/v1.0/powershell.exe');
+    launchArgs = ['-NoProfile', '-NonInteractive', '-File', fileURLToPath(new URL('./windows-job.ps1', import.meta.url)),
+      '-Configuration', configuration];
+  }
+  const fd = openSync(log, 'wx', 0o600);
+  let child;
+  try {
+    child = spawn(executable, launchArgs, { cwd, env, stdio: ['ignore', fd, fd],
+      detached: process.platform !== 'win32', windowsHide: true });
+  } finally { closeSync(fd); }
+  let stopped = false;
+  let cleanupTimer;
+  let rejectCleanup;
+  const terminate = () => {
+    if (stopped) return;
+    stopped = true;
+    cleanupTimer = setTimeout(() => {
+      try { child.kill('SIGKILL'); } catch { /* Report failure without waiting indefinitely for exit. */ }
+      rejectCleanup(Object.assign(new Error('Process cleanup deadline reached.'), { code: 'CLEANUP_DEADLINE' }));
+    }, cleanupTimeoutMs);
+    try { terminateProcess(child); }
+    catch { try { child.kill('SIGKILL'); } catch { /* The cleanup deadline still rejects. */ } }
+  };
+  const timer = setTimeout(terminate, timeoutMs);
+  signal?.addEventListener('abort', terminate, { once: true });
+  try {
+    await new Promise((resolveExit, reject) => {
+      rejectCleanup = reject;
+      child.once('error', () => reject(Object.assign(new Error('Process failed to start; inspect private logs.'), { code: 'SPAWN_FAILED' })));
+      child.once('exit', code => code === 0 && !stopped ? resolveExit() : reject(Object.assign(new Error(
+        stopped ? 'Process deadline or cancellation reached.' : 'Process failed; inspect private logs.'),
+      { code: stopped ? 'DEADLINE_OR_CANCELLED' : 'PROCESS_FAILED' })));
+      if (signal?.aborted) terminate();
+    });
+  } finally {
+    clearTimeout(timer);
+    clearTimeout(cleanupTimer);
+    signal?.removeEventListener('abort', terminate);
+    // POSIX groups remain addressable after their leader exits. The Windows
+    // wrapper closes its Job only after all command descendants have terminated.
+    if (process.platform !== 'win32') terminateTree(child);
+  }
+}
+
+export async function selectTarball(input) {
+  let target = await realpath(resolve(input));
+  if ((await stat(target)).isDirectory()) {
+    const candidates = (await readdir(target)).filter(name => name.endsWith('.tgz'));
+    if (candidates.length !== 1) throw new Error('Artifact directory must contain exactly one .tgz.');
+    target = await realpath(join(target, candidates[0]));
+  }
+  if (!target.endsWith('.tgz') || !(await stat(target)).isFile()) throw new Error('Candidate must be a .tgz file.');
+  return target;
+}
+
+export function safeAvailabilityCheckpoint(value) {
+  if (!value || typeof value !== 'object') return undefined;
+  const scenarios = ['setup', 'user-install', 'user-winner', 'project-install', 'project-winner', 'user-shadowed', 'remote', 'by-name', 'content-modified', 'skill-missing', 'directory-missing', 'policy', 'absent', 'incomplete-provider', 'failed-provider'];
+  const checkpoints = ['setup', 'install', 'install-poll', 'reference', 'before-digest', 'execute', 'assertion', 'after-digest', 'mutation', 'mutation-apply', 'mutation-restore'];
+  const assertions = ['none', 'isError', 'kind', 'schemaVersion', 'association', 'scope', 'integrity', 'discovery', 'name', 'reason', 'invocation', 'installation', 'namespace', 'slug', 'version', 'fingerprint', 'render', 'privacy', 'unchanged', 'accepted', 'completed', 'reference'];
+  if (!scenarios.includes(value.scenario) || !checkpoints.includes(value.checkpoint) || !assertions.includes(value.assertion)) return undefined;
+  const result = { scenario: value.scenario, checkpoint: value.checkpoint, assertion: value.assertion };
+  const osCodes = ['EACCES', 'EPERM', 'EBUSY', 'ENOENT', 'ENOTEMPTY', 'EEXIST', 'EXDEV', 'EIO', 'ETIMEDOUT'];
+  for (const field of ['osCode', 'restoreOsCode']) if (osCodes.includes(value[field])) result[field] = value[field];
+  const statuses = ['accepted', 'not-confirmed', 'awaiting-confirmation', 'cancelled'];
+  // Mirror the public installationFailureCodes contract; never forward error messages or IDs.
+  const codes = ['CONTEXT_STALE', 'REQUEST_CONFLICT', 'SOURCE_NOT_CONFIGURED', 'SOURCE_DENIED',
+    'SKILL_UNAVAILABLE', 'RATE_LIMITED', 'SOURCE_UNAVAILABLE', 'TARGET_UNAVAILABLE', 'UNCONFIRMED'];
+  if (statuses.includes(value.install?.status)) {
+    result.install = { status: value.install.status };
+    if (codes.includes(value.install.code)) result.install.code = value.install.code;
+    const reasons = ['AGENT', 'CWD', 'SOURCE', 'FS', 'POLICY', 'RUNTIME', 'DETAIL', 'TARGET', 'HOST_MISMATCH'];
+    if (value.install.code === 'CONTEXT_STALE' && reasons.includes(value.install.reason)) result.install.reason = value.install.reason;
+  }
+  return result;
+}
+
+export function safeToggleCheckpoint(value) {
+  if (!value || typeof value !== 'object') return undefined;
+  const scenarios = ['setup', 'install', 'initial-discovery', 'watch-off-disable', 'watch-off-diagnosis', 'watch-off-uninstall', 'cancel', 'disable', 'disabled-files', 'disabled-use', 'enable', 'disable-again', 'disabled-upgrade', 'disabled-uninstall', 'same-name-install', 'same-name-disable', 'same-name-fallback', 'same-name-diagnosis', 'cleanup'];
+  const assertions = ['none', 'invoke', 'operation', 'discovery', 'equal', 'notEqual', 'deepEqual', 'rejects', 'truthy'];
+  if (!scenarios.includes(value.scenario) || !assertions.includes(value.assertion)) return undefined;
+  return { scenario: value.scenario, assertion: value.assertion };
+}
+
+export function safeFixtureLocation(value) {
+  if (value?.fixture !== 'skill-toggle-fixture.mjs' || !Number.isInteger(value.line) || value.line < 1 || value.line > 10000) return undefined;
+  return { fixture: value.fixture, line: value.line };
+}
+
+export function safeOperationObservation(value) {
+  if (!value || typeof value !== 'object') return undefined;
+  const fields = {
+    phase: ['accepted', 'staging', 'revalidating', 'committing', 'recovering', 'completed', 'failed', 'recovery-required', 'unknown'],
+    files: ['pending', 'installed', 'already-installed', 'upgraded', 'removed', 'stale-record-removed', 'enabled', 'disabled', 'failed', 'unknown'],
+    discovery: ['unconfirmed', 'confirmed', 'failed'], recovery: ['not-needed', 'restored', 'incomplete', 'unknown'],
+  };
+  const safe = {};
+  for (const [name, allowed] of Object.entries(fields)) if (allowed.includes(value[name])) safe[name] = value[name];
+  if (typeof value.deadlineReached === 'boolean') safe.deadlineReached = value.deadlineReached;
+  return Object.keys(safe).length ? safe : undefined;
+}
+
+const diagnosticCodes = ['EACCES', 'EPERM', 'ENOENT', 'EEXIST', 'ENOSPC', 'EBUSY', 'EXDEV', 'ENOTEMPTY', 'EIO', 'ELOCKED', 'ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN', 'AUTHORIZATION', 'NETWORK', 'FILESYSTEM', 'INVALID_INPUT', 'VALIDATION', 'UNCLASSIFIED'];
+export function safeHostFailureCodes(value) {
+  return Array.isArray(value) ? diagnosticCodes.filter(code => value.includes(code)) : [];
+}
+export function knownHostFailureCodes(log) {
+  // Observed codes are diagnostic hints, not attribution of the assertion's cause.
+  return diagnosticCodes.filter(code => new RegExp('\\b' + code + '\\b').test(log));
+}
+
+export function safeProbeFailure(log, probe) {
+  const stages = ['setup', 'validate-root', 'prepare-fixture', 'fixture-ports', 'registry-ready', 'host-result', 'host-assertion'];
+  const codes = ['PROBE_FAILED', 'REGISTRY_EXITED', 'REGISTRY_TIMEOUT', 'CHILD_EXITED', 'HOST_ASSERTION_FAILED', 'HOST_RESULT_TIMEOUT'];
+  for (const line of log.trim().split('\n').reverse()) {
+    let result;
+    try { result = JSON.parse(line); } catch { continue; }
+    if (result?.passed === false && result.probe === probe && stages.includes(result.stage)
+      && codes.includes(result.failureCode)) {
+      const safe = { stage: result.stage, code: result.failureCode };
+      if (result.diagnostics) {
+        const observer = result.diagnostics.observer?.stage;
+        const states = ['imported', 'applied', 'validation-failed', 'validated', 'running', 'completed', 'assertion-failed'];
+        safe.observer = states.includes(observer) ? observer : 'not-observed';
+        const validation = result.diagnostics.observer?.validation;
+        if (['root-realpath', 'temporary-realpath', 'temporary-containment', 'home-identity'].includes(validation)) {
+          safe.validation = validation;
+        }
+        const availability = safeAvailabilityCheckpoint(result.diagnostics.availability);
+        if (probe === 'skill-availability' && availability) safe.availability = availability;
+        if (['skill-toggle', 'skill-toggle-watch-off'].includes(probe)) {
+          const toggle = safeToggleCheckpoint(result.diagnostics.toggle);
+          const location = safeFixtureLocation(result.diagnostics.location);
+          if (toggle) safe.toggle = toggle;
+          if (location) safe.location = location;
+        }
+        if (['skill-availability', 'skill-toggle', 'skill-toggle-watch-off'].includes(probe)) {
+          const operation = safeOperationObservation(result.diagnostics.operation);
+          if (operation) safe.operation = operation;
+          const codes = safeHostFailureCodes(result.diagnostics.observedHostCodes);
+          if (codes.length) safe.observedHostCodes = codes;
+        }
+        safe.dependencies = {};
+        for (const name of ['loader', 'pluginPackages', 'clientModules', 'skillhub']) {
+          const present = result.diagnostics.dependencies?.[name];
+          if (typeof present === 'boolean') safe.dependencies[name] = present;
+        }
+      }
+      return safe;
+    }
+  }
+  return undefined;
+}
+
+// npm emits completed timers incrementally with --timing, even when killed before
+// its final timing.json. Never expose arbitrary timer names, URLs or log lines.
+const npmPreparationLogLimit = 1024 * 1024;
+export function summarizeNpmPreparation(log, truncated = false) {
+  const phases = new Set(['idealTree', 'idealTree:init', 'idealTree:userRequests', 'idealTree:buildDeps',
+    'idealTree:fixDepFlags', 'reify', 'reify:loadTrees', 'reify:diffTrees', 'reify:retireShallow',
+    'reify:createSparse', 'reify:loadBundles', 'reify:unpack', 'reify:unretire', 'reify:build',
+    'reify:trash', 'reify:save', 'command:install']);
+  const result = { completedTimingsMs: {}, lastCompletedPhase: null,
+    cacheObservations: { hit: 0, miss: 0, revalidated: 0 }, truncated: truncated || log.length > npmPreparationLogLimit };
+  let bounded = log.slice(-npmPreparationLogLimit);
+  if (result.truncated) {
+    const newline = bounded.indexOf('\n');
+    bounded = newline < 0 ? '' : bounded.slice(newline + 1);
+  }
+  for (const line of bounded.split('\n')) {
+    const timer = /^npm timing ([A-Za-z:]+) Completed in ([0-9]+)ms\r?$/.exec(line);
+    if (timer && phases.has(timer[1])) {
+      const elapsed = Number(timer[2]);
+      if (Number.isSafeInteger(elapsed) && elapsed <= 3600000) {
+        result.completedTimingsMs[timer[1]] = elapsed;
+        result.lastCompletedPhase = timer[1];
+      }
+    }
+    const request = /^npm http fetch GET [0-9]{3} \S+ [0-9]+ms \(cache (hit|miss|revalidated)\)\r?$/.exec(line);
+    if (request) result.cacheObservations[request[1]]++;
+    // npm also logs package-cache lookups separately from HTTP fetch responses.
+    if (/^npm http cache \S+ [0-9]+ms \(cache hit\)\r?$/.test(line)) result.cacheObservations.hit++;
+  }
+  return result;
+}
+
+async function readPreparationLog(path) {
+  let file;
+  try {
+    file = await open(path, 'r');
+    const { size } = await file.stat();
+    const buffer = Buffer.alloc(Math.min(size, npmPreparationLogLimit));
+    const { bytesRead } = await file.read(buffer, 0, buffer.length, Math.max(0, size - buffer.length));
+    return { text: buffer.subarray(0, bytesRead).toString('utf8'), truncated: size > buffer.length };
+  } catch { return { text: '', truncated: false }; }
+  finally { await file?.close(); }
+}
+
+// Only npm's public download content is shared; every Host/config/profile stays fresh.
+export async function prepareDownloadCache(path) {
+  if (!isAbsolute(path)) throw new Error('Download cache must be an absolute temporary directory.');
+  const bases = [tmpdir()];
+  if (process.env.CI && process.env.RUNNER_TEMP && isAbsolute(process.env.RUNNER_TEMP)) bases.push(process.env.RUNNER_TEMP);
+  const target = resolve(path);
+  for (const base of bases) {
+    const basePath = resolve(base);
+    const canonicalBase = await realpath(basePath);
+    // Only the trusted anchor may be canonicalized: never resolve unverified descendants.
+    const suffix = [basePath, canonicalBase].map(anchor => relative(anchor, target))
+      .find(value => value && value !== '..' && !value.startsWith('..' + sep) && !isAbsolute(value));
+    if (!suffix) continue;
+    let current = canonicalBase;
+    const parts = suffix.split(sep);
+    for (const [index, part] of parts.entries()) {
+      current = join(current, part);
+      await mkdir(current, { mode: 0o700 }).catch(error => { if (error.code !== 'EEXIST') throw error; });
+      const info = await lstat(current);
+      if (!info.isDirectory() || info.isSymbolicLink() || (process.getuid && info.uid !== process.getuid())
+        || (process.platform !== 'win32' && index < parts.length - 1 && (info.mode & 0o022) !== 0)) {
+        throw new Error('Download cache must contain only current-user directories without links.');
+      }
+    }
+    await chmod(current, 0o700);
+    const content = join(current, '_cacache');
+    const info = await lstat(content).catch(error => { if (error.code !== 'ENOENT') throw error; });
+    if (info && (!info.isDirectory() || info.isSymbolicLink() || (process.getuid && info.uid !== process.getuid()))) {
+      throw new Error('Invalid download content directory.');
+    }
+    return { path: current, populated: Boolean(info && (await readdir(content)).length) };
+  }
+  throw new Error('Download cache must be below the current temporary directory.');
+}
+
+export function isolatedEnvironment(root, inherited = process.env) {
+  // In particular, do not inherit model credentials, DSH overrides or Node preload hooks.
+  const allowed = /^(PATH|SystemRoot|WINDIR|COMSPEC|PATHEXT|TEMP|TMP|TMPDIR|LANG|LC_ALL|HTTPS?_PROXY|ALL_PROXY|NO_PROXY|CI)$/i;
+  const env = Object.fromEntries(Object.entries(inherited).filter(([key]) => allowed.test(key)));
+  const path = Object.entries(env).find(([key]) => key.toUpperCase() === 'PATH')?.[1] ?? '';
+  for (const key of Object.keys(env)) if (key.toUpperCase() === 'PATH') delete env[key];
+  return { ...env, PATH: [join(root, 'node_modules/.bin'), dirname(process.execPath), path].join(delimiter),
+    HOME: join(root, 'native-install-home'), USERPROFILE: join(root, 'native-install-home'),
+    XDG_CONFIG_HOME: join(root, 'config'), XDG_CACHE_HOME: join(root, 'cache'),
+    APPDATA: join(root, 'appdata'), LOCALAPPDATA: join(root, 'localappdata'),
+    DSH_HOME: join(root, 'home'), DSH_AGENTS_HOME: join(root, 'agents'), DSH_TELEMETRY_DISABLED: '1',
+    npm_config_cache: join(root, 'npm-cache'), npm_config_userconfig: join(root, 'empty.npmrc'),
+    npm_config_logs_dir: join(root, 'logs/npm'),
+    npm_config_globalconfig: join(root, 'empty-global.npmrc'), CI: 'true' };
+}
+
+async function findNpm() {
+  const candidates = [process.env.npm_execpath,
+    join(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js'),
+    join(dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js')];
+  for (const candidate of candidates) {
+    if (!candidate || !candidate.endsWith('npm-cli.js')) continue;
+    try { return await realpath(candidate); } catch { /* Try the next Node installation layout. */ }
+  }
+  throw new Error('Cannot locate npm-cli.js alongside Node. Run with a Node installation that includes npm.');
+}
+
+async function main() {
+  const { values } = parseArgs({ options: { 'download-cache': { type: 'string' }, 'dsh-version': { type: 'string', default: '0.2.0-rc.2' }, artifact: { type: 'string' }, report: { type: 'string' }, help: { type: 'boolean' }, 'cordis-family': { type: 'string', default: 'fresh' }, scenario: { type: 'string', default: 'smoke' } } });
+  if (values.help) {
+    console.log('node scripts/smoke-native-host.mjs --artifact <candidate.tgz|directory> --report <summary.json> [--download-cache <temporary-directory>] [--scenario smoke|skill-toggle|skill-toggle-watch-off] [--cordis-family fresh|retained] [--dsh-version <exact-release-at-or-above-0.2.0-rc.2>]');
+    return;
+  }
+  if (!values.artifact || !values.report) throw new Error('Specify --artifact and --report; see --help.');
+  const probes = scenarioProbes(values.scenario);
+  const dshVersion = selectDshVersion(values['dsh-version'], values['cordis-family']);
+  assertHostNodeVersion(dshVersion);
+  const installManifest = hostInstallManifest(values['cordis-family']);
+  const artifact = await selectTarball(values.artifact);
+  const npm = await findNpm();
+  const reportFile = resolve(values.report);
+  await mkdir(dirname(reportFile), { recursive: true });
+  const root = await mkdtemp(join(tmpdir(), 'skillhub-native-smoke-'));
+  const env = isolatedEnvironment(root);
+  const downloads = values['download-cache'] ? await prepareDownloadCache(values['download-cache']) : undefined;
+  if (downloads) env.npm_config_cache = downloads.path;
+  for (const directory of ['home', 'native-install-home', 'agents', 'workspace', 'logs']) await mkdir(join(root, directory), { mode: 0o700 });
+  for (const name of ['empty.npmrc', 'empty-global.npmrc']) await writeFile(join(root, name), '', { mode: 0o600 });
+  await writeFile(join(root, 'package.json'), JSON.stringify(installManifest));
+  const abort = new AbortController();
+  const stop = () => abort.abort();
+  process.once('SIGINT', stop);
+  process.once('SIGTERM', stop);
+  const summary = { passed: false, platform: process.platform, node: process.versions.node,
+    scenario: values.scenario, dsh: dshVersion, pnpm: PNPM_VERSION, cordisFamily: values['cordis-family'],
+    artifactSha256: createHash('sha256').update(await readFile(artifact)).digest('hex'),
+    modelCalled: false, probes: [], preparation: { cacheMode: downloads ? 'shared-public-downloads' : 'isolated', cachePopulated: downloads?.populated ?? false }, stage: 'install-host' };
+  const run = (name, args, timeoutMs = 300000) => runBounded(args, { cwd: join(root, 'workspace'), env,
+    log: join(root, 'logs', name + '.log'), timeoutMs, signal: abort.signal });
+  try {
+    const installStarted = Date.now();
+    try {
+      // Prefer reuse within the original exact/range/peer constraints to reduce duplicate files.
+      await run('install-host', [npm, 'install', '--prefer-dedupe', '--timing', '--loglevel=http', '--prefix', root, '--ignore-scripts', '--no-audit', '--no-fund',
+        '--registry=https://registry.npmjs.org', `@deepseek-ai/dsh@${dshVersion}`, `pnpm@${PNPM_VERSION}`], 600000);
+    } finally {
+      env.npm_config_cache = join(root, 'npm-cache');
+      summary.preparation.elapsedMs = Date.now() - installStarted;
+      const installLog = await readPreparationLog(join(root, 'logs/install-host.log'));
+      summary.preparation.observedCodes = knownHostFailureCodes(installLog.text);
+      summary.preparation.npm = summarizeNpmPreparation(installLog.text, installLog.truncated);
+    }
+    const dsh = join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js');
+    await access(dsh);
+    summary.stage = 'initialize-web';
+    await run(summary.stage, [dsh, '--profile', 'skillhub-m0', '--from-default-profile', 'web', '--dump-config']);
+    summary.stage = 'install-candidate';
+    // npm's root overrides do not propagate into the profile's separate pnpm project.
+    // Keep the retained fixture coherent even if a future profile enables peer auto-install.
+    if (values['cordis-family'] === 'retained') {
+      const profileManifestPath = join(root, 'home/profiles/skillhub-m0/package.json');
+      const profileManifest = JSON.parse(await readFile(profileManifestPath, 'utf8'));
+      await writeFile(profileManifestPath, JSON.stringify(profileInstallManifest(profileManifest, 'retained'), null, 2) + '\n');
+    }
+    await run(summary.stage, [dsh, 'plugin', '--profile', 'skillhub-m0', 'add', artifact, '--ignore-scripts']);
+    const manifest = JSON.parse(await readFile(join(root, 'home/profiles/skillhub-m0/node_modules/@astron-team/skillhub-dsh/package.json'), 'utf8'));
+    if (manifest.name !== '@astron-team/skillhub-dsh') throw new Error('Unexpected installed candidate identity.');
+    const probeScript = fileURLToPath(new URL('./probe-host.mjs', import.meta.url));
+    for (const probe of probes) {
+      summary.stage = probe;
+      await run(probe, [probeScript, '--root', root, '--probe', probe], 150000);
+      const lines = (await readFile(join(root, 'logs', probe + '.log'), 'utf8')).trim().split('\n');
+      const result = JSON.parse(lines.at(-1));
+      if (result.passed !== true || result.probe !== probe) throw new Error('Probe did not provide a successful result.');
+      if (probe === 'runtime-baseline') {
+        const detail = JSON.parse(await readFile(result.report, 'utf8'));
+        const resolved = Object.fromEntries(detail.initial.host.map(pkg => [pkg.name, pkg.version]));
+        summary.cordisPackages = Object.fromEntries(Object.keys(retainedCordisFamily).map(name => [name, resolved[name]]));
+        if (values['cordis-family'] === 'retained' && Object.entries(retainedCordisFamily).some(([name, version]) => resolved[name] !== version)) {
+          throw new Error('Retained Cordis family was not exercised.');
+        }
+      }
+      summary.probes.push({ name: probe, passed: true });
+    }
+    summary.stage = 'complete';
+    summary.passed = true;
+  } catch (error) {
+    summary.failure = ['SPAWN_FAILED', 'DEADLINE_OR_CANCELLED', 'PROCESS_FAILED', 'CLEANUP_DEADLINE'].includes(error.code)
+      ? error.code : 'INVALID_RESULT';
+    if (probes.includes(summary.stage)) {
+      const log = await readFile(join(root, 'logs', summary.stage + '.log'), 'utf8').catch(() => '');
+      summary.probeFailure = safeProbeFailure(log, summary.stage);
+    }
+    process.exitCode = 1;
+  } finally {
+    process.removeListener('SIGINT', stop);
+    process.removeListener('SIGTERM', stop);
+    // Only this fixed schema is suitable for upload. The temporary root contains private Host logs.
+    await writeFile(reportFile, JSON.stringify(summary, null, 2) + '\n');
+    console.log(JSON.stringify(summary));
+    if (!summary.passed) console.error(`Private diagnostics retained locally: ${join(root, 'logs')}`);
+  }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(() => { console.error('Invalid smoke setup; use --help and verify the local artifact and Node/npm installation.'); process.exitCode = 1; });
+}

@@ -1,0 +1,849 @@
+# skillhub 部署架构与运维
+
+对象存储可选部署、凭证和迁移说明见[对象存储手册](object-storage.md)。
+可选前端动作统计默认关闭。Docker／Compose 和 Helm 只填配置即可接入 Umami，
+详见[前端动作统计接入指南](frontend-analytics-integration.md)。
+
+### CLI 设备授权地址
+
+`skillhub login --no-open --registry https://skills.example.com` 先按 `--token`、
+`SKILLHUB_TOKEN`、该 registry 已保存凭据的顺序解析 Token。仅在未解析到 Token 时
+进入设备码授权；已解析的 Token 若验证失败，不会自动回退到设备码流程。`--no-open`
+只禁止自动打开浏览器，不会跳过 Token 解析。
+
+设备码流程中，CLI 请求 `/api/v1/auth/device/code`，用户打开返回的 `/device` 页面并登录、确认授权，
+CLI 再轮询兑换 Token。完成后用 `skillhub whoami --registry https://skills.example.com`
+确认登录身份；不要分享设备码、用户码或 Token。
+
+- `DEVICE_AUTH_VERIFICATION_URI` 未设置、为空或仅含空白时，服务端使用
+  `SKILLHUB_PUBLIC_BASE_URL` 加 `/device`，保留子路径并移除末尾重复斜杠。
+  例如 `https://skills.example.com/portal/` 对应 `https://skills.example.com/portal/device`。
+- 若公开地址也未设置，保留兼容的 `/device` 相对地址，由 CLI 按 registry 的源解析。
+  正式部署、子路径部署或 Web/API 分离部署应设置正确的 Web 公开地址。
+- 显式指定有效的 HTTP(S) 地址或根相对路径时原样使用，支持自定义页面和查询参数。
+  非法地址会阻止服务启动，错误提示只包含配置项名称，不回显配置值。
+  宿主机进程修改配置后需重启；Compose 部署修改 `.env.release` 后需重建受影响容器，
+  `docker compose restart` 不会更新容器环境变量。
+- Compose 的空配置交由后端处理；Helm 的 `deviceAuthVerificationUri` 默认对应
+  `<publicBaseUrl>/device`，也可显式覆盖。
+
+对已运行的单机交付栈，仅修改设备授权地址时，先编辑原部署目录中的 `.env.release`：
+
+- 源码部署：在包含 `Makefile` 和 `scripts/validate-release-config.sh` 的仓库根目录，
+  先执行 `make validate-release-config`，修正错误后再重建。
+- 一键脚本部署：进入脚本输出的 `Runtime dir`（即该实例的 `--home` 目录）。脚本仅下载
+  Compose 清单和环境模板，不提供上述 Make 校验入口，不要在该目录执行 `make`。
+
+以下重建命令适用于未自定义项目名、未使用 override 的标准栈：
+
+```bash
+docker compose --env-file .env.release -f compose.release.yml up -d --no-deps --force-recreate server
+```
+
+若原部署使用了 `-p`、`COMPOSE_PROJECT_NAME` 或额外的 `-f` 文件，重建时必须保留原项目名、
+环境文件及按原顺序排列的全部 `-f` 参数，不能直接照抄以上基础命令；否则可能操作另一实例
+或丢失 override 中的配置。此操作只重建已有后端容器，不重新下载部署文件。
+
+首次部署仍使用完整栈的 `up -d`。若同时修改公开地址等其他服务也使用的配置，
+应一并重建相应服务。验证设备授权地址时，使用未传 `--token`、未设置 `SKILLHUB_TOKEN`，
+且该 registry 没有保存凭据的 CLI 环境，再执行上述登录命令并核对返回地址；
+已有 Token 的登录成功不能证明设备授权地址已更新。不要仅凭配置文件内容判断已生效。
+
+`/cli/auth` 是旧版浏览器 loopback 回调入口，需要客户端附带回调参数；它不是输入设备码的页面。
+不要将设备授权地址设成这个旧入口。此次配置保护不改变旧客户端回调流程。
+
+## 1 运行模型
+
+按用途选择运行方式；以下重点介绍源码开发和单机交付，Kubernetes 另见[部署指南](skillhub/guide/kubernetes.md)：
+
+- 开发环境：`make dev-all`
+  - 前端和后端运行在宿主机
+  - `docker-compose.yml` 只负责 PostgreSQL、Redis、MinIO
+- 单机交付环境：`docker compose --env-file .env.release -f compose.release.yml up -d`
+  - 前端和后端都运行在容器内
+- 使用 GitHub Actions 发布到 GHCR 的镜像
+- 默认发布多架构镜像：`server` / `web` 覆盖 `linux/amd64`、`linux/arm64` 与
+  `linux/riscv64`，`scanner` 暂保持 `linux/amd64` 与 `linux/arm64`
+  - PostgreSQL、Redis 与应用容器一起通过 Compose 启动
+
+`make staging` 仍用于从源码构建的容器回归验证，见[开发工作流](dev-workflow.md)，不等同于正式交付。正式单机部署使用 `compose.release.yml`，不使用 `docker-compose.prod.yml`。
+
+## 一键部署后的邮件配置
+
+邮件是已有 Registry 的可选能力，不改变 `runtime.sh up` 的部署顺序，也不要求为邮件创建第二套 Compose 项目。业务邮件要求所用发行包含[对应改动](https://github.com/iflytek/skillhub/pull/1004)；未启用邮件时无需配置 SMTP 凭据。
+
+一键安装后记录 **Runtime dir** 和 **Lifecycle commands**。邮件配置只编辑该实例原有的 `.env.release`，权限保持 `600`，不重新复制示例覆盖原文件。默认未指定 `--home` 时，脚本使用 `${TMPDIR:-/tmp}/skillhub-runtime`；正式实例固定持久目录，后续保持同一 home、文件来源和镜像选项。运行目录没有源码 Make 校验工具，不能在该目录照抄 `make validate-release-config`。
+
+| 配置 | 所属位置 | 生效方式 |
+|---|---|---|
+| SMTP、TLS、授权码、发件人 | 原运行目录 `.env.release` | 编辑后重跑输出中的同实例 up 命令，不能只 restart |
+| 平台开关、摘要周期、邮件站点地址 | 系统配置 → 业务邮件通知 | 环境仅首次初始化缺失设置；已有策略以数据库为准 |
+| 收件证明、即时／摘要类别 | 用户通知设置 | 每个账号自行验邮并订阅；站内通知不要求验邮 |
+
+已有环境先在后台关闭业务邮件，再配置 SMTP 并重跑原 up；核对后端健康和 SMTP 配置后，在协调窗口重新启用平台邮件，再用未验邮测试账号获取验证码，或用已验邮测试账号触发新业务事件，验证即时收件、窗口摘要和邮件链接。平台关闭时不能测试通知验证码或业务邮件；重新启用期间，既有合格订阅用户的新事件也可能发信，不能把受控启用当作测试账号隔离。测试失败则再次在后台关闭，按状态排查，不盲目重试 UNKNOWN；通过后恢复测试偏好并按部署安排正常开放。SMTP 更新也影响共用连接的密码重置邮件，两类发件地址分别配置。旧空 SSL_TRUST 由修复脚本清除，明确主机例外保留；不使用空值或通配信任代替 JVM 证书验证。
+
+升级使用匹配的脚本／配置来源与镜像版本；`--ref` 不等于 `--version`。新版安装器的默认 `--aliyun` 模式下，三个核心文件来自 OSS，可选统计／Collector 配置通过代理按 `--ref`／`SKILLHUB_REF` 下载，默认 `main`。生产环境应固定已审核 tag 或提交并配套选择镜像版本，不能仅凭 Git ref 推定 OSS 核心文件版本。代理可能有缓存；基础格式检查不是来源真实性校验，使用代理须信任第三方。显式自定义来源保留原有语义。新版模板不会覆盖现存 `.env.release`，也不会覆盖入库平台策略。关闭邮件不会撤回已授权或已被 SMTP 接受的发送，不要删除队列或数据卷作为停用步骤。
+
+完整命令、SMTP 参数、升级保留、密码轮换和故障矩阵见[一键部署邮件接入流程](notification-email.md)；仅密码重置邮件见[SMTP 配置指南](19-smtp-password-reset-email-setup.md)。
+
+## 2 单机交付拓扑
+
+```
+┌──────────────┐
+│ Browser / CLI│
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Web/Nginx  │  published image
+└──────┬───────┘
+       │ /api/*
+       ▼
+┌──────────────┐
+│ Spring Boot  │  published image
+└───┬────┬─────┘
+    │    │
+    ▼    ▼
+ PostgreSQL  Redis
+```
+
+说明：
+- Web 容器提供静态资源，并将 `/api/*`、`/oauth2/*`、`/.well-known/*` 反代到后端
+- 后端默认运行 `docker` profile，不再启用本地 mock 登录
+- PostgreSQL / Redis 默认只绑定 `127.0.0.1`
+- 对象存储推荐使用外部 S3 / OSS，通过环境变量注入
+
+## 3 Profile 约定
+
+| Profile | 用途 | 说明 |
+|---------|------|------|
+| `local` | 本地源码开发能力 | 启用 mock 登录、开发种子账号、调试日志 |
+| `docker` | 容器运行时能力 | 启用容器运行时相关能力，不会自动打开首登管理员 |
+
+单机交付环境使用 `SPRING_PROFILES_ACTIVE=docker`，原因如下：
+
+- 生产环境不应开启 `X-Mock-User-Id` 这一类本地开发旁路能力
+- 容器环境仍然保留 `docker` profile 的运行时能力，首个管理员账户初始化不依赖该 profile，通过环境变量控制
+- 数据库、Redis、OSS、站点公网地址全部改为环境变量优先
+
+如需启用首登管理员，来源于以下环境变量：
+
+- `BOOTSTRAP_ADMIN_ENABLED=true`（发布模板默认已开启）
+- `BOOTSTRAP_ADMIN_USERNAME`（默认 `admin`）
+- `BOOTSTRAP_ADMIN_PASSWORD`（默认 `ChangeMe!2026`）
+
+建议：
+
+- 生产环境务必修改 `BOOTSTRAP_ADMIN_PASSWORD`（`validate-release-config.sh` 会拒绝默认值）
+- 完成首次登录后立即修改管理员密码
+- 如果已有外部身份源，通常不需要启用 bootstrap admin
+- `SKILLHUB_PUBLIC_BASE_URL` 应配置为最终 HTTPS 域名，避免 OAuth / Cookie / 设备码链接异常
+
+## 4 开发环境
+
+开发入口保持不变：
+
+```bash
+make dev-all
+```
+
+行为：
+
+- `docker-compose.yml` 启动 PostgreSQL、Redis、MinIO
+- `server` 在宿主机通过 Maven Wrapper 启动
+- `web` 在宿主机通过 Vite 启动
+
+常用命令：
+
+```bash
+make dev
+make dev-all
+make dev-down
+make dev-all-down
+make dev-all-reset
+```
+
+可选的 GitHub 公开 Skill 采集服务在宿主机前台运行。先为 Java 和 Go 设置同一枚本地服务密钥，再启动 `make dev-all` 与 `make dev-github-sync`；后者按 `Ctrl-C` 停止，不影响 Java 和其他开发依赖。默认使用本地存储，Go 临时目录为 `.dev/github-sync-tmp`。如需使用 S3/MinIO，应按[同步运行手册](github-sync-operations.md)配置两侧的存储地址和允许上传主机。
+
+```bash
+export SKILLHUB_GITHUB_SYNC_SERVICE_TOKENS="<本机生成的至少 32 字符密钥>"
+export SKILLHUB_GITHUB_SYNC_SERVICE_TOKEN="$SKILLHUB_GITHUB_SYNC_SERVICE_TOKENS"
+make dev-all
+make dev-github-sync
+```
+
+## 5 单机交付环境
+
+### 5.1 启动
+
+```bash
+cp .env.release.example .env.release
+# 编辑 .env.release：设置数据库/管理员密码、公开地址、存储和固定镜像版本
+make validate-release-config
+docker compose --env-file .env.release -f compose.release.yml up -d
+```
+
+公开 GitHub Skill 采集服务使用独立的 `github-sync` profile，默认不启动。设置同一条至少
+32 字符的服务密钥到 `SKILLHUB_GITHUB_SYNC_SERVICE_TOKEN` 与 Java 认可的
+`SKILLHUB_GITHUB_SYNC_SERVICE_TOKENS` 后，才能显式启动；S3/MinIO 模式还需设置
+`SKILLHUB_GITHUB_SYNC_ALLOWED_S3_HOSTS` 为内部上传主机及端口。配置和当前实现边界见
+[Go 服务说明](../github-sync-go/README.md)，启停、后台操作与排障见
+[管理员运行手册](github-sync-operations.md)。
+
+使用 S3/MinIO 时，给 Java 服务设置正值的 `SKILLHUB_GITHUB_SYNC_STAGING_CAPACITY_LIMIT_BYTES`，
+表示 GitHub 同步隔离暂存前缀可使用的字节预算。未设置且暂存区已有对象时容量告警为 `1`；
+扫描前缀不完整或读取失败时同样告警。预算应结合对象存储容量与试运行数据确定，
+具体指标和扫描边界见 [内部协议说明](api/github-sync-internal.md#暂存容量监控)。
+
+如需在后台配置公开读取 GitHub Token，Java 服务还需设置
+`SKILLHUB_GITHUB_SYNC_CREDENTIAL_KEYS`（例如 `v1=<32 字节随机密钥的 Base64>`）和
+`SKILLHUB_GITHUB_SYNC_ACTIVE_CREDENTIAL_KEY_VERSION`（例如 `v1`）。两项缺省时保留匿名读取能力，后台不能保存 Token。轮换时同时保留旧、新版本密钥，待旧密文被替换后再移除旧版本；不要把密钥或 Token 写入 Compose 文件、仓库或命令历史。管理接口和状态见 [GitHub 同步管理接口](api/github-sync-admin.md)。
+
+默认访问地址：
+
+- Web UI: `SKILLHUB_PUBLIC_BASE_URL`
+- Backend API: `http://localhost:8080`
+
+### 5.2 连接外部 Redis Cluster
+
+发布 Compose 默认仍使用内置单机 Redis。连接外部 Redis Cluster 时，在
+`.env.release` 中设置标准 Spring Boot 配置，不需要额外的模式开关：
+
+```dotenv
+SPRING_DATA_REDIS_CLUSTER_NODES=redis-0.example.com:6379,redis-1.example.com:6379,redis-2.example.com:6379
+SPRING_DATA_REDIS_CLUSTER_MAX_REDIRECTS=5
+SPRING_DATA_REDIS_USERNAME=skillhub
+SPRING_DATA_REDIS_PASSWORD=replace-with-secret
+SPRING_DATA_REDIS_SSL_ENABLED=true
+SPRING_DATA_REDIS_CONNECT_TIMEOUT=5s
+SPRING_DATA_REDIS_TIMEOUT=3s
+```
+
+Cluster 节点返回给客户端的所有地址必须能从 `server` 容器访问。Redis Cluster
+只支持数据库 `0`；不要为 Cluster 设置非零的
+`SPRING_DATA_REDIS_DATABASE`。配置 Cluster 节点后，Spring Boot 自动忽略单机
+`host`/`port`，Compose 中的内置 Redis 容器仍会启动，但不会被 Server 使用。
+
+对真实 Cluster 运行功能检查：
+
+```bash
+REDIS_CLUSTER_TEST_NODES=redis-0.example.com:6379,redis-1.example.com:6379,redis-2.example.com:6379 \
+REDIS_CLUSTER_TEST_USERNAME=skillhub \
+REDIS_CLUSTER_TEST_PASSWORD=replace-with-secret \
+make test-redis-cluster
+```
+
+该检查覆盖 Spring Data 读写、Spring Session 保存/读取/删除和 Redisson Stream。
+
+### 5.3 连接外部 Redis Sentinel
+
+Sentinel 使用标准 Spring Boot 配置。数据节点和 Sentinel 可以使用不同 ACL：
+
+```dotenv
+SPRING_DATA_REDIS_SENTINEL_MASTER=mymaster
+SPRING_DATA_REDIS_SENTINEL_NODES=sentinel-0.example.com:26379,sentinel-1.example.com:26379,sentinel-2.example.com:26379
+SPRING_DATA_REDIS_USERNAME=skillhub
+SPRING_DATA_REDIS_PASSWORD=replace-with-data-node-secret
+SPRING_DATA_REDIS_SENTINEL_USERNAME=sentinel-user
+SPRING_DATA_REDIS_SENTINEL_PASSWORD=replace-with-sentinel-secret
+SKILLHUB_REDIS_SENTINEL_CHECK_SENTINELS_LIST=true
+```
+
+Sentinel 配置优先于 Cluster 和单机 `host`/`port`。在 Kubernetes 等 Sentinel
+返回地址与客户端入口不一致的环境中，可以将
+`SKILLHUB_REDIS_SENTINEL_CHECK_SENTINELS_LIST` 设为 `false`。
+
+### 5.4 关键文件
+
+- `compose.release.yml`
+  - 使用发布镜像，不在用户机器上执行本地构建
+  - 负责拉起 PostgreSQL、Redis、server、web
+  - PostgreSQL、Redis 默认只绑定到 `127.0.0.1`
+  - Web 和后端都支持运行时环境变量注入，不需要为每个环境重建镜像；S3/OSS 的
+    `SKILLHUB_STORAGE_S3_*` 变量会透传到 server
+- `.env.release.example`
+  - 运行时变量模板
+  - 包含镜像名、镜像版本、端口、数据库凭证、外部 OSS、站点公网地址和首登管理员参数
+- `scripts/validate-release-config.sh`
+  - 在启动前校验 `.env.release`
+  - 可提前拦截占位值、URL 格式错误、缺失的 OSS 凭据、危险的明文默认值
+
+阿里云 OSS 等不支持 AWS chunked encoding 的对象存储，需要在 `.env.release` 中设置：
+
+```dotenv
+SKILLHUB_STORAGE_S3_DISABLE_CHUNKED_ENCODING=true
+```
+
+该变量由 `compose.release.yml` 透传到 server；修改后需要重新创建 server 容器：
+
+```bash
+docker compose --env-file .env.release -f compose.release.yml up -d --force-recreate server
+```
+
+### 5.5 镜像标签约定
+
+- `edge`
+  - `main` 分支最新构建
+  - 用于内部持续验证
+- `vX.Y.Z`
+  - 对应 Git tag
+  - 用于稳定版本交付
+- `latest`
+  - 仅在语义化版本 tag 发布时更新
+
+推荐：
+
+- 默认快速启动：`SKILLHUB_VERSION=latest`
+- 团队内部试用：`SKILLHUB_VERSION=edge`
+- 对外演示或严格可复现环境：固定为某个 `vX.Y.Z`
+
+## 6 GitHub Actions 发布流程
+
+发布工作流文件：`.github/workflows/publish-images.yml`
+
+触发条件：
+
+- `release.published`
+- 手动 `workflow_dispatch`
+
+流程：
+
+1. 检出代码
+2. 登录 GHCR
+3. 分别构建 `server`、`web`、`scanner` 与 `github-sync-go` 的 Dockerfile
+4. 推送镜像：
+   - `ghcr.io/iflytek/skillhub-server`
+   - `ghcr.io/iflytek/skillhub-web`
+   - `ghcr.io/iflytek/skillhub-scanner`
+   - `ghcr.io/iflytek/skillhub-github-sync`
+5. 写入 `edge` / `vX.Y.Z` / `latest` / `sha-*` 标签
+6. 同时发布多架构 manifest：`server` / `web` 覆盖 `linux/amd64`、`linux/arm64` 与
+   `linux/riscv64`，`scanner` 与 `github-sync` 覆盖 `linux/amd64`、`linux/arm64`
+
+## 7 配置管理
+
+### 7.1 请求限流配置
+
+限流默认开启。未配置分类覆盖时，各接口使用代码中 `@RateLimit` 声明的默认值，现有部署无需调整。
+
+可通过环境变量关闭全部限流，或按分类覆盖额度和时间窗口：
+
+```bash
+SKILLHUB_RATELIMIT_ENABLED=false
+SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_ANONYMOUS=100
+SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_AUTHENTICATED=300
+SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_WINDOW_SECONDS=60
+```
+
+支持的配置字段为 `authenticated`、`anonymous` 和 `window-seconds`。分类名称来自接口的
+`@RateLimit(category = "...")`，例如 `search`、`download`、`publish` 和 `resolve`。只设置其中一个字段时，
+其他字段仍回退到接口默认值。
+
+Docker Compose 用户需要显式传入变量，宿主机环境变量不会自动注入容器：
+
+```yaml
+services:
+  server:
+    environment:
+      SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_ANONYMOUS: "100"
+      SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_AUTHENTICATED: "300"
+      SKILLHUB_RATELIMIT_CATEGORIES_SEARCH_WINDOW_SECONDS: "60"
+```
+
+修改后重启 server 容器生效。超过额度时接口返回 HTTP `429`；该配置只调整阈值，不改变 Redis 限流算法或响应格式。
+
+前端运行时配置通过 `web/runtime-config.js.template` 注入。与认证兼容层相关的新变量如下：
+
+- `SKILLHUB_WEB_AUTH_DIRECT_ENABLED`
+  - 是否在前端打开账号密码兼容接入层
+  - 默认应为 `false`
+- `SKILLHUB_WEB_AUTH_DIRECT_PROVIDER`
+  - 前端调用 `/api/v1/auth/direct/login` 时使用的 provider，例如 `private-sso`
+- `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_ENABLED`
+  - 是否在前端打开企业 SSO 被动会话兼容入口
+  - 默认应为 `false`
+- `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_PROVIDER`
+  - 前端调用 `/api/v1/auth/session/bootstrap` 时使用的 provider，例如 `private-sso`
+- `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO`
+  - 是否在登录页加载后自动尝试一次 bootstrap
+  - 建议私有版初期保持 `false`
+
+注意：
+
+- 前端密码兼容层打开之前，后端仍必须同步打开 `skillhub.auth.direct.enabled=true`
+- 前端开关打开之前，后端仍必须同步打开 `skillhub.auth.session-bootstrap.enabled=true`
+- 前后端任一侧未开启，都不会破坏原有登录方式；只会使该兼容入口不可用或不显示
+
+开发环境：
+
+- 本地命令与 `docker-compose.yml`
+- 非敏感默认值可直接落库或写入本地配置
+
+单机交付环境：
+
+- 使用 `.env.release` 管理 Compose 变量
+- 如果 GHCR 包保持私有，用户需要先 `docker login ghcr.io`
+- 推荐将敏感变量放入 CI/CD Secret 或主机上的受控 `.env.release`
+- 外部对象存储通过 `SKILLHUB_STORAGE_S3_*` 注入
+- 前端反代和运行时 API 地址通过 `SKILLHUB_API_UPSTREAM` / `SKILLHUB_WEB_API_BASE_URL` 注入
+- `SKILLHUB_TRUST_FORWARDED_PROTO` 默认保持 `false`。只有 Web 容器仅能经由可信
+  TLS 终止代理访问，且该代理会覆盖客户端传入的 `X-Forwarded-Proto` 时才设为
+  `true`；否则客户端可伪造协议并影响 OAuth 回调、重定向和安全 Cookie 判断
+- Web 代理从收到的 `Host` 生成后端的 `Host` 和 `X-Forwarded-Host`，保留显式端口；
+  客户端传入的 `Forwarded` 和 `X-Forwarded-Port` 会被清除，`X-Forwarded-Host`
+  会被覆盖。外层代理必须保留完整公网 `Host`（含非默认端口，例如 Nginx 的
+  `proxy_set_header Host $http_host;`），不能只靠这些被覆盖的转发头补端口。
+  主机名可包含内部下划线，支持 IPv4 和括号 IPv6；歧义的 Host（含逗号、空白、
+  用户信息、路径或非数字端口）会被拒绝。升级 Web 镜像并重新创建 Web 容器后生效。
+- 如果通过网关部署在 `/skillhub/` 等子路径，需同时配置：
+  - `SKILLHUB_WEB_BASE_PATH=/skillhub/`
+  - `SKILLHUB_WEB_API_BASE_URL=/skillhub`
+  - `SKILLHUB_PUBLIC_BASE_URL=https://example.com/skillhub`
+  网关可以在转发到 Web 容器前将该前缀重写掉，但公网 URL 仍必须保留前缀，确保 OAuth、CLI 和 registry 链接正确。
+- 如果要开放真实登录，再补充对应 Provider 的 client id/secret：
+  - GitHub：`OAUTH2_GITHUB_CLIENT_ID` / `OAUTH2_GITHUB_CLIENT_SECRET`
+  - GitLab：`OAUTH2_GITLAB_CLIENT_ID` / `OAUTH2_GITLAB_CLIENT_SECRET`（自建实例再设 `OAUTH2_GITLAB_BASE_URI`）
+  - 飞书：`OAUTH2_FEISHU_CLIENT_ID` / `OAUTH2_FEISHU_CLIENT_SECRET`。
+    Endpoint 默认配置为：
+    - `OAUTH2_FEISHU_AUTHORIZATION_URI=https://accounts.feishu.cn/open-apis/authen/v1/authorize`
+    - `OAUTH2_FEISHU_PROTOCOL_VERSION=v3`
+    - `OAUTH2_FEISHU_TOKEN_URI=https://accounts.feishu.cn/oauth/v3/token`
+    - `OAUTH2_FEISHU_USER_INFO_URI=https://open.feishu.cn/open-apis/authen/v1/user_info`
+    - `OAUTH2_FEISHU_REDIRECT_URI=`（可选；Compose 默认根据
+      `SKILLHUB_PUBLIC_BASE_URL` 生成 `/login/oauth2/code/feishu`，Helm/K8s 未设置时由
+      Spring 使用 `{baseUrl}`；经过特殊反向代理或本地动态端口时应显式设置完整回调 URL）
+
+    Lark 国际版、私有化部署或企业网关可分别覆盖这三个完整 endpoint；历史的
+    `OAUTH2_FEISHU_AUTHORIZE_URI` / `OAUTH2_FEISHU_BASE_URI` 仍可作为 base-URI
+    兼容回退。`OAUTH2_FEISHU_TOKEN_URI` 必须指向支持 JSON authorization-code
+    exchange 的 endpoint。`OAUTH2_FEISHU_PROTOCOL_VERSION` 只允许 `v2` 或 `v3`，
+    默认 `v3`，不会自动 fallback。
+  - 钉钉：`OAUTH2_DINGTALK_CLIENT_ID` / `OAUTH2_DINGTALK_CLIENT_SECRET`
+    （分别填应用的 AppKey 与 AppSecret）。在钉钉开发者后台登记
+    `https://<公网域名>/login/oauth2/code/dingtalk`，并为用户信息接口开通所需权限。
+    同时将钉钉开发者后台的“服务器出口 IP”配置为实际运行 SkillHub 后端并调用
+    DingTalk API 的机器公网 IP；仅将回调域名或反向隧道服务器 IP 加入白名单并不能
+    改变本地后端的出站 IP。使用 SSH 反向隧道做本地预览时，应临时加入本机出站 IP，
+    或让后端出站流量经过已加入白名单的服务器；生产环境应只配置生产后端的固定出口 IP。
+    `OAUTH2_DINGTALK_REDIRECT_URI` 可在动态端口或特殊反向代理场景显式覆盖；Compose
+    默认根据 `SKILLHUB_PUBLIC_BASE_URL` 生成回调，Helm/K8s 未设置时由 Spring 使用
+    `{baseUrl}`。国际版或网关场景可覆盖 `OAUTH2_DINGTALK_AUTHORIZE_URI` 与
+    `OAUTH2_DINGTALK_BASE_URI`。
+
+  留空即不展示该入口，无需改配置文件。注意：飞书和钉钉的邮箱都由企业管理员导入、
+  未经用户确认，因此 `emailVerified` 恒为 false；若在 `application.yml` 中把
+  `skillhub.access-policy.mode` 设为 `EMAIL_DOMAIN`，该策略会拒绝所有未验证邮箱，
+  这两个入口的登录将一律失败。启用它们时请保留默认的 `OPEN` 或改用其他准入模式。
+
+  启用飞书前，使用一个测试租户完成一次真实回调验收。不要把真实 client secret
+  写入仓库、报告或聊天记录；只在受控的 `.env.release`、CI Secret 或 Kubernetes
+  Secret 中注入：
+
+  1. 在飞书自建应用中登记
+     `https://<公网域名>/login/oauth2/code/feishu`，并开启用户信息所需权限；如果使用
+     本地预览，则把 `OAUTH2_FEISHU_REDIRECT_URI` 设置为预览 Web 地址对应的完整回调 URL。
+  2. 在受控环境设置 `OAUTH2_FEISHU_CLIENT_ID`、`OAUTH2_FEISHU_CLIENT_SECRET`，确认
+     `OAUTH2_FEISHU_PROTOCOL_VERSION` 与 token endpoint 匹配，然后运行：
+
+     ```bash
+     make validate-release-config
+     docker compose --env-file .env.release -f compose.release.yml up -d
+     curl -fsS http://127.0.0.1:8080/actuator/health
+     curl -fsS http://127.0.0.1:8080/api/v1/auth/methods
+     ```
+
+  3. 在登录页选择“飞书”，确认浏览器跳转到配置的授权域名；完成授权后应回到
+     `/login/oauth2/code/feishu`，最终进入 `/` 或原始的 root-relative `returnTo`。
+  4. 用同一个飞书账号再次登录，确认仍绑定同一个 SkillHub 账号；再用已禁用的
+     SkillHub 账号登录，预期跳转 `/access-denied`，且不创建新 Session。
+  5. 检查日志中只有 provider、HTTP 状态、错误码和阶段信息，不应出现 client secret、
+     authorization code、access token、`open_id` 或上游错误文本：
+
+     ```bash
+     docker compose -f compose.release.yml logs --tail=200 server \
+       | rg -i 'client_secret|authorization code|access[_-]?token|open_id|secret|token'
+     ```
+
+  本地 mock 回调只能证明 SkillHub 与协议形状的集成，不能替代上述真实租户验收。
+  没有可用飞书租户时，应将该项记录为“未验证”，不要宣称 Feishu 登录已通过。
+
+  钉钉登录使用同样的验收边界，但协议配置不同：在钉钉开发者后台创建企业内部
+  H5 微应用，使用应用的 AppKey/AppSecret，进入“钉钉登录与分享”登记
+  `https://<公网域名>/login/oauth2/code/dingtalk`，并开通个人信息读取权限。
+  验收前设置：
+
+  ```dotenv
+  OAUTH2_DINGTALK_CLIENT_ID=<AppKey>
+  OAUTH2_DINGTALK_CLIENT_SECRET=<AppSecret>
+  OAUTH2_DINGTALK_REDIRECT_URI=https://<公网域名>/login/oauth2/code/dingtalk
+  ```
+
+  登录请求必须包含 `scope=openid` 和 `prompt=consent`，但配置文件不能声明 `openid`
+  scope；实现会把它们仅写入外发授权 URL，避免 Spring 将回调路由到 OIDC。验收时应
+  确认 token 请求为 JSON body，userinfo 请求使用 `x-acs-dingtalk-access-token`，重复
+  登录仍绑定同一 `unionId`。上游失败时日志只记录 HTTP 状态、错误码、requiredScopes
+  和 requestId，不记录 AppSecret、authorization code、access token、unionId 或完整错误正文。
+  没有钉钉测试应用凭据时，这些只能标记为“协议测试通过、真实厂商往返未验证”。
+
+### 7.1 钉钉配置示例
+
+以下示例中的 `AppKey`、`AppSecret`、公网地址和出口 IP 都必须替换为部署环境的真实值。
+不要把 `AppSecret` 提交到 Git、镜像或 HTML 报告。
+
+#### Docker Compose release
+
+在受保护的 `.env.release` 中设置：
+
+```dotenv
+# 浏览器访问地址，不带末尾斜杠
+SKILLHUB_PUBLIC_BASE_URL=https://skills.example.com
+SESSION_COOKIE_SECURE=true
+
+# 钉钉企业内部 H5 微应用
+OAUTH2_DINGTALK_CLIENT_ID=dingxxxxxxxx
+OAUTH2_DINGTALK_CLIENT_SECRET=<从密钥管理系统注入>
+OAUTH2_DINGTALK_REDIRECT_URI=https://skills.example.com/login/oauth2/code/dingtalk
+OAUTH2_DINGTALK_AUTHORIZE_URI=https://login.dingtalk.com
+OAUTH2_DINGTALK_BASE_URI=https://api.dingtalk.com
+OAUTH2_DINGTALK_DISPLAY_NAME=钉钉
+```
+
+启动和检查：
+
+```bash
+make validate-release-config
+docker compose --env-file .env.release -f compose.release.yml up -d
+curl -fsS http://127.0.0.1:8080/actuator/health
+curl -fsS http://127.0.0.1:8080/api/v1/auth/methods
+```
+
+钉钉后台必须同时配置：
+
+1. “钉钉登录与分享”回调 URL：与 `OAUTH2_DINGTALK_REDIRECT_URI` 完全一致。
+2. `Contact.User.Read` 个人信息读取权限，并将应用发布到当前版本。
+3. 服务器出口 IP：填写运行 SkillHub 后端并访问 `api.dingtalk.com` 的真实公网出口。
+4. 测试账号必须属于应用所属组织，并在应用可用范围内。
+
+#### Helm 私有化部署
+
+推荐使用 Kubernetes Secret，不把密钥写入 `values-production.yaml`：
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: skillhub-production-secret
+  namespace: skillhub
+type: Opaque
+stringData:
+  bootstrap-admin-password: "<固定随机密码>"
+  skillhub-download-anon-cookie-secret: "<至少32字符随机值>"
+  oauth2-dingtalk-client-id: "dingxxxxxxxx"
+  oauth2-dingtalk-client-secret: "<从密钥管理系统注入>"
+```
+
+`values-production.yaml` 只放非敏感配置：
+
+```yaml
+images:
+  registry: ghcr.io/iflytek
+  tag: <固定发布版本>
+  pullPolicy: IfNotPresent
+publicBaseUrl: https://skills.example.com
+session:
+  cookieSecure: true
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: skills.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - skills.example.com
+      secretName: skillhub-tls
+oauth2:
+  dingtalk:
+    authorizeBaseUri: https://login.dingtalk.com
+    apiBaseUri: https://api.dingtalk.com
+    redirectUri: https://skills.example.com/login/oauth2/code/dingtalk
+    displayName: 钉钉
+```
+
+安装或升级：
+
+```bash
+kubectl create namespace skillhub --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f skillhub-production-secret.yaml
+helm upgrade --install skillhub ./charts/skillhub \
+  --namespace skillhub \
+  -f values-production.yaml \
+  --set existingSecret=skillhub-production-secret
+```
+
+如果使用 Chart 自己创建 Secret，也可以在受保护的 values 文件中设置
+`secrets.oauth2DingtalkClientId` 和 `secrets.oauth2DingtalkClientSecret`；生产环境优先使用
+External Secrets、Sealed Secrets 或其他密钥注入方案。
+
+#### 原生 Kubernetes/Kustomize
+
+在 `deploy/k8s/base/secret.yaml.example` 对应的 Secret 中提供：
+
+```yaml
+stringData:
+  oauth2-dingtalk-client-id: dingxxxxxxxx
+  oauth2-dingtalk-client-secret: "<从密钥管理系统注入>"
+```
+
+再通过环境变量或 overlay 设置公开地址和回调：
+
+```yaml
+env:
+  - name: SKILLHUB_PUBLIC_BASE_URL
+    value: https://skills.example.com
+  - name: OAUTH2_DINGTALK_REDIRECT_URI
+    value: https://skills.example.com/login/oauth2/code/dingtalk
+```
+
+Kubernetes 集群节点或出口网关的公网 IP 必须加入钉钉服务器出口 IP 白名单。Ingress 只负责浏览器
+回调可达性，不会替代后端出站 IP 白名单。
+密码重置验证码使用独立发件人及安全流程，参见[SMTP 配置指南](19-smtp-password-reset-email-setup.md)；业务邮件按[邮件通知接入流程](notification-email.md)配置平台策略及用户订阅。
+
+## 8 OIDC 登录配置
+
+SkillHub 复用 Spring Security OAuth2 Client 的 OIDC 支持。前端不需要单独
+配置回调页；登录页会从 `/api/v1/auth/methods` 读取后端暴露的
+`OAUTH_REDIRECT` 方法并跳转到 `/oauth2/authorization/{registrationId}`。
+
+生产环境接入 OIDC 时，为后端增加一组 OAuth2 client registration 配置即可。
+下面以 `oidc` 作为 registration id：
+
+```bash
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_ID=replace-me
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_SECRET=replace-me
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_PROVIDER=oidc
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_AUTHORIZATION_GRANT_TYPE=authorization_code
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_REDIRECT_URI={baseUrl}/login/oauth2/code/{registrationId}
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_SCOPE=openid,profile,email
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_OIDC_CLIENT_NAME=OIDC
+SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_OIDC_ISSUER_URI=https://idp.example.com/realms/skillhub
+```
+
+要接入多个 OIDC IdP，使用不同 registration id，例如 `okta`、`keycloak`，
+并把上面的环境变量中的 `OIDC` 替换为对应大写 id。registration id 会作为
+`identity_binding.provider_code`，请保持稳定。
+
+> **警告：Registration ID 冲突**
+>
+> 每个 OIDC 提供商必须使用唯一的 registration ID。Registration ID 作为
+> `identity_binding.provider_code` 存储在数据库中，用于将外部身份映射到平台
+> 用户。如果两个不同的 IdP 使用了相同的 registration ID（例如都使用 `oidc`），
+> 会导致不同 IdP 的用户 `sub` 值空间混用，可能出现身份绑定错误或账户冲突。
+>
+> 建议使用有意义的 registration ID，例如 `okta`、`keycloak`、`azure-ad`，
+> 而不是通用的 `oidc`。一旦投入使用，不要更改 registration ID，否则现有用户
+> 将无法登录。
+
+Docker Compose 发布模板默认只透传常用变量。若使用 OIDC，请通过 compose
+override 或部署平台环境变量把上述 `SPRING_SECURITY_*` 变量注入 `server`
+容器。Kubernetes 部署同理，将这些变量放入 `backend-deployment.yaml` 的
+`server` 容器环境变量或统一的配置管理系统中。
+
+## 9 裸金属上线清单
+
+推荐顺序：
+
+1. 准备服务器基础环境
+   - 安装 Docker Engine 与 Docker Compose Plugin
+   - 配置公网 HTTPS 入口，确保最终访问域名已经确定
+   - 打开 `80` / `443`，避免直接暴露 `5432` / `6379`
+2. 填写 `.env.release`
+   - `SKILLHUB_PUBLIC_BASE_URL` 填最终 HTTPS 域名，且不要带尾部 `/`；子路径部署时必须包含外部路径前缀
+   - `SKILLHUB_STORAGE_PROVIDER=s3`
+   - 按云厂商 OSS / S3 兼容参数填写 `SKILLHUB_STORAGE_S3_*`
+   - 设置非默认的 `POSTGRES_PASSWORD`
+   - 模板默认已开启首登管理员，务必将 `BOOTSTRAP_ADMIN_PASSWORD` 改为强密码
+3. 启动前校验
+   - 运行 `make validate-release-config`
+   - 确认没有 `replace-me`、`change-this-*`、`ChangeMe!2026` 之类的占位值
+4. 首次启动
+   - 运行 `docker compose --env-file .env.release -f compose.release.yml up -d`
+   - 检查 `docker compose --env-file .env.release -f compose.release.yml ps`
+   - 检查 `curl -i http://127.0.0.1:8080/actuator/health`
+5. 首登收尾
+   - 仅在启用了 `BOOTSTRAP_ADMIN_ENABLED=true` 时，使用 `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` 登录
+   - 立即修改管理员密码
+   - 如果后续完全走 OAuth，可将 `BOOTSTRAP_ADMIN_ENABLED=false`
+
+## 10 可观测性
+
+| 维度 | 方案 |
+|------|------|
+| 健康检查 | `web/nginx-health`、`server/actuator/health` |
+| 请求关联 | 响应头和日志中的 `X-Request-Id` / `request.id` |
+| 日志 | 文本或 ECS 风格 JSON，均输出到容器 stdout / stderr |
+| Trace | `none`、Micrometer + OTel SDK、或外部 Java Agent 三选一 |
+| 业务事实 | 默认关闭；生产 `runtime.sh business-logs-enable` / `business-logs-up`，本地 `make business-logs-demo-up`；[配置、实收查询、排障与停止](./business-event-logs.md) |
+| 指标 | 默认仅 health/info；`SKILLHUB_ACTUATOR_EXPOSURE_INCLUDE=health,info,metrics,prometheus` 后重建 server，使用管理员会话查询 |
+
+### 10.1 通用配置
+
+默认配置不要求 Collector、SkyWalking 或 Elasticsearch：
+
+```dotenv
+SKILLHUB_TRACING_MODE=none
+SKILLHUB_LOG_FORMAT=json
+SKILLHUB_SERVICE_VERSION=v0.2.15
+SKILLHUB_SERVICE_ENVIRONMENT=production
+```
+
+发布 Compose 默认使用 ECS 风格 JSON，由 Filebeat、Fluent Bit 或容器平台采集 stdout。
+本地源码开发仍可使用 `SKILLHUB_LOG_FORMAT=text`。SkillHub 不直接连接 Elasticsearch。
+JSON 日志使用以下稳定字段：
+
+- `request.id`：SkillHub 请求、响应和审计关联 ID。
+- `trace.id`、`span.id`：当前存在有效 Trace 时输出。
+- `service.name`、`service.version`、`service.environment`。
+
+`SKILLHUB_LOG_ASYNC_QUEUE_SIZE` 默认是 `1024`。JSON 日志队列是有界且非阻塞的；采集端
+阻塞时允许丢弃日志以保护业务线程，数据库中的 `audit_log` 仍是审计事实来源。
+
+### 10.2 三种 Tracing 模式
+
+三种 Trace 模式只能选择一种，切换后需要重启。该限制不禁止独立配置业务 Logs；下表及本节的 endpoint 限制仅指 TRACE endpoint：
+
+| 模式 | 适用场景 | 必需配置 |
+|------|----------|----------|
+| `none` | 不部署链路追踪 | `SKILLHUB_TRACING_MODE=none` |
+| `otel-sdk` | 厂商中立 OTLP/Collector | 模式、采样率；需要导出时再配置 endpoint |
+| `external-agent` | 使用 SkyWalking Agent 原生能力 | 模式、唯一的外部 Agent；不得配置 OTLP endpoint |
+
+OTel SDK 模式的最小配置：
+
+```dotenv
+SKILLHUB_TRACING_MODE=otel-sdk
+SKILLHUB_LOG_FORMAT=json
+SKILLHUB_TRACING_SAMPLING_PROBABILITY=0.1
+MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
+SKILLHUB_OTLP_TIMEOUT=5s
+SKILLHUB_OTLP_COMPRESSION=gzip
+```
+
+未设置 `MANAGEMENT_OTLP_TRACING_ENDPOINT` 时，`otel-sdk` 仍可建立进程内 Trace，但不会
+创建 OTLP Exporter，也不会尝试连接默认地址。`none` 或 `external-agent` 模式配置
+endpoint 会启动失败。
+
+External Agent 模式的应用侧配置：
+
+```dotenv
+SKILLHUB_TRACING_MODE=external-agent
+SKILLHUB_LOG_FORMAT=json
+```
+
+部署平台还必须通过 JVM 启动参数挂载且只挂载一个 Agent。SkillHub 无法可靠识别任意
+Java Agent，因此上线前应检查实际 `JAVA_TOOL_OPTIONS` 或容器启动命令，确认没有同时启用
+OTel Agent、SkyWalking Agent 和应用内 `otel-sdk`。SkyWalking Agent 模式可以通过官方
+Logback Toolkit 输出 `trace.id`；`span.id` 是否可用取决于 Agent 版本。
+
+### 10.3 OTel Collector 接入 SkyWalking
+
+下面是只转发 Trace 的最小 Collector 配置：
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  otlp/skywalking:
+    endpoint: skywalking-oap:11800
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/skywalking]
+```
+
+SkyWalking OAP 10.3 还需要启用 OTLP Trace handler、Zipkin receiver 和 Zipkin query：
+
+```dotenv
+SW_OTEL_RECEIVER_ENABLED_HANDLERS=otlp-traces
+SW_RECEIVER_ZIPKIN=default
+SW_QUERY_ZIPKIN=default
+```
+
+应用使用 Collector 的 OTLP/HTTP `4318` 端口，Collector 使用 OAP 的 OTLP/gRPC
+`11800` 端口。生产环境应按网络边界配置 TLS；上例中的 `insecure: true` 只适用于受控的
+容器内部网络。
+
+SkyWalking 10.3 会把 OTLP Trace 转换为 Zipkin Trace，并通过 Zipkin Query/Lens 查询。
+这条路径不提供 SkyWalking Java Agent 的完整原生拓扑、慢 SQL 和 Profiling 能力。需要
+这些能力时使用 `external-agent`，不要同时启用 `otel-sdk`。
+
+### 10.4 日志与 Trace 联查
+
+JSON 日志由采集器写入 Elasticsearch 后，在 Kibana 通过 `trace.id` 查询；同一个
+`trace.id` 可在 SkyWalking 的 Zipkin Query/Lens 或 Agent 原生查询界面中定位调用链。
+`request.id` 始终可以用于 SkillHub 内部日志和审计关联。
+
+当采样率小于 `1.0` 时，日志仍是全量输出，因此部分日志虽有请求关联信息，但在
+SkyWalking 中没有被保留的 Trace。这是头部采样的预期行为。
+
+### 10.5 回滚
+
+遇到观测后端异常时：
+
+1. 将 `SKILLHUB_TRACING_MODE` 改为 `none`。
+2. 删除 `MANAGEMENT_OTLP_TRACING_ENDPOINT`。
+3. 需要进一步降低日志开销时，将 `SKILLHUB_LOG_FORMAT` 改为 `text`。
+4. 滚动重启 Server。
+
+关闭 Trace 和 JSON 日志不会改变请求、数据库或异步任务的业务语义。
+
+开发者接入统一标准的最小步骤、内部/外部 HTTP Client 传播边界和扩展点见：
+[可观测性开发者接入指南](./observability-developer-guide.md)。
+
+## 11 安全扫描服务
+
+如果要启用 `skill-scanner` 后端链路，当前仓库建议按下面的方式部署：
+
+- 本地共享目录场景可以使用 `local` 模式
+- Kubernetes 或分离部署场景应使用 `upload` 模式
+
+当前 `deploy/k8s` 已按分离部署建模，因此推荐：
+
+- `SKILLHUB_SECURITY_SCANNER_ENABLED=true`
+- `SKILLHUB_SECURITY_SCANNER_URL=http://skillhub-scanner:8000`
+- `SKILLHUB_SECURITY_SCANNER_MODE=upload`
+
+相关文件：
+
+- `deploy/k8s/scanner-deployment.yaml`
+- `deploy/k8s/services.yaml`
+- `deploy/k8s/backend-deployment.yaml`
+- `scripts/verify-scanner.sh`
+- `docs/security-scanning.md`
+
+## 12 数据迁移
+
+Flyway 仍是唯一 schema 变更入口：
+
+- 路径：`server/skillhub-app/src/main/resources/db/migration/`
+- 命名：`V{version}__{description}.sql`
+- 启动策略：应用容器启动时自动执行迁移
+
+GitHub 同步的 V76 迁移会创建系统管理的 `@github` 目录和 `github-sync-publisher` 系统账户。若升级前已有同名 namespace 或账户，迁移会明确失败并回滚，不会接管或改写原数据。部署前应检查这两个标识是否被占用；遇到冲突时先处理现有数据的归属，再重新启动迁移。
+
+
+本次 GitHub 同步从 main 的 V75 schema 继续追加 V76–V119；main 已发行 V1–V75 不改名、不改 checksum。升级前备份数据库和对象存储，先在副本验证迁移与业务。早期未发布开发分支使用过 V66–V109 的不同编号，它们与 main 历史冲突，不能直接套用本次迁移，也不应通过 Flyway repair 掩盖 checksum/版本冲突。一次性开发库应使用新的隔离库重新建立；需要保留早期分支数据时须另行设计并验收数据迁移。回退镜像不等于数据库降级。

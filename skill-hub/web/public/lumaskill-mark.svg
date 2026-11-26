@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title"><title id="title">LumaSkill 光棱标识</title><defs>
+  <linearGradient id="body" x1="30" y1="18" x2="83" y2="112" gradientUnits="userSpaceOnUse"><stop stop-color="#298AFF"/><stop offset=".52" stop-color="#1264EF"/><stop offset="1" stop-color="#174BCD"/></linearGradient>
+  <linearGradient id="fold" x1="30" y1="26" x2="60" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#7AD5FF"/><stop offset="1" stop-color="#298AFF"/></linearGradient>
+  <linearGradient id="inside" x1="43" y1="37" x2="76" y2="90" gradientUnits="userSpaceOnUse"><stop stop-color="#D9F1FF"/><stop offset="1" stop-color="#72CAFF"/></linearGradient>
+  <linearGradient id="light" x1="40" y1="51" x2="91" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#E5F6FF"/><stop offset=".55" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E5F6FF"/></linearGradient>
+  <linearGradient id="edge" x1="88" y1="92" x2="106" y2="107" gradientUnits="userSpaceOnUse"><stop stop-color="#4FBAFF"/><stop offset="1" stop-color="#1671F1"/></linearGradient>
+  <linearGradient id="node" x1="72" y1="45" x2="94" y2="72" gradientUnits="userSpaceOnUse"><stop stop-color="#45B4FF"/><stop offset="1" stop-color="#1554E3"/></linearGradient>
+</defs><g transform="translate(-7 2)">
+  <path fill="url(#body)" d="M27 40c0-7 2-12 8-16l20-11c3-2 6-1 6 3v62c0 9 3 12 11 12h39c2 0 2 1 1 2l-17 18c-.6.7-1.4 1-2.5 1H45c-12 0-18-7-18-19Z"/>
+  <path fill="url(#fold)" d="M27 40c0-7 2-12 8-16l20-11c3-2 6-1 6 3 0 4-2 7-6 11L35 47l-8 8Z"/>
+  <path fill="url(#inside)" d="m46 36 15-15v57c0 9 3 12 11 12H58c-8-2-12-6-12-14Z"/>
+  <path fill="url(#light)" d="m40 42 6-6v40c0 9 4 14 12 14h53l-12 6H53c-9 0-13-5-13-16Z"/>
+  <path fill="url(#edge)" d="m99 96 13-5-17 19c-.6.7-1.4 1-2.5 1H82Z"/>
+  <path fill="url(#node)" d="m84.5 42.5 15 15a2 2 0 0 1 0 3l-15 15a2 2 0 0 1-3 0l-15-15a2 2 0 0 1 0-3l15-15a2 2 0 0 1 3 0Z"/>
+  <path fill="url(#inside)" d="m81.5 42.5-15 15a2 2 0 0 0 0 3l3 3 12-6c2-1 3-3 3-6v-8a2 2 0 0 0-3-1Z"/>
+  <path fill="#67C7FF" d="m84.5 42.5 15 15a2 2 0 0 1 0 3L84 54.5a5 5 0 0 0 .5-2.5Z" opacity=".6"/>
+</g></svg>

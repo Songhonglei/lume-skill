@@ -1,0 +1,95 @@
+import { describe, expect, test } from 'bun:test';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SkillCard, SkillMetrics } from '../src/client/skill-card.js';
+import { MarketCardActions } from '../src/client/market-card-actions.js';
+import { InstallationStatus } from '../src/client/installation-status.js';
+import { catalogLabel } from '../src/client/catalog-label.js';
+import { FavoriteButton } from '../src/client/favorite-button.js';
+
+const item = { namespace: 'demo', slug: 'document', displayName: '文档助手' };
+describe('market presentation and action boundaries', () => {
+  test('detail metrics name market counts separately from local bookmark actions', () => {
+    const html = renderToStaticMarkup(<SkillMetrics labeled item={{ ...item, starCount: 42, downloadCount: 10, ratingAvg: 4 }} />);
+    expect(html).toContain('市场收藏 '); expect(html).toContain('aria-label="市场收藏数 42"');
+    expect(html).toContain('下载 '); expect(html).toContain('评分 ');
+    expect(html).not.toContain('<button');
+  });
+
+  test('whole-card details trigger and installation action are sibling buttons', () => {
+    const html = renderToStaticMarkup(<SkillCard item={item} version="1.0" onOpen={() => {}}
+      actions={<button>安装</button>} />);
+    expect(html).toContain('aria-label="查看 文档助手 @demo/document 1.0 详情"');
+    expect(html).not.toContain('详情<');
+    const detailStart = html.indexOf('class="astron-sh-card-open"');
+    const detailEnd = html.indexOf('</button>', detailStart);
+    expect(html.indexOf('>安装</button>')).toBeGreaterThan(detailEnd);
+    expect(html).not.toContain('astron-sh-card-open"><button');
+  });
+  test('unknown inventory disables direct install action', () => {
+    const client = new QueryClient();
+    const render = (verified: boolean) => renderToStaticMarkup(<QueryClientProvider client={client}>
+      <MarketCardActions services={{} as import('../src/client/installed-skills.js').InstalledServices} records={[]} sourceRevision="r1" verified={verified} onInstall={() => {}} />
+    </QueryClientProvider>);
+    expect(render(false)).toContain('disabled=""');
+    expect(render(true)).not.toContain('disabled=""');
+  });
+  test('favorite control is separate from the detail trigger and snapshots have no invented version or metrics', () => {
+    const html = renderToStaticMarkup(<SkillCard item={item} onOpen={() => {}}
+      favoriteAction={<FavoriteButton item={item} pressed disabled={false} busy={false} onToggle={() => {}} />} />);
+    const detailEnd = html.indexOf('</button>', html.indexOf('class="astron-sh-card-open"'));
+    expect(html.indexOf('aria-label="取消收藏 文档助手 @demo/document"')).toBeGreaterThan(detailEnd);
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('aria-label="查看 文档助手 @demo/document 详情"');
+    expect(html).not.toContain('vundefined'); expect(html).not.toContain('收藏数');
+  });
+  test('saving favorites remains keyboard focusable while unavailable favorites use native disabled', () => {
+    const saving = renderToStaticMarkup(<FavoriteButton item={item} pressed disabled={false} busy onToggle={() => {}} />);
+    expect(saving).toContain('aria-disabled="true"'); expect(saving).toContain('aria-busy="true"');
+    expect(saving).not.toMatch(/<button[^>]*\sdisabled=/);
+    const unavailable = renderToStaticMarkup(<FavoriteButton item={item} pressed={false} disabled busy onToggle={() => {}} />);
+    expect(unavailable).toMatch(/<button[^>]*\sdisabled=""/);
+  });
+  test('hides only complete empty source records, preserving unsafe status', () => {
+    const base = { checkedAt: '2026-10-20T00:00:00Z', complete: true, unavailable: [], records: [] };
+    expect(renderToStaticMarkup(<InstallationStatus hideEmpty installation={base} />)).toBe('');
+    expect(renderToStaticMarkup(<InstallationStatus hideEmpty installation={{ ...base, complete: false }} />)).toContain('安装状态未知');
+    expect(renderToStaticMarkup(<InstallationStatus hideEmpty pending installation={base} />)).toContain('核对安装状态');
+    expect(renderToStaticMarkup(<InstallationStatus hideEmpty installation={{ ...base, records: [{ scope: 'user', version: '1', state: 'mismatch' }] }} />)).toContain('安装记录异常');
+  });
+  test('Chinese presentation does not change custom names or filter slugs', () => {
+    for (const [slug, displayName, expected] of [
+      ['official', 'Official', '官方'], ['ai-competition', 'AI Competition', '人工智能竞赛'],
+      ['aicomp-2026', 'aicomp-2026', '2026 人工智能竞赛'], ['coding', '开发工具', '开发工具'],
+      ['private-label', 'Custom Workspace', 'Custom Workspace'], ['private-label', '', 'private-label'],
+    ]) expect(catalogLabel({ slug: slug!, displayName: displayName! })).toBe(expected!);
+  });
+});
+
+test.each(['single', 'mixed', 'disabled', 'abnormal'] as const)('market %s exposes one daily action, never position controls', state => {
+  const client = new QueryClient();
+  const unexpected = async () => { throw new Error('Rendering must not transport'); };
+  const services = { skillUse: { useSkill: unexpected }, management: { selectSkillUse: unexpected } } as unknown as import('../src/client/installed-skills.js').InstalledServices;
+  const record = { itemKey: 'precise-record', namespace: 'demo', slug: 'document', version: '1', scope: 'project' as const, state: state === 'abnormal' ? 'mismatch' as const : 'present' as const, installationState: state === 'disabled' ? 'disabled' as const : 'enabled' as const };
+  const records = state === 'mixed' ? [record, { ...record, itemKey: 'user', scope: 'user' as const, installationState: 'disabled' as const }] : [record];
+  try {
+    const html = renderToStaticMarkup(<QueryClientProvider client={client}><MarketCardActions records={records} sourceRevision="r" verified services={services} onManage={() => {}} onInstall={() => {}} /></QueryClientProvider>);
+    expect(html).not.toContain('管理安装');
+    expect(html.includes('>使用</button>')).toBe(state === 'single' || state === 'mixed');
+    expect(html.includes('查看详情')).toBe(state === 'disabled' || state === 'abnormal');
+    expect(html.match(/<button/g)?.length).toBe(1);
+    for (const text of ['role="combobox"', '更多操作', '>启用</button>', '>停用</button>', '>卸载</button>', '检查更新']) expect(html).not.toContain(text);
+
+  } finally { client.clear(); }
+});
+
+test('disabled and mixed installation summaries describe locations without implying callable skills', () => {
+  const base = { checkedAt: 'now', complete: true, unavailable: [] };
+  const disabled = { scope: 'project' as const, state: 'present' as const, version: '1', installationState: 'disabled' as const };
+  const single = renderToStaticMarkup(<InstallationStatus installation={{ ...base, records: [disabled] }} />);
+  expect(single).toContain('data-tone="neutral"'); expect(single).toContain('>已停用 · v1 · 仅此项目</span>');
+  const mixed = renderToStaticMarkup(<InstallationStatus installation={{ ...base, records: [{ ...disabled, scope: 'user', installationState: 'enabled' }, disabled] }} />);
+  expect(mixed).toContain('所有项目 · v1 · 已启用 / 仅此项目 · v1 · 已停用');
+  expect(mixed).toContain('data-multiple="true"'); expect(mixed.match(/class="astron-sh-location-summary"/g)?.length).toBe(2);
+  expect(mixed).toContain('文件存在不代表 DSH 已启用或技能已执行'); expect(mixed).not.toContain('可调用');
+});

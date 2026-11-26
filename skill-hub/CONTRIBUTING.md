@@ -1,0 +1,169 @@
+# Contributing to SkillHub
+
+## Scope
+
+SkillHub is a self-hosted registry for agent skills. Contributions should
+preserve the existing architecture and product direction documented in
+[`docs/`](./docs).
+
+AI coding agents working in this repository should follow the rules in
+[`AGENTS.md`](./AGENTS.md), which routes to the engineering conventions in
+[`.trellis/spec/index.md`](./.trellis/spec/index.md). These documents can be read
+without installing Trellis or any engineering Skill. Architecture and business
+design remain in `docs/`; execution tools and task records remain local.
+
+### Optional OpenSpec agent integration
+
+OpenSpec owns the change lifecycle. For a managed change, use its original requirements,
+design and tasks; read the applicable engineering topic bodies before implementation and
+verification. Follow the [OpenSpec project procedure](.trellis/spec/workflow/openspec.md).
+Verification reports findings; repair product code in apply rather than silently fixing it
+during verify. Small edits do not require an OpenSpec change or a local Trellis task.
+
+For Codex, the optional setup uses the installed OpenSpec 1.17.0 CLI to generate native
+Skills including verify, with thin project reading instructions. It leaves the global
+OpenSpec profile and hook trust unchanged:
+
+```bash
+npm install --global @fission-ai/openspec@1.17.0
+python3 scripts/setup-agent-workflow.py          # preview
+python3 scripts/setup-agent-workflow.py --apply
+python3 scripts/setup-agent-workflow.py --check
+```
+
+Node.js >=22.12.0 is required by this OpenSpec version. The Python setup uses only the
+standard library. Generated Skills and setup metadata stay local. Re-run setup/check after
+updating upstream instruction files; it refuses to overwrite conflicting local edits and
+backs up changed managed entries. Do not use a successful setup check as proof that the
+Agent read all rules or implemented them correctly. The explicit-reading procedure works
+without optional setup.
+
+### Shared design resources
+
+The [SkillHub design core](design-system/skillhub/README.md) ships with this repository under Apache-2.0, with third-party icon notices retained. Read the relevant theme, component contracts and design rules alongside the frontend engineering conventions. The reader defaults to this versioned core; no private library, editor plugin or local cache is required.
+
+## Before You Start
+
+- Read [`README.md`](./README.md) for local development commands.
+- Check the relevant design docs before changing behavior.
+- Open an issue for non-trivial changes before sending a large pull request.
+
+## Development Setup
+
+Prerequisites:
+
+- Docker and Docker Compose
+- Java 21
+- For the web frontend: Node.js 22.13+ (22.x, default in `.nvmrc`) or 24.x, and the pnpm version declared in `web/package.json`. Other Node.js majors are not supported for frontend development (see #991).
+
+Use `nvm install && nvm use` from the repository root, then enable Corepack (`corepack enable`). Frontend dependency installation enforces this Node.js range via `web/.npmrc`; CI builds and tests both supported majors. CLI and integration packages retain their own runtime requirements.
+
+Start the local stack:
+
+```bash
+make dev-all
+```
+
+Useful commands:
+
+```bash
+make test
+make typecheck-web
+make build-web
+make generate-api
+./scripts/check-openapi-generated.sh
+./scripts/smoke-test.sh
+```
+
+Stop the stack:
+
+```bash
+make dev-all-down
+```
+
+## Change Guidelines
+
+- Keep changes focused. Avoid mixing refactors with behavior changes.
+- Follow existing module boundaries across `server/`, `web/`, and `docs/`.
+- Add or update tests when behavior changes.
+- Update docs when APIs, auth flows, deployment, or operator workflows change.
+- Regenerate and commit `web/src/api/generated/schema.d.ts` when backend OpenAPI
+  contracts change.
+- Prefer backward-compatible changes unless the issue explicitly allows a break.
+
+## Pull Requests
+
+Before opening a pull request, make sure:
+
+- The branch is rebased or merged cleanly from the target branch.
+- Relevant backend tests pass.
+- Frontend checks follow the [change-impact matrix](.trellis/spec/testing/index.md).
+  Changes limited to existing translation display text use its narrow exception;
+  frontend behavior or tooling changes require the applicable typecheck/build checks.
+  This does not waive required CI checks or failures in relevant existing tests.
+- `make generate-api` or `./scripts/check-openapi-generated.sh` has been run when
+  backend API contracts changed.
+- Smoke coverage is updated when operator-facing workflows change.
+- The pull request description explains motivation, scope, and rollout impact.
+- Every commit is signed off and the CLA is signed (see below).
+
+## Commit Style
+
+Conventional-style subjects are preferred, for example:
+
+- `feat(auth): add local account login`
+- `fix(ops): align smoke test with csrf flow`
+- `docs(deploy): clarify runtime image usage`
+
+## Sign-off and CLA
+
+Two checks must pass before a pull request can be merged:
+
+- **DCO**: every commit needs a `Signed-off-by` trailer that matches the commit
+  author, certifying the [Developer Certificate of Origin](https://developercertificate.org/).
+  Use `git commit -s` when committing. To sign off commits you already pushed,
+  run `git commit --amend -s --no-edit` for the last commit, or
+  `git rebase --signoff <base>` for several, then `git push --force-with-lease`.
+- **CLA**: sign the Contributor License Agreement once through the
+  `license/cla` link that the CLA assistant posts on your first pull request.
+
+Both are your own attestations, so maintainers cannot complete them for you.
+Workflow runs on a first-time contributor's pull request also wait for a
+maintainer to approve them; that pending state is not a test failure.
+
+## Reporting Security Issues
+
+Do not open public issues for suspected security vulnerabilities.
+
+Use GitHub Security Advisories or your internal security process to report them
+privately to the maintainers.
+
+## Flyway migration version advisory
+
+The **Migration Preflight** workflow reads file metadata for all open PRs on PR
+changes, every six hours, or via **Actions → Migration Preflight → Run workflow**.
+See its Actions run summary for migration numbers introduced by more than one PR.
+It checks `server/skillhub-app/src/main/resources/db/migration/V<n>__*.sql` additions,
+including renames that introduce a different migration number. Pure renames with
+the same number, modified/deleted migrations and conflicts with migrations already
+merged into the base branch are outside this advisory's scope.
+
+This is a snapshot and a non-blocking warning, not a reservation or merge gate.
+If a scan is incomplete (for example API permissions, file-list truncation or a
+PR changing during collection), its summary says so; it must not be interpreted
+as confirmation of no conflict. The script exits nonzero on an incomplete scan;
+the workflow keeps this advisory and explicitly adds an unavailable-scan warning. PRs with 3,000 or more changed files are conservatively
+reported as incomplete because GitHub caps the files endpoint at 3,000 entries.
+Coordinate numbering with the other PR's author, update your migration filename,
+and rerun the relevant database/migration tests before merging. The workflow does
+not renumber files, post comments, fetch raw SQL files or execute PR code. The
+GitHub files API may include diff patches; the script ignores them and only uses
+file names/status, PR numbers and revision metadata. It uses only
+repository-content and pull-request read permissions and runs the default branch's
+script, so workflow/script changes take effect only after merging into that branch.
+
+Local offline regression checks (Python standard library only):
+
+```bash
+python3 -m unittest discover -s scripts/tests -p 'test_migration_preflight.py' -v
+```

@@ -1,0 +1,678 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CHART_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+TEST_VALUES="$CHART_DIR/tests/test-values.yaml"
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+fail() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+render() {
+  helm template "$@" -f "$TEST_VALUES"
+}
+
+assert_rejected() {
+  local name=$1
+  shift
+  if render "$name" "$CHART_DIR" "$@" >"$TMP_DIR/$name.yaml" 2>"$TMP_DIR/$name.err"; then
+    fail "$name should have been rejected"
+  fi
+}
+
+assert_web_upstream() {
+  local manifest=$1
+  local expected=$2
+  [[ $(grep -Fc 'name: SKILLHUB_API_UPSTREAM' "$manifest") -eq 1 ]] \
+    || fail "Web must render exactly one built-in API upstream"
+  grep -A1 -F 'name: SKILLHUB_API_UPSTREAM' "$manifest" \
+    | grep -Fq "value: \"$expected\"" \
+    || fail "Web runtime DNS upstream must be $expected"
+}
+
+# Nginx runtime DNS resolution does not expand the pod's search suffixes.
+render web-dns "$CHART_DIR" --namespace default \
+  --show-only templates/web-deployment.yaml >"$TMP_DIR/web-dns.yaml"
+assert_web_upstream "$TMP_DIR/web-dns.yaml" \
+  'http://web-dns-skillhub-server.default.svc.cluster.local:8080'
+
+render skillhub "$CHART_DIR" --namespace team-skills \
+  --show-only templates/web-deployment.yaml >"$TMP_DIR/web-dns-namespace.yaml"
+assert_web_upstream "$TMP_DIR/web-dns-namespace.yaml" \
+  'http://skillhub-server.team-skills.svc.cluster.local:8080'
+
+render web-dns "$CHART_DIR" --namespace team-skills \
+  --set nameOverride=registry \
+  --show-only templates/web-deployment.yaml >"$TMP_DIR/web-dns-name.yaml"
+assert_web_upstream "$TMP_DIR/web-dns-name.yaml" \
+  'http://web-dns-registry-server.team-skills.svc.cluster.local:8080'
+
+render web-dns "$CHART_DIR" --namespace team-skills \
+  --set fullnameOverride=custom-hub --set server.service.port=9080 \
+  --set web.clusterDomain=k8s.example.internal \
+  --show-only templates/web-deployment.yaml >"$TMP_DIR/web-dns-custom.yaml"
+assert_web_upstream "$TMP_DIR/web-dns-custom.yaml" \
+  'http://custom-hub-server.team-skills.svc.k8s.example.internal:9080'
+
+# --reuse-values can supply old chart defaults without this newly added key.
+# Model that effective values shape here; a real cross-version upgrade is a
+# separate integration check, not a second render of this chart's new defaults.
+LEGACY_VALUES_CHART="$TMP_DIR/legacy-values-chart"
+cp -R "$CHART_DIR" "$LEGACY_VALUES_CHART"
+sed '/^  clusterDomain:/d' "$CHART_DIR/values.yaml" >"$LEGACY_VALUES_CHART/values.yaml"
+render web-dns "$LEGACY_VALUES_CHART" --namespace team-skills \
+  --set fullnameOverride=custom-hub --set server.service.port=9080 \
+  --show-only templates/web-deployment.yaml >"$TMP_DIR/web-dns-legacy-values.yaml"
+assert_web_upstream "$TMP_DIR/web-dns-legacy-values.yaml" \
+  'http://custom-hub-server.team-skills.svc.cluster.local:9080'
+
+assert_rejected web-dns-empty-domain --set-string web.clusterDomain=
+assert_rejected web-dns-url-domain --set-string web.clusterDomain=https://cluster.local
+assert_rejected web-dns-empty-label --set-string web.clusterDomain=cluster..local
+assert_rejected web-dns-invalid-label --set-string web.clusterDomain=-cluster.local
+
+render verify "$CHART_DIR" >"$TMP_DIR/default.yaml"
+if grep -Fq 'name: verify-skillhub-github-sync' "$TMP_DIR/default.yaml"; then
+  fail "GitHub sync deployment must stay disabled by default"
+fi
+grep -A1 -F 'name: SKILLHUB_GITHUB_SYNC_STAGING_CAPACITY_LIMIT_BYTES' "$TMP_DIR/default.yaml" \
+  | grep -Fq 'value: "0"' \
+  || fail "server must receive the default GitHub sync staging capacity budget"
+render github-sync "$CHART_DIR" \
+  --set githubSync.enabled=true \
+  --set githubSync.stagingCapacityLimitBytes=1073741824 \
+  --set-string secrets.githubSyncServiceToken=github-sync-service-token-at-least-32-characters \
+  >"$TMP_DIR/github-sync.yaml"
+grep -Fq 'name: github-sync-skillhub-github-sync' "$TMP_DIR/github-sync.yaml" \
+  || fail "enabled GitHub sync must render its deployment"
+grep -A1 -F 'name: SKILLHUB_GITHUB_SYNC_STAGING_CAPACITY_LIMIT_BYTES' "$TMP_DIR/github-sync.yaml" \
+  | grep -Fq 'value: "1073741824"' \
+  || fail "server must receive the configured GitHub sync staging capacity budget"
+assert_rejected github-sync-negative-capacity --set githubSync.stagingCapacityLimitBytes=-1
+grep -Fq 'name: POSTGRESQL_MAX_CONNECTIONS' "$TMP_DIR/default.yaml"
+grep -Fq 'value: "verify-postgresql"' "$TMP_DIR/default.yaml"
+grep -Fq 'value: "verify-redis-master"' "$TMP_DIR/default.yaml"
+grep -Fq 'bitnami/postgresql@sha256:db2312d9b243afa8c3b3f5496e478d17d0dff9791d06f3b93b9567abd86ae92f' "$TMP_DIR/default.yaml"
+grep -Fq 'bitnami/postgres-exporter@sha256:53ab72a1b940d7637e91619f1000da9ebef14bc7dad74321a78731d65c79f55b' "$TMP_DIR/default.yaml"
+grep -Fq 'bitnami/redis@sha256:08863c2c3f4e051fb6139b38fa223e9c13be5033326a59bead182860d899bf98' "$TMP_DIR/default.yaml"
+grep -Fq 'bitnami/redis-exporter@sha256:fb1dae6add1e1104989d086d9407f7d65f58968550aa5fddea20637a758c0773' "$TMP_DIR/default.yaml"
+if grep -Eq 'image:.*:latest([@"[:space:]]|$)' "$TMP_DIR/default.yaml"; then
+  fail "default workloads must not use mutable latest image tags"
+fi
+grep -Fq 'fsGroup: 101' "$TMP_DIR/default.yaml"
+grep -Fq 'fsGroupChangePolicy: OnRootMismatch' "$TMP_DIR/default.yaml"
+grep -Fq 'type: Recreate' "$TMP_DIR/default.yaml"
+grep -A1 -F 'name: SKILLHUB_SUITE_REVIEW_WRITES_ENABLED' "$TMP_DIR/default.yaml" \
+  | grep -Fq 'value: "false"'
+if grep -Fq 'name: OAUTH2_FEISHU_REDIRECT_URI' "$TMP_DIR/default.yaml"; then
+  fail "default Helm rendering must omit an empty Feishu redirect URI so Spring can derive baseUrl"
+fi
+if grep -Fq 'name: OAUTH2_DINGTALK_REDIRECT_URI' "$TMP_DIR/default.yaml"; then
+  fail "default Helm rendering must omit an empty DingTalk redirect URI so Spring can derive baseUrl"
+fi
+
+render feishu-redirect "$CHART_DIR" \
+  --set-string oauth2.feishu.redirectUri=https://skills.example.com/login/oauth2/code/feishu \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/feishu-redirect.yaml"
+grep -A1 -F 'name: OAUTH2_FEISHU_REDIRECT_URI' "$TMP_DIR/feishu-redirect.yaml" \
+  | grep -Fq 'value: "https://skills.example.com/login/oauth2/code/feishu"' \
+  || fail "Helm must inject an explicitly configured Feishu redirect URI"
+
+render dingtalk-redirect "$CHART_DIR" \
+  --set-string oauth2.dingtalk.redirectUri=https://skills.example.com/login/oauth2/code/dingtalk \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/dingtalk-redirect.yaml"
+grep -A1 -F 'name: OAUTH2_DINGTALK_REDIRECT_URI' "$TMP_DIR/dingtalk-redirect.yaml" \
+  | grep -Fq 'value: "https://skills.example.com/login/oauth2/code/dingtalk"' \
+  || fail "Helm must inject an explicitly configured DingTalk redirect URI"
+
+render suite-review-enabled "$CHART_DIR" \
+  --set server.suiteReviewWritesEnabled=true \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/suite-review-enabled.yaml"
+grep -A1 -F 'name: SKILLHUB_SUITE_REVIEW_WRITES_ENABLED' "$TMP_DIR/suite-review-enabled.yaml" \
+  | grep -Fq 'value: "true"'
+
+render custom-server-fsgroup "$CHART_DIR" \
+  --set server.podSecurityContext.fsGroup=2000 \
+  --set server.podSecurityContext.fsGroupChangePolicy=Always \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/custom-server-fsgroup.yaml"
+grep -Fq 'fsGroup: 2000' "$TMP_DIR/custom-server-fsgroup.yaml"
+grep -Fq 'fsGroupChangePolicy: Always' "$TMP_DIR/custom-server-fsgroup.yaml"
+
+stable_args=(
+  --set-string secrets.bootstrapAdminPassword=stable-bootstrap-password
+  --set-string secrets.downloadAnonCookieSecret=stable-download-cookie-secret
+  --set-string postgresql.auth.postgresPassword=stable-postgres-password
+  --set-string postgresql.auth.password=stable-user-password
+  --set-string redis.auth.password=stable-redis-password
+)
+render stable "$CHART_DIR" "${stable_args[@]}" >"$TMP_DIR/stable-a.yaml"
+render stable "$CHART_DIR" "${stable_args[@]}" >"$TMP_DIR/stable-b.yaml"
+cmp "$TMP_DIR/stable-a.yaml" "$TMP_DIR/stable-b.yaml"
+
+render dingtalk "$CHART_DIR" "${stable_args[@]}" \
+  --set-string secrets.oauth2DingtalkClientId=ding-test \
+  --set-string secrets.oauth2DingtalkClientSecret=dingtalk-test-secret \
+  >"$TMP_DIR/dingtalk.yaml"
+grep -Fq 'oauth2-dingtalk-client-id: "ding-test"' "$TMP_DIR/dingtalk.yaml" \
+  || fail "Helm must render the configured DingTalk client id"
+grep -Fq 'oauth2-dingtalk-client-secret: "dingtalk-test-secret"' "$TMP_DIR/dingtalk.yaml" \
+  || fail "Helm must render the configured DingTalk client secret"
+grep -Fq 'name: OAUTH2_DINGTALK_CLIENT_ID' "$TMP_DIR/dingtalk.yaml" \
+  || fail "server deployment must inject the DingTalk client id"
+
+render private-registry "$CHART_DIR" \
+  --set server.dependencyWait.image.registry=registry.example.com \
+  --set server.dependencyWait.image.repository=library/busybox \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/private-registry.yaml"
+grep -Fq 'image: "registry.example.com/library/busybox:1.37"' "$TMP_DIR/private-registry.yaml"
+
+render postgresql-replication "$CHART_DIR" \
+  --set postgresql.architecture=replication >"$TMP_DIR/postgresql-replication.yaml"
+if [[ $(grep -Fc 'name: POSTGRESQL_MAX_CONNECTIONS' "$TMP_DIR/postgresql-replication.yaml") -ne 2 ]]; then
+  fail "PostgreSQL primary and read replica must use the same max_connections setting"
+fi
+
+render custom "$CHART_DIR" \
+  --set postgresql.auth.existingSecret=custom-pg \
+  --set postgresql.auth.secretKeys.userPasswordKey=custom-pg-key \
+  --set redis.auth.existingSecret=custom-redis \
+  --set redis.auth.existingSecretPasswordKey=custom-redis-key \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/custom.yaml"
+grep -Fq 'name: custom-pg' "$TMP_DIR/custom.yaml"
+grep -Fq 'key: custom-pg-key' "$TMP_DIR/custom.yaml"
+grep -Fq 'name: custom-redis' "$TMP_DIR/custom.yaml"
+grep -Fq 'key: custom-redis-key' "$TMP_DIR/custom.yaml"
+
+render postgresql-admin "$CHART_DIR" \
+  --set postgresql.auth.username=postgres \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/postgresql-admin.yaml"
+grep -Fq 'value: "postgres"' "$TMP_DIR/postgresql-admin.yaml"
+grep -Fq 'key: postgres-password' "$TMP_DIR/postgresql-admin.yaml"
+render postgresql-admin-secret "$CHART_DIR" \
+  --set postgresql.auth.username=postgres \
+  --show-only charts/postgresql/templates/secrets.yaml >"$TMP_DIR/postgresql-admin-secret.yaml"
+grep -Eq '^  postgres-password:' "$TMP_DIR/postgresql-admin-secret.yaml"
+if grep -Eq '^  password:' "$TMP_DIR/postgresql-admin-secret.yaml"; then
+  fail "Bitnami PostgreSQL must not create a custom-user password key for username=postgres"
+fi
+
+render postgresql-admin-existing-secret "$CHART_DIR" \
+  --set postgresql.auth.username=postgres \
+  --set postgresql.auth.existingSecret=custom-pg-admin \
+  --set postgresql.auth.secretKeys.adminPasswordKey=custom-admin-key \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/postgresql-admin-existing-secret.yaml"
+grep -Fq 'name: custom-pg-admin' "$TMP_DIR/postgresql-admin-existing-secret.yaml"
+grep -Fq 'key: custom-admin-key' "$TMP_DIR/postgresql-admin-existing-secret.yaml"
+
+render sentinel "$CHART_DIR" \
+  --set redis.architecture=replication \
+  --set redis.sentinel.enabled=true \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/sentinel.yaml"
+grep -Fq 'value: "docker,redis-sentinel"' "$TMP_DIR/sentinel.yaml"
+grep -Fq 'value: "mymaster"' "$TMP_DIR/sentinel.yaml"
+grep -Fq '.svc.cluster.local:26379' "$TMP_DIR/sentinel.yaml"
+grep -Fq 'name: SPRING_DATA_REDIS_PASSWORD' "$TMP_DIR/sentinel.yaml"
+grep -Fq 'name: SPRING_DATA_REDIS_SENTINEL_PASSWORD' "$TMP_DIR/sentinel.yaml"
+grep -A1 -F 'name: SKILLHUB_REDIS_SENTINEL_CHECK_SENTINELS_LIST' "$TMP_DIR/sentinel.yaml" \
+  | grep -Fq 'value: "false"'
+render sentinel-full "$CHART_DIR" \
+  --set redis.architecture=replication \
+  --set redis.sentinel.enabled=true >"$TMP_DIR/sentinel-full.yaml"
+grep -Fq 'bitnami/redis-sentinel@sha256:ae75dd69c192a632bdeb21baa6721080be5b12347e52add922036398b47631da' "$TMP_DIR/sentinel-full.yaml"
+if grep -Eq 'image:.*:latest([@"[:space:]]|$)' "$TMP_DIR/sentinel-full.yaml"; then
+  fail "Sentinel workloads must not use mutable latest image tags"
+fi
+
+render external-sentinel "$CHART_DIR" \
+  --set postgresql.enabled=false \
+  --set externalDatabase.host=db.example.com \
+  --set redis.enabled=false \
+  --set externalRedis.username=redis-user \
+  --set externalRedis.password=redis-password \
+  --set externalRedis.sentinel.enabled=true \
+  --set externalRedis.sentinel.username=sentinel-user \
+  --set externalRedis.sentinel.password=sentinel-password \
+  --set-json 'externalRedis.sentinel.nodes=["sentinel-a:26379","sentinel-b:26379"]' \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/external-sentinel.yaml"
+grep -Fq 'value: "sentinel-a"' "$TMP_DIR/external-sentinel.yaml"
+grep -Fq 'name: SPRING_DATA_REDIS_PASSWORD' "$TMP_DIR/external-sentinel.yaml"
+grep -Fq 'name: SPRING_DATA_REDIS_SENTINEL_PASSWORD' "$TMP_DIR/external-sentinel.yaml"
+grep -A1 -F 'name: SPRING_DATA_REDIS_USERNAME' "$TMP_DIR/external-sentinel.yaml" \
+  | grep -Fq 'value: "redis-user"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_SENTINEL_USERNAME' "$TMP_DIR/external-sentinel.yaml" \
+  | grep -Fq 'value: "sentinel-user"'
+if grep -Fq 'name: SKILLHUB_REDIS_SENTINEL_CHECK_SENTINELS_LIST' "$TMP_DIR/external-sentinel.yaml"; then
+  fail "external Sentinel must preserve Redisson address consistency checks by default"
+fi
+
+render external-cluster "$CHART_DIR" \
+  --set postgresql.enabled=false \
+  --set externalDatabase.host=db.example.com \
+  --set redis.enabled=false \
+  --set existingSecret=skillhub-production-secret \
+  --set externalRedis.username=skillhub \
+  --set externalRedis.tls.enabled=true \
+  --set externalRedis.connectTimeout=5s \
+  --set externalRedis.timeout=3s \
+  --set externalRedis.clientName=skillhub-server \
+  --set externalRedis.cluster.enabled=true \
+  --set externalRedis.cluster.maxRedirects=7 \
+  --set-json 'externalRedis.cluster.nodes=["redis-a.example.com:6379","redis-b.example.com:6380"]' \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/external-cluster.yaml"
+grep -A1 -F 'name: REDIS_HOST' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "redis-a.example.com"'
+grep -A1 -F 'name: REDIS_PORT' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "6379"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_CLUSTER_NODES' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "redis-a.example.com:6379,redis-b.example.com:6380"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_CLUSTER_MAX_REDIRECTS' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "7"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_USERNAME' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "skillhub"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_SSL_ENABLED' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "true"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_CONNECT_TIMEOUT' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "5s"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_TIMEOUT' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "3s"'
+grep -A1 -F 'name: SPRING_DATA_REDIS_CLIENT_NAME' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'value: "skillhub-server"'
+grep -A4 -F 'name: SPRING_DATA_REDIS_PASSWORD' "$TMP_DIR/external-cluster.yaml" \
+  | grep -Fq 'name: skillhub-production-secret'
+if grep -Fq 'name: SPRING_DATA_REDIS_HOST' "$TMP_DIR/external-cluster.yaml"; then
+  fail "external Redis Cluster must not render standalone host configuration"
+fi
+if grep -Fq 'name: SPRING_DATA_REDIS_SENTINEL_NODES' "$TMP_DIR/external-cluster.yaml"; then
+  fail "external Redis Cluster must not render Sentinel configuration"
+fi
+
+render special "$CHART_DIR" \
+  --set-string 'bootstrapAdmin.displayName=Ops: Admin' \
+  --show-only templates/configmap.yaml >"$TMP_DIR/special.yaml"
+grep -Fq 'bootstrap-admin-display-name: "Ops: Admin"' "$TMP_DIR/special.yaml"
+
+render device "$CHART_DIR" \
+  --set publicBaseUrl=https://skills.example.com \
+  --show-only templates/configmap.yaml >"$TMP_DIR/device.yaml"
+grep -Fq 'device-auth-verification-uri: "https://skills.example.com/device"' "$TMP_DIR/device.yaml"
+
+render device-subpath "$CHART_DIR" \
+  --set publicBaseUrl=https://skills.example.com/portal/ \
+  --show-only templates/configmap.yaml >"$TMP_DIR/device-subpath.yaml"
+grep -Fq 'device-auth-verification-uri: "https://skills.example.com/portal/device"' "$TMP_DIR/device-subpath.yaml"
+
+render device-override "$CHART_DIR" \
+  --set publicBaseUrl=https://skills.example.com \
+  --set-string 'deviceAuthVerificationUri=https://login.example.com/custom/device?source=cli' \
+  --show-only templates/configmap.yaml >"$TMP_DIR/device-override.yaml"
+grep -Fq 'device-auth-verification-uri: "https://login.example.com/custom/device?source=cli"' "$TMP_DIR/device-override.yaml"
+
+render tls "$CHART_DIR" \
+  --set ingress.enabled=true \
+  --set-json 'ingress.tls=[{"hosts":["skills.example.com"],"secretName":"skills-tls"}]' \
+  --show-only templates/configmap.yaml >"$TMP_DIR/tls.yaml"
+grep -Fq 'session-cookie-secure: "true"' "$TMP_DIR/tls.yaml"
+render tls "$CHART_DIR" \
+  --set ingress.enabled=true \
+  --set-json 'ingress.tls=[{"hosts":["skills.example.com"],"secretName":"skills-tls"}]' \
+  --show-only templates/ingress.yaml >"$TMP_DIR/tls-ingress.yaml"
+for server_path in /api /oauth2 /login/oauth2 /.well-known; do
+  grep -Fq -- "- path: $server_path" "$TMP_DIR/tls-ingress.yaml"
+done
+if [[ $(grep -Fc 'name: tls-skillhub-server' "$TMP_DIR/tls-ingress.yaml") -ne 4 ]]; then
+  fail "API and OAuth ingress paths must route directly to the SkillHub server"
+fi
+
+render legacy-ingress "$CHART_DIR" \
+  --set ingress.enabled=true \
+  --set-string ingress.className= \
+  --set-json 'ingress.annotations={"kubernetes.io/ingress.class":"alb","alb.ingress.kubernetes.io/listen-ports":"[{\"HTTPS\":6443}]"}' \
+  --show-only templates/ingress.yaml >"$TMP_DIR/legacy-ingress.yaml"
+grep -Fq 'kubernetes.io/ingress.class: alb' "$TMP_DIR/legacy-ingress.yaml"
+grep -Fq 'alb.ingress.kubernetes.io/listen-ports:' "$TMP_DIR/legacy-ingress.yaml"
+if grep -Fq 'ingressClassName:' "$TMP_DIR/legacy-ingress.yaml"; then
+  fail "empty ingress.className must omit spec.ingressClassName"
+fi
+
+render multi-host-ingress "$CHART_DIR" \
+  --set ingress.enabled=true \
+  --set ingress.certManager.enabled=true \
+  --set-json 'ingress.hosts=[{"host":"skills-a.example.com","paths":[{"path":"/","pathType":"Prefix"}]},{"host":"skills-b.example.com","paths":[{"path":"/portal","pathType":"Prefix"}]}]' \
+  --set-json 'ingress.tls=[{"hosts":["skills-a.example.com","skills-b.example.com"],"secretName":"skills-tls"}]' \
+  --show-only templates/ingress.yaml \
+  --show-only templates/certificate.yaml >"$TMP_DIR/multi-host-ingress.yaml"
+if [[ $(grep -Fc 'skills-a.example.com' "$TMP_DIR/multi-host-ingress.yaml") -ne 3 ]]; then
+  fail "first ingress host must be rendered in rule, TLS and Certificate"
+fi
+if [[ $(grep -Fc 'skills-b.example.com' "$TMP_DIR/multi-host-ingress.yaml") -ne 3 ]]; then
+  fail "second ingress host must be rendered in rule, TLS and Certificate"
+fi
+
+render scanner-off "$CHART_DIR" \
+  --set scanner.enabled=false \
+  --set scanner.autoscaling.enabled=true \
+  --set scanner.podDisruptionBudget.enabled=true >"$TMP_DIR/scanner-off.yaml"
+if awk '
+  $1 == "kind:" { kind=$2 }
+  kind ~ /^(Deployment|Service|HorizontalPodAutoscaler|PodDisruptionBudget)$/ &&
+    $1 == "name:" && $2 == "scanner-off-skillhub-scanner" { found=1 }
+  END { exit found ? 0 : 1 }
+' "$TMP_DIR/scanner-off.yaml"; then
+  fail "disabled scanner rendered workload resources"
+fi
+
+render multi-rwx "$CHART_DIR" \
+  --set server.replicaCount=2 \
+  --set server.storage.accessMode=ReadWriteMany >"$TMP_DIR/multi-rwx.yaml"
+grep -Fq -- '- ReadWriteMany' "$TMP_DIR/multi-rwx.yaml"
+grep -Fq 'type: RollingUpdate' "$TMP_DIR/multi-rwx.yaml"
+
+render s3-rolling "$CHART_DIR" \
+  --set s3.enabled=true \
+  --set s3.bucket=skillhub \
+  --set s3.endpoint=https://s3.example.com \
+  --set s3.accessKey=access-key \
+  --set s3.secretKey=secret-key \
+  --show-only templates/server-deployment.yaml >"$TMP_DIR/s3-rolling.yaml"
+grep -Fq 'type: RollingUpdate' "$TMP_DIR/s3-rolling.yaml"
+
+assert_rejected server-off --set server.enabled=false
+assert_rejected direct-auth-without-provider \
+  --set auth.direct.enabled=true \
+  --set-string auth.direct.provider=
+assert_rejected ingress-without-server-service --set ingress.enabled=true --set server.service.enabled=false
+assert_rejected ingress-without-web-service --set ingress.enabled=true --set web.service.enabled=false
+assert_rejected multi-without-rwx --set server.replicaCount=2
+assert_rejected hpa-without-metrics \
+  --set server.autoscaling.enabled=true \
+  --set server.autoscaling.targetCPUUtilizationPercentage=0 \
+  --set server.autoscaling.targetMemoryUtilizationPercentage=0
+assert_rejected old-postgres-env --set-json 'postgresql.primary.extraEnv=[{"name":"X","value":"Y"}]'
+assert_rejected old-sentinel-password --set redis.auth.sentinelPassword=unused
+assert_rejected old-sentinel-nodes --set redis.sentinel.nodes=unused
+assert_rejected old-sentinel-service-switch --set redis.sentinel.service.enabled=false
+assert_rejected internal-and-external-cluster \
+  --set externalRedis.cluster.enabled=true \
+  --set-json 'externalRedis.cluster.nodes=["redis-a.example.com:6379"]'
+assert_rejected sentinel-and-cluster \
+  --set redis.enabled=false \
+  --set externalRedis.sentinel.enabled=true \
+  --set externalRedis.cluster.enabled=true \
+  --set-json 'externalRedis.sentinel.nodes=["sentinel-a.example.com:26379"]' \
+  --set-json 'externalRedis.cluster.nodes=["redis-a.example.com:6379"]'
+assert_rejected cluster-without-nodes \
+  --set redis.enabled=false \
+  --set externalRedis.cluster.enabled=true
+assert_rejected cluster-invalid-node \
+  --set redis.enabled=false \
+  --set externalRedis.cluster.enabled=true \
+  --set-json 'externalRedis.cluster.nodes=["redis-a.example.com"]'
+assert_rejected cluster-invalid-port \
+  --set redis.enabled=false \
+  --set externalRedis.cluster.enabled=true \
+  --set-json 'externalRedis.cluster.nodes=["redis-a.example.com:65536"]'
+assert_rejected invalid-fullname --set fullnameOverride=INVALID_NAME
+assert_rejected old-ingress-host --set ingress.host=old.example.com
+assert_rejected old-ingress-tls-object --set ingress.tls.enabled=true
+assert_rejected reserved-oauth-ingress-path \
+  --set ingress.enabled=true \
+  --set-json 'ingress.hosts=[{"host":"skills.example.com","paths":[{"path":"/oauth2","pathType":"Prefix"}]}]'
+assert_rejected reserved-oauth-ingress-child-path \
+  --set ingress.enabled=true \
+  --set-json 'ingress.hosts=[{"host":"skills.example.com","paths":[{"path":"/login/oauth2/code/github","pathType":"Prefix"}]}]'
+assert_rejected invalid-s3-endpoint --set s3.endpoint=s3.amazonaws.com
+assert_rejected invalid-s3-public-endpoint --set s3.publicEndpoint=cdn.example.com
+assert_rejected invalid-s3-empty-authority --set-string 's3.endpoint=https://?'
+assert_rejected invalid-s3-whitespace-authority --set-string 's3.publicEndpoint=https:// '
+assert_rejected empty-ingress-hosts --set-json 'ingress.hosts=[]'
+assert_rejected cert-manager-without-tls \
+  --set ingress.enabled=true \
+  --set ingress.certManager.enabled=true \
+  --set-json 'ingress.tls=[]'
+if helm template missing-credentials "$CHART_DIR" >"$TMP_DIR/missing-credentials.yaml" 2>"$TMP_DIR/missing-credentials.err"; then
+  fail "default rendering without stable credentials should have been rejected"
+fi
+
+# Sub-path deployment: base path and API prefix must flow from values into the
+# config map and be injected into the web deployment.
+grep -Fq 'web-base-path: ""' "$TMP_DIR/default.yaml" \
+  || fail "default config map web-base-path must be empty so a fixed-base image is honored"
+
+render subpath "$CHART_DIR" \
+  --set web.basePath=/portal/ \
+  --set web.apiBaseUrl=/portal >"$TMP_DIR/subpath.yaml"
+grep -Fq 'web-base-path: "/portal/"' "$TMP_DIR/subpath.yaml" \
+  || fail "config map must expose the configured web base path"
+grep -Fq 'web-api-base-url: "/portal"' "$TMP_DIR/subpath.yaml" \
+  || fail "config map must expose the configured web API base url"
+grep -Fq 'name: SKILLHUB_WEB_BASE_PATH' "$TMP_DIR/subpath.yaml" \
+  || fail "web deployment must set SKILLHUB_WEB_BASE_PATH"
+grep -Fq 'key: web-base-path' "$TMP_DIR/subpath.yaml" \
+  || fail "web deployment must source SKILLHUB_WEB_BASE_PATH from the config map"
+grep -Fq 'key: web-api-base-url' "$TMP_DIR/subpath.yaml" \
+  || fail "web deployment must source SKILLHUB_WEB_API_BASE_URL from the config map"
+
+# A sub-path base must be consistent with publicBaseUrl and be a normalized path.
+assert_rejected subpath-public-mismatch \
+  --set web.basePath=/portal/ \
+  --set-string publicBaseUrl=https://skills.example.com
+assert_rejected subpath-dot-segment --set web.basePath=/foo/../bar/
+assert_rejected subpath-missing-trailing --set-string web.basePath=/portal
+assert_rejected subpath-api-base-mismatch \
+  --set web.basePath=/portal/ \
+  --set-string web.apiBaseUrl=/other \
+  --set-string publicBaseUrl=https://skills.example.com/portal
+# A base path whose first segment is reserved by the server would shadow the
+# server's own Nginx location and break the app.
+assert_rejected subpath-reserved-api --set-string web.basePath=/api/
+assert_rejected subpath-reserved-assets --set-string web.basePath=/assets/
+assert_rejected subpath-reserved-well-known --set-string web.basePath=/.well-known/
+assert_rejected subpath-reserved-nested --set-string web.basePath=/api/nested/
+assert_rejected subpath-reserved-analytics --set-string web.basePath=/_skillhub-analytics/
+assert_rejected subpath-reserved-analytics-nested --set-string web.basePath=/_skillhub-analytics/nested/
+
+render analytics-default "$CHART_DIR" >"$TMP_DIR/analytics-default.yaml"
+grep -Fq 'name: analytics-default-skillhub-web-analytics' "$TMP_DIR/analytics-default.yaml" \
+  || fail "analytics must render its Web-only ConfigMap"
+grep -Fq '  config: ""' "$TMP_DIR/analytics-default.yaml" || fail "analytics must default off"
+if grep -Eq '^  web-analytics-(config|upstream):' "$TMP_DIR/analytics-default.yaml"; then
+  fail "analytics keys must stay out of the shared ConfigMap hashed by the server"
+fi
+# --set treats {...} as a list, so pass the JSON string through a values file,
+# the same way the operator guide documents it.
+cat >"$TMP_DIR/analytics-values.yaml" <<'VALUES'
+web:
+  analytics:
+    config: '{"enabled":true,"adapter":"umami","consent":"granted","adapterConfig":{"websiteId":"4398de8e-40df-4483-9eea-ed213643525f"}}'
+    upstream: https://stats.example.com
+VALUES
+render analytics-default "$CHART_DIR" -f "$TMP_DIR/analytics-values.yaml" >"$TMP_DIR/analytics-enabled.yaml"
+for key in SKILLHUB_WEB_ANALYTICS_CONFIG SKILLHUB_WEB_ANALYTICS_UPSTREAM; do
+  grep -A4 -F "name: $key" "$TMP_DIR/analytics-enabled.yaml" \
+    | grep -Fq 'name: analytics-default-skillhub-web-analytics' \
+    || fail "$key must come from the Web-only analytics ConfigMap"
+done
+grep -Fq '  upstream: "https://stats.example.com"' "$TMP_DIR/analytics-enabled.yaml" || fail "missing analytics origin"
+
+# Pod template annotations: "<deployment-name> <annotation> <value>" per line.
+pod_checksums() {
+  awk '
+    $1 == "kind:" { kind=$2; name="" }
+    kind == "Deployment" && name == "" && $1 == "name:" { name=$2 }
+    kind == "Deployment" && $1 ~ /^checksum\// { print name, $1, $2 }
+  ' "$1" | sort
+}
+checksum_of() {
+  pod_checksums "$1" | awk -v d="$2" -v k="$3" '$1 == d && $2 == k { print $3 }'
+}
+assert_checksum() {
+  local before=$1 after=$2 deployment=$3 annotation=$4 expect=$5
+  local a b
+  a=$(checksum_of "$before" "$deployment" "$annotation")
+  b=$(checksum_of "$after" "$deployment" "$annotation")
+  [[ -n $a && -n $b ]] || fail "$deployment must render $annotation"
+  if [[ $expect == same && $a != "$b" ]]; then
+    fail "$deployment $annotation must not change"
+  elif [[ $expect == changed && $a == "$b" ]]; then
+    fail "$deployment $annotation must change"
+  fi
+}
+web=analytics-default-skillhub-web
+server=analytics-default-skillhub-server
+# Changing only analytics must roll Web and leave every other workload alone.
+assert_checksum "$TMP_DIR/analytics-default.yaml" "$TMP_DIR/analytics-enabled.yaml" "$web" checksum/config: changed
+diff <(pod_checksums "$TMP_DIR/analytics-default.yaml" | grep -v "^$web ") \
+  <(pod_checksums "$TMP_DIR/analytics-enabled.yaml" | grep -v "^$web ") >/dev/null \
+  || fail "analytics-only changes must not replace server or other pods"
+# A second adapter uses the same opaque JSON/ConfigMap contract, via a values file.
+render analytics-default "$CHART_DIR" -f "$CHART_DIR/tests/datafinder-values.yaml" >"$TMP_DIR/analytics-datafinder.yaml"
+grep -Fq 'appId\":123456' "$TMP_DIR/analytics-datafinder.yaml" || fail "DataFinder public config missing"
+grep -Fq '  upstream: "https://collector.example.com"' "$TMP_DIR/analytics-datafinder.yaml" || fail "DataFinder origin missing"
+assert_checksum "$TMP_DIR/analytics-default.yaml" "$TMP_DIR/analytics-datafinder.yaml" "$web" checksum/config: changed
+diff <(pod_checksums "$TMP_DIR/analytics-default.yaml" | grep -v "^$web ") \
+  <(pod_checksums "$TMP_DIR/analytics-datafinder.yaml" | grep -v "^$web ") >/dev/null \
+  || fail "DataFinder must not roll non-Web pods"
+
+# Backend configuration still rolls the server.
+render analytics-default "$CHART_DIR" -f "$TMP_DIR/analytics-values.yaml" \
+  --set-string bootstrapAdmin.displayName=Changed >"$TMP_DIR/analytics-server-change.yaml"
+assert_checksum "$TMP_DIR/analytics-enabled.yaml" "$TMP_DIR/analytics-server-change.yaml" "$server" checksum/config: changed
+
+# publicBaseUrl is concatenated with paths (/cli/auth, /.well-known/clawhub.json),
+# so a query or fragment corrupts the generated URLs. Reject it independently of
+# web.basePath (these cases use the default root deployment).
+assert_rejected public-base-url-query --set-string publicBaseUrl=https://skills.example.com/skillhub?ref=1
+assert_rejected public-base-url-fragment --set-string publicBaseUrl=https://skills.example.com#frag
+assert_rejected public-base-url-no-host --set-string publicBaseUrl=https://
+
+# Example values must reuse the external application Secret and existing S3 config keys.
+helm template storage-contract "$CHART_DIR" -f "$TEST_VALUES" \
+  -f "$CHART_DIR/../../deploy/storage/helm-values.example.yaml" \
+  >"$TMP_DIR/storage-example.yaml"
+grep -Fq 'skillhub-storage-provider: "s3"' "$TMP_DIR/storage-example.yaml" \
+  || fail "Storage example must select the existing S3 provider"
+grep -Fq 's3-force-path-style: "true"' "$TMP_DIR/storage-example.yaml" \
+  || fail "Storage example must use path style"
+grep -Fq 'name: skillhub-app-secrets' "$TMP_DIR/storage-example.yaml" \
+  || fail "Storage example must reference the external application Secret"
+grep -Fq 'key: skillhub-storage-s3-access-key' "$TMP_DIR/storage-example.yaml" \
+  || fail "Storage access key Secret mapping changed"
+grep -Fq 'key: skillhub-storage-s3-secret-key' "$TMP_DIR/storage-example.yaml" \
+  || fail "Storage secret key Secret mapping changed"
+
+# Generated application secrets must be resolved once per render, including
+# independent Server/GitHub Sync checksum includes and the actual Secret output.
+python3 - "$CHART_DIR" "$TMP_DIR" <<'PY_SECRET_RENDER'
+import base64
+import hashlib
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+
+chart = Path(sys.argv[2]) / 'secret-render-chart'
+shutil.copytree(Path(sys.argv[1]), chart)
+(chart / 'templates/secret-render-probe.yaml').write_text('''apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secret-render-probe
+data:
+  first: {{ include (print $.Template.BasePath "/secret.yaml") . | b64enc | quote }}
+  second: {{ include (print $.Template.BasePath "/secret.yaml") . | b64enc | quote }}
+  values-cache: {{ hasKey .Values "_skillhubAppSecretManifest" | quote }}
+''')
+base = ['helm', 'template', 'secret-render', str(chart), '-f',
+        str(chart / 'tests/test-values.yaml'), '--set', 'githubSync.enabled=true',
+        '--set-string', 'secrets.githubSyncServiceToken=synthetic-github-sync-token-at-least-32-characters']
+
+def render(*args):
+    output = subprocess.check_output([*base, *args], text=True)
+    parts = re.split(r'^---\s*$', output, flags=re.M)
+    def resource(name):
+        return next(part for part in parts if '# Source: skillhub/templates/' + name in part)
+    probe = resource('secret-render-probe.yaml')
+    manifests = [base64.b64decode(re.search(r'^  ' + key + r': "([A-Za-z0-9+/=]*)"$', probe, re.M).group(1))
+                 for key in ['first', 'second']]
+    assert manifests[0] == manifests[1], 'Secret includes must share one generated result'
+    assert '  values-cache: "false"' in probe, 'Render cache must not mutate user Values'
+    digest = hashlib.sha256(manifests[0]).hexdigest()
+    for name in ['server-deployment.yaml', 'github-sync-deployment.yaml']:
+        checksum = re.search(r'checksum/secret: ([0-9a-f]+)', resource(name)).group(1)
+        assert checksum == digest, name + ' checksum must describe the emitted Secret'
+    if manifests[0].strip():
+        emitted = resource('secret.yaml').split('# Source: skillhub/templates/secret.yaml', 1)[1].strip()
+        assert emitted == manifests[0].decode().strip(), 'Actual Secret and checksum input must match'
+    else:
+        assert not any('# Source: skillhub/templates/secret.yaml' in part for part in parts), 'existingSecret must not emit an application Secret'
+    return digest, manifests[0]
+
+generated_args = ['--set', 'secrets.allowAutoGenerated=true',
+                  '--set-string', 'secrets.bootstrapAdminPassword=',
+                  '--set-string', 'secrets.downloadAnonCookieSecret=',
+                  '--set-string', 'bootstrapAdmin.password=']
+generated, manifest = render(*generated_args)
+assert re.search(rb'bootstrap-admin-password: "[A-Za-z0-9]{16}"', manifest), 'Bootstrap password must be generated'
+assert re.search(rb'skillhub-download-anon-cookie-secret: "[A-Za-z0-9]{48}"', manifest), 'Download signing secret must be generated'
+assert render(*generated_args)[0] != generated, 'A fresh offline render must not reuse another render context'
+fixed, _ = render()
+for key in ['bootstrapAdminPassword', 'downloadAnonCookieSecret']:
+    assert render('--set-string', 'secrets.' + key + '=rotated-synthetic-secret-at-least-48-characters-long')[0] != fixed, 'Explicit secret rotation must change checksums'
+analytics = chart / 'analytics-values.yaml'
+analytics.write_text(json.dumps({'web': {'analytics': {
+    'config': json.dumps({'enabled': True, 'adapter': 'umami', 'consent': 'granted',
+                         'adapterConfig': {'websiteId': '4398de8e-40df-4483-9eea-ed213643525f'}}),
+    'upstream': 'http://umami.stats.svc.cluster.local:3000'}}}))
+assert render('-f', str(analytics))[0] == fixed, 'Analytics-only changes must preserve explicit-secret checksums'
+assert not render('--set-string', 'existingSecret=external-application-secret')[1].strip(), 'External Secret path must not generate credentials'
+print('Helm application Secret render/rotation contracts passed')
+PY_SECRET_RENDER
+# Notification policy is opt-in; credentials are supplied with existing extraEnv Secret refs.
+grep -Fq 'notification-email-enabled: "false"' "$TMP_DIR/default.yaml" \
+  || fail "Notification email must stay off by default"
+render notification-email "$CHART_DIR" \
+  --set notificationEmail.enabled=true \
+  --set notificationEmail.digestWindowMinutes=60 \
+  --set notificationEmail.publicBaseUrl=https://skills.example.com/portal \
+  --set notificationEmail.fromAddress=notifications@example.com \
+  >"$TMP_DIR/notification-email.yaml"
+grep -Fq 'notification-email-window: "60"' "$TMP_DIR/notification-email.yaml" \
+  || fail "Notification digest window must reach the config map"
+grep -Fq 'notification-email-public-url: "https://skills.example.com/portal"' "$TMP_DIR/notification-email.yaml" \
+  || fail "Notification links must use the configured public URL"
+for key in ENABLED DIGEST_WINDOW_MINUTES PUBLIC_BASE_URL FROM_ADDRESS FROM_NAME; do
+  grep -Fq "name: SKILLHUB_NOTIFICATION_EMAIL_$key" "$TMP_DIR/notification-email.yaml" \
+    || fail "Missing notification email deployment environment: $key"
+done
+assert_rejected email-window-too-short --set notificationEmail.digestWindowMinutes=4
+assert_rejected email-window-too-long --set notificationEmail.digestWindowMinutes=1441
+assert_rejected email-url-query --set-string notificationEmail.publicBaseUrl=https://skills.example.com?ref=1
+assert_rejected email-unknown-config --set notificationEmail.password=invalid
+
+echo "Helm configuration contract tests passed"
+
+# Business Logs and metrics remain opt-in; credentials reference an existing Secret.
+render business-default "$CHART_DIR" --show-only templates/server-deployment.yaml >"$TMP_DIR/business-default.yaml"
+grep -A1 -F 'name: SKILLHUB_ACTUATOR_EXPOSURE_INCLUDE' "$TMP_DIR/business-default.yaml" | grep -Fq 'value: "health,info"'
+grep -A1 -F 'name: SKILLHUB_BUSINESS_LOGS_ENABLED' "$TMP_DIR/business-default.yaml" | grep -Fq 'value: "false"'
+assert_rejected business-no-endpoint --set server.businessLogs.enabled=true
+assert_rejected actuator-wildcard --set-string 'server.actuatorExposureInclude=*'
+cat >"$TMP_DIR/business-values.yaml" <<'BUSINESS_VALUES'
+server:
+  actuatorExposureInclude: health,info,metrics,prometheus
+  businessLogs:
+    enabled: true
+    endpoint: https://receiver.example.com/v1/logs
+    headersSecretRef:
+      name: business-logs-credentials
+      key: headers
+BUSINESS_VALUES
+render business-enabled "$CHART_DIR" -f "$TMP_DIR/business-values.yaml" --show-only templates/server-deployment.yaml >"$TMP_DIR/business-enabled.yaml"
+grep -A1 -F 'name: SKILLHUB_ACTUATOR_EXPOSURE_INCLUDE' "$TMP_DIR/business-enabled.yaml" | grep -Fq 'value: "health,info,metrics,prometheus"'
+grep -A6 -F 'name: SKILLHUB_BUSINESS_LOGS_HEADERS' "$TMP_DIR/business-enabled.yaml" | grep -Fq 'name: "business-logs-credentials"'
+grep -A6 -F 'name: SKILLHUB_BUSINESS_LOGS_HEADERS' "$TMP_DIR/business-enabled.yaml" | grep -Fq 'optional: false'
+echo 'Helm business Logs / metrics contracts passed'

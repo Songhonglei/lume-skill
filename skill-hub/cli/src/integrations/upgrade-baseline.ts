@@ -1,0 +1,93 @@
+import { assertChangeTreeBudget } from './change-tree-budget'
+import { createHash } from 'node:crypto'
+import { snapshotSkillDirectory } from '../services/skill-fingerprint'
+import { captureInstallInventory } from '../services/inventory-cas'
+import { realpath } from 'node:fs/promises'
+import { isAbsolute, join, resolve } from 'node:path'
+import { isDeepStrictEqual } from 'node:util'
+import { canonicalizeExistingPath, pathsOverlap } from '../platform/paths'
+import { readInstalledSkillMetadata, sameInstalledSkillSource } from '../services/installed-skill-metadata'
+import { snapshotInstalledSkillDirectory } from '../services/installed-skill-snapshot'
+import { targetInstalledBy } from '../stores/inventory-store'
+import type { InventoryItem, InventoryStore } from '../stores/inventory-store'
+import type { InstalledProjectionTarget, UpgradeBaseline } from './native-contract'
+export type { UpgradeBaseline } from './native-contract'
+import { assertOwnedRegularTree } from './recovery-files'
+
+/** Read-only preparation. Execution must compare this complete snapshot again under mutation locks. */
+export async function inspectUpgradeBaseline(store: Pick<InventoryStore, 'read'>,
+  selected: Pick<InventoryItem, 'registry' | 'namespace' | 'slug'> & { version: string },
+  approvedRoots: readonly InstalledProjectionTarget[], allowLocalChanges = false): Promise<UpgradeBaseline> {
+  const inventory = structuredClone(await store.read())
+  const matches = inventory.items.filter(item => sameInstalledSkillSource(item, selected))
+  const whole = matches[0]
+  const item = whole && { ...whole, targets: whole.targets.filter(target => approvedRoots.some(root => root.root === target.rootDir)) }
+  if (matches.length !== 1 || !item || item.targets.some(target => target.version !== selected.version) || !item.targets.length
+    || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(item.slug)) return { status: 'blocked', reason: 'record-changed' }
+  const targets: Extract<UpgradeBaseline, { status: 'ready' }>['targets'] = []
+  const paths = new Set<string>()
+  // Verify only the explicitly selected positions before reading their content.
+  for (const target of item.targets) {
+    const roots = approvedRoots.filter(root => isAbsolute(root.root) && root.root === resolve(root.root)
+      && root.root === target.rootDir)
+    const root = roots[0]
+    if (target.agent !== 'dsh' || !root || !isAbsolute(target.installDir)
+      || target.installDir !== join(root.root, item.slug)) return { status: 'blocked', reason: 'target-outside-context' }
+    if (roots.length !== 1 || paths.has(target.installDir)) return { status: 'blocked', reason: 'target-alias' }
+    const owners = targetInstalledBy(item, target)
+    if (owners.length !== 1 || owners[0] !== 'direct') return { status: 'blocked', reason: 'shared-target' }
+    paths.add(target.installDir)
+  }
+  for (const other of inventory.items) {
+    for (const target of other.targets) {
+      if (other === whole && item.targets.includes(target)) continue
+      const canonical = await canonicalizeExistingPath(target.installDir)
+      if ([...paths].some(path => pathsOverlap(path, canonical))) return { status: 'blocked', reason: 'shared-target' }
+    }
+  }
+  for (const suite of inventory.suites ?? []) {
+    for (const member of suite.members) {
+      for (const path of member.installDirs) {
+        const canonical = await canonicalizeExistingPath(path)
+        if ([...paths].some(selected => pathsOverlap(selected, canonical))) return { status: 'blocked', reason: 'shared-target' }
+      }
+    }
+  }
+  for (const target of item.targets) {
+    try {
+      if (await realpath(target.rootDir) !== target.rootDir || await realpath(target.installDir) !== target.installDir) {
+        return { status: 'blocked', reason: 'target-alias' }
+      }
+      if (allowLocalChanges) await assertChangeTreeBudget(target.installDir)
+      await assertOwnedRegularTree(target.installDir)
+      const read = await readInstalledSkillMetadata(target.installDir)
+      if (read.status !== 'valid') return { status: 'blocked', reason: 'metadata-invalid' }
+      const metadata = read.metadata
+      if (!metadata.files || !target.fingerprint || !sameInstalledSkillSource(metadata, item)
+        || metadata.version !== target.version || metadata.fingerprint !== target.fingerprint
+        || metadata.agent !== 'dsh' || metadata.installedAt !== target.installedAt) {
+        return { status: 'blocked', reason: 'metadata-invalid' }
+      }
+      const original = createHash('sha256')
+      for (const path of Object.keys(metadata.files).sort()) original.update(`${path}:${metadata.files[path]}\n`, 'utf8')
+      if (`sha256:${original.digest('hex')}` !== target.fingerprint) return { status: 'blocked', reason: 'metadata-invalid' }
+      let snapshot
+      if (allowLocalChanges) {
+        snapshot = await snapshotSkillDirectory(target.installDir)
+        if (target.installationState === 'disabled') {
+          if ('SKILL.md' in snapshot.files || 'SKILL.md.disabled' in metadata.files) return { status: 'blocked', reason: 'entry-conflict' }
+          if (snapshot.files['SKILL.md.disabled']) snapshot.files['SKILL.md'] = snapshot.files['SKILL.md.disabled']!
+          delete snapshot.files['SKILL.md.disabled']
+        } else if ('SKILL.md.disabled' in snapshot.files && !('SKILL.md.disabled' in metadata.files)) return { status: 'blocked', reason: 'entry-conflict' }
+      } else snapshot = await snapshotInstalledSkillDirectory(item, target)
+      if (!allowLocalChanges && (snapshot.fingerprint !== target.fingerprint || !isDeepStrictEqual(snapshot.files, metadata.files))) {
+        return { status: 'blocked', reason: 'local-changes' }
+      }
+      targets.push({ scope: approvedRoots.find(root => root.root === target.rootDir)!.scope,
+        root: target.rootDir, path: target.installDir, metadata, files: snapshot.files })
+    } catch { return { status: 'blocked', reason: 'target-unavailable' } }
+  }
+  if (await captureInstallInventory(await store.read(), selected, paths)
+    !== await captureInstallInventory(inventory, selected, paths)) return { status: 'blocked', reason: 'record-changed' }
+  return { status: 'ready', inventoryItem: item, targets }
+}
