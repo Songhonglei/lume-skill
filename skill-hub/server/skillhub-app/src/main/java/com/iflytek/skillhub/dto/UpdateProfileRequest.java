@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.dto;
 
+import com.iflytek.skillhub.domain.user.ProfileAvatar;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -16,18 +17,22 @@ import jakarta.validation.constraints.Size;
  * </ul>
  *
  * @param displayName new display name (nullable — omit to leave unchanged)
+ * @param avatarId an ID from the built-in avatar collection
  */
 public record UpdateProfileRequest(
         @Size(min = 2, max = 32, message = "error.profile.displayName.length")
         @Pattern(regexp = "^[\\u4e00-\\u9fa5a-zA-Z0-9_ -]+$",
                  message = "error.profile.displayName.pattern")
-        String displayName
+        String displayName,
+        @Pattern(
+                regexp = ProfileAvatar.ID_PATTERN,
+                message = "error.profile.avatar.invalid")
+        String avatarId
 ) {
     /**
      * Returns true if at least one field is provided.
-     * Future fields (avatarUrl, etc.) should be added to this check.
      */
     public boolean hasChanges() {
-        return displayName != null;
+        return displayName != null || avatarId != null;
     }
 }

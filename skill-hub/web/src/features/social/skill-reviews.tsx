@@ -1,3 +1,4 @@
+import { avatarAssetUrl } from '@/shared/lib/avatar-asset-url'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader2, MessageSquare, ShieldAlert, Star } from 'lucide-react'
@@ -178,7 +179,7 @@ function ReviewRow({ skillId, review, canModerate }: {
     <div className={cn('space-y-3 py-5 first:pt-0 last:pb-0', hidden && 'opacity-60')}>
       <div className="flex items-start gap-3">
         {review.avatarUrl ? (
-          <img src={review.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+          <img src={avatarAssetUrl(review.avatarUrl)} alt="" className="h-9 w-9 rounded-full object-cover" />
         ) : (
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
             {initials}

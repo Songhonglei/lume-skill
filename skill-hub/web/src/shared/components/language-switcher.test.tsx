@@ -11,7 +11,7 @@ const mockI18n = vi.hoisted(() => ({
 }))
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ i18n: mockI18n }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: mockI18n }),
 }))
 
 describe('LanguageSwitcher', () => {
@@ -49,13 +49,14 @@ describe('LanguageSwitcher', () => {
     expect(screen.getByRole('button', { name: /English/i })).toBeTruthy()
   })
 
-  it('selects Chinese and closes the menu', () => {
+  it('switches directly from English to Chinese', () => {
     mockI18n.language = 'en'
     mockI18n.resolvedLanguage = 'en'
-    render(<LanguageSwitcher />)
-    fireEvent.click(screen.getByRole('button', { name: /English/i }))
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['中文', 'English'])
-    fireEvent.click(screen.getByRole('menuitem', { name: '中文' }))
+    const view = render(<LanguageSwitcher />)
+    const button = screen.getByRole('button', { name: /English/i })
+    expect(button.textContent).toBe('EN')
+    fireEvent.click(button)
+    view.rerender(<LanguageSwitcher />)
     expect(mockI18n.changeLanguage).toHaveBeenCalledWith('zh')
     expect(screen.getByRole('button', { name: /中文/ })).toBeTruthy()
     expect(screen.queryByRole('menu')).toBeNull()
@@ -71,10 +72,11 @@ describe('LanguageSwitcher', () => {
     mockI18n.language = 'zh'
     mockI18n.resolvedLanguage = 'zh'
 
-    render(<LanguageSwitcher />)
-
-    fireEvent.click(screen.getByRole('button', { name: /中文/i }))
-    fireEvent.click(screen.getByRole('menuitem', { name: /English/i }))
+    const view = render(<LanguageSwitcher />)
+    const button = screen.getByRole('button', { name: /中文/i })
+    expect(button.textContent).toBe('中')
+    fireEvent.click(button)
+    view.rerender(<LanguageSwitcher />)
 
     expect(mockI18n.changeLanguage).toHaveBeenCalledWith('en')
     expect(screen.getByRole('button', { name: /English/i })).toBeTruthy()

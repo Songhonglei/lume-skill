@@ -7,6 +7,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   const { t } = useTranslation()
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
+  const Icon = isDark ? Moon : Sun
   const label = t(isDark ? 'theme.switchToLight' : 'theme.switchToDark')
 
   return (
@@ -18,10 +19,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-checked={isDark}
       title={label}
       onClick={toggleTheme}
-      className={cn('luma-header-control luma-theme-toggle', className)}
+      className={cn('luma-header-icon inline-grid', className)}
     >
-      <span data-selected={!isDark} aria-hidden="true"><Sun /></span>
-      <span data-selected={isDark} aria-hidden="true"><Moon /></span>
+      <Icon aria-hidden="true" className="h-4 w-4" />
     </button>
   )
 }

@@ -128,6 +128,7 @@ export function Layout() {
                 <Link data-analytics-id={item.analyticsId}
                   key={item.to}
                   to={item.to}
+                  activeOptions={{ exact: true }}
                   aria-current={active ? 'page' : undefined}
                   className="luma-nav-link"
                 >
@@ -138,12 +139,12 @@ export function Layout() {
           </nav>
         ) : null}
 
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0" style={{ color: 'hsl(var(--text-secondary))' }}>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" style={{ color: 'hsl(var(--text-secondary))' }}>
           {/* Hamburger — visible below xl */}
           {!isAuthEntryRoute ? (
             <button data-analytics-id="navigation.menu.toggle"
               type="button"
-              className="xl:hidden luma-header-control inline-flex items-center justify-center px-2"
+              className="luma-header-icon inline-grid xl:hidden"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-expanded={mobileMenuOpen}
               aria-label={t(mobileMenuOpen ? 'layout.closeNavigation' : 'layout.openNavigation')}
@@ -179,6 +180,7 @@ export function Layout() {
                 <Link data-analytics-id={item.analyticsId}
                   key={item.to}
                   to={item.to}
+                  activeOptions={{ exact: true }}
                   className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}

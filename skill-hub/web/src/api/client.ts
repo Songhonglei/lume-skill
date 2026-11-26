@@ -1961,7 +1961,7 @@ export const profileApi = {
   }> {
     return fetchJson('/api/v1/user/profile')
   },
-  async updateProfile(request: Record<string, string>): Promise<{
+  async updateProfile(request: components['schemas']['UpdateProfileRequest']): Promise<{
     status: string
     appliedFields?: Record<string, string>
     pendingFields?: Record<string, string>

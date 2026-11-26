@@ -1,4 +1,4 @@
-export const DASHBOARD_PAGE_TITLE_CLASS_NAME = 'break-words text-[27px] font-medium leading-9 tracking-[-0.8px]'
+export const DASHBOARD_PAGE_TITLE_CLASS_NAME = 'min-w-0 break-words text-2xl font-semibold leading-8 tracking-tight'
 
 interface DashboardPageHeaderProps {
   title: string

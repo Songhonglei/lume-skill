@@ -28,7 +28,7 @@
     "githubSkills": "Open-source Skills",
     "skillDetail": "Skill Detail",
     "explore": "Explore Skills",
-    "dashboard": "My Console",
+    "dashboard": "Console",
     "mySkills": "My Skills",
     "mySuites": "My Suites",
     "publish": "Publish",
@@ -598,11 +598,11 @@
     "goToLogin": "Go to Login"
   },
   "dashboard": {
-    "title": "My Console",
+    "title": "Console",
     "subtitle": "Manage your skills, account, and preferences",
     "overview": "Overview",
-    "backToDashboard": "Back to My Console",
-    "navigation": "My Console",
+    "backToDashboard": "Back to Console",
+    "navigation": "Console",
     "userInfo": "Account Information",
     "userInfoDesc": "Basic account details and platform roles",
     "loginVia": "Logged in via {{provider}}",
@@ -1437,7 +1437,7 @@
   },
   "reviewProgress": {
     "systemAutomaticDecision": "Approved automatically by the system after a safe scan",
-    "title": "My Review Progress",
+    "title": "My Reviews",
     "subtitle": "Track the current decision, reviewer feedback, and every resubmission of your skills and suites",
     "searchLabel": "Search skills, suites, or namespaces",
     "searchPlaceholder": "Search skill, suite, or namespace",
@@ -1744,6 +1744,36 @@
     "nextPage": "Next"
   },
   "profile": {
+    "avatar": {
+      "title": "Avatar",
+      "choose": "Choose avatar",
+      "description": "Your saved avatar appears when you sign in on other devices.",
+      "animals": "Animals",
+      "plants": "Plants",
+      "error": "Could not save the avatar. Try again.",
+      "names": {
+        "fox": "Fox",
+        "rabbit": "Rabbit",
+        "cat": "Cat",
+        "bear": "Bear",
+        "panda": "Panda",
+        "owl": "Owl",
+        "koi": "Koi",
+        "deer": "Deer",
+        "bee": "Bee",
+        "turtle": "Turtle",
+        "octopus": "Octopus",
+        "hedgehog": "Hedgehog",
+        "fern": "Fern",
+        "ginkgo": "Ginkgo",
+        "cactus": "Cactus",
+        "bamboo": "Bamboo",
+        "lotus": "Lotus",
+        "mushroom": "Mushroom",
+        "sprout": "Sprout",
+        "sunflower": "Sunflower"
+      }
+    },
     "title": "Profile",
     "subtitle": "Manage your display name and personal information.",
     "displayName": "Display Name",
@@ -2398,6 +2428,8 @@
     }
   },
   "layout": {
+    "switchToEnglish": "Switch to English",
+    "switchToChinese": "Switch to Chinese",
     "openNavigation": "Open navigation menu",
     "closeNavigation": "Close navigation menu",
     "footerDescription": "Skill registry, providing efficient skill management and distribution for developers."
@@ -2685,14 +2717,14 @@
     "menu": {
       "settings": "Settings",
       "adminSettings": "Administration",
-      "dashboard": "My Console",
+      "dashboard": "Console",
       "mySkills": "My Skills",
       "mySuites": "My Suites",
       "myNamespaces": "My Namespaces",
       "governance": "Governance Center",
       "stars": "Starred",
       "subscriptions": "My Subscriptions",
-      "reviewProgress": "My Review Progress",
+      "reviewProgress": "My Reviews",
       "reviews": "Review center",
       "promotions": "Promotion Management",
       "reports": "Report Management",

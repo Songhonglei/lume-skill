@@ -25,11 +25,11 @@ SKILLHUB_PUBLIC_BASE_URL=http://127.0.0.1:18080
 ```
 
 ```sh
-docker compose --env-file .env.release -f compose.release.yml -f compose.luma.yml build web
+docker compose --env-file .env.release -f compose.release.yml -f compose.luma.yml build server web
 docker compose --env-file .env.release -f compose.release.yml -f compose.luma.yml up -d --wait
 ```
 
-入口为 [http://127.0.0.1:18080](http://127.0.0.1:18080)。升级正在运行的 v0.2.28 实例时，以原 Compose 项目名执行构建，再在 `up` 后加 `--no-deps web`，只替换 Web。数据库、数据卷及已留存的 Skill 包沿用原实例。回退时只用原 `compose.release.yml` 更新 Web 服务。
+入口为 [http://127.0.0.1:18080](http://127.0.0.1:18080)。升级正在运行的 v0.2.28 实例时沿用原 Compose 项目名和配置。本版的账号内置头像需要同时更新 Server 和 Web。数据库、数据卷及已留存的 Skill 包沿用原实例。回退时只用原 `compose.release.yml` 更新 Server 和 Web。
 
 ## CLI
 

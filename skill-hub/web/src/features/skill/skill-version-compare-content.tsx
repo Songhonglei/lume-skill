@@ -238,7 +238,7 @@ export function SkillVersionCompareContent({ namespace, slug, from = '', to = ''
         </nav>
       </aside>
 
-      <main className="min-w-0 flex-1 space-y-6">
+      <div className="min-w-0 flex-1 space-y-6">
         {filteredFiles.length > 0 ? (
           filteredFiles.map((file) => (
             <section key={file.path} id={toDiffSectionId(file.path)} className="rounded-xl border border-border/60 p-4">
@@ -290,7 +290,7 @@ export function SkillVersionCompareContent({ namespace, slug, from = '', to = ''
             {t('skillCompare.noFilesFound')}
           </div>
         )}
-      </main>
+      </div>
     </div>
   )
 }

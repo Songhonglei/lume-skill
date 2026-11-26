@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -34,7 +35,7 @@ export function SuitesPage() {
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('suite.listTitle')}</h1>
+          <DashboardPageHeader title={t('suite.listTitle')} />
         </div>
         <Button data-analytics-id="suite.create.open" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>
       </div>

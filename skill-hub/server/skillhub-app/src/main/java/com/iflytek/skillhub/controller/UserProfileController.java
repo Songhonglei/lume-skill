@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.session.PlatformSessionService;
+import com.iflytek.skillhub.domain.user.ProfileAvatar;
 import com.iflytek.skillhub.domain.user.ProfileChangeRequest;
 import com.iflytek.skillhub.domain.user.ProfileChangeRequestRepository;
 import com.iflytek.skillhub.domain.user.ProfileChangeStatus;
@@ -143,6 +144,10 @@ public class UserProfileController extends BaseApiController {
             changes.put("displayName", displayName);
         }
 
+        if (request.avatarId() != null) {
+            changes.put("avatarUrl", ProfileAvatar.path(request.avatarId()));
+        }
+
         // Delegate to domain service
         UpdateProfileResult result = userProfileService.updateProfile(
                 principal.userId(),
@@ -155,7 +160,7 @@ public class UserProfileController extends BaseApiController {
         // Refresh session if changes were applied immediately
         var response = switch (result) {
             case UpdateProfileResult.Applied() -> {
-                // Rebuild principal with updated displayName and refresh session
+                // Rebuild the session principal from the applied fields
                 refreshSession(principal, authentication, changes, httpRequest);
                 yield new UpdateProfileResponse(
                         ProfileUpdateStatus.APPLIED,
