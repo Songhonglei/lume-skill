@@ -202,12 +202,13 @@ test.describe('Auth Entry', () => {
       await page.screenshot({ path: testInfo.outputPath(`register-${viewport.width}-dark.png`) })
     }
 
+    await page.goto('/login')
     await page.getByRole('button', { name: 'English' }).click()
+    await expect(page.getByRole('menuitem')).toHaveText(['中文', 'English'])
     await page.getByRole('menuitem', { name: '中文' }).click()
-    await expect(page.getByText(/让技能\s*连接团队/)).toBeVisible()
-    await page.getByRole('button', { name: '中文' }).click()
-    await page.getByRole('menuitem', { name: 'Русский' }).click()
-    await expect(page.getByText(/Навыки\s*объединяют\s*команду/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: '登录 Luma Skill Hub' })).toBeVisible()
+    await page.reload()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN')
   })
 
   test('keeps configured session bootstrap available in the organization view', async ({ page }) => {
