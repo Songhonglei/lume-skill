@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/web/github-repositories")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubRepositoryCatalogController extends BaseApiController {
     private final GithubRepositoryCatalogQueryRepository catalog;
 

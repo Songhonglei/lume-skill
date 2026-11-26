@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping({"/api/v1/reviews/sync/groups", "/api/web/reviews/sync/groups"})
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubReviewGroupController extends BaseApiController {
     private final GithubReviewGroupAppService groups;
     public GithubReviewGroupController(ApiResponseFactory responses, GithubReviewGroupAppService groups) {

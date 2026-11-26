@@ -12,6 +12,7 @@ export interface PublishDraft {
   shortTouched: boolean
   overviewTouched: boolean
   hadPackage: boolean
+  externalSourceUrl?: string
 }
 
 export function readPublishDraft(key: string): PublishDraft | undefined {

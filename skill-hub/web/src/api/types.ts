@@ -696,18 +696,6 @@ export interface GithubSyncReviewSource {
   }
 }
 
-export type GithubSyncReviewQueueItem = Omit<components['schemas']['GithubSyncReviewQueueItemResponse'],
-  'review' | 'ingestionId' | 'runId' | 'repositoryId' | 'skillPath' | 'commitSha'> & {
-  review: ReviewTask
-  ingestionId: string
-  runId: string
-  repositoryId: number
-  ownerLogin?: string | null
-  repositoryName?: string | null
-  skillPath: string
-  commitSha: string
-}
-
 export interface ReviewProgress extends Pick<components['schemas']['ReviewProgressResponse'],
   'subjectType' | 'subjectId' | 'subjectVersionId' | 'subjectSlug'> {
   latestReviewTaskId: number
@@ -918,5 +906,3 @@ export type BatchReviewRequest = components['schemas']['BatchReviewRequest']
 export type BatchReviewResponse = components['schemas']['BatchReviewResponse']
 
 /** Web review read models generated from the running Spring application contract. */
-export type GithubReviewGroup = RequiredGenerated<components['schemas']['GithubReviewGroupResponse']>
-export type GithubReviewGroupMember = Omit<RequiredGenerated<components['schemas']['GithubReviewGroupMemberResponse']>, 'review'> & { review: ReviewTask }

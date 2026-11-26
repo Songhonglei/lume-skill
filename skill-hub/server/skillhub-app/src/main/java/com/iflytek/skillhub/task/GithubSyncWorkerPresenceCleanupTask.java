@@ -10,6 +10,7 @@ import java.time.Instant;
 
 /** Discard expired process diagnostics without touching durable task progress or legacy contact. */
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncWorkerPresenceCleanupTask {
     private static final int BATCH_SIZE = 500;
     private final GithubSyncWorkerPresenceRepository presence;

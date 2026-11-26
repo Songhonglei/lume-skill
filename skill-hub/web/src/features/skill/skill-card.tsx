@@ -81,10 +81,10 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
                   name={`@${skill.namespace}`}
                   title={`@${skill.namespace}`}
                 />
-                {skill.source === 'github' || skill.source === 'platform' ? (
+                {skill.source ? (
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    {skill.source === 'github' ? <GitBranch aria-hidden="true" className="h-3 w-3" /> : null}
-                    {t(`search.source.${skill.source}`)}
+                    {skill.source === 'github' || skill.source === 'external' ? <GitBranch aria-hidden="true" className="h-3 w-3" /> : null}
+                    {t(skill.source === 'platform' ? 'skillSource.local' : 'skillSource.external')}
                   </span>
                 ) : null}
                 {skill.hasVisibleSuites === true ? (
@@ -176,10 +176,10 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
                 <span className="truncate">{formatRelativeTime(skill.updatedAt, i18n.language)}</span>
               </span>
             ) : null}
-            {skill.source === 'github' || skill.source === 'platform' ? (
-              <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-xs" title={t(`search.source.${skill.source}Hint`)}>
-                {skill.source === 'github' ? <GitBranch aria-hidden="true" className="h-3.5 w-3.5" /> : <LayoutGrid aria-hidden="true" className="h-3.5 w-3.5" />}
-                {t(`skillCard.source.${skill.source}`)}
+            {skill.source ? (
+              <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 text-xs">
+                {skill.source === 'github' || skill.source === 'external' ? <GitBranch aria-hidden="true" className="h-3.5 w-3.5" /> : <LayoutGrid aria-hidden="true" className="h-3.5 w-3.5" />}
+                {t(skill.source === 'platform' ? 'skillSource.local' : 'skillSource.external')}
               </span>
             ) : null}
           </div>

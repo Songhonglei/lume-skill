@@ -1873,6 +1873,11 @@
     "emptyTitle": "暂无技能",
     "emptyDescription": "该命名空间下还没有发布任何技能"
   },
+  "skillSource": {
+    "local": "用户上传",
+    "external": "外部",
+    "link": "查看原始来源"
+  },
   "skillDetail": {
     "installCopyFailed": "复制失败。可在安装说明中手动复制命令。",
     "copyInstallCommand": "复制安装命令",
@@ -2782,6 +2787,18 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "external": {
+      "source": "技能来源",
+      "local": "本地上传",
+      "external": "外部链接",
+      "url": "技能链接",
+      "import": "导入并检测",
+      "checking": "正在检测…",
+      "help": "支持 GitHub、ClawHub、腾讯 SkillHub 和 Skills.sh 的公开技能链接。",
+      "failed": "导入失败，请检查链接后重试。",
+      "checked": "技能包格式检查通过",
+      "reimport": "已保留草稿。请重新导入外部链接。"
+    },
     "audience": {
       "public": "可见范围：所有访问者",
       "private": "可见范围：你和有权限的管理员",

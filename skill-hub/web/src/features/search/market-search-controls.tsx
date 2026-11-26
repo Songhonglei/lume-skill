@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import * as Popover from '@radix-ui/react-popover'
-import { Bookmark, Check, ChevronDown, GitBranch, Layers, LayoutGrid, SlidersHorizontal } from 'lucide-react'
+import { Bookmark, Check, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { LabelItem, SkillSource } from '@/api/types'
+import type { LabelItem } from '@/api/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
@@ -15,8 +15,6 @@ interface MarketSearchControlsProps {
   query: string
   onQueryChange: (value: string) => void
   onSearch: (value: string) => void
-  source: SkillSource
-  onSourceChange: (value: SkillSource) => void
   labels: LabelItem[]
   selectedLabel: string
   onLabelChange: (value: string) => void
@@ -91,32 +89,11 @@ export function MarketSearchControls(props: MarketSearchControlsProps) {
         <SearchBar variant="market" analyticsId="search.query.submit" value={props.query} onChange={props.onQueryChange} onSearch={props.onSearch}
           placeholder={t('search.market.placeholder')} isSearching={props.isUpdating} />
 
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
-          {!props.starredOnly ? (
-            <>
-              <span className="text-xs text-muted-foreground" id="market-source-label">{t('search.source.label')}</span>
-              <div role="group" aria-labelledby="market-source-label" className="grid grid-cols-3 gap-1 rounded-lg bg-secondary/60 p-1 sm:w-[348px]">
-                {(['platform', 'github', 'all'] as const).map(value => {
-                  const Icon = value === 'platform' ? LayoutGrid : value === 'github' ? GitBranch : Layers
-                  return (
-                    <Button key={value} size="default" variant="ghost" data-analytics-id="search.source.filter" aria-pressed={props.source === value}
-                      title={t(`search.source.${value}Hint`)} onClick={() => props.onSourceChange(value)}
-                      className={cn('h-8 min-w-0 gap-1.5 px-1 text-xs sm:text-[13px]', props.source === value && 'border border-border bg-card shadow-sm hover:bg-card')}>
-                      <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{t(`search.source.${value}`)}</span>
-                    </Button>
-                  )
-                })}
-              </div>
-            </>
-          ) : <span className="flex min-h-16 items-center text-sm text-muted-foreground sm:min-h-10">{t('search.market.favoriteScope')}</span>}
-          {favoritesToggle(false)}
-        </div>
-
         <div className="mt-3.5 flex flex-col gap-3 border-t border-border pt-2.5 sm:flex-row sm:items-center sm:gap-5">
-          <div className="relative flex h-4 items-center justify-between sm:h-auto">
+          <div className="relative flex min-h-7 items-center justify-between sm:min-h-0">
             <span className="text-xs text-muted-foreground">{t('search.market.labels')}</span>
             {favoritesToggle(true)}
+
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Button size="sm" variant={!props.selectedLabel ? 'soft' : 'outline'} aria-pressed={!props.selectedLabel} disabled={props.starredOnly} onClick={() => props.onLabelChange('')}>{t('search.market.all')}</Button>
@@ -163,6 +140,7 @@ export function MarketSearchControls(props: MarketSearchControlsProps) {
               </Dialog>
             </>}
           </div>
+          {favoritesToggle(false)}
         </div>
         {props.namespace && <Button size="sm" variant="soft" className="mt-3 max-w-full" data-analytics-id="search.namespace.clear" onClick={props.onNamespaceClear}><span className="truncate">{t('search.namespaceFilter', { namespace: props.namespace })}</span></Button>}
       </section>
@@ -170,7 +148,7 @@ export function MarketSearchControls(props: MarketSearchControlsProps) {
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
           <span className="text-base font-semibold">{t('search.results', { count: props.resultCount })}</span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">{props.starredOnly ? t('search.market.favoriteScope') : t('search.market.currentSource', { source: t(`search.source.${props.source}`) })}</span>
+          {props.starredOnly && <span className="hidden text-xs text-muted-foreground sm:inline">{t('search.market.favoriteScope')}</span>}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">{t('search.market.sort')}</span>

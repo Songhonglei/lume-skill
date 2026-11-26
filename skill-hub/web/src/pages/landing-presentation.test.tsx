@@ -29,7 +29,7 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.getByText('landing-quick-start')).toBeTruthy()
     expect(screen.getByText('home.popularTitle')).toBeTruthy()
     expect(screen.getByText('home.latestTitle')).toBeTruthy()
-    expect(state.search).toHaveBeenCalledWith({ sort: 'downloads', size: 6, source: 'platform' }, true)
+    expect(state.search).toHaveBeenCalledWith({ sort: 'downloads', size: 6, source: 'all' }, true)
   })
   it.each([
     [0, '', '', ''],
@@ -74,8 +74,8 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.queryByText('landing-quick-start')).toBeNull()
     expect(screen.queryByText('home.popularTitle')).toBeNull()
     expect(screen.queryByText('home.latestTitle')).toBeNull()
-    expect(state.search).toHaveBeenCalledWith({ sort: 'downloads', size: 6, source: 'platform' }, false)
-    expect(state.search).toHaveBeenCalledWith({ sort: 'newest', size: 6, source: 'platform' }, false)
+    expect(state.search).toHaveBeenCalledWith({ sort: 'downloads', size: 6, source: 'all' }, false)
+    expect(state.search).toHaveBeenCalledWith({ sort: 'newest', size: 6, source: 'all' }, false)
   })
   it('defaults legacy missing picks to visible and respects explicit hidden picks', () => {
     state.settings = defaultSitePresentation()
@@ -101,7 +101,7 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.getByText('home.popularTitle')).toBeTruthy()
     expect(screen.getByText('home.latestTitle')).toBeTruthy()
     expect(screen.getByText('market-quick-start')).toBeTruthy()
-    expect(state.search).toHaveBeenLastCalledWith({ sort: 'newest', size: 6, source: 'platform' }, true)
+    expect(state.search).toHaveBeenLastCalledWith({ sort: 'newest', size: 6, source: 'all' }, true)
   })
   it('binds visible landing text slots, item switches and shared external links', () => {
     state.hasSkills = true

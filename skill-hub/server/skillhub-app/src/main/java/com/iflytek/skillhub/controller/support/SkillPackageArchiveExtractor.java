@@ -6,7 +6,9 @@ import com.iflytek.skillhub.domain.skill.validation.SkillPackagePolicy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,9 +33,20 @@ public class SkillPackageArchiveExtractor {
     }
 
     public List<PackageEntry> extract(MultipartFile file) throws IOException {
-        if (file.getSize() > maxTotalPackageSize) {
+        try (InputStream input = file.getInputStream()) {
+            return extract(input, file.getSize(), maxTotalPackageSize);
+        }
+    }
+
+    public ExtractionResult extractWithWarnings(byte[] bytes, long maxExpandedSize) throws IOException {
+        return promoteSingleSkillMdDirectory(extract(new ByteArrayInputStream(bytes), bytes.length,
+                Math.min(maxTotalPackageSize, maxExpandedSize)));
+    }
+
+    private List<PackageEntry> extract(InputStream input, long compressedSize, long maxExpandedSize) throws IOException {
+        if (compressedSize > maxTotalPackageSize) {
             throw new IllegalArgumentException(
-                    "Package too large: " + file.getSize() + " bytes (max: "
+                    "Package too large: " + compressedSize + " bytes (max: "
                             + maxTotalPackageSize + ")"
             );
         }
@@ -41,15 +54,13 @@ public class SkillPackageArchiveExtractor {
         List<PackageEntry> entries = new ArrayList<>();
         long totalSize = 0;
 
-        try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
+        try (ZipInputStream zis = new ZipInputStream(input)) {
             ZipEntry zipEntry;
             while ((zipEntry = zis.getNextEntry()) != null) {
-                if (isDirectoryEntry(zipEntry)) {
-                    zis.closeEntry();
-                    continue;
-                }
-
-                if (isOsMetadataEntry(zipEntry.getName())) {
+                if (isDirectoryEntry(zipEntry) || isOsMetadataEntry(zipEntry.getName())) {
+                    // Count ignored entries against the same limits before moving to the next ZIP entry.
+                    totalSize += readEntry(zis, zipEntry.getName()).length;
+                    enforceExpandedLimit(totalSize, maxExpandedSize);
                     zis.closeEntry();
                     continue;
                 }
@@ -63,12 +74,7 @@ public class SkillPackageArchiveExtractor {
                 String normalizedPath = SkillPackagePolicy.normalizeEntryPath(zipEntry.getName());
                 byte[] content = readEntry(zis, normalizedPath);
                 totalSize += content.length;
-                if (totalSize > maxTotalPackageSize) {
-                    throw new IllegalArgumentException(
-                            "Package too large: " + totalSize + " bytes (max: "
-                                    + maxTotalPackageSize + ")"
-                    );
-                }
+                enforceExpandedLimit(totalSize, maxExpandedSize);
 
                 entries.add(new PackageEntry(
                         normalizedPath,
@@ -81,6 +87,12 @@ public class SkillPackageArchiveExtractor {
         }
 
         return stripSingleRootDirectory(entries);
+    }
+
+    private void enforceExpandedLimit(long totalSize, long limit) {
+        if (totalSize > limit) {
+            throw new IllegalArgumentException("Package too large: " + totalSize + " bytes (max: " + limit + ")");
+        }
     }
 
     public ExtractionResult extractWithWarnings(MultipartFile file) throws IOException {

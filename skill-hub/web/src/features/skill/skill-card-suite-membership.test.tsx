@@ -94,7 +94,7 @@ describe('market skill cards', () => {
     expect(screen.getByTitle(skill.displayName).textContent).toBe(skill.displayName)
     expect(screen.getByTitle(`@${skill.namespace}`).textContent).toBe(`@${skill.namespace}`)
     expect(screen.getByRole('list').textContent).toBe('Writing')
-    expect(screen.getByText('skillCard.source.platform')).toBeDefined()
+    expect(screen.getByText('skillSource.local')).toBeDefined()
     expect(screen.getByText('skillCard.relatedSuites')).toBeDefined()
     expect(screen.queryByText(skill.ownerDisplayName)).toBeNull()
     expect(screen.getByTitle(new Date(skill.updatedAt).toLocaleString('en'))).toBeDefined()
@@ -105,10 +105,9 @@ describe('market skill cards', () => {
     expect(screen.getByRole('link').querySelectorAll('button, a')).toHaveLength(0)
   })
 
-  it.each(['platform', 'github'])('shows the %s source alongside the update metadata', (source) => {
+  it.each(['platform', 'github', 'external'])('shows the %s source alongside the update metadata', (source) => {
     render(<SkillCard variant="market" skill={{ ...baseSkill, source }} />)
-    const sourceLabel = screen.getByText(`skillCard.source.${source}`)
-    expect(sourceLabel.getAttribute('title')).toBe(`search.source.${source}Hint`)
+    const sourceLabel = screen.getByText(source === 'platform' ? 'skillSource.local' : 'skillSource.external')
     expect(sourceLabel.parentElement?.textContent).not.toContain('@team-a')
     expect(sourceLabel.parentElement?.querySelector('svg.lucide-clock')).not.toBeNull()
   })
@@ -116,8 +115,8 @@ describe('market skill cards', () => {
   it('does not invent labels or provenance when optional fields are absent', () => {
     render(<SkillCard variant="market" skill={baseSkill} />)
     expect(screen.queryByRole('list')).toBeNull()
-    expect(screen.queryByText('skillCard.source.platform')).toBeNull()
-    expect(screen.queryByText('skillCard.source.github')).toBeNull()
+    expect(screen.queryByText('skillSource.local')).toBeNull()
+    expect(screen.queryByText('skillSource.external')).toBeNull()
   })
 
   it('respects an explicit empty label override', () => {

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Hidden
 @RequestMapping("/internal/github-sync/v1")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncWorkerHeartbeatController {
     private final GithubSyncWorkerPresenceRepository presence;
 

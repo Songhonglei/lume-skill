@@ -148,13 +148,13 @@ function LandingIntroduction() {
   const navigate = useNavigate()
 
   const { data: popularSkills, isLoading: isLoadingPopular, isError: popularFailed } = useSearchSkills({
-    source: 'platform',
+    source: 'all',
     sort: 'downloads',
     size: 6,
   }, settings.sections.popular.enabled)
 
   const { data: latestSkills, isLoading: isLoadingLatest, isError: latestFailed } = useSearchSkills({
-    source: 'platform',
+    source: 'all',
     sort: 'newest',
     size: 6,
   }, settings.sections.latest.enabled)

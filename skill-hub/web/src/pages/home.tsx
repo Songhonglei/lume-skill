@@ -17,13 +17,13 @@ export function HomePage() {
   const navigate = useNavigate()
 
   const { data: popularSkills, isLoading: isLoadingPopular } = useSearchSkills({
-    source: 'platform',
+    source: 'all',
     sort: 'downloads',
     size: 6,
   })
 
   const { data: latestSkills, isLoading: isLoadingLatest } = useSearchSkills({
-    source: 'platform',
+    source: 'all',
     sort: 'newest',
     size: 6,
   })

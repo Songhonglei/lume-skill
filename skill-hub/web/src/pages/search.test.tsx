@@ -38,13 +38,12 @@ vi.mock('@/features/auth/use-auth', () => ({
 
 vi.mock('@/features/search/market-search-controls', () => ({
   MarketSearchControls: (props: {
-    query: string; onSearch: (value: string) => void; source: string; onSourceChange: (value: string) => void;
+    query: string; onSearch: (value: string) => void;
     labels: Array<{ slug: string; displayName: string }>; selectedLabel: string; onLabelChange: (value: string) => void;
     onSortChange: (value: string) => void; onStarredToggle: () => void; starredOnly: boolean;
   }) => {
     searchBarProps.push({ value: props.query, onSearch: props.onSearch })
     if (!props.starredOnly) {
-      for (const source of ['platform', 'github', 'all']) buttonRecords.push({ label: `search.source.${source}`, variant: props.source === source ? 'default' : 'outline', onClick: () => props.onSourceChange(source) })
       for (const label of props.labels) buttonRecords.push({ label: label.displayName, variant: props.selectedLabel === label.slug ? 'default' : 'outline', onClick: () => props.onLabelChange(label.slug) })
     }
     for (const sort of ['relevance', 'downloads', 'newest']) buttonRecords.push({ label: `search.sort.${sort}`, onClick: () => props.onSortChange(sort) })
@@ -166,25 +165,23 @@ describe('SearchPage', () => {
     })
   })
 
-  it('defaults the unscoped market to platform skills', () => {
+  it('loads both origins in the unscoped market', () => {
     useSearchMock.mockReturnValue({ q: '', sort: 'newest', page: 0 })
     renderToStaticMarkup(<SearchPage />)
-    expect(searchSkillParams[0]).toMatchObject({ source: 'platform' })
-    expect(findButton('search.source.platform').variant).toBe('default')
+    expect(searchSkillParams[0]).not.toHaveProperty('source')
+    expect(buttonRecords.some(button => button.label === 'search.source.platform')).toBe(false)
   })
 
   it('keeps an explicit namespace link across all sources', () => {
     renderToStaticMarkup(<SearchPage />)
-    expect(searchSkillParams[0]).toMatchObject({ namespace: 'team-ai', source: 'all' })
+    expect(searchSkillParams[0]).toMatchObject({ namespace: 'team-ai' })
   })
 
-  it('restores explicit source and resets paging on source changes', () => {
-    useSearchMock.mockReturnValue({ q: 'agent', source: 'platform', page: 3, sort: 'downloads' })
+  it('loads the unified catalog for a legacy GitHub source URL', () => {
+    useSearchMock.mockReturnValue({ q: 'agent', source: 'github', page: 3, sort: 'downloads' })
     renderToStaticMarkup(<SearchPage />)
-    findButton('search.source.github').onClick?.()
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/search', search: {
-      q: 'agent', namespace: '', label: '', source: 'github', sort: 'downloads', page: 0, starredOnly: false,
-    } })
+    expect(searchSkillParams[0]).toMatchObject({ q: 'agent', sort: 'downloads' })
+    expect(searchSkillParams[0]).not.toHaveProperty('source')
   })
 
   it('does not expose source filtering in favorites', () => {
@@ -211,7 +208,6 @@ describe('SearchPage', () => {
       search: {
         q: 'agent',
         namespace: 'team-ai',
-        source: 'all',
         label: '',
         sort: 'downloads',
         page: 0,
@@ -230,7 +226,6 @@ describe('SearchPage', () => {
       search: {
         q: 'agent',
         namespace: 'team-ai',
-        source: 'all',
         label: 'code-generation',
         sort: 'newest',
         page: 0,
@@ -245,7 +240,7 @@ describe('SearchPage', () => {
     expect(html).not.toContain('pagination')
     findButton('search.filterStarred').onClick?.()
     expect(navigateMock).toHaveBeenCalledWith({ to: '/search', search: {
-      q: 'agent', namespace: 'team-ai', source: 'all', label: 'code-generation', sort: 'downloads', page: 0, starredOnly: true,
+      q: 'agent', namespace: 'team-ai', label: 'code-generation', sort: 'downloads', page: 0, starredOnly: true,
     } })
   })
 
@@ -271,7 +266,6 @@ describe('SearchPage', () => {
       search: {
         q: 'onboarding',
         namespace: 'product-team',
-        source: 'all',
         label: 'code-generation',
         sort: 'downloads',
         page: 0,
@@ -333,11 +327,11 @@ describe('SearchPage', () => {
     expect(html).not.toContain('search.enterKeyword')
   })
 
-  it('clears query, namespace and labels while retaining the current source and sort', () => {
+  it('clears query, namespace and labels while retaining sort', () => {
     useSearchSkillsMock.mockReturnValue({ data: { items: [], total: 0, page: 0, size: 12 }, isLoading: false, isFetching: false })
     renderToStaticMarkup(<SearchPage />)
     findButton('search.market.reset').onClick?.()
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/search', search: { q: '', namespace: '', source: 'all', label: '', sort: 'downloads', page: 0, starredOnly: false } })
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/search', search: { q: '', namespace: '', label: '', sort: 'downloads', page: 0, starredOnly: false } })
   })
 
   it('keeps search skill-only when an obsolete Suite type query parameter is present', () => {

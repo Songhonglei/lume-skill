@@ -5,16 +5,11 @@ import type { ManagedNamespace, SkillSuite } from '@/api/types'
 import { NamespaceSettingsPage } from '@/pages/dashboard/namespace-settings'
 import { ReportsPage } from '@/pages/dashboard/reports'
 import { SuiteManagementActions } from '@/features/suite/suite-management-actions'
-import { GithubSyncPlatformControl } from '@/features/github-sync/github-sync-platform-control'
-import { GithubCredentialConfig } from '@/features/github-sync/github-credential-config'
 
 const state = vi.hoisted(() => ({
   namespace: null as ManagedNamespace | null,
   namespaceMutate: vi.fn(), resolve: vi.fn(), dismiss: vi.fn(),
   hidden: vi.fn(), archived: vi.fn(), remove: vi.fn(),
-  paused: false, platform: vi.fn(),
-  credential: { id: 'synthetic-private-id', label: 'synthetic-private-label', status: 'ACTIVE', keyAvailable: true },
-  create: vi.fn(), replace: vi.fn(), enable: vi.fn(),
 }))
 vi.mock('react-i18next', async () => ({ ...await vi.importActual<typeof import('react-i18next')>('react-i18next'), useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }) }))
 vi.mock('@tanstack/react-router', () => ({ useParams: () => ({ slug: 'synthetic-private-team' }), useNavigate: () => vi.fn() }))
@@ -42,12 +37,6 @@ vi.mock('@/features/report/use-skill-reports', () => ({
   useResolveSkillReport: () => ({ mutateAsync: state.resolve, isPending: false }),
   useDismissSkillReport: () => ({ mutateAsync: state.dismiss, isPending: false }),
 }))
-vi.mock('@/features/github-sync/use-github-sync-admin', () => ({
-  useGithubPlatformControl: () => ({ data: { desiredPaused: state.paused, version: 1, state: state.paused ? 'PAUSED' : 'RUNNING' } }),
-  useUpdateGithubPlatformControl: () => ({ mutateAsync: state.platform }),
-  useGithubCredentials: () => ({ data: [state.credential] }),
-  useGithubCredentialMutations: () => ({ create: { mutateAsync: state.create }, replace: { mutateAsync: state.replace }, setEnabled: { mutateAsync: state.enable } }),
-}))
 const id = (node: Element) => node.getAttribute('data-analytics-id')
 function assertNoSensitiveAttributes() {
   for (const node of document.querySelectorAll('[data-analytics-id]')) expect(id(node)).not.toMatch(/synthetic|private|reason|token-value/)
@@ -55,8 +44,6 @@ function assertNoSensitiveAttributes() {
 beforeEach(() => {
   vi.clearAllMocks()
   state.namespace = { id: 2, slug: 'synthetic-private-team', displayName: 'Private name', type: 'TEAM', status: 'ACTIVE', createdAt: '', immutable: false, currentUserRole: 'OWNER', canFreeze: true, canUnfreeze: true, canArchive: true, canRestore: true, canDelete: true }
-  state.paused = false
-  state.credential.status = 'ACTIVE'
 })
 afterEach(cleanup)
 
@@ -120,28 +107,6 @@ describe('finite business branch markers on real confirmation DOM', () => {
     fireEvent.click(confirm)
     if (disposition) await waitFor(() => expect(state.resolve).toHaveBeenCalledWith({ id: 1, disposition }))
     else await waitFor(() => expect(state.dismiss).toHaveBeenCalledWith({ id: 1 }))
-    assertNoSensitiveAttributes()
-  })
-
-  it.each([false, true])('platform paused=%s uses finite pause/resume values', async paused => {
-    state.paused = paused
-    render(<GithubSyncPlatformControl visible />)
-    const action = paused ? 'resume' : 'pause'
-    fireEvent.click(document.querySelector(`[data-analytics-id="github.platform.${action}.request"]`)!)
-    expect(id(screen.getByRole('button', { name: 'Close' }))).toBe(`github.platform.${action}.cancel`)
-    fireEvent.click(document.querySelector(`[data-analytics-id="github.platform.${action}.confirm"]`)!)
-    await waitFor(() => expect(state.platform).toHaveBeenCalledWith({ expectedVersion: 1, paused: !paused }))
-  })
-
-  it.each(['create', 'replace'] as const)('credential %s marks submit only, never the secret fields', action => {
-    render(<GithubCredentialConfig />)
-    fireEvent.click(document.querySelector(`[data-analytics-id="github.credential.${action}"]`)!)
-    const form = document.querySelector('form')!
-    expect(id(form)).toBe(`github.credential.${action}.submit`)
-    expect(id(screen.getByRole('button', { name: 'Close' }))).toBe(`github.credential.${action}.cancel`)
-    expect(form.querySelector('button[type="submit"]')?.hasAttribute('data-analytics-id')).toBe(false)
-    for (const field of form.querySelectorAll('input')) expect(id(field)).toBeNull()
-    expect(document.querySelector('[data-analytics-id="github.credential.disable"]')).not.toBeNull()
     assertNoSensitiveAttributes()
   })
 })

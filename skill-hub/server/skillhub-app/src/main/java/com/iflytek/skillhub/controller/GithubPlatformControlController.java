@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Hidden
 @RequestMapping("/internal/github-sync/v1/tasks")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubPlatformControlController {
     private final GithubPlatformControlRepository controls;
 

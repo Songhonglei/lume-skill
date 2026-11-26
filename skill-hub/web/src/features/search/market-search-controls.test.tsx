@@ -14,7 +14,7 @@ class ResizeObserverStub {
 function setup(labelCount = 8) {
   vi.stubGlobal('ResizeObserver', ResizeObserverStub)
   const props = {
-    query: '', onQueryChange: vi.fn(), onSearch: vi.fn(), source: 'platform' as const, onSourceChange: vi.fn(),
+    query: '', onQueryChange: vi.fn(), onSearch: vi.fn(),
     labels: ['Office', 'Development', 'Learning', 'Writing', 'Research', 'Security', 'Design', 'Archive'].slice(0, labelCount).map(displayName => ({ slug: displayName.toLowerCase(), displayName, type: 'RECOMMENDED' })),
     selectedLabel: 'office', onLabelChange: vi.fn(), starredOnly: false, onStarredToggle: vi.fn(),
     sort: 'newest', onSortChange: vi.fn(), namespace: '', onNamespaceClear: vi.fn(), resultCount: 26, isUpdating: false,
@@ -26,7 +26,7 @@ function setup(labelCount = 8) {
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe('market search controls', () => {
-  it('keeps search explicit and routes source and favorite selection to the page', () => {
+  it('keeps search explicit and routes favorite selection to the page', () => {
     const props = setup()
     const input = screen.getByRole('textbox', { name: 'search.market.placeholder' })
     fireEvent.change(input, { target: { value: '@global writer' } })
@@ -35,13 +35,12 @@ describe('market search controls', () => {
     props.updateQuery('@global writer')
     fireEvent.submit(input.closest('form')!)
     expect(props.onSearch).toHaveBeenCalledWith('@global writer')
-    fireEvent.click(screen.getByRole('button', { name: 'search.source.github' }))
-    expect(props.onSourceChange).toHaveBeenCalledWith('github')
+    expect(screen.queryByRole('button', { name: 'search.source.github' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'search.market.onlyFavorites' }))
     expect(props.onStarredToggle).toHaveBeenCalledOnce()
   })
 
-  it('reflects favorite mode in both toggle buttons and restores source controls', () => {
+  it('reflects favorite mode in both toggle buttons without dedicated source controls', () => {
     const props = setup()
     const toggle = screen.getByRole('button', { name: 'search.market.onlyFavorites' })
     expect(toggle.getAttribute('aria-pressed')).toBe('false')
@@ -53,7 +52,7 @@ describe('market search controls', () => {
     fireEvent.click(toggle)
     expect(props.onStarredToggle).toHaveBeenCalledOnce()
     props.updateFavorites(false)
-    expect(screen.getByRole('button', { name: 'search.source.github' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'search.source.github' })).toBeNull()
     expect(screen.queryByRole('checkbox')).toBeNull()
   })
 

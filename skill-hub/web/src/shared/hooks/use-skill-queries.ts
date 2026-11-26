@@ -45,7 +45,7 @@ async function getSkillDocumentation(namespace: string, slug: string, version: s
   return fetchText(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${encodeURIComponent(slug)}/versions/${encodeURIComponent(version)}/file?path=${encodeURIComponent(path)}`)
 }
 
-async function publishSkill(params: { namespace: string; file: File; visibility: string; confirmWarnings?: boolean; avatarAction?: 'KEEP' | 'REPLACE' | 'REMOVE'; avatarUploadId?: string; expectedSlug?: string; displayName?: string; shortDescription?: string; overview?: string; resetPresentation?: boolean }): Promise<PublishResult> {
+async function publishSkill(params: { namespace: string; file: File; visibility: string; confirmWarnings?: boolean; avatarAction?: 'KEEP' | 'REPLACE' | 'REMOVE'; avatarUploadId?: string; expectedSlug?: string; displayName?: string; shortDescription?: string; overview?: string; resetPresentation?: boolean; externalSourceUrl?: string }): Promise<PublishResult> {
   const cleanNamespace = params.namespace.startsWith('@') ? params.namespace.slice(1) : params.namespace
   const formData = new FormData()
   formData.append('file', params.file)
@@ -58,6 +58,7 @@ async function publishSkill(params: { namespace: string; file: File; visibility:
   if (params.shortDescription !== undefined) formData.append('shortDescription', params.shortDescription)
   if (params.overview !== undefined) formData.append('overview', params.overview)
   if (params.resetPresentation) formData.append('resetPresentation', 'true')
+  if (params.externalSourceUrl) formData.append('externalSourceUrl', params.externalSourceUrl)
 
   return fetchJson<PublishResult>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/publish`, {
     method: 'POST',
@@ -65,6 +66,19 @@ async function publishSkill(params: { namespace: string; file: File; visibility:
     body: formData,
     timeoutMs: PUBLISH_REQUEST_TIMEOUT_MS,
   })
+}
+
+export async function resolveExternalSkillPackage(url: string) {
+  const response = await fetchJson<import('@/api/generated/schema').components['schemas']['ExternalSkillPackageResponse']>(
+    `${WEB_API_PREFIX}/skills/external-package`, {
+      method: 'POST',
+      headers: getCsrfHeaders(),
+      body: new URLSearchParams({ url }),
+      timeoutMs: PUBLISH_REQUEST_TIMEOUT_MS,
+    },
+  )
+  const bytes = Uint8Array.from(atob(response.zipBase64!), character => character.charCodeAt(0))
+  return { file: new File([bytes], 'external-skill.zip', { type: 'application/zip' }), sourceUrl: response.sourceUrl! }
 }
 
 export async function previewSkillPackage(file: File): Promise<import('@/api/generated/schema').components['schemas']['SkillPackagePreviewResponse']> {

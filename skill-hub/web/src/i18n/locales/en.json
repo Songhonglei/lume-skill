@@ -1874,6 +1874,11 @@
     "emptyTitle": "No skills",
     "emptyDescription": "No skills have been published in this namespace yet"
   },
+  "skillSource": {
+    "local": "User upload",
+    "external": "External",
+    "link": "View original source"
+  },
   "skillDetail": {
     "installCopyFailed": "Copy failed. Copy the command manually from the installation instructions.",
     "copyInstallCommand": "Copy install command",
@@ -2784,6 +2789,18 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "external": {
+      "source": "Skill source",
+      "local": "Upload files",
+      "external": "External link",
+      "url": "Skill URL",
+      "import": "Import and check",
+      "checking": "Checking…",
+      "help": "Public skill links from GitHub, ClawHub, Tencent SkillHub, and Skills.sh.",
+      "failed": "Could not import the skill. Check the link and try again.",
+      "checked": "Skill package format check passed",
+      "reimport": "Draft restored. Import the external link again."
+    },
     "audience": {
       "public": "Visible to all visitors",
       "private": "Visible to you and authorized administrators",

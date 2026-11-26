@@ -11,7 +11,7 @@ import { buttonVariants } from '@/shared/ui/button'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import {
   Star, Heart, Package, Boxes, Key, Flag, Globe,
-  UserCog, Lock, Bell, Clock, ChevronDown, ChevronRight, Github, Settings, Tags, ClipboardList, Users,
+  UserCog, Lock, Bell, Clock, ChevronDown, ChevronRight, Settings, Tags, ClipboardList, Users,
 } from 'lucide-react'
 
 /**
@@ -69,8 +69,6 @@ export const ADMIN_SETTINGS_GROUPS: SidebarGroup[] = [
       { key: 'labels', icon: Tags, label: 'user.menu.labels', to: '/admin/labels', analyticsId: 'admin.labels.open', roles: ['SUPER_ADMIN'] },
       { key: 'namespacesAdmin', icon: Globe, label: 'user.menu.namespacesAdmin', to: '/admin/namespaces', analyticsId: 'admin.namespaces.open', roles: ['SUPER_ADMIN'] },
       { key: 'governance', icon: Flag, label: 'sidebar.governance', to: '/dashboard/governance', analyticsId: 'governance.center.open', admin: true },
-      { key: 'githubSync', icon: Github, label: 'sidebar.githubSync', to: '/dashboard/github-sync', analyticsId: 'github.sync.open', roles: ['SUPER_ADMIN'] },
-      { key: 'githubCatalog', icon: Github, label: 'nav.githubSkills', to: '/github', analyticsId: 'navigation.github.open', roles: ['SUPER_ADMIN'] },
       { key: 'audit', icon: ClipboardList, label: 'user.menu.auditLog', to: '/admin/audit-log', analyticsId: 'admin.audit.open', roles: ['AUDITOR', 'SUPER_ADMIN'] },
     ],
   },

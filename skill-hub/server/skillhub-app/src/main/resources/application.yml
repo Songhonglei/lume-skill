@@ -161,6 +161,7 @@ skillhub:
     # Active runs older than this are swept to TIMED_OUT (crash recovery)
     stale-run-minutes: ${SKILLHUB_AUTHORING_STALE_RUN_MINUTES:30}
   github-sync:
+    enabled: false
     discovery-scheduler-interval-ms: ${SKILLHUB_GITHUB_SYNC_DISCOVERY_SCHEDULER_INTERVAL_MS:60000}
     candidate-scheduler-interval-ms: ${SKILLHUB_GITHUB_SYNC_CANDIDATE_SCHEDULER_INTERVAL_MS:60000}
     source-scheduler-interval-ms: ${SKILLHUB_GITHUB_SYNC_SOURCE_SCHEDULER_INTERVAL_MS:60000}

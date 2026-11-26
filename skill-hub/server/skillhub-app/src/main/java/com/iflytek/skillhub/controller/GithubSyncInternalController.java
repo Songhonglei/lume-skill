@@ -36,6 +36,7 @@ import java.util.UUID;
 @RestController
 @Hidden
 @RequestMapping("/internal/github-sync/v1/tasks")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncInternalController {
     private final GithubSyncLeaseService leases;
     private final GithubCredentialLeaseAppService credentialLeases;

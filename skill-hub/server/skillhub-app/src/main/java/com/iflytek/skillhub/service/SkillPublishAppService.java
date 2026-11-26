@@ -59,6 +59,16 @@ public class SkillPublishAppService {
             SkillVisibility visibility, Set<String> roles, boolean confirmWarnings, AvatarAction action,
             String uploadId, String expectedSlug, String displayName, String shortDescription,
             String overview, boolean resetPresentation, AuditRequestContext context, Set<String> tokenCapabilities) {
+        return publish(namespace, entries, actor, visibility, roles, confirmWarnings, action, uploadId,
+                expectedSlug, displayName, shortDescription, overview, resetPresentation, context, tokenCapabilities, null);
+    }
+
+    @Transactional
+    public SkillPublishService.PublishResult publish(String namespace, List<PackageEntry> entries, String actor,
+            SkillVisibility visibility, Set<String> roles, boolean confirmWarnings, AvatarAction action,
+            String uploadId, String expectedSlug, String displayName, String shortDescription,
+            String overview, boolean resetPresentation, AuditRequestContext context, Set<String> tokenCapabilities,
+            String verifiedSourceUrl) {
         if (action == AvatarAction.REPLACE && (uploadId == null || uploadId.isBlank())
                 || action != AvatarAction.REPLACE && uploadId != null && !uploadId.isBlank()) {
             throw new DomainBadRequestException("error.skill.avatar.invalidUpload");
@@ -84,6 +94,7 @@ public class SkillPublishAppService {
                     : publications.publishFromEntries(namespace, entries, actor, visibility, roles, confirmWarnings, displayName))
                 : publications.publishFromEntries(namespace, entries, actor, visibility, roles, confirmWarnings, displayName,
                         shortDescription, overview, resetPresentation);
+        if (verifiedSourceUrl != null) SkillPackageProvenance.markExternal(result.version(), verifiedSourceUrl);
         var review = reviews.findBySkillVersionIdAndStatus(
                 result.version().getId(), ReviewTaskStatus.PENDING).orElse(null);
         if (action == AvatarAction.REPLACE) {

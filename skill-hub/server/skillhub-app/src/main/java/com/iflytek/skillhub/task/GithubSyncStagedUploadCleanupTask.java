@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "skillhub.github-sync.enabled", havingValue = "true")
 public class GithubSyncStagedUploadCleanupTask {
     private static final Logger log = LoggerFactory.getLogger(GithubSyncStagedUploadCleanupTask.class);
     private final GithubSyncUploadRepository uploads;
