@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
@@ -98,7 +99,7 @@ export function AuditLogPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('auditLog.title')}</h1>
+        <DashboardPageHeader title={t('auditLog.title')} />
       </div>
 
       <Card className="p-5">

@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { KeyboardEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
@@ -151,7 +152,7 @@ export function AdminUsersPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('adminUsers.title')}</h1>
+        <DashboardPageHeader title={t('adminUsers.title')} />
       </div>
 
       <Card className="p-5">

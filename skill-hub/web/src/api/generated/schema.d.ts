@@ -9985,6 +9985,7 @@ export interface components {
         };
         UpdateProfileRequest: {
             displayName?: string;
+            avatarId?: string;
         };
         ApiResponseUpdateProfileResponse: {
             /** Format: int32 */

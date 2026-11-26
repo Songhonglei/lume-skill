@@ -1,3 +1,4 @@
+import { avatarAssetUrl } from '@/shared/lib/avatar-asset-url'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -128,7 +129,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
       >
         {user.avatarUrl ? (
           <img
-            src={user.avatarUrl}
+            src={avatarAssetUrl(user.avatarUrl)}
             alt={user.displayName}
             loading="lazy"
             className="w-8 h-8 rounded-full border border-border/60"

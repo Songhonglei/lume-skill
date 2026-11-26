@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
@@ -131,7 +132,7 @@ export function SearchPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('nav.marketplace')}</h1>
+      <DashboardPageHeader title={t('nav.marketplace')} />
       <MarketSearchControls query={queryInput} onQueryChange={setQueryInput} onSearch={handleSearch}
         source={source} onSourceChange={handleSourceChange} labels={labels ?? []} selectedLabel={selectedLabel}
         onLabelChange={label => applyFilters({ ...current, label: label === selectedLabel ? '' : label })}

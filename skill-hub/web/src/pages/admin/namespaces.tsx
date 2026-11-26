@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { KeyboardEvent, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AdminNamespace, NamespaceMember, NamespaceRole } from '@/api/types'
@@ -318,10 +319,10 @@ export function AdminNamespacesPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('adminNamespaces.title')}</h1>
+        <DashboardPageHeader title={t('adminNamespaces.title')} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <StatCard label={t('adminNamespaces.statTotal')} value={stats?.total ?? 0} />
         <StatCard label={t('adminNamespaces.statActive')} value={stats?.active ?? 0} tone="success" />
         <StatCard label={t('adminNamespaces.statFrozen')} value={stats?.frozen ?? 0} tone="warning" />
@@ -334,6 +335,7 @@ export function AdminNamespacesPage() {
             <Label htmlFor="admin-namespace-search">{t('adminNamespaces.searchLabel')}</Label>
             <div className="flex gap-2">
               <Input data-analytics-id="admin.namespace.search"
+                className="min-w-0"
                 id="admin-namespace-search"
                 placeholder={t('adminNamespaces.searchPlaceholder')}
                 value={keywordInput}
@@ -378,8 +380,8 @@ export function AdminNamespacesPage() {
         </div>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(26rem,0.9fr)]">
-        <Card className="overflow-hidden">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(26rem,0.9fr)]">
+        <Card className="min-w-0 overflow-hidden">
           {namespacesQuery.isLoading ? (
             <div className="space-y-3 p-5">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -391,7 +393,7 @@ export function AdminNamespacesPage() {
           ) : (
             <>
               <Table>
-                <TableHeader>
+                <TableHeader className="whitespace-nowrap">
                   <TableRow>
                     <TableHead>{t('adminNamespaces.colNamespace')}</TableHead>
                     <TableHead>{t('adminNamespaces.colType')}</TableHead>
@@ -432,7 +434,7 @@ export function AdminNamespacesPage() {
           )}
         </Card>
 
-        <Card className="p-5">
+        <Card className="min-w-0 p-5">
           {!selectedNamespace ? (
             <div className="py-20 text-center text-muted-foreground">{t('adminNamespaces.selectNamespace')}</div>
           ) : (
@@ -446,12 +448,12 @@ export function AdminNamespacesPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="font-heading text-lg font-semibold">{t('adminNamespaces.membersTitle')}</h2>
                     <p className="text-sm text-muted-foreground">{t('adminNamespaces.membersDescription')}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button data-analytics-id="admin.namespace.transfer"
                       variant="outline"
                       size="sm"
@@ -725,7 +727,7 @@ function NamespaceDetailHeader({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 break-words">
           <h2 className="font-heading text-2xl font-semibold">{namespace.displayName}</h2>
           <p className="font-mono text-sm text-muted-foreground">@{namespace.slug}</p>
         </div>
@@ -739,7 +741,7 @@ function NamespaceDetailHeader({
         </div>
       </div>
       {namespace.description ? (
-        <p className="text-sm text-muted-foreground">{namespace.description}</p>
+        <p className="break-words text-sm text-muted-foreground">{namespace.description}</p>
       ) : null}
       <div className="text-xs text-muted-foreground">
         {t('adminNamespaces.createdAt')}: {formatLocalDateTime(namespace.createdAt, i18nLanguage)} · {t('adminNamespaces.updatedAt')}: {formatLocalDateTime(namespace.updatedAt, i18nLanguage)}
@@ -773,7 +775,7 @@ function MembersTable({
 
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="whitespace-nowrap">
         <TableRow>
           <TableHead>{t('members.colUsername')}</TableHead>
           <TableHead>{t('members.colRole')}</TableHead>

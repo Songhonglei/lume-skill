@@ -1,3 +1,4 @@
+import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -76,7 +77,7 @@ export function GithubSkillsPage() {
 
   return <div className={cn(APP_SHELL_PAGE_CLASS_NAME, 'github-catalog-page space-y-6')}>
     <header className="max-w-3xl space-y-3 pb-2">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('githubCatalog.title')}</h1>
+      <DashboardPageHeader title={t('githubCatalog.title')} />
     </header>
     <section className="space-y-4">
       <form data-analytics-id="github.catalog.search" onSubmit={submit} className="mb-7 flex max-w-3xl items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-sm">

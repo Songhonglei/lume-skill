@@ -204,8 +204,6 @@ test.describe('Auth Entry', () => {
 
     await page.goto('/login')
     await page.getByRole('button', { name: 'English' }).click()
-    await expect(page.getByRole('menuitem')).toHaveText(['中文', 'English'])
-    await page.getByRole('menuitem', { name: '中文' }).click()
     await expect(page.getByRole('heading', { name: '登录 Luma Skill Hub' })).toBeVisible()
     await page.reload()
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN')

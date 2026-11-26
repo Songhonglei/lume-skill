@@ -13,6 +13,7 @@ import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
 import com.iflytek.skillhub.auth.settings.InitialExternalRoleGrantService;
 import com.iflytek.skillhub.domain.event.UserActivatedEvent;
 import com.iflytek.skillhub.domain.namespace.GlobalNamespaceMembershipService;
+import com.iflytek.skillhub.domain.user.ProfileAvatar;
 import com.iflytek.skillhub.domain.user.UserAccount;
 import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.domain.user.UserStatus;
@@ -96,7 +97,7 @@ public class IdentityBindingService {
             ensureExternalLoginAllowed(user);
             user.setDisplayName(claims.providerLogin());
             if (trustedEmail(claims) != null) user.setEmail(claims.email());
-            if (claims.extra().get("avatar_url") != null) {
+            if (claims.extra().get("avatar_url") != null && !ProfileAvatar.isPreset(user.getAvatarUrl())) {
                 user.setAvatarUrl((String) claims.extra().get("avatar_url"));
             }
             user = userRepo.save(user);

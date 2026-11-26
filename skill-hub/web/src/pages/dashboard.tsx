@@ -1,3 +1,4 @@
+import { avatarAssetUrl } from '@/shared/lib/avatar-asset-url'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -96,7 +97,7 @@ export function DashboardPage() {
           <Link data-analytics-id={card.analyticsId}
             key={card.key}
             to={card.to}
-            className="group flex items-start gap-4 rounded-xl border border-border/60 p-5 transition-all duration-150 hover:bg-accent hover:border-border hover:shadow-sm"
+            className="group flex items-start gap-4 rounded-lg border border-border bg-card p-4 transition-all duration-150 hover:bg-accent hover:border-border hover:shadow-sm"
           >
             <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-secondary">
               <Icon className="w-5 h-5" style={{ color: 'hsl(var(--foreground))' }} />
@@ -156,7 +157,7 @@ export function DashboardSidebar({
 
         <div className="mb-4 hidden items-center gap-3 px-3 py-2 lg:flex">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.displayName} className="h-8 w-8 shrink-0 rounded-full border border-border/60" />
+            <img src={avatarAssetUrl(user.avatarUrl)} alt={user.displayName} className="h-8 w-8 shrink-0 rounded-full border border-border/60" />
           ) : (
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
               {user?.displayName?.charAt(0) ?? '?'}

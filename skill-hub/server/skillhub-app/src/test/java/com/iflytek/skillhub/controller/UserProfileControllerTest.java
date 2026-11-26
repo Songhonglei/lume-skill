@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -153,6 +154,39 @@ class UserProfileControllerTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.status").value("APPLIED"));
     }
+    @Test
+    void updateProfile_appliesBuiltInAvatarWithoutChangingDisplayName() throws Exception {
+        var user = new UserAccount("user-1", "OldName", "user@example.com", "https://example.com/avatar.png");
+        given(userAccountRepository.findById("user-1")).willReturn(Optional.of(user));
+        given(namespaceMemberRepository.findByUserId("user-1")).willReturn(List.of());
+        given(userRoleBindingRepository.findByUserId("user-1")).willReturn(List.of());
+
+        mockMvc.perform(patch("/api/v1/user/profile")
+                        .with(authentication(testAuth(testPrincipal())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"avatarId":"ginkgo"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("APPLIED"));
+
+        assertThat(user.getAvatarUrl()).isEqualTo("/avatars/ginkgo.svg");
+        assertThat(user.getDisplayName()).isEqualTo("OldName");
+    }
+
+    @Test
+    void updateProfile_rejectsAnAvatarOutsideTheBuiltInList() throws Exception {
+        mockMvc.perform(patch("/api/v1/user/profile")
+                        .with(authentication(testAuth(testPrincipal())))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"avatarId":"https://example.test/avatar.svg"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
     // ===== AC-E-001: Display name too short =====
 
     @Test

@@ -136,13 +136,14 @@ public class UserProfileService {
 
     /**
      * Apply approved changes to the user account.
-     * Extensible for future fields (avatarUrl, etc.).
      */
     private void applyChanges(UserAccount user, Map<String, String> changes) {
         if (changes.containsKey("displayName")) {
             user.setDisplayName(changes.get("displayName"));
         }
-        // Future: avatarUrl, etc.
+        if (changes.containsKey("avatarUrl")) {
+            user.setAvatarUrl(changes.get("avatarUrl"));
+        }
         userAccountRepository.save(user);
     }
 
@@ -167,7 +168,9 @@ public class UserProfileService {
         if (changes.containsKey("displayName")) {
             oldValues.put("displayName", user.getDisplayName());
         }
-        // Future: avatarUrl, etc.
+        if (changes.containsKey("avatarUrl")) {
+            oldValues.put("avatarUrl", user.getAvatarUrl());
+        }
         return oldValues;
     }
 

@@ -3,11 +3,12 @@ import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, profileApi } from '@/api/client'
+import { ProfileAvatarPicker } from '@/features/profile/profile-avatar-picker'
 import { useAuth } from '@/features/auth/use-auth'
 import { truncateErrorMessage } from '@/shared/lib/error-display'
 import { toast } from '@/shared/lib/toast'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Card, CardContent } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 
@@ -177,35 +178,23 @@ export function ProfileSettingsPage() {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <DashboardPageHeader title={t('profile.title')} />
-      <Card className="glass-strong">
-        <CardHeader className="flex flex-row items-center justify-end">
-          {!isEditing ? (
-            <div className="flex items-center gap-2">
-              {user?.canChangePassword === true ? (
-                <Button data-analytics-id="account.security.open" type="button" variant="outline" size="sm" onClick={() => void navigate({ to: '/settings/security' })}>
-                  {t('profile.resetPassword')}
-                </Button>
-              ) : null}
-              {hasEditableFields ? (
-                <Button data-analytics-id="account.profile.edit" type="button" variant="outline" size="sm" onClick={handleEdit}>
-                  {t('profile.edit')}
-                </Button>
-              ) : null}
-            </div>
+      <DashboardPageHeader title={t('profile.title')} actions={!isEditing ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {user?.canChangePassword === true ? (
+            <Button data-analytics-id="account.security.open" type="button" variant="outline" size="sm" onClick={() => void navigate({ to: '/settings/security' })}>
+              {t('profile.resetPassword')}
+            </Button>
           ) : null}
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Avatar (read-only) */}
-          {effectiveAvatarUrl ? (
-            <div className="flex items-center gap-4">
-              <img
-                src={effectiveAvatarUrl}
-                alt={effectiveDisplayName}
-                className="h-16 w-16 rounded-2xl border-2 border-border/60 shadow-card"
-              />
-            </div>
+          {hasEditableFields ? (
+            <Button data-analytics-id="account.profile.edit" type="button" variant="outline" size="sm" onClick={handleEdit}>
+              {t('profile.edit')}
+            </Button>
           ) : null}
+        </div>
+      ) : null} />
+      <Card>
+        <CardContent className="space-y-6 p-5 sm:p-6">
+          {profileData ? <ProfileAvatarPicker avatarUrl={effectiveAvatarUrl} name={effectiveDisplayName} /> : null}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('profile.userId')}</label>
