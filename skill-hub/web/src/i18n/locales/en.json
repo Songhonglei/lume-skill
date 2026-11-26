@@ -28,7 +28,7 @@
     "githubSkills": "Open-source Skills",
     "skillDetail": "Skill Detail",
     "explore": "Explore Skills",
-    "dashboard": "Dashboard",
+    "dashboard": "My Console",
     "mySkills": "My Skills",
     "mySuites": "My Suites",
     "publish": "Publish",
@@ -598,11 +598,11 @@
     "goToLogin": "Go to Login"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "My Console",
     "subtitle": "Manage your skills, account, and preferences",
     "overview": "Overview",
-    "backToDashboard": "Back to Dashboard",
-    "navigation": "Dashboard navigation",
+    "backToDashboard": "Back to My Console",
+    "navigation": "My Console",
     "userInfo": "Account Information",
     "userInfoDesc": "Basic account details and platform roles",
     "loginVia": "Logged in via {{provider}}",
@@ -627,7 +627,7 @@
     "userId": "User ID"
   },
   "sidebar": {
-    "account": "Account",
+    "account": "Personal Settings",
     "profile": "Profile",
     "security": "Security",
     "accounts": "Account Merge",
@@ -1744,7 +1744,7 @@
     "nextPage": "Next"
   },
   "profile": {
-    "title": "Profile Settings",
+    "title": "Profile",
     "subtitle": "Manage your display name and personal information.",
     "displayName": "Display Name",
     "email": "Email",
@@ -2684,8 +2684,8 @@
   "user": {
     "menu": {
       "settings": "Settings",
-      "adminSettings": "Admin Settings",
-      "dashboard": "Dashboard",
+      "adminSettings": "Administration",
+      "dashboard": "My Console",
       "mySkills": "My Skills",
       "mySuites": "My Suites",
       "myNamespaces": "My Namespaces",

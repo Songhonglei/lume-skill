@@ -5,7 +5,7 @@ import type { useAuth } from '@/features/auth/use-auth'
 import { APP_SHELL_PAGE_CLASS_NAME } from '@/app/page-shell-style'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import {
-  Star, Heart, Package, Boxes, Key, Shield, Flag, Globe,
+  Star, Heart, Package, Boxes, Key, Flag, Globe,
   UserCog, Lock, Bell, Clock, ChevronDown, ChevronRight, Github, Settings, Tags, ClipboardList, Users,
 } from 'lucide-react'
 
@@ -22,21 +22,19 @@ interface SidebarItem {
   label: string
   to: string
   analyticsId?: string
-  review?: boolean
   admin?: boolean
   roles?: readonly string[]
   passwordCapability?: boolean
-  badge?: string
 }
 
 interface SidebarGroup {
-  label?: string
+  label: string
   items: SidebarItem[]
 }
 
-export const PERSONAL_SETTINGS_GROUPS: SidebarGroup[] = [
+export const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
-    label: 'user.menu.settings',
+    label: 'sidebar.account',
     items: [
       { key: 'profile', icon: UserCog, label: 'sidebar.profile', to: '/settings/profile', analyticsId: 'account.profile.open' },
       { key: 'security', icon: Lock, label: 'sidebar.security', to: '/settings/security', analyticsId: 'account.security.open', passwordCapability: true },
@@ -44,9 +42,6 @@ export const PERSONAL_SETTINGS_GROUPS: SidebarGroup[] = [
       { key: 'notifications', icon: Bell, label: 'sidebar.notifications', to: '/settings/notifications', analyticsId: 'notification.settings.open' },
     ],
   },
-]
-
-export const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'sidebar.skillsAndData',
     items: [
@@ -56,11 +51,6 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { key: 'stars', icon: Star, label: 'sidebar.stars', to: '/dashboard/stars', analyticsId: 'navigation.starred.open' },
       { key: 'subscriptions', icon: Heart, label: 'sidebar.subscriptions', to: '/dashboard/subscriptions', analyticsId: 'navigation.subscriptions.open' },
       { key: 'reviewProgress', icon: Clock, label: 'sidebar.reviewProgress', to: '/dashboard/review-progress', analyticsId: 'review.progress.open' },
-    ],
-  },
-  {
-    items: [
-      { key: 'reviewCenter', icon: Shield, label: 'reviewCenter.title', to: '/dashboard/reviews', analyticsId: 'review.queue.open', review: true },
     ],
   },
 ]
@@ -136,104 +126,76 @@ export function DashboardSidebar({
   user,
   t,
   pathname,
+  navigationLabel,
 }: {
   groups: SidebarGroup[]
   user: ReturnType<typeof useAuth>['user']
   t: ReturnType<typeof useTranslation>['t']
   pathname: string
+  navigationLabel: string
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const activeItem = groups.flatMap(group => group.items)
-    .find(item => pathname === item.to || pathname.startsWith(item.to))
+    .find(item => pathname === item.to || pathname.startsWith(`${item.to}/`))
 
   return (
     <aside className="w-full lg:w-56 flex-shrink-0">
-      <div className="rounded-lg border bg-background lg:hidden">
+      <div className="overflow-hidden rounded-lg border bg-background lg:sticky lg:top-[68px] lg:rounded-none lg:border-0">
         <button data-analytics-id="navigation.dashboard.toggle"
           type="button"
-          className="flex h-10 w-full items-center justify-between gap-3 px-3 text-sm font-medium"
+          className="flex h-10 w-full items-center justify-between gap-3 px-3 text-sm font-medium lg:hidden"
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(open => !open)}
         >
-          <span>{groups[0]?.label === 'user.menu.settings' || groups[0]?.label === 'user.menu.adminSettings' ? t(groups[0].label) : t('dashboard.navigation')}</span>
+          <span>{navigationLabel}</span>
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             {activeItem ? t(activeItem.label) : null}
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
           </span>
         </button>
-        {mobileOpen ? (
-          <div className="grid grid-cols-2 gap-1 border-t p-2">
-            {groups.flatMap(group => group.items).map(item => {
-              const Icon = item.icon
-              const isActive = pathname === item.to || pathname.startsWith(item.to)
-              return (
-                <Link data-analytics-id={item.analyticsId}
-                  key={item.key}
-                  to={item.to}
-                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-xs font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent'}`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{t(item.label)}</span>
-                </Link>
-              )
-            })}
-          </div>
-        ) : null}
-      </div>
 
-      <div className="hidden lg:sticky lg:top-[68px] lg:block">
-      {/* User summary */}
-      <div className="flex items-center gap-3 px-3 py-2 mb-4">
-        {user?.avatarUrl ? (
-          <img src={user.avatarUrl} alt={user.displayName} className="h-8 w-8 rounded-full border border-border/60" />
-        ) : (
-          <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
-            {user?.displayName?.charAt(0) ?? '?'}
-          </div>
-        )}
-        <div className="min-w-0">
-          <div className="text-sm font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>
-            {user?.displayName}
-          </div>
-          <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            {user?.email}
-          </div>
-          <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            {t('dashboard.userId')}: {user?.userId}
-          </div>
-        </div>
-      </div>
-
-      {/* Nav groups */}
-      {groups.map((group) => (
-        <div key={group.label ?? 'top'} className="mb-4">
-          {group.label && (
-            <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {t(group.label)}
+        <div className="mb-4 hidden items-center gap-3 px-3 py-2 lg:flex">
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt={user.displayName} className="h-8 w-8 shrink-0 rounded-full border border-border/60" />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+              {user?.displayName?.charAt(0) ?? '?'}
             </div>
           )}
-          <nav className="space-y-0.5">
-            {group.items.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.to || pathname.startsWith(item.to)
-              return (
-                <Link data-analytics-id={item.analyticsId}
-                  key={item.key}
-                  to={item.to}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                    isActive ? 'bg-accent' : 'hover:bg-accent'
-                  }`}
-                  style={{ color: isActive ? 'hsl(var(--foreground))' : 'hsl(var(--text-secondary))' }}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{t(item.label)}</span>
-                </Link>
-              )
-            })}
-          </nav>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold">{user?.displayName}</div>
+            <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {t('dashboard.userId')}: {user?.userId}
+            </div>
+          </div>
         </div>
-      ))}
+
+        <div className={`${mobileOpen ? 'block' : 'hidden'} border-t p-2 lg:block lg:border-0 lg:p-0`}>
+          {groups.map(group => (
+            <div key={group.label} className="mb-3 last:mb-0">
+              <h2 className="px-3 py-1.5 text-xs font-medium text-muted-foreground">{t(group.label)}</h2>
+              <nav aria-label={t(group.label)} className="grid grid-cols-2 gap-1 lg:block lg:space-y-0.5">
+                {group.items.map(item => {
+                  const Icon = item.icon
+                  const isActive = activeItem?.key === item.key
+                  return (
+                    <Link data-analytics-id={item.analyticsId}
+                      key={item.key}
+                      to={item.to}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors hover:bg-accent lg:text-sm ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground'}`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <Icon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 break-words">{t(item.label)}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+          ))}
+        </div>
       </div>
     </aside>
   )

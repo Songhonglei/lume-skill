@@ -10,7 +10,6 @@ let pathname = '/dashboard'
 let resolvedPathname = '/dashboard'
 let roles: string[] = []
 let canChangePassword = false
-let namespaceRole: 'OWNER' | 'ADMIN' | 'MEMBER' | undefined
 
 vi.mock('@tanstack/react-router', () => ({
   Outlet: () => <div data-testid="outlet">page-content</div>,
@@ -25,7 +24,6 @@ vi.mock('@/shared/hooks/use-site-presentation', async (original) => {
   const actual = await original<typeof import('@/shared/hooks/use-site-presentation')>()
   return { ...actual, useSitePresentation: () => ({ settings: presentationSettings ?? actual.defaultSitePresentation() }) }
 })
-vi.mock('@/shared/hooks/use-namespace-queries', () => ({ useMyNamespaces: () => ({ data: namespaceRole ? [{ type: 'TEAM', currentUserRole: namespaceRole, status: 'ACTIVE', slug: 'design' }] : [] }) }))
 vi.mock('@/features/auth/use-auth', () => ({ useAuth: () => ({ user: { userId: 'test-reader', displayName: 'Reader', platformRoles: roles, canChangePassword }, isLoading: false }) }))
 vi.mock('@/shared/components/language-switcher', () => ({ LanguageSwitcher: () => null }))
 vi.mock('@/shared/components/theme-toggle', () => ({ ThemeToggle: () => null }))
@@ -35,7 +33,7 @@ vi.mock('@/features/notification/notification-bell', () => ({ NotificationBell: 
 import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
 import { Layout } from './layout'
 
-beforeEach(() => { presentationSettings = undefined; pathname = '/dashboard'; resolvedPathname = pathname; roles = []; canChangePassword = false; namespaceRole = undefined })
+beforeEach(() => { presentationSettings = undefined; pathname = '/dashboard'; resolvedPathname = pathname; roles = []; canChangePassword = false })
 afterEach(cleanup)
 
 describe('shared console layout composition', () => {
@@ -111,46 +109,46 @@ describe('shared console layout composition', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
   })
 
-  it('keeps personal, administrative and workspace navigation separate', () => {
+  it('uses the same two groups in the console and profile, separate from administration', () => {
     roles = ['SUPER_ADMIN']
     const view = render(<Layout />)
     const sidebar = () => within(screen.getByRole('complementary'))
-    expect(sidebar().getByText('sidebar.mySkills')).toBeTruthy()
-    expect(sidebar().queryByText('sidebar.security')).toBeNull()
-    expect(sidebar().queryByText('sidebar.governance')).toBeNull()
+    const expectConsoleGroups = () => {
+      expect(sidebar().getByRole('navigation', { name: 'sidebar.account' })).toBeTruthy()
+      expect(sidebar().getByRole('navigation', { name: 'sidebar.skillsAndData' })).toBeTruthy()
+      expect(sidebar().getByRole('link', { name: 'sidebar.mySkills' })).toBeTruthy()
+      expect(sidebar().getByRole('link', { name: 'sidebar.profile' })).toBeTruthy()
+      expect(sidebar().getByRole('link', { name: 'sidebar.tokens' })).toBeTruthy()
+      expect(sidebar().queryByRole('link', { name: 'reviewCenter.title' })).toBeNull()
+      expect(sidebar().queryByRole('link', { name: 'sidebar.governance' })).toBeNull()
+    }
+    expectConsoleGroups()
     expect(within(screen.getByRole('banner')).queryByText('nav.githubSkills')).toBeNull()
+    expect(sidebar().queryByRole('link', { name: 'sidebar.security' })).toBeNull()
 
     resolvedPathname = pathname = '/settings/profile'
-    view.rerender(<Layout />)
-    expect(sidebar().getByRole('link', { name: 'sidebar.profile' })).toBeTruthy()
-    expect(sidebar().getByText('sidebar.tokens')).toBeTruthy()
-    expect(sidebar().queryByText('sidebar.security')).toBeNull()
-    expect(sidebar().queryByText('sidebar.governance')).toBeNull()
     canChangePassword = true
     view.rerender(<Layout />)
-    expect(sidebar().getByText('sidebar.security')).toBeTruthy()
+    expectConsoleGroups()
+    expect(sidebar().getByRole('link', { name: 'sidebar.security' })).toBeTruthy()
 
     resolvedPathname = pathname = '/admin/system-config'
     view.rerender(<Layout />)
     expect(sidebar().getByText('sidebar.githubSync')).toBeTruthy()
     expect(sidebar().getByText('sidebar.governance')).toBeTruthy()
-    expect(sidebar().queryByText('sidebar.profile')).toBeNull()
+    expect(sidebar().queryByRole('link', { name: 'sidebar.profile' })).toBeNull()
     roles = ['USER_ADMIN']
     view.rerender(<Layout />)
     expect(sidebar().getByText('user.menu.users')).toBeTruthy()
     expect(sidebar().queryByText('sidebar.githubSync')).toBeNull()
   })
 
-  it('shows the unified review entry only for authorized namespace managers', () => {
-    const view = render(<Layout />)
-    const sidebar = screen.getByRole('complementary')
-    expect(within(sidebar).queryByRole('link', { name: 'reviewCenter.title' })).toBeNull()
-    namespaceRole = 'OWNER'
-    view.rerender(<Layout />)
-    expect(within(sidebar).getByRole('link', { name: 'reviewCenter.title' }).getAttribute('href')).toBe('/dashboard/reviews')
-    namespaceRole = 'MEMBER'
-    view.rerender(<Layout />)
-    expect(within(sidebar).queryByRole('link', { name: 'reviewCenter.title' })).toBeNull()
+  it('renders the review center directly without the personal console sidebar', () => {
+    roles = ['SUPER_ADMIN']
+    resolvedPathname = pathname = '/dashboard/reviews'
+    render(<Layout />)
+    expect(screen.getByTestId('outlet')).toBeTruthy()
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 
   it('keeps a single frame while settings-to-dashboard navigation resolves', () => {
