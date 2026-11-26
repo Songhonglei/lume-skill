@@ -21,7 +21,7 @@ describe('getAppMainContentLayout', () => {
   })
 
   it.each([
-    '/search', '/github', '/suites', '/suites/team/example', '/space/acme/demo',
+    '/search', '/suites', '/suites/team/example', '/space/acme/demo',
     '/space/acme/demo/compare', '/namespaces/acme', '/notifications', '/privacy',
     '/reset-password', '/device', '/dashboard/publish',
   ])('gives %s the shared public frame without console navigation', (pathname) => {
@@ -34,6 +34,7 @@ describe('getAppMainContentLayout', () => {
 
   it.each([
     '/dashboard', '/dashboard/skills', '/dashboard/tokens', '/dashboard/stars',
+    '/github', '/admin/system-config', '/dashboard/github-sync',
     '/dashboard/namespaces', '/dashboard/suites', '/dashboard/reviews', '/dashboard/governance',
     '/settings/profile', '/settings/security', '/settings/notifications', '/settings/accounts',
     '/dashboard/reviews/42', '/dashboard/namespaces/team/reviews/42',

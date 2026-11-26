@@ -1,11 +1,10 @@
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { DASHBOARD_PAGE_DESCRIPTION_CLASS_NAME, DASHBOARD_PAGE_TITLE_CLASS_NAME } from '@/shared/components/dashboard-page-header'
+import { DASHBOARD_PAGE_TITLE_CLASS_NAME } from '@/shared/components/dashboard-page-header'
 import { Button } from '@/shared/ui/button'
 
 interface SuiteWorkspaceHeaderProps {
   title: string
-  description?: string
   eyebrow?: string
   backLabel?: string
   onBack?: () => void
@@ -15,7 +14,6 @@ interface SuiteWorkspaceHeaderProps {
 /** Compact, consistent page framing for the dashboard Suite workflow. */
 export function SuiteWorkspaceHeader({
   title,
-  description,
   eyebrow,
   backLabel,
   onBack,
@@ -39,7 +37,6 @@ export function SuiteWorkspaceHeader({
         <div className="min-w-0">
           {eyebrow ? <p className="mb-1 text-xs text-muted-foreground">{eyebrow}</p> : null}
           <h1 className={DASHBOARD_PAGE_TITLE_CLASS_NAME}>{title}</h1>
-          {description ? <p className={`${DASHBOARD_PAGE_DESCRIPTION_CLASS_NAME} max-w-3xl text-muted-foreground`}>{description}</p> : null}
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
       </div>

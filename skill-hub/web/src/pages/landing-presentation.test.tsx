@@ -68,7 +68,7 @@ describe('configurable original homepage and market boundary', () => {
     state.settings = settings
     render(<LandingPage />)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('<b>团队技能</b>')
-    expect(screen.getByText('Fallback description')).toBeTruthy()
+    expect(screen.queryByText('Fallback description')).toBeNull()
     expect(document.querySelector('h1 b')).toBeNull()
     expect(screen.queryByText('landing-quick-start')).toBeNull()
     expect(screen.queryByText('home.popularTitle')).toBeNull()
@@ -112,6 +112,7 @@ describe('configurable original homepage and market boundary', () => {
     for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
       for (const slot of Object.keys(PRESENTATION_CONTENT[section])) {
         if (['badge', 'eyebrow', 'previewTitle', 'previewCaption', 'previewPublishTitle', 'previewPublishDescription'].includes(slot) || slot.startsWith('highlight')) continue
+        if (section === 'hero' && slot === 'description') continue
         if (slot === 'searchPlaceholder') expect(screen.getByPlaceholderText(`${section}-${slot}`)).toBeTruthy()
         else expect(container.textContent).toContain(`${section}-${slot}`)
       }

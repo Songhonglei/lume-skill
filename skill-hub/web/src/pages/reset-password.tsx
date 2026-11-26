@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { authApi } from '@/api/client'
 import { useLocalAuthCapabilities } from '@/features/auth/use-local-auth-capabilities'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 
 /**
@@ -96,7 +96,6 @@ export function ResetPasswordPage() {
       <Card className="w-full border-border bg-card/95 shadow-xl">
         <CardHeader className="space-y-3 text-center">
           <CardTitle>{t('resetPassword.title')}</CardTitle>
-          <CardDescription>{t('resetPassword.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           {capabilitiesError ? <p role="alert" className="text-sm text-red-600">{t('systemConfig.capabilitiesUnavailable')}</p> : null}

@@ -41,7 +41,7 @@ export function GithubSyncPage() {
 
   return <div className="github-sync-surface space-y-5 animate-fade-up">
     <div className="sync-hero flex flex-wrap items-start justify-between gap-4">
-      <div><DashboardPageHeader title={t('githubSync.unifiedTitle')} subtitle={t('githubSync.unifiedSubtitle')} /><span className="mt-2 inline-flex rounded border px-2 py-0.5 text-xs text-muted-foreground">@github</span></div>
+      <div><DashboardPageHeader title={t('githubSync.unifiedTitle')} /><span className="mt-2 inline-flex rounded border px-2 py-0.5 text-xs text-muted-foreground">@github</span></div>
       <div className="flex flex-wrap gap-2">
         <Button data-analytics-id="github.collection.open" size="sm" variant="outline" onClick={() => updateSearch({ drawer: 'collection' })}><SlidersHorizontal className="h-4 w-4" />{t('githubSync.collectionConfig')}</Button>
         <Button data-analytics-id="github.settings.open" size="sm" variant="outline" onClick={() => updateSearch({ drawer: 'settings' })}><Settings2 className="h-4 w-4" />{t('githubSync.systemSettings')}</Button>

@@ -228,14 +228,11 @@ function LandingIntroduction() {
         <section className={`${APP_FRAME_CLASS_NAME} py-6 md:py-8`} aria-labelledby="hub-title">
           <div className="grid gap-6 rounded-xl border border-border border-t-[3px] border-t-primary bg-card p-5 shadow-[var(--shadow-card)] sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="min-w-0">
-              <h1 id="hub-title" className="mb-2 text-2xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-3xl">{text('hero', 'title')}</h1>
-              <p className="mb-5 max-w-2xl whitespace-pre-line text-sm leading-6 text-muted-foreground [overflow-wrap:anywhere]">
-                {text('hero', 'description')}
-              </p>
+              <h1 id="hub-title" className="text-2xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-3xl">{text('hero', 'title')}</h1>
               {presentationItemVisible(settings, 'hero', 'preview') && (
                 <form
                   aria-label={t('nav.marketplace')}
-                  className="flex max-w-2xl items-center gap-2 rounded-lg border border-border bg-background p-1.5 focus-within:border-ring"
+                  className="mt-4 flex max-w-2xl items-center gap-2 rounded-lg border border-border bg-background p-1.5 focus-within:border-ring"
                   onSubmit={(event) => {
                     event.preventDefault()
                     handleSearch(searchQuery)

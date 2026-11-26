@@ -66,6 +66,6 @@ describe('HomePage', () => {
     const html = renderToStaticMarkup(<HomePage />)
 
     expect(html).toContain('Luma Skill Hub')
-    expect(html).toContain('home.subtitle')
+    expect(html).not.toContain('home.subtitle')
   })
 })

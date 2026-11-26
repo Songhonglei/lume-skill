@@ -98,9 +98,6 @@ export function DeviceAuthPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold font-heading">{t('device.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('device.subtitle')}
-          </p>
         </div>
 
         <form data-analytics-id="auth.device.authorize" onSubmit={handleSubmit} className="space-y-6">

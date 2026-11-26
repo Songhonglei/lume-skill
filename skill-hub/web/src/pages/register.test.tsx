@@ -85,7 +85,7 @@ describe('RegisterPage', () => {
     const html = renderToStaticMarkup(<RegisterPage />)
 
     expect(html).toContain('register.title')
-    expect(html).toContain('register.subtitle')
+    expect(html).not.toContain('register.subtitle')
     expect(html).toContain('register.submit')
     expect(html).not.toContain('register.oauthHint')
   })

@@ -60,6 +60,21 @@ export function GithubSyncCollectionDrawer({ onClose, onRepository, visible }: {
         <DialogDescription>{t('githubSync.collectionScope')}</DialogDescription>
       </DialogHeader>
       <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
+        <section className="space-y-4 rounded border p-4">
+          <div><h2 className="font-semibold">{t('githubSync.specifiedRepository')}</h2><p className="text-sm text-muted-foreground">{t('githubSync.specifiedRepositoryHelp')}</p></div>
+          <form data-analytics-id="github.repository.add" onSubmit={addRepository} className="flex flex-wrap gap-2">
+            <Input className="min-w-0 flex-1 sm:min-w-52" aria-label={t('githubSync.repository')} placeholder="https://github.com/owner/repository" value={repository} onChange={(event) => setRepository(event.target.value)} required />
+            <Button size="sm" type="submit" disabled={mutations.addRepository.isPending}>{t('githubSync.addRepository')}</Button>
+          </form>
+          {entries.error ? <p role="alert" className="text-sm text-destructive">{t('githubSync.loadFailed')}: {entries.error.message}</p> : null}
+          {entries.isLoading ? <p className="text-sm text-muted-foreground">{t('githubSync.loading')}</p> : null}
+          {specified?.length ? <div className="divide-y rounded border text-sm">{specified.map((entry) => <div key={entry.id} className="space-y-2 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2"><span className="break-all font-medium">{entry.ownerLogin}/{entry.repositoryName}</span><span className="sync-state" data-tone={entry.enabled ? 'teal' : 'amber'}>{entry.enabled ? t('githubSync.enabled') : t('githubSync.disabled')}</span></div>
+            <p className="text-xs text-muted-foreground">{entry.repositoryId ? `#${entry.repositoryId}` : t('githubSync.unresolved')} · {t('githubSync.nextCheck')}: {entry.nextDueAt ? formatLocalDateTime(entry.nextDueAt, i18n.language) : '—'}</p>
+            {entry.latestExecution ? <p className="text-xs text-muted-foreground">{t('githubSync.latestExecution')}: {entry.latestExecution.status ? t(`githubSync.codes.${entry.latestExecution.status}`, { defaultValue: entry.latestExecution.status }) : '—'}{entry.latestExecution.errorCode ? ` · ${t(`githubSync.codes.${entry.latestExecution.errorCode}`, { defaultValue: entry.latestExecution.errorCode })}` : ''}{entry.latestExecution.retryAt ? ` · ${t('githubSync.retryAt')}: ${formatLocalDateTime(entry.latestExecution.retryAt, i18n.language)}` : ''}</p> : null}
+            <div className="flex flex-wrap gap-2">{entry.repositoryId ? <Button data-analytics-id="github.repository.open" size="sm" variant="outline" onClick={() => onRepository(entry.repositoryId!)}>{t('githubSync.viewRepository')}</Button> : null}<Button data-analytics-id="github.repository.toggle" size="sm" variant="outline" disabled={!entry.id || mutations.setEnabled.isPending} onClick={() => entry.id && void setEnabled(entry.id, !entry.enabled)}>{entry.enabled ? t('githubSync.disable') : t('githubSync.enable')}</Button></div>
+          </div>)}</div> : !entries.isLoading && !entries.error ? <p className="text-sm text-muted-foreground">{t('githubSync.noSpecifiedRepositories')}</p> : null}
+        </section>
         <section className="space-y-3 rounded border p-4">
           <div><h2 className="font-semibold">{t('githubSync.automaticDiscovery')}</h2><p className="text-sm text-muted-foreground">{t('githubSync.automaticDiscoveryHelp')}</p></div>
           {configuration.isLoading ? <p className="text-sm text-muted-foreground">{t('githubSync.loading')}</p> : null}
@@ -82,21 +97,6 @@ export function GithubSyncCollectionDrawer({ onClose, onRepository, visible }: {
               {summary.data?.waits?.map((wait, index) => <p key={`${wait.reason}:${index}`} className="rounded border border-amber-500/30 p-2">{t(`deepDiscovery.reason.${wait.reason}`, { defaultValue: wait.reason ?? '—' })}{wait.retryAt ? ` · ${t('deepDiscovery.retryAt')}: ${formatLocalDateTime(wait.retryAt, i18n.language)}` : ''}</p>)}
             </div> : null}
           </div>
-        </section>
-        <section className="space-y-4 rounded border p-4">
-          <div><h2 className="font-semibold">{t('githubSync.specifiedRepository')}</h2><p className="text-sm text-muted-foreground">{t('githubSync.specifiedRepositoryHelp')}</p></div>
-          <form data-analytics-id="github.repository.add" onSubmit={addRepository} className="flex flex-wrap gap-2">
-            <Input className="min-w-52 flex-1" aria-label={t('githubSync.repository')} placeholder="https://github.com/owner/repository" value={repository} onChange={(event) => setRepository(event.target.value)} required />
-            <Button size="sm" type="submit" disabled={mutations.addRepository.isPending}>{t('githubSync.addRepository')}</Button>
-          </form>
-          {entries.error ? <p role="alert" className="text-sm text-destructive">{t('githubSync.loadFailed')}: {entries.error.message}</p> : null}
-          {entries.isLoading ? <p className="text-sm text-muted-foreground">{t('githubSync.loading')}</p> : null}
-          {specified?.length ? <div className="divide-y rounded border text-sm">{specified.map((entry) => <div key={entry.id} className="space-y-2 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2"><span className="break-all font-medium">{entry.ownerLogin}/{entry.repositoryName}</span><span className="sync-state" data-tone={entry.enabled ? 'teal' : 'amber'}>{entry.enabled ? t('githubSync.enabled') : t('githubSync.disabled')}</span></div>
-            <p className="text-xs text-muted-foreground">{entry.repositoryId ? `#${entry.repositoryId}` : t('githubSync.unresolved')} · {t('githubSync.nextCheck')}: {entry.nextDueAt ? formatLocalDateTime(entry.nextDueAt, i18n.language) : '—'}</p>
-            {entry.latestExecution ? <p className="text-xs text-muted-foreground">{t('githubSync.latestExecution')}: {entry.latestExecution.status ? t(`githubSync.codes.${entry.latestExecution.status}`, { defaultValue: entry.latestExecution.status }) : '—'}{entry.latestExecution.errorCode ? ` · ${t(`githubSync.codes.${entry.latestExecution.errorCode}`, { defaultValue: entry.latestExecution.errorCode })}` : ''}{entry.latestExecution.retryAt ? ` · ${t('githubSync.retryAt')}: ${formatLocalDateTime(entry.latestExecution.retryAt, i18n.language)}` : ''}</p> : null}
-            <div className="flex flex-wrap gap-2">{entry.repositoryId ? <Button data-analytics-id="github.repository.open" size="sm" variant="outline" onClick={() => onRepository(entry.repositoryId!)}>{t('githubSync.viewRepository')}</Button> : null}<Button data-analytics-id="github.repository.toggle" size="sm" variant="outline" disabled={!entry.id || mutations.setEnabled.isPending} onClick={() => entry.id && void setEnabled(entry.id, !entry.enabled)}>{entry.enabled ? t('githubSync.disable') : t('githubSync.enable')}</Button></div>
-          </div>)}</div> : !entries.isLoading && !entries.error ? <p className="text-sm text-muted-foreground">{t('githubSync.noSpecifiedRepositories')}</p> : null}
         </section>
         <section className="rounded border p-4">
           <button data-analytics-id="github.acquisition.toggle" type="button" className="flex w-full items-center justify-between text-left font-semibold" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{t('githubSync.otherAcquisition')}<span aria-hidden="true">{expanded ? '−' : '+'}</span></button>

@@ -1,8 +1,9 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { startTransition, useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Download, Folder, Globe, Lock, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
+import { ArrowLeft, ArrowUpCircle, Boxes, ChevronDown, ChevronUp, Clock, Download, Folder, Globe, Lock, MoreHorizontal, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
 import { SkillInstructions } from '@/features/skill/skill-instructions'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { SkillVisibilityDialog } from '@/features/skill/skill-visibility-dialog'
@@ -1007,15 +1008,31 @@ export function SkillDetailPage() {
               ))}
             </div>
           )}
-          <Button
-            data-analytics-id="skill.download.request"
-            size="lg"
-            onClick={handleDownload}
-            disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
-          >
-            <Download aria-hidden="true" className="h-4 w-4" />
-            {t('skillDetail.download')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              data-analytics-id="skill.download.request"
+              size="lg"
+              onClick={handleDownload}
+              disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
+            >
+              <Download aria-hidden="true" className="h-4 w-4" />
+              {t('skillDetail.download')}
+            </Button>
+            {canInteract && canReport ? (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="lg" aria-label={t('mySkills.moreActions')}>
+                    <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem data-analytics-id="report.create.open" onSelect={handleOpenReport} disabled={hasReported || reportMutation.isPending}>
+                    {hasReported ? t('skillDetail.reportedSkill') : reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
           {showingUnpublishedPreview && (
             <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{t('skillDetail.unpublishedPreviewTitle')}</div>
@@ -1332,11 +1349,6 @@ export function SkillDetailPage() {
                     <SubscribeButton skillId={skill.id} subscriptionCount={(skill as { subscriptionCount?: number }).subscriptionCount ?? 0} onRequireLogin={requireLogin} />
                     <RatingInput skillId={skill.id} onRequireLogin={requireLogin} />
                   </>
-                ) : null}
-                {canReport ? (
-                  <Button data-analytics-id="report.create.open" variant="outline" className="w-full" onClick={handleOpenReport} disabled={hasReported || reportMutation.isPending}>
-                    {hasReported ? t('skillDetail.reportedSkill') : reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
-                  </Button>
                 ) : null}
               </>
             ) : (

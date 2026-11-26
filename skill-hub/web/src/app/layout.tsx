@@ -12,13 +12,13 @@ import { UserMenu } from '@/shared/components/user-menu'
 import { NotificationBell } from '@/features/notification/notification-bell'
 import { dismissOpenOverlays } from '@/shared/lib/dismiss-open-overlays'
 import { syncDocumentLanguage } from '@/shared/lib/document-language'
-import { DashboardSidebar, SIDEBAR_GROUPS } from '@/pages/dashboard'
+import { ADMIN_SETTINGS_GROUPS, DashboardSidebar, PERSONAL_SETTINGS_GROUPS, SIDEBAR_GROUPS } from '@/pages/dashboard'
 import { canViewGovernanceCenter } from '@/shared/lib/governance-access'
 import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
 import { canAccessReviewCenter } from '@/features/review/review-paths'
 import { APP_HEADER_CONTENT_CLASS_NAME, getAppHeaderClassName } from './layout-header-style'
 import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
-import { AUTH_ENTRY_PATHS, SPLIT_AUTH_PATHS, getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
+import { AUTH_ENTRY_PATHS, SPLIT_AUTH_PATHS, consoleArea, getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
 
 /**
  * Application shell shared by all routed pages.
@@ -44,16 +44,18 @@ export function Layout() {
   const isAuthEntryRoute = AUTH_ENTRY_PATHS.includes(contentLayoutPathname as typeof AUTH_ENTRY_PATHS[number])
   const isSplitAuthRoute = SPLIT_AUTH_PATHS.includes(contentLayoutPathname as typeof SPLIT_AUTH_PATHS[number])
   const showSidebar = mainContentLayout.sidebarRowClassName !== undefined
+  const area = consoleArea(contentLayoutPathname)
+  const groups = area === 'admin' ? ADMIN_SETTINGS_GROUPS : area === 'personal' ? PERSONAL_SETTINGS_GROUPS : SIDEBAR_GROUPS
   const governanceVisible = canViewGovernanceCenter(user?.platformRoles)
-  const { data: managedNamespaces } = useMyNamespaces(Boolean(user) && showSidebar)
+  const { data: managedNamespaces } = useMyNamespaces(Boolean(user) && showSidebar && area === 'workspace')
   const reviewVisible = canAccessReviewCenter(user?.platformRoles, managedNamespaces)
-  const filteredDashboardGroups = SIDEBAR_GROUPS
+  const filteredDashboardGroups = groups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => (
         (!item.admin || governanceVisible)
         && (!item.review || reviewVisible)
-        && (!item.superAdmin || user?.platformRoles?.includes('SUPER_ADMIN'))
+        && (!item.roles || item.roles.some(role => user?.platformRoles?.includes(role)))
         && (!item.passwordCapability || user?.canChangePassword === true)
       )),
     }))
@@ -95,17 +97,12 @@ export function Layout() {
     { label: t('nav.landing'), to: '/', analyticsId: 'navigation.home.open', exact: true },
     { label: t('nav.marketplace'), to: '/search', analyticsId: 'navigation.skills.open' },
     { label: t('nav.publish'), to: '/dashboard/publish', analyticsId: 'skill.publish.open', auth: true },
-    { label: t('nav.githubSkills'), to: '/github', analyticsId: 'navigation.github.open' },
     { label: t('nav.suites'), to: '/suites', analyticsId: 'navigation.suites.open' },
     { label: t('nav.dashboard'), to: '/dashboard', analyticsId: 'navigation.dashboard.open', auth: true },
   ]
 
   const isActive = (to: string, exact?: boolean) => {
     if (exact) return pathname === to
-    // 「控制台」按钮：仅在 /dashboard 主页或 /settings/* 时高亮
-    if (to === '/dashboard') {
-      return pathname === '/dashboard' || pathname.startsWith('/settings/')
-    }
     // Keep matching strict so parent dashboard paths do not highlight unrelated child links.
     return pathname === to
   }
@@ -212,7 +209,7 @@ export function Layout() {
           }
         >
           <div className={mainContentLayout.contentClassName}>
-          {showSidebar ? (
+          {showSidebar && filteredDashboardGroups.length > 0 ? (
             <div className={mainContentLayout.sidebarRowClassName ?? "flex flex-col lg:flex-row gap-6"}>
               <DashboardSidebar groups={filteredDashboardGroups} user={user} t={t} pathname={contentLayoutPathname} />
               <div className={mainContentLayout.sidebarContentClassName ?? "flex-1 min-w-0"}>

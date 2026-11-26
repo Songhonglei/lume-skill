@@ -644,7 +644,7 @@
     "admin": "Admin",
     "governance": "Governance center",
     "reports": "Reports",
-    "githubSync": "Skill Sync",
+    "githubSync": "GitHub Sync",
     "deepDiscovery": "Deep Discovery"
   },
   "deepDiscovery": {
@@ -2683,6 +2683,8 @@
   },
   "user": {
     "menu": {
+      "settings": "Settings",
+      "adminSettings": "Admin Settings",
       "dashboard": "Dashboard",
       "mySkills": "My Skills",
       "mySuites": "My Suites",
@@ -4263,7 +4265,7 @@
     "title": "Site and homepage",
     "intro": "Edit branding and homepage content. Save to apply changes for visitors.",
     "brandTitle": "Site brand",
-    "brandHelp": "Used in the navigation, homepage, footer and browser title.",
+    "brandHelp": "Shown in the navigation and browser title.",
     "siteName": "Site name",
     "defaultHelp": "Leave empty to use the default Luma Skill Hub name.",
     "logoUrl": "Site logo",
@@ -4398,14 +4400,14 @@
     "siteInformationHelp": "Set the name, images and main links.",
     "commonLinksHelp": "Leave blank to use the original link. Enter a full URL or a site path such as /guide.",
     "introductionTitle": "Homepage introduction",
-    "introductionHelp": "Edit the heading and description at the top of the homepage. Leave blank to use the original text.",
+    "introductionHelp": "Edit the homepage title. Leave it blank to use the default title.",
     "introductionHeading": "Heading",
     "introductionDescription": "Description",
     "homeContentTitle": "Homepage modules",
     "homeContentHelp": "Show or hide existing modules while keeping the original order. The footer setting applies site-wide.",
     "restorePage": "Restore page defaults",
     "restorePageTitle": "Restore this page’s defaults?",
-    "restorePageHelp": "Reset the site name and images, homepage heading and description in all languages, these visibility settings, and documentation and source links. Other saved text, card settings and links stay unchanged. Save to apply.",
+    "restorePageHelp": "Reset the site name and images, homepage title in all languages, these visibility settings, and documentation and source links. Other saved text, card settings and links stay unchanged. Save to apply.",
     "saveBeforeViewing": "Save your changes to view them on the homepage.",
     "viewHomepage": "View saved homepage",
     "previewReadOnly": "Read-only draft preview",

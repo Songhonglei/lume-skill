@@ -70,7 +70,6 @@ export function ReviewProgressPage() {
     <div className="space-y-8 animate-fade-up">
       <DashboardPageHeader
         title={t('reviewProgress.title')}
-        subtitle={t('reviewProgress.subtitle')}
       />
 
       <Card className="border-border/70">

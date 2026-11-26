@@ -52,7 +52,7 @@ export function EmailBatchDetail({ id }: { id: string }) {
   const batch = query.data
   return <div className={APP_SHELL_PAGE_CLASS_NAME}>
     <Link to="/settings/notifications" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden="true" />{t('notificationEmail.back')}</Link>
-    <DashboardPageHeader title={t('notificationEmail.batchTitle')} subtitle={t('notificationEmail.batchHelp')} />
+    <DashboardPageHeader title={t('notificationEmail.batchTitle')} />
     {loading ? <Card role="status" className="space-y-4 p-6 sm:p-8"><span className="sr-only">{t('notificationEmail.loading')}</span><div aria-hidden="true" className="space-y-3"><div className="h-5 w-40 animate-pulse rounded bg-muted" /><div className="h-4 w-3/4 animate-pulse rounded bg-muted" /><div className="h-4 w-1/2 animate-pulse rounded bg-muted" /></div></Card> : null}
     {signInRequired || unavailable || (query.isError && !loading) ? <Card role={signInRequired ? 'status' : 'alert'} className="overflow-hidden">
       <div className="flex flex-col gap-5 p-6 sm:flex-row sm:gap-6 sm:p-8">

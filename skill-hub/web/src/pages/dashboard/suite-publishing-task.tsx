@@ -25,7 +25,6 @@ export function SuitePublishingTaskPage() {
     <div className="space-y-5 animate-fade-up">
       <SuiteWorkspaceHeader
         title={t('suite.bundle.taskDetailTitle')}
-        description={t('suite.bundle.taskDetailDescription')}
         eyebrow={t('suite.myTitle')}
         backLabel={t(returnsToSuite ? 'suite.bundle.backToSuite' : 'suite.management.backToSuites')}
         onBack={goBack}

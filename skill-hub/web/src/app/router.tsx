@@ -9,6 +9,7 @@ import { createRedirectAuthenticated, createRequireAuth, isSafeAuthReturnTo } fr
 import { clearDynamicImportReloadGuard, recoverFromDynamicImportError } from '@/shared/lib/dynamic-import-recovery'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
 import { captureInvitationFragment } from '@/shared/lib/namespace-invitation'
+import { GOVERNANCE_ROLES } from '@/shared/lib/governance-access'
 import { validateReviewSearch } from '@/features/review/review-route-search'
 
 /**
@@ -171,7 +172,7 @@ const NamespaceReviewDetailPage = createLazyRouteComponent(
   'NamespaceReviewDetailPage',
   dashboardRouteOptions,
 )
-const GovernancePage = createLazyRouteComponent(() => import('@/pages/dashboard/governance'), 'GovernancePage', dashboardRouteOptions)
+const GovernancePage = createRoleProtectedRouteComponent(() => import('@/pages/dashboard/governance'), 'GovernancePage', GOVERNANCE_ROLES, dashboardRouteOptions)
 const GithubSyncPage = createRoleProtectedRouteComponent(
   () => import('@/pages/dashboard/github-sync'), 'GithubSyncPage', ['SUPER_ADMIN'], dashboardRouteOptions,
 )
@@ -323,6 +324,12 @@ const searchRoute = createRoute({
 const githubSkillsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'github',
+  beforeLoad: async ({ search }) => {
+    const user = await getCurrentUser()
+    if (!user?.platformRoles.includes('SUPER_ADMIN')) {
+      throw redirect({ to: '/search', search: { q: search.q, source: 'github', sort: search.sort, page: 0, starredOnly: false }, replace: true })
+    }
+  },
   component: GithubSkillsPage,
   validateSearch: (search: Record<string, unknown>): {
     q: string; sort: string; page: number; view?: 'repositories'; repositoryId?: string; repositoryPage?: number; memberQuery?: string; snapshotId?: string; repositoryTab?: 'history'

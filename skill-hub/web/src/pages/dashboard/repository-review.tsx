@@ -69,7 +69,7 @@ export function RepositoryReviewPage() {
 
   return <div className="space-y-6">
     <Button variant="link" className="min-h-11 px-0 sm:min-h-8" disabled={batch.busy} onClick={back}><ArrowLeft aria-hidden="true" className="mr-2 h-4 w-4" />{t('reviewGroups.back')}</Button>
-    <DashboardPageHeader title={context.data ? `${context.data.owner}/${context.data.repository}` : t('reviewGroups.detailTitle')} subtitle={t('reviewGroups.detailDescription')} />
+    <DashboardPageHeader title={context.data ? `${context.data.owner}/${context.data.repository}` : t('reviewGroups.detailTitle')} />
     {batch.dialogs}
     {!validId || context.isError ? <Card className="space-y-3 p-6" role="alert"><p>{t(statusError === 403 ? 'reviewCenter.noPermission' : 'reviewCenter.loadFailed')}</p>{validId && <Button variant="outline" onClick={() => void context.refetch()}>{t('reviewCenter.retry')}</Button>}</Card>
       : context.isPending ? <div className="h-28 animate-shimmer rounded-lg" aria-label={t('reviewCenter.loading')} />

@@ -111,21 +111,34 @@ describe('shared console layout composition', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
   })
 
-  it('retains role and account-capability filtering in the centralized sidebar', () => {
+  it('keeps personal, administrative and workspace navigation separate', () => {
+    roles = ['SUPER_ADMIN']
     const view = render(<Layout />)
-    const sidebar = screen.getByRole('complementary')
-    expect(within(sidebar).queryByText('sidebar.governance')).toBeNull()
-    expect(within(sidebar).queryByText('sidebar.githubSync')).toBeNull()
-    expect(within(sidebar).queryByText('sidebar.security')).toBeNull()
-    roles = ['SKILL_ADMIN']
+    const sidebar = () => within(screen.getByRole('complementary'))
+    expect(sidebar().getByText('sidebar.mySkills')).toBeTruthy()
+    expect(sidebar().queryByText('sidebar.security')).toBeNull()
+    expect(sidebar().queryByText('sidebar.governance')).toBeNull()
+    expect(within(screen.getByRole('banner')).queryByText('nav.githubSkills')).toBeNull()
+
+    resolvedPathname = pathname = '/settings/profile'
+    view.rerender(<Layout />)
+    expect(sidebar().getByRole('link', { name: 'sidebar.profile' })).toBeTruthy()
+    expect(sidebar().getByText('sidebar.tokens')).toBeTruthy()
+    expect(sidebar().queryByText('sidebar.security')).toBeNull()
+    expect(sidebar().queryByText('sidebar.governance')).toBeNull()
     canChangePassword = true
     view.rerender(<Layout />)
-    expect(within(sidebar).getByText('sidebar.governance')).toBeTruthy()
-    expect(within(sidebar).queryByText('sidebar.githubSync')).toBeNull()
-    expect(within(sidebar).getByText('sidebar.security')).toBeTruthy()
-    roles = ['SUPER_ADMIN']
+    expect(sidebar().getByText('sidebar.security')).toBeTruthy()
+
+    resolvedPathname = pathname = '/admin/system-config'
     view.rerender(<Layout />)
-    expect(within(sidebar).getByText('sidebar.githubSync')).toBeTruthy()
+    expect(sidebar().getByText('sidebar.githubSync')).toBeTruthy()
+    expect(sidebar().getByText('sidebar.governance')).toBeTruthy()
+    expect(sidebar().queryByText('sidebar.profile')).toBeNull()
+    roles = ['USER_ADMIN']
+    view.rerender(<Layout />)
+    expect(sidebar().getByText('user.menu.users')).toBeTruthy()
+    expect(sidebar().queryByText('sidebar.githubSync')).toBeNull()
   })
 
   it('shows the unified review entry only for authorized namespace managers', () => {

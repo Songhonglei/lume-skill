@@ -16,10 +16,9 @@ vi.mock('@/features/token/token-list', () => ({
 }))
 
 vi.mock('@/shared/components/dashboard-page-header', () => ({
-  DashboardPageHeader: ({ title, subtitle }: { title: string; subtitle: string }) => (
+  DashboardPageHeader: ({ title }: { title: string }) => (
     <div>
       <h1>{title}</h1>
-      <p>{subtitle}</p>
     </div>
   ),
 }))
@@ -35,7 +34,7 @@ describe('TokensPage', () => {
     const html = renderToStaticMarkup(<TokensPage />)
 
     expect(html).toContain('tokens.pageTitle')
-    expect(html).toContain('tokens.pageSubtitle')
+    expect(html).not.toContain('tokens.pageSubtitle')
     expect(html).toContain('token-list')
   })
 })
