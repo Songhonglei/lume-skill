@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/features/auth/use-auth'
 import { Button } from '@/shared/ui/button'
+import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import { Card } from '@/shared/ui/card'
 import { NamespaceBadge } from '@/shared/components/namespace-badge'
 import { EmptyState } from '@/shared/components/empty-state'
@@ -47,16 +48,6 @@ export function MyNamespacesPage() {
       return t('namespaceStatus.archived')
     }
     return t('namespaceStatus.active')
-  }
-
-  const resolveStatusClassName = (status: string) => {
-    if (status === 'FROZEN') {
-      return 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-    }
-    if (status === 'ARCHIVED') {
-      return 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-    }
-    return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
   }
 
   const resolveHint = (status: string, type: string) => {
@@ -113,9 +104,10 @@ export function MyNamespacesPage() {
                         type={namespace.type}
                         name={namespace.type === 'GLOBAL' ? t('myNamespaces.typeGlobal') : t('myNamespaces.typeTeam')}
                       />
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${resolveStatusClassName(namespace.status)}`}>
-                        {resolveStatusLabel(namespace.status)}
-                      </span>
+                      <ListStatusIcon
+                        kind={namespace.status === 'FROZEN' ? 'frozen' : namespace.status === 'ARCHIVED' ? 'archived' : 'active'}
+                        label={resolveStatusLabel(namespace.status)}
+                      />
                     </div>
                     <p className="mb-3 min-h-10 text-sm leading-relaxed text-muted-foreground">
                       {namespace.description ?? ''}
