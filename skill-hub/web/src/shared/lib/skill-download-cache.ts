@@ -1,5 +1,8 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { InfiniteData, QueryClient } from '@tanstack/react-query'
 import type { PagedResponse, SkillDetail, SkillSummary } from '@/api/types'
+
+type SearchPage = PagedResponse<SkillSummary>
+type SearchCache = SearchPage | InfiniteData<SearchPage, number>
 
 type SkillIdentity = {
   namespace: string
@@ -42,12 +45,9 @@ function incrementSummaryList(
 }
 
 function incrementPagedSummaryList(
-  page: PagedResponse<SkillSummary> | undefined,
+  page: SearchPage,
   target: SkillIdentity,
-): PagedResponse<SkillSummary> | undefined {
-  if (!page) {
-    return page
-  }
+): SearchPage {
   return {
     ...page,
     items: page.items.map((skill) => incrementSummaryDownloadCount(skill, target)),
@@ -70,8 +70,13 @@ export function incrementSkillDownloadCount(
     ['skills', 'stars'],
     (current) => incrementSummaryList(current, target),
   )
-  queryClient.setQueriesData<PagedResponse<SkillSummary>>(
+  queryClient.setQueriesData<SearchCache>(
     { queryKey: ['skills', 'search'] },
-    (current) => incrementPagedSummaryList(current, target),
+    (current) => {
+      if (!current) return current
+      return 'pages' in current
+        ? { ...current, pages: current.pages.map(page => incrementPagedSummaryList(page, target)) }
+        : incrementPagedSummaryList(current, target)
+    },
   )
 }

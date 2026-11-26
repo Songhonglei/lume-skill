@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, type InfiniteData } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import type { PagedResponse, SkillDetail, SkillSummary } from '@/api/types'
 import { incrementSkillDownloadCount } from './skill-download-cache'
@@ -90,5 +90,23 @@ describe('incrementSkillDownloadCount', () => {
         ['skills', 'search', { q: '', sort: 'downloads', page: 0, size: 12, starredOnly: false }],
       )?.items[1]?.downloadCount,
     ).toBe(4)
+  })
+
+  it('updates every loaded market page without changing pagination', () => {
+    const queryClient = new QueryClient()
+    const searchKey = ['skills', 'search', 'infinite', 'reader', 'en', { q: 'demo' }]
+    const otherSkill = createSkillSummary({ id: 2, slug: 'other-skill', downloadCount: 4 })
+    const pages = [
+      { items: [createSkillSummary()], total: 2, page: 0, size: 1 },
+      { items: [otherSkill], total: 2, page: 1, size: 1 },
+    ]
+    queryClient.setQueryData(searchKey, { pages, pageParams: [0, 1] })
+
+    incrementSkillDownloadCount(queryClient, { namespace: 'team', slug: 'demo-skill' })
+
+    const cached = queryClient.getQueryData<InfiniteData<PagedResponse<SkillSummary>, number>>(searchKey)
+    expect(cached?.pageParams).toEqual([0, 1])
+    expect(cached?.pages[0].items[0].downloadCount).toBe(11)
+    expect(cached?.pages[1].items[0]).toBe(otherSkill)
   })
 })
