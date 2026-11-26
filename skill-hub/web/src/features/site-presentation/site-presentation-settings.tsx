@@ -3,9 +3,9 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'r
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useBlocker } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Eye, Upload } from 'lucide-react'
+import { Eye, Plus, Upload } from 'lucide-react'
 import { ApiError } from '@/api/client'
-import { presentationAssetUrl, sitePresentationApi, type SitePresentationResponse, type SitePresentationSettings } from '@/api/site-presentation'
+import { presentationAssetUrl, sitePresentationApi, type SitePresentationLink, type SitePresentationResponse, type SitePresentationSettings } from '@/api/site-presentation'
 import { defaultSitePresentation, presentationText, SITE_PRESENTATION_QUERY_KEY } from '@/shared/hooks/use-site-presentation'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/shared/ui/dialog'
@@ -16,10 +16,11 @@ import { Label } from '@/shared/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { withBasePath } from '@/shared/lib/base-path'
-import { PRESENTATION_CONTENT, PRESENTATION_LINKS, type PresentationSection } from '@/shared/lib/presentation-content'
+import { PRESENTATION_CONTENT, PRESENTATION_LINKS, presentationItemVisible, presentationNavigationUrl, type PresentationSection } from '@/shared/lib/presentation-content'
 
 const ADMIN_QUERY_KEY = ['system-config', 'presentation'] as const
 const LOCALES = ['zh', 'en'] as const
+const MAX_COMMON_LINKS = 5
 const normalizeSettings = (value: SitePresentationSettings): SitePresentationSettings => ({ ...value, sections: { ...defaultSitePresentation().sections, ...value.sections } })
 const settingsSnapshot = (value: SitePresentationSettings) => JSON.stringify(normalizeSettings(value), (_key, entry: unknown) =>
   entry !== null && typeof entry === 'object' && !Array.isArray(entry)
@@ -75,6 +76,37 @@ function SettingsSection({ title, help, children }: { title: string; help: strin
   </section>
 }
 
+function CommonLinksEditor({ links, onChange }: { links: SitePresentationLink[]; onChange: (links: SitePresentationLink[]) => void }) {
+  const { t } = useTranslation()
+  const changeLink = (index: number, patch: Partial<SitePresentationLink>) => onChange(
+    links.map((link, position) => position === index ? { ...link, ...patch } : link),
+  )
+  return <div className="space-y-4">
+    {links.length === 0 && <p className="text-sm text-muted-foreground">{t('sitePresentation.commonLinksEmpty')}</p>}
+    {links.length > 0 && <ul className="divide-y rounded-lg border bg-card px-4">
+      {links.map((link, index) => <li key={index} className="grid min-w-0 gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)_auto] sm:items-start">
+        <div className="min-w-0 space-y-2">
+          <Label htmlFor={`common-link-title-${index}`}>{t('sitePresentation.commonLinkName')}</Label>
+          <Input id={`common-link-title-${index}`} maxLength={160} value={link.title ?? ''} onChange={event => changeLink(index, { title: event.target.value })} />
+        </div>
+        <div className="min-w-0 space-y-2">
+          <Label htmlFor={`common-link-url-${index}`}>{t('sitePresentation.commonLinkUrl')}</Label>
+          <Input id={`common-link-url-${index}`} autoCapitalize="none" spellCheck={false} maxLength={2048} value={link.url ?? ''} aria-invalid={!!link.url && !presentationNavigationUrl(link.url)} onChange={event => changeLink(index, { url: event.target.value })} />
+        </div>
+        <Button type="button" variant="ghost" className="justify-self-start sm:mt-6" aria-label={t('sitePresentation.removeCommonLinkLabel', { index: index + 1 })} onClick={() => onChange(links.filter((_, position) => position !== index))}>
+          {t('sitePresentation.removeCommonLink')}
+        </Button>
+      </li>)}
+    </ul>}
+    <div className="flex flex-wrap items-center gap-3">
+      <Button type="button" variant="outline" size="sm" disabled={links.length >= MAX_COMMON_LINKS} onClick={() => onChange([...links, { title: '', url: '' }])}>
+        <Plus aria-hidden className="size-4" />{t('sitePresentation.addCommonLink')}
+      </Button>
+      <span className="text-xs tabular-nums text-muted-foreground">{t('sitePresentation.commonLinksCount', { count: links.length, max: MAX_COMMON_LINKS })}</span>
+    </div>
+  </div>
+}
+
 export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: { onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void } = {}) {
   const { t, i18n } = useTranslation()
   const client = useQueryClient()
@@ -90,6 +122,10 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
   const [previewOpen, setPreviewOpen] = useState(false)
   const rawValue = draft?.settings ?? query.data?.settings
   const value = rawValue ? normalizeSettings(rawValue) : undefined
+  const incompleteLinks = draft?.settings.commonLinks?.some(link => !link.title?.trim() || !presentationNavigationUrl(link.url)) ?? false
+  const commonLinks = value?.commonLinks ?? (value ? ([['repository', 'primaryAction'], ['documentation', 'secondaryAction']] as const)
+    .filter(([, action]) => presentationItemVisible(value, 'cta', action))
+    .map(([slot, action]) => ({ title: presentationText(value, 'cta', `${action}Label`, i18n.resolvedLanguage, t), url: value.links[slot] ?? PRESENTATION_LINKS[slot] })) : [])
   const dirty = draft !== null && !sameSettings(draft.settings, draft.original)
   const blocker = useBlocker({ shouldBlockFn: () => dirty || uploading, enableBeforeUnload: dirty || uploading, withResolver: true })
   const save = useMutation({
@@ -118,7 +154,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
     const links = { ...value.links }
     delete links.documentation
     delete links.repository
-    edit({ siteName: defaults.siteName, logoUrl: defaults.logoUrl, sections, links })
+    edit({ siteName: defaults.siteName, logoUrl: defaults.logoUrl, sections, links, ...(value.commonLinks != null && { commonLinks: null }) })
     setResetOpen(false)
   }
   const editIntroduction = (text: string) => {
@@ -147,7 +183,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
       </header>
       {query.isPending && <p role="status">{t('common.loading')}</p>}
       {query.isError && <div role="alert" className="space-y-3"><p>{t('sitePresentation.loadFailed')}</p><Button variant="outline" onClick={() => void query.refetch()}>{t('sitePresentation.retry')}</Button></div>}
-      {value && <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); if (draft && dirty && !busy && !conflict) save.mutate({ settings: draft.settings, version: draft.version }) }}>
+      {value && <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); if (draft && dirty && !busy && !conflict && !incompleteLinks) save.mutate({ settings: draft.settings, version: draft.version }) }}>
         <div role="group" aria-label={t('sitePresentation.settingsContent')} className="inline-flex max-w-full gap-1 rounded-full border bg-secondary/60 p-1">
           {(['identity', 'home'] as const).map(id => <Button key={id} type="button" variant="ghost" aria-pressed={tab === id} disabled={busy} onClick={() => setTab(id)} className={`rounded-full px-4 ${tab === id ? 'border bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground'}`}>{t(`sitePresentation.tabs.${id}`)}</Button>)}
         </div>
@@ -159,7 +195,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
               <p className="text-xs leading-relaxed text-muted-foreground">{t('sitePresentation.publicImageHelp')}</p>
             </SettingsSection>
             <SettingsSection title={t('sitePresentation.commonLinksTitle')} help={t('sitePresentation.commonLinksHelp')}>
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2">{(['documentation', 'repository'] as const).map(slot => <div key={slot} className="min-w-0 space-y-2"><Label htmlFor={`presentation-link-${slot}`}>{t(`sitePresentation.linkLabels.${slot}`)}</Label><Input id={`presentation-link-${slot}`} maxLength={2048} placeholder={PRESENTATION_LINKS[slot]} value={value.links[slot] ?? ''} onChange={(event) => edit({ links: { ...value.links, [slot]: event.target.value } })} /></div>)}</div>
+              <CommonLinksEditor links={commonLinks} onChange={links => edit({ commonLinks: links })} />
             </SettingsSection>
           </div>
           <div hidden={tab !== 'home'} className="space-y-6">
@@ -176,7 +212,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
           </div>
         </fieldset>
         {error && <div role="alert" className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><p>{conflict ? t('sitePresentation.conflict') : error}</p>{conflict && <Button type="button" variant="outline" disabled={busy} onClick={() => void query.refetch()}>{t('sitePresentation.retry')}</Button>}</div>}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5"><p role="status" className="text-sm text-muted-foreground">{saved ? t('sitePresentation.saved') : dirty ? t('sitePresentation.unsaved') : t('sitePresentation.current')}</p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" disabled={!dirty || busy} onClick={() => void discard()}>{t('sitePresentation.discard')}</Button><Button type="submit" disabled={!dirty || busy || conflict}>{save.isPending ? t('sitePresentation.saving') : t('sitePresentation.save')}</Button></div></div>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5"><p role="status" className="text-sm text-muted-foreground">{incompleteLinks ? t('sitePresentation.completeCommonLinks') : saved ? t('sitePresentation.saved') : dirty ? t('sitePresentation.unsaved') : t('sitePresentation.current')}</p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" disabled={!dirty || busy} onClick={() => void discard()}>{t('sitePresentation.discard')}</Button><Button type="submit" disabled={!dirty || busy || conflict || incompleteLinks}>{save.isPending ? t('sitePresentation.saving') : t('sitePresentation.save')}</Button></div></div>
         <div className="flex flex-wrap items-center gap-3"><Button type="button" variant="ghost" disabled={busy} onClick={() => setResetOpen(true)}>{t('sitePresentation.restorePage')}</Button><span className="text-xs text-muted-foreground">{t('sitePresentation.restoreDraftHelp')}</span></div>
         {conflict && <p className="text-sm text-muted-foreground">{t('sitePresentation.conflictHelp')} <Button type="button" variant="ghost" disabled={busy} onClick={() => void discard()}>{t('sitePresentation.discardReload')}</Button></p>}
       </form>}

@@ -14,6 +14,7 @@ import com.iflytek.skillhub.auth.settings.SystemSettingRepository;
 import com.iflytek.skillhub.domain.audit.AuditLogService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.shared.exception.DomainConflictException;
+import com.iflytek.skillhub.dto.SitePresentationLink;
 import com.iflytek.skillhub.dto.SitePresentationSection;
 import com.iflytek.skillhub.dto.SitePresentationSettings;
 import com.iflytek.skillhub.dto.SitePresentationUpdateRequest;
@@ -21,6 +22,7 @@ import com.iflytek.skillhub.observability.RequestIdAccessor;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
@@ -291,6 +293,34 @@ class SitePresentationServiceTest {
         when(repository.findBySettingKey(SitePresentationService.SETTING_KEY)).thenReturn(Optional.of(stored));
         var settings = new SitePresentationSettings(null, null, null, SitePresentationSettings.defaults().sections(), Map.of("repository", url));
         assertThat(update(settings).settings().links()).containsEntry("repository", url);
+    }
+
+    @Test
+    void commonLinksPreserveOrderAndSupportAnExplicitEmptyList() {
+        when(repository.findBySettingKey(SitePresentationService.SETTING_KEY)).thenReturn(Optional.of(stored));
+        var sections = SitePresentationSettings.defaults().sections();
+        var legacy = Map.of("documentation", "/old-guide");
+        var settings = new SitePresentationSettings(null, null, null, sections, legacy,
+                List.of(new SitePresentationLink(" Guide ", " /guide "), new SitePresentationLink("Help", "https://example.test/help")));
+        assertThat(update(settings).settings().commonLinks()).containsExactly(
+                new SitePresentationLink("Guide", "/guide"), new SitePresentationLink("Help", "https://example.test/help"));
+        assertThat(service.current().settings().links()).isEqualTo(legacy);
+
+        assertThat(update(new SitePresentationSettings(null, null, null, sections, legacy, List.of())).settings().commonLinks()).isEmpty();
+        assertThat(stored.getValue()).containsEntry("commonLinks", List.of());
+        assertThat(update(new SitePresentationSettings(null, null, null, sections, legacy)).settings().commonLinks()).isNull();
+    }
+
+    @Test
+    void commonLinksRejectAnOverlongListIncompleteRowsAndUnsafeUrls() {
+        var sections = SitePresentationSettings.defaults().sections();
+        invalid(new SitePresentationSettings(null, null, null, sections, Map.of(),
+                java.util.Collections.nCopies(6, new SitePresentationLink("Link", "/guide"))));
+        invalid(new SitePresentationSettings(null, null, null, sections, Map.of(),
+                List.of(new SitePresentationLink(" ", "/guide"))));
+        when(repository.findBySettingKey(SitePresentationService.SETTING_KEY)).thenReturn(Optional.of(stored));
+        invalid(new SitePresentationSettings(null, null, null, sections, Map.of(),
+                List.of(new SitePresentationLink("Bad link", "javascript:alert(1)"))));
     }
 
     @Test

@@ -8495,6 +8495,10 @@ export interface components {
             hasVisibleSuites?: boolean;
             source?: string;
         };
+        SitePresentationLink: {
+            title: string;
+            url: string;
+        };
         SitePresentationSection: {
             enabled: boolean;
             texts: {
@@ -8517,6 +8521,8 @@ export interface components {
             links: {
                 [key: string]: string;
             };
+            /** @description Homepage links in display order. Null uses the existing homepage links; an empty list hides them. */
+            commonLinks?: components["schemas"]["SitePresentationLink"][] | null;
         };
         SitePresentationUpdateRequest: {
             settings: components["schemas"]["SitePresentationSettings"];

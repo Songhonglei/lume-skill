@@ -7,12 +7,15 @@ import com.iflytek.skillhub.domain.audit.AuditLogService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.shared.exception.DomainConflictException;
 import com.iflytek.skillhub.dto.SitePresentationResponse;
+import com.iflytek.skillhub.dto.SitePresentationLink;
 import com.iflytek.skillhub.dto.SitePresentationSection;
 import com.iflytek.skillhub.dto.SitePresentationSettings;
 import com.iflytek.skillhub.dto.SitePresentationUpdateRequest;
 import com.iflytek.skillhub.observability.RequestIdAccessor;
 import jakarta.validation.Validator;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +72,9 @@ public class SitePresentationService {
         }
         next.put("sections", sections);
         next.put("links", links);
+        if (settings.commonLinks() != null) {
+            next.put("commonLinks", settings.commonLinks().stream().map(this::validateCommonLink).toList());
+        }
         stored.update(next, actor);
         repository.saveAndFlush(stored);
         audit.record(actor, "SITE_PRESENTATION_UPDATE", "SYSTEM_SETTING", stored.getId(), requestIds.current(),
@@ -106,6 +112,24 @@ public class SitePresentationService {
         return Map.copyOf(normalized);
     }
 
+    private Map<String, String> validateCommonLink(SitePresentationLink link) {
+        String url = SitePresentationLinks.safeUrl(link.url().strip());
+        if (url == null) throw new DomainBadRequestException("error.site.presentation.invalidLink");
+        return Map.of("title", link.title().strip(), "url", url);
+    }
+
+    private List<SitePresentationLink> readCommonLinks(Object raw) {
+        if (!(raw instanceof List<?> items)) return null;
+        var links = new ArrayList<SitePresentationLink>();
+        for (Object item : items.stream().limit(SitePresentationSettings.MAX_COMMON_LINKS).toList()) {
+            var data = map(item);
+            String title = text(data.get("title"), 160);
+            String url = SitePresentationLinks.safeUrl(text(data.get("url"), 2048));
+            if (title != null && url != null) links.add(new SitePresentationLink(title, url));
+        }
+        return List.copyOf(links);
+    }
+
     private SitePresentationResponse response(SystemSetting stored) {
         Map<String, Object> values = stored.getValue();
         Map<String, SitePresentationSection> sections = new LinkedHashMap<>();
@@ -140,7 +164,7 @@ public class SitePresentationService {
         String logo = text(values.get("logoUrl"), 256);
         var settings = new SitePresentationSettings(text(values.get("siteName"), 80),
                 logo, SitePresentationAssetService.faviconUrl(logo),
-                Map.copyOf(sections), Map.copyOf(links));
+                Map.copyOf(sections), Map.copyOf(links), readCommonLinks(values.get("commonLinks")));
         return new SitePresentationResponse(settings, stored.getVersion());
     }
 
