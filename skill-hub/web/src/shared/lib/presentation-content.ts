@@ -78,7 +78,7 @@ export const PRESENTATION_CONTENT = {
     "serviceLayer": "landing.experience.enterprise.serviceLayer",
     "storageLayer": "landing.experience.enterprise.storageLayer",
     "networkBoundary": "landing.experience.enterprise.networkBoundary",
-    "registryLabel": "=Luma Skill Hub\nRegistry"
+    "registryLabel": "=Registry"
   },
   "cta": {
     "title": "landing.experience.cta.title",

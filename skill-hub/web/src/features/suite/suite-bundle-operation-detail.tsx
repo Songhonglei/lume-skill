@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 /* Hallmark · component: publishing task detail · genre: modern-minimal · tone: utilitarian · pre-emit critique: P5 H5 E5 S5 R5 V4 */
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
@@ -36,6 +37,7 @@ function splitCoordinate(coordinate?: string): { namespace: string; slug: string
 
 export function SuiteBundleOperationDetail({ operationId }: { operationId: string }) {
   const { t, i18n } = useTranslation()
+  const siteName = useSiteName()
   const navigate = useNavigate()
   const operationQuery = useSuiteBundleOperation(operationId)
   const cancelMutation = useCancelSuiteBundleOperation()
@@ -316,7 +318,7 @@ export function SuiteBundleOperationDetail({ operationId }: { operationId: strin
         open={cancelOpen}
         onOpenChange={setCancelOpen}
         title={t('suite.bundle.cancelConfirmTitle')}
-        description={t('suite.bundle.cancelConfirmDescription')}
+        description={t('suite.bundle.cancelConfirmDescription', { siteName })}
         confirmText={t('suite.bundle.cancelConfirmAction')}
         variant="destructive"
         onConfirm={() => cancelMutation.mutate(operationId, {

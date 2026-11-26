@@ -5,13 +5,13 @@ import zh from './locales/zh.json'
 
 describe('landing quick start locales', () => {
   it('uses localized agent setup prompts for Chinese and English', () => {
-    expect(zh.landing.quickStart.agent.command).toBe('请根据 https://www.example.com/registry/skill.md 接入 Luma Skill Hub')
-    expect(en.landing.quickStart.agent.command).toBe('Connect Luma Skill Hub using https://www.example.com/registry/skill.md')
+    expect(zh.landing.quickStart.agent.command).toBe('请根据 https://www.example.com/registry/skill.md 接入 {{siteName}}')
+    expect(en.landing.quickStart.agent.command).toBe('Connect {{siteName}} using https://www.example.com/registry/skill.md')
   })
 
   it('provides command templates with url placeholder for dynamic rendering', () => {
-    expect(zh.landing.quickStart.agent.commandTemplate).toBe('请根据 {{url}} 接入 Luma Skill Hub')
-    expect(en.landing.quickStart.agent.commandTemplate).toBe('Connect Luma Skill Hub using {{url}}')
+    expect(zh.landing.quickStart.agent.commandTemplate).toBe('请根据 {{url}} 接入 {{siteName}}')
+    expect(en.landing.quickStart.agent.commandTemplate).toBe('Connect {{siteName}} using {{url}}')
     expect(zh.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
     expect(en.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
   })
@@ -22,6 +22,7 @@ describe('landing quick start locales', () => {
       en.skillDetail.installForAgent.prompt,
     ]) {
       expect(prompt).toContain('{{guideUrl}}')
+      expect(prompt).toContain('{{siteName}}')
       expect(prompt).toContain('{{skill}}')
       expect(prompt).toContain('{{version}}')
       expect(prompt).not.toContain('fallback')
@@ -59,9 +60,9 @@ describe('landing quick start locales', () => {
   it('exposes the CLI version check in both locales', () => {
     expect(zh.landing.quickStart.tabs.cli).toBe('CLI')
     expect(zh.landing.quickStart.cli.command).toBe('skillhub --version')
-    expect(zh.landing.quickStart.cli.description).toBe('安装 Luma Skill Hub CLI 到本地，后续可运行 skillhub install 安装技能')
+    expect(zh.landing.quickStart.cli.description).toBe('安装 {{siteName}} CLI 到本地，后续可运行 skillhub install 安装技能')
     expect(en.landing.quickStart.tabs.cli).toBe('CLI')
     expect(en.landing.quickStart.cli.command).toBe('skillhub --version')
-    expect(en.landing.quickStart.cli.description).toBe('Install the Luma Skill Hub CLI locally to run skillhub install for skills.')
+    expect(en.landing.quickStart.cli.description).toBe('Install the {{siteName}} CLI locally to run skillhub install for skills.')
   })
 })

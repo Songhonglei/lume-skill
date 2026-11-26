@@ -52,8 +52,14 @@ public class SitePresentationSettingsController extends BaseApiController {
     }
 
     @PostMapping(value = "/assets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload a public branding image (PNG or JPEG, up to 2 MiB and 1024 pixels per side)")
+    @Operation(summary = "Upload a public presentation image (PNG or JPEG, up to 2 MiB and 1024 pixels per side)")
     public ApiResponse<SitePresentationAssetResponse> upload(@RequestParam("file") MultipartFile file) {
         return ok("response.success.updated", assets.upload(file));
+    }
+
+    @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload a public site logo (PNG or JPEG, under 1 MB, center-cropped to a square)")
+    public ApiResponse<SitePresentationAssetResponse> uploadLogo(@RequestParam("file") MultipartFile file) {
+        return ok("response.success.updated", assets.uploadLogo(file));
     }
 }

@@ -1,4 +1,4 @@
-import { PRODUCT_NAME } from '@/shared/lib/product-brand'
+import { PRODUCT_NAME, SiteNameContext } from '@/shared/lib/product-brand'
 import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createInstance } from 'i18next'
@@ -22,7 +22,7 @@ export function SitePresentationPreview({ settings, locale }: { settings: SitePr
     return instance
   }, [i18n, locale])
   return <QueryClientProvider client={previewClient}><I18nextProvider i18n={previewI18n}><SitePresentationPreviewContext.Provider value={settings}>
-    <PreviewPage settings={settings} />
+    <SiteNameContext.Provider value={settings.siteName || PRODUCT_NAME}><PreviewPage settings={settings} /></SiteNameContext.Provider>
   </SitePresentationPreviewContext.Provider></I18nextProvider></QueryClientProvider>
 }
 
@@ -35,7 +35,7 @@ function PreviewPage({ settings }: { settings: SitePresentationSettings }) {
     }
   }
   return <div data-homepage-preview lang={i18n.resolvedLanguage} className="overflow-hidden rounded-lg border bg-background text-foreground">
-    <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground"><span aria-hidden className="flex gap-1"><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /></span><img alt="" className="ml-2 h-3.5 w-3.5 object-contain" src={presentationAssetUrl(settings.faviconUrl) ?? withBasePath('/favicon.svg')} /><span>{settings.siteName || PRODUCT_NAME} · {t('nav.landing')}</span></div>
+    <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground"><span aria-hidden className="flex gap-1"><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /><i className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" /></span><img alt="" className="ml-2 h-3.5 w-3.5 shrink-0 object-contain" src={presentationAssetUrl(settings.faviconUrl) ?? presentationAssetUrl(settings.logoUrl) ?? withBasePath('/favicon.svg')} /><span className="truncate">{settings.siteName || PRODUCT_NAME} · {t('nav.landing')}</span></div>
     <div aria-label={t('sitePresentation.previewReadOnly')} onClickCapture={preventNavigation} onAuxClickCapture={preventNavigation} onKeyDownCapture={preventActivation} onSubmitCapture={event => event.preventDefault()} className="[&_.scroll-fade-up]:!translate-y-0 [&_.scroll-fade-up]:!opacity-100 [&_.animate-fade-up]:animate-none [&_.animate-pulse]:animate-none">
       <header className="flex items-center justify-between gap-4 border-b px-5 py-4 sm:px-8"><div className="flex min-w-0 items-center gap-2"><BrandMark className="h-8 w-8 shrink-0" /><strong className="truncate text-xl">{settings.siteName || PRODUCT_NAME}</strong></div><div className="flex gap-4 text-xs text-muted-foreground"><span>{t('nav.landing')}</span><span>{t('nav.marketplace')}</span></div></header>
       <LandingPage />

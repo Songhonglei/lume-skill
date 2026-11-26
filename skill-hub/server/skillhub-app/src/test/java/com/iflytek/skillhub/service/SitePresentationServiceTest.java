@@ -283,7 +283,7 @@ class SitePresentationServiceTest {
     @Test
     void invalidAssetDoesNotChangePersistentSettings() {
         when(repository.findBySettingKey(SitePresentationService.SETTING_KEY)).thenReturn(Optional.of(stored));
-        doThrow(new DomainBadRequestException("error.site.presentation.invalidAsset")).when(assets).validateReference("https://example.com/logo.svg");
+        doThrow(new DomainBadRequestException("error.site.presentation.invalidAsset")).when(assets).validateLogoReference("https://example.com/logo.svg", null);
         invalid(new SitePresentationSettings(null, "https://example.com/logo.svg", null, SitePresentationSettings.defaults().sections(), Map.of()));
         assertThat(stored.getValue()).isEmpty();
     }

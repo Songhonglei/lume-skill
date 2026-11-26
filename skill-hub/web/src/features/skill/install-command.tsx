@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Copy } from 'lucide-react'
@@ -104,6 +105,7 @@ function CommandBlock({ command, analyticsId }: CommandBlockProps) {
 
 export function InstallCommand({ namespace, slug, version, analyticsId, skillhubAnalyticsId, clawhubAnalyticsId }: InstallCommandProps) {
   const { t } = useTranslation()
+  const siteName = useSiteName()
   const baseUrl = useMemo(() => getBaseUrl(), [])
   const clawhubCommand = useMemo(() => buildInstallCommand(namespace, slug, baseUrl), [baseUrl, namespace, slug])
   const skillhubCommand = useMemo(
@@ -115,7 +117,7 @@ export function InstallCommand({ namespace, slug, version, analyticsId, skillhub
     <Tabs defaultValue="skillhub" className="space-y-3">
       <TabsList className="w-full gap-6 border-border/70 bg-transparent p-0 text-xs">
         <TabsTrigger data-analytics-id={skillhubAnalyticsId} value="skillhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodSkillhub')}
+          {t('skillDetail.installMethodSkillhub', { siteName })}
         </TabsTrigger>
         <TabsTrigger data-analytics-id={clawhubAnalyticsId} value="clawhub" className={installMethodTabTriggerClass}>
           {t('skillDetail.installMethodClawhub')}

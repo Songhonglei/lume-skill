@@ -93,6 +93,10 @@ class SitePresentationControllerTest {
         mvc.perform(multipart(ADMIN + "/assets").file(new MockMultipartFile("file", "x.png", "image/png", new byte[]{1}))
                         .with(authentication(auth("SUPER_ADMIN"))).with(csrf()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.url").value("/api/v1/site-presentation/assets/id"));
+        when(assets.uploadLogo(any())).thenReturn(new SitePresentationAssetResponse("/api/v1/site-presentation/assets/logo-id"));
+        mvc.perform(multipart(ADMIN + "/logo").file(new MockMultipartFile("file", "logo.png", "image/png", new byte[]{1}))
+                        .with(authentication(auth("SUPER_ADMIN"))).with(csrf()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.url").value("/api/v1/site-presentation/assets/logo-id"));
     }
 
     @Test
@@ -102,8 +106,11 @@ class SitePresentationControllerTest {
                         .contentType("application/json").content(SETTINGS)).andExpect(status().isForbidden());
         mvc.perform(multipart(ADMIN + "/assets").file(new MockMultipartFile("file", new byte[]{1}))
                         .with(authentication(auth("USER_ADMIN"))).with(csrf())).andExpect(status().isForbidden());
+        mvc.perform(multipart(ADMIN + "/logo").file(new MockMultipartFile("file", new byte[]{1}))
+                        .with(authentication(auth("USER_ADMIN"))).with(csrf())).andExpect(status().isForbidden());
         verify(service, never()).update(any(), any(), any());
         verify(assets, never()).upload(any());
+        verify(assets, never()).uploadLogo(any());
     }
 
     @Test

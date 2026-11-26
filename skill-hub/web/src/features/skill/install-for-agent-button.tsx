@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 import { Bot, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
@@ -28,6 +29,7 @@ export function buildAgentInstallPrompt(
 
 export function InstallForAgentButton({ namespace, slug, version, disabled = false, analyticsId }: InstallForAgentButtonProps) {
   const { t } = useTranslation()
+  const siteName = useSiteName()
   const [copied, copy] = useCopyToClipboard()
 
   const handleCopy = async () => {
@@ -39,6 +41,7 @@ export function InstallForAgentButton({ namespace, slug, version, disabled = fal
         getBaseUrl(),
         (guideUrl, skill, selectedVersion) => t('skillDetail.installForAgent.prompt', {
           guideUrl,
+          siteName,
           skill,
           version: selectedVersion,
         }),

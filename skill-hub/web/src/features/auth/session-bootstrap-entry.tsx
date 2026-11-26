@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, getSessionBootstrapRuntimeConfig } from '@/api/client'
@@ -16,6 +17,7 @@ interface SessionBootstrapEntryProps {
  */
 export function SessionBootstrapEntry({ onAuthenticated, methodDisplayName, compact = false }: SessionBootstrapEntryProps) {
   const { t } = useTranslation()
+  const siteName = useSiteName()
   const config = getSessionBootstrapRuntimeConfig()
   const bootstrapMutation = useSessionBootstrap()
   const attemptedRef = useRef(false)
@@ -87,7 +89,7 @@ export function SessionBootstrapEntry({ onAuthenticated, methodDisplayName, comp
         <p className="text-sm text-muted-foreground">
           {config.auto
             ? t('login.enterpriseSsoAutoHint', { name: providerName })
-            : t('login.enterpriseSsoHint', { name: providerName })}
+            : t('login.enterpriseSsoHint', { name: providerName, siteName })}
         </p>
       </div>
 

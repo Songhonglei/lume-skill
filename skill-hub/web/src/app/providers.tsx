@@ -7,6 +7,7 @@ import { router } from './router'
 import { useSitePresentation } from '@/shared/hooks/use-site-presentation'
 import { PresentationDocument } from '@/features/site-presentation/presentation-document'
 import { useTranslation } from 'react-i18next'
+import { PRODUCT_NAME, SiteNameContext } from '@/shared/lib/product-brand'
 
 /**
  * Front-end application root.
@@ -51,10 +52,13 @@ const queryClient = new QueryClient({
 })
 
 function ConfiguredApplication() {
-  const { isPending, isFetched, isError, refetch } = useSitePresentation()
+  const { settings, isPending, isFetched, isError, refetch } = useSitePresentation()
   const { t } = useTranslation()
   if (isPending && !isFetched) return <div role="status" className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">{t('common.loading')}</div>
-  return <>{isError && <div role="alert" className="border-b bg-secondary px-4 py-3 text-center text-sm text-foreground">{t('sitePresentation.defaultsUnavailable')} <button type="button" className="ml-2 underline underline-offset-4" onClick={() => void refetch()}>{t('sitePresentation.retry')}</button></div>}<PresentationDocument /><RouterProvider router={router} /><Toaster /></>
+  return <SiteNameContext.Provider value={settings?.siteName || PRODUCT_NAME}>
+    {isError && <div role="alert" className="border-b bg-secondary px-4 py-3 text-center text-sm text-foreground">{t('sitePresentation.defaultsUnavailable')} <button type="button" className="ml-2 underline underline-offset-4" onClick={() => void refetch()}>{t('sitePresentation.retry')}</button></div>}
+    <PresentationDocument /><RouterProvider router={router} /><Toaster />
+  </SiteNameContext.Provider>
 }
 
 export function App() {

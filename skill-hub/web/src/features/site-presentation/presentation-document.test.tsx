@@ -2,21 +2,24 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { PresentationDocument } from './presentation-document'
-const state = vi.hoisted(() => ({ settings: { siteName: null as string | null, faviconUrl: null as string | null } }))
+const state = vi.hoisted(() => ({ settings: { siteName: null as string | null, faviconUrl: null as string | null, logoUrl: null as string | null } }))
 vi.mock('@/shared/hooks/use-site-presentation', () => ({ useSitePresentation: () => state }))
 vi.mock('@/api/site-presentation', () => ({ presentationAssetUrl: (path: string | null) => path ? `/skillhub${path}` : undefined }))
 vi.mock('@/shared/lib/base-path', () => ({ withBasePath: (path: string) => `/skillhub${path}` }))
-afterEach(() => { cleanup(); document.head.innerHTML = ''; state.settings = { siteName: null, faviconUrl: null } })
+afterEach(() => { cleanup(); document.head.innerHTML = ''; state.settings = { siteName: null, faviconUrl: null, logoUrl: null } })
 describe('site document metadata', () => {
   it('applies brand metadata and restores defaults without retaining a custom icon MIME type', () => {
     document.head.innerHTML = '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-    state.settings = { siteName: 'Team Library', faviconUrl: '/api/v1/site-presentation/assets/logo-123' }
+    state.settings = { siteName: 'Team Library', faviconUrl: '/api/v1/site-presentation/assets/icon-123', logoUrl: '/api/v1/site-presentation/assets/logo-123' }
     const { rerender } = render(<PresentationDocument />)
     expect(document.title).toBe('Team Library')
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')!
-    expect(icon.getAttribute('href')).toBe('/skillhub/api/v1/site-presentation/assets/logo-123')
+    expect(icon.getAttribute('href')).toBe('/skillhub/api/v1/site-presentation/assets/icon-123')
     expect(icon.type).toBe('')
-    state.settings = { siteName: null, faviconUrl: null }
+    state.settings = { ...state.settings, faviconUrl: null }
+    rerender(<PresentationDocument />)
+    expect(icon.getAttribute('href')).toBe('/skillhub/api/v1/site-presentation/assets/logo-123')
+    state.settings = { siteName: null, faviconUrl: null, logoUrl: null }
     rerender(<PresentationDocument />)
     expect(document.title).toBe('Luma Skill Hub')
     expect(icon.getAttribute('href')).toBe('/skillhub/favicon.svg')

@@ -57,7 +57,8 @@ public class SitePresentationService {
         var settings = request.settings();
         String logo = nullableText(settings.logoUrl());
         String favicon = nullableText(settings.faviconUrl());
-        assets.validateReference(logo);
+        Map<String, Object> previous = stored.getValue();
+        assets.validateLogoReference(logo, text(previous.get("logoUrl"), 256));
         assets.validateReference(favicon);
         Map<String, Object> next = new LinkedHashMap<>();
         putText(next, "siteName", settings.siteName());
@@ -71,7 +72,6 @@ public class SitePresentationService {
         }
         next.put("sections", sections);
         next.put("links", links);
-        Map<String, Object> previous = stored.getValue();
         stored.update(next, actor);
         repository.saveAndFlush(stored);
         audit.record(actor, "SITE_PRESENTATION_UPDATE", "SYSTEM_SETTING", stored.getId(), requestIds.current(),

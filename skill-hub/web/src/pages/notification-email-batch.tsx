@@ -1,3 +1,4 @@
+import { useSiteName } from '@/shared/lib/product-brand'
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +21,7 @@ export function NotificationEmailBatchPage() {
 
 export function EmailBatchDetail({ id }: { id: string }) {
   const { t, i18n } = useTranslation()
+  const siteName = useSiteName()
   const { user, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
   const client = useQueryClient()
@@ -58,7 +60,7 @@ export function EmailBatchDetail({ id }: { id: string }) {
       <div className="flex flex-col gap-5 p-6 sm:flex-row sm:gap-6 sm:p-8">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">{unavailable ? <ShieldCheck className="size-6" aria-hidden="true" /> : signInRequired ? <LogIn className="size-6" aria-hidden="true" /> : <Mail className="size-6" aria-hidden="true" />}</div>
         <div className="min-w-0 flex-1 space-y-5">
-          <div className="space-y-2"><h2 className="text-xl font-semibold leading-7">{t(signInRequired ? 'notificationEmail.batchState.signInTitle' : unavailable ? 'notificationEmail.batchState.unavailableTitle' : 'notificationEmail.batchState.failureTitle')}</h2><p className="max-w-2xl text-sm leading-6 text-muted-foreground">{t(signInRequired ? 'notificationEmail.batchState.signInDescription' : unavailable ? 'notificationEmail.batchState.unavailableDescription' : 'notificationEmail.batchState.failureDescription')}</p></div>
+          <div className="space-y-2"><h2 className="text-xl font-semibold leading-7">{t(signInRequired ? 'notificationEmail.batchState.signInTitle' : unavailable ? 'notificationEmail.batchState.unavailableTitle' : 'notificationEmail.batchState.failureTitle')}</h2><p className="max-w-2xl text-sm leading-6 text-muted-foreground">{t(signInRequired ? 'notificationEmail.batchState.signInDescription' : unavailable ? 'notificationEmail.batchState.unavailableDescription' : 'notificationEmail.batchState.failureDescription', { siteName })}</p></div>
           {user && unavailable ? <p className="break-words text-sm [overflow-wrap:anywhere]">{t('notificationEmail.batchState.currentAccount', { account: accountName })}</p> : null}
           <div className="flex flex-wrap gap-3">
             {signInRequired ? <Link to="/login" search={{ returnTo }} className={buttonVariants()}><LogIn className="size-4" aria-hidden="true" />{t('notificationEmail.batchState.signIn')}</Link> : unavailable ? <Button onClick={() => switchAccount.mutate()} disabled={switchAccount.isPending}><LogIn className="size-4" aria-hidden="true" />{t(switchAccount.isPending ? 'notificationEmail.batchState.switchingAccount' : 'notificationEmail.batchState.switchAccount')}</Button> : null}
@@ -68,7 +70,7 @@ export function EmailBatchDetail({ id }: { id: string }) {
           {switchAccount.isError ? <p role="alert" className="text-sm text-destructive">{t('notificationEmail.batchState.switchFailed')}</p> : null}
         </div>
       </div>
-      {unavailable ? <p className="border-t bg-muted/30 px-6 py-4 text-xs leading-5 text-muted-foreground sm:px-8">{t('notificationEmail.batchState.accountHint')}</p> : null}
+      {unavailable ? <p className="border-t bg-muted/30 px-6 py-4 text-xs leading-5 text-muted-foreground sm:px-8">{t('notificationEmail.batchState.accountHint', { siteName })}</p> : null}
     </Card> : null}
     {batch && !query.isError && !signInRequired ? <Card className="space-y-4 p-4 sm:p-6">
       <div className="flex flex-wrap gap-4 text-sm"><span>{t(`notificationEmail.status.${batch.status}`)}</span><time>{batch.createdAt ? new Date(batch.createdAt).toLocaleString(i18n.language) : ''}</time></div>

@@ -14,6 +14,7 @@ import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.shared.exception.DomainNotFoundException;
 import com.iflytek.skillhub.storage.ObjectStorageService;
 import com.iflytek.skillhub.storage.StorageAccessException;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,6 +50,50 @@ class SitePresentationAssetServiceTest {
         var decoded = ImageIO.read(new ByteArrayInputStream(bytes));
         assertThat(decoded.getWidth()).isEqualTo(96);
         assertThat(decoded.getHeight()).isEqualTo(32);
+    }
+
+    @Test
+    void logoIsCenterCroppedDownscaledAndPreservesAlpha() throws Exception {
+        var source = new BufferedImage(1200, 640, BufferedImage.TYPE_INT_ARGB);
+        var graphics = source.createGraphics();
+        graphics.setColor(Color.RED);
+        graphics.fillRect(0, 0, 280, 640);
+        graphics.fillRect(920, 0, 280, 640);
+        graphics.setColor(Color.BLUE);
+        graphics.fillRect(300, 100, 600, 440);
+        graphics.dispose();
+        var original = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", original);
+
+        var uploaded = service.uploadLogo(new MockMultipartFile("file", "brand.png", "image/png", original.toByteArray()));
+        assertThat(uploaded.url()).matches("/api/v1/site-presentation/assets/logo-[0-9a-f-]{36}");
+        String id = uploaded.url().substring(uploaded.url().lastIndexOf('/') + 1);
+        var content = ArgumentCaptor.forClass(java.io.InputStream.class);
+        verify(storage).putObject(eq("site-presentation/assets/" + id + ".png"), content.capture(), anyLong(), eq("image/png"));
+        byte[] bytes = content.getValue().readAllBytes();
+        var image = ImageIO.read(new ByteArrayInputStream(bytes));
+        assertThat(bytes.length).isLessThan(1_000_000);
+        assertThat(image.getWidth()).isEqualTo(384);
+        assertThat(image.getHeight()).isEqualTo(384);
+        assertThat(image.getRGB(0, 0)).isZero();
+        assertThat(image.getRGB(192, 192)).isEqualTo(Color.BLUE.getRGB());
+    }
+
+    @Test
+    void logoRejectsFilesAtTheLimit() {
+        assertThatThrownBy(() -> service.uploadLogo(new MockMultipartFile("file", new byte[1_000_000])))
+                .isInstanceOf(DomainBadRequestException.class);
+        verify(storage, never()).putObject(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    void keepsAnExistingLogoAndRequiresLogoUploadsForNewReferences() {
+        String savedLogo = "/api/v1/site-presentation/assets/" + ID;
+        when(storage.exists("site-presentation/assets/" + ID + ".png")).thenReturn(true);
+        when(storage.exists("site-presentation/assets/logo-" + ID + ".png")).thenReturn(true);
+        service.validateLogoReference(savedLogo, savedLogo);
+        service.validateLogoReference("/api/v1/site-presentation/assets/logo-" + ID, savedLogo);
+        assertThatThrownBy(() -> service.validateLogoReference(savedLogo, null)).isInstanceOf(DomainBadRequestException.class);
     }
 
     @ParameterizedTest

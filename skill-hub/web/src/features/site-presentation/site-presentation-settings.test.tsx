@@ -11,7 +11,7 @@ const state = vi.hoisted(() => ({ blocker: vi.fn<(options: { shouldBlockFn: () =
 vi.mock('@tanstack/react-router', () => ({ useBlocker: (options: { shouldBlockFn: () => boolean; enableBeforeUnload: boolean }) => { state.blocker(options); return { status: 'idle' } } }))
 vi.mock('react-i18next', async (original) => ({ ...await original<typeof import('react-i18next')>(), useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: 'en' } }) }))
 vi.mock('./site-presentation-preview', () => ({ SitePresentationPreview: ({ settings }: { settings: SitePresentationSettings }) => <div data-testid="live-homepage-preview"><strong>{settings.siteName}</strong>{settings.sections.curated.enabled && <p>published-curated-content</p>}</div> }))
-vi.mock('@/api/site-presentation', () => ({ sitePresentationApi: { getAdmin: vi.fn(), update: vi.fn(), upload: vi.fn() }, presentationAssetUrl: () => undefined }))
+vi.mock('@/api/site-presentation', () => ({ sitePresentationApi: { getAdmin: vi.fn(), update: vi.fn(), upload: vi.fn(), uploadLogo: vi.fn() }, presentationAssetUrl: () => undefined }))
 afterEach(() => { cleanup(); vi.resetAllMocks() })
 async function setup(settings = defaultSitePresentation()) {
   const response = { settings, version: 7 }
