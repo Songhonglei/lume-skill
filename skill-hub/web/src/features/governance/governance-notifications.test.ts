@@ -89,7 +89,7 @@ describe('governance-notifications module', () => {
     )
 
     expect(html).toContain('Governance notification')
-    expect(html).toContain('UNREAD')
+    expect(html).toContain('notification.unread')
     expect(html).toContain('Needs attention')
     expect(html).toContain('2026-03-23 11:00')
     expect(formatLocalDateTimeMock).toHaveBeenCalledWith('2026-03-23T03:00:00Z', 'en')
@@ -125,7 +125,7 @@ describe('governance-notifications module', () => {
       })
     )
 
-    expect(html).toContain('READ')
+    expect(html).toContain('notification.read')
     expect(buttonProps).toHaveLength(0)
   })
 })

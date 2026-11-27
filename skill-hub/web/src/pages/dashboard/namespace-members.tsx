@@ -3,6 +3,7 @@ import { Check, Loader2, Trash2, X } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
+import { namespaceRoleLabel } from '@/shared/lib/namespace-role-label'
 import { AddNamespaceMemberDialog } from '@/features/namespace/add-namespace-member-dialog'
 import { BatchImportMembersDialog } from '@/features/namespace/batch-import-members-dialog'
 import { InvitationControls } from '@/features/namespace/invitation-controls'
@@ -87,7 +88,6 @@ export function NamespaceMembersPage() {
   // elevated roles surfaced through the current user's namespace membership.
   const canManageMembers = !isReadOnly && (currentUserRole === 'OWNER' || currentUserRole === 'ADMIN')
   const canViewInvitations = namespace?.type === 'TEAM' && (currentUserRole === 'OWNER' || currentUserRole === 'ADMIN')
-  const canEditNamespace = canManageMembers
   const canTransferOwnership = !isReadOnly && currentUserRole === 'OWNER'
   // The permission exists only for TEAM namespaces; managers see the grant controls.
   const showAutoPublication = namespace?.type === 'TEAM'
@@ -204,7 +204,7 @@ export function NamespaceMembersPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <NamespaceManagementBack />
-      <NamespaceHeader namespace={namespace} canEdit={canEditNamespace} />
+      <NamespaceHeader namespace={namespace} viewerRole={currentUserRole} />
       <NamespaceManagementNav slug={slug} active="members" />
 
       <div className="space-y-6">
@@ -256,7 +256,7 @@ export function NamespaceMembersPage() {
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
+                <thead className="whitespace-nowrap">
                   <tr className="border-b border-border/40">
                     <th className="text-left p-4 font-medium font-heading text-sm text-muted-foreground">{t('members.colUsername')}</th>
                     <th className="text-left p-4 font-medium font-heading text-sm text-muted-foreground">{t('members.colEmail')}</th>
@@ -309,12 +309,8 @@ export function NamespaceMembersPage() {
                               </Select>
                             </div>
                           ) : (
-                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-secondary text-foreground border border-border/60">
-                              {member.role === 'OWNER'
-                                ? t('members.roleOwner')
-                                : member.role === 'ADMIN'
-                                  ? t('members.roleAdmin')
-                                  : t('members.roleMember')}
+                            <span className="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium bg-secondary text-foreground border border-border/60">
+                              {namespaceRoleLabel(t, member.role)}
                             </span>
                           )}
                         </td>

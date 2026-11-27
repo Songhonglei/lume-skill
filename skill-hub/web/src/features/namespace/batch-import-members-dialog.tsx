@@ -1,3 +1,4 @@
+import { namespaceRoleLabel } from '@/shared/lib/namespace-role-label'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BatchMemberResponse } from '@/api/types'
@@ -228,7 +229,7 @@ export function BatchImportMembersDialog({ slug, children }: BatchImportMembersD
                   {parsedRows.map((row, index) => (
                     <tr key={index} className="border-b border-border/40 last:border-b-0">
                       <td className="p-2 font-mono text-xs">{row.userId || '-'}</td>
-                      <td className="p-2">{row.role || '-'}</td>
+                      <td className="p-2">{row.role ? namespaceRoleLabel(t, row.role) : '—'}</td>
                       <td className={`p-2 text-xs ${row.validation === 'valid' ? 'text-green-600' : 'text-red-600'}`}>
                         {validationLabel(row)}
                       </td>
@@ -263,7 +264,7 @@ export function BatchImportMembersDialog({ slug, children }: BatchImportMembersD
                   {results.results.map((result, index) => (
                     <tr key={index} className="border-b border-border/40 last:border-b-0">
                       <td className="p-2 font-mono text-xs">{result.userId}</td>
-                      <td className="p-2">{result.role}</td>
+                      <td className="p-2">{namespaceRoleLabel(t, result.role)}</td>
                       <td className={`p-2 text-xs ${result.success ? 'text-green-600' : 'text-red-600'}`}>
                         {result.success ? t('members.batchResultSuccess') : mapResultError(result.error, t)}
                       </td>

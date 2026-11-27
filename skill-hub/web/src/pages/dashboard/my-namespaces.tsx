@@ -1,3 +1,4 @@
+import { namespaceRoleLabel } from '@/shared/lib/namespace-role-label'
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -102,7 +103,7 @@ export function MyNamespacesPage() {
                 <div className="mt-auto flex items-end justify-between gap-2 border-t border-border/50 pt-2">
                   <div className="min-w-0 space-y-0.5 text-xs text-muted-foreground">
                     <div className="truncate font-mono" title={`@${namespace.slug}`}>@{namespace.slug}</div>
-                    <div>{t('myNamespaces.roleLabel')}: {namespace.currentUserRole === 'OWNER' ? t('members.roleOwner') : namespace.currentUserRole === 'ADMIN' ? t('members.roleAdmin') : namespace.currentUserRole === 'MEMBER' ? t('members.roleMember') : t('myNamespaces.roleUnknown')}</div>
+                    <div>{t('myNamespaces.roleLabel')}: {namespaceRoleLabel(t, namespace.currentUserRole)}</div>
                   </div>
                   <Button data-analytics-id="namespace.management.open" variant="outline" size="sm" className="shrink-0" onClick={() => handleNamespaceClick(namespace.slug)}>
                     {t('namespaceManagement.enter')}

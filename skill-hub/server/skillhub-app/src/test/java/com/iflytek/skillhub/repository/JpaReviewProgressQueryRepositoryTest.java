@@ -149,6 +149,7 @@ class JpaReviewProgressQueryRepositoryTest {
                 new Namespace("team-suite-review", "Suite Review Team", "owner"));
         Skill skill = entityManager.persistFlushFind(
                 new Skill(namespace.getId(), "starter-skill", "author-1", SkillVisibility.PUBLIC));
+        skill.setDisplayName("入门技能");
         SkillSuite suite = entityManager.persistFlushFind(
                 new SkillSuite(namespace.getId(), "starter-pack", "Starter Pack", "author-1"));
         SkillSuiteVersion suiteVersion = entityManager.persistFlushFind(
@@ -195,6 +196,23 @@ class JpaReviewProgressQueryRepositoryTest {
         assertThat(skillsOnly.total()).isEqualTo(1);
         assertThat(skillsOnly.statusCounts().pending()).isZero();
         assertThat(skillsOnly.statusCounts().approved()).isEqualTo(1);
+
+        var skillDisplayName = repository.findMyProgress("author-1", null, null, "入门技能", 0, 20);
+        assertThat(skillDisplayName.items()).singleElement()
+                .satisfies(item -> assertThat(item.skillSlug()).isEqualTo("starter-skill"));
+        assertThat(skillDisplayName.total()).isEqualTo(1);
+        assertThat(skillDisplayName.statusCounts().approved()).isEqualTo(1);
+
+        var suiteDisplayName = repository.findMyProgress("author-1", null, null, "Starter Pack", 0, 20);
+        assertThat(suiteDisplayName.items()).singleElement()
+                .satisfies(item -> assertThat(item.subjectSlug()).isEqualTo("starter-pack"));
+        assertThat(suiteDisplayName.total()).isEqualTo(1);
+        assertThat(suiteDisplayName.statusCounts().pending()).isEqualTo(1);
+
+        var spaceDisplayName = repository.findMyProgress("author-1", null, null, "Suite Review Team", 0, 20);
+        assertThat(spaceDisplayName.items()).hasSize(2);
+        assertThat(spaceDisplayName.total()).isEqualTo(2);
+        assertThat(repository.findMyProgress("owner", null, null, "Suite Review Team", 0, 20).total()).isZero();
     }
 
     @Test

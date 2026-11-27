@@ -1,3 +1,4 @@
+import { namespaceRoleLabel } from '@/shared/lib/namespace-role-label'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Namespace, NamespaceMember } from '@/api/types'
@@ -97,7 +98,7 @@ export function TransferOwnershipDialog({ namespace, members, children }: Transf
                 <SelectContent>
                   {candidates.map((candidate) => (
                     <SelectItem data-analytics-id="namespace.ownership.select" key={candidate.userId} value={candidate.userId}>
-                      {candidate.displayName || candidate.userId} ({candidate.role})
+                      {candidate.displayName || candidate.userId} ({namespaceRoleLabel(t, candidate.role)})
                     </SelectItem>
                   ))}
                 </SelectContent>
