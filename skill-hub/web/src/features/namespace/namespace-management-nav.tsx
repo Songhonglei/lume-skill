@@ -1,7 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/features/auth/use-auth'
 import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
 import { cn } from '@/shared/lib/utils'
 
@@ -15,17 +14,13 @@ export function NamespaceManagementBack() {
   )
 }
 
-export function NamespaceManagementNav({ slug, active }: { slug: string; active: 'skills' | 'members' | 'reviews' | 'settings' }) {
+export function NamespaceManagementNav({ slug, active }: { slug: string; active: 'skills' | 'members' | 'settings' }) {
   const { t } = useTranslation()
-  const { hasRole } = useAuth()
   const { data: namespaces } = useMyNamespaces()
   const namespace = namespaces?.find((item) => item.slug === slug)
-  const canReview = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
-    || (namespace?.type === 'TEAM' && (namespace.currentUserRole === 'OWNER' || namespace.currentUserRole === 'ADMIN'))
   const tabs = [
     { key: 'skills', path: '/dashboard/namespaces/$slug', analyticsId: 'namespace.skills.open', visible: true },
     { key: 'members', path: '/dashboard/namespaces/$slug/members', analyticsId: 'namespace.members.open', visible: namespace?.type === 'TEAM' && !!namespace.currentUserRole },
-    { key: 'reviews', path: '/dashboard/namespaces/$slug/reviews', analyticsId: 'namespace.reviews.open', visible: canReview },
     { key: 'settings', path: '/dashboard/namespaces/$slug/settings', analyticsId: 'namespace.settings.open', visible: !!namespace },
   ] as const
   return (
@@ -34,7 +29,7 @@ export function NamespaceManagementNav({ slug, active }: { slug: string; active:
         {tabs.filter((tab) => tab.visible).map((tab) => (
           <Link data-analytics-id={tab.analyticsId} key={tab.key} to={tab.path} params={{ slug }}
             aria-current={active === tab.key ? 'page' : undefined}
-            className={cn('shrink-0 border-b-2 px-4 py-3 text-sm font-medium transition-colors', active === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+            className={cn('shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors', active === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
             {t(`namespaceManagement.${tab.key}`)}
           </Link>
         ))}

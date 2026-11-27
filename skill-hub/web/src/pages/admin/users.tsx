@@ -254,7 +254,7 @@ export function AdminUsersPage() {
                         label={t(user.status === 'ACTIVE' ? 'adminUsers.statusActive' : user.status === 'PENDING' ? 'adminUsers.statusPending' : 'adminUsers.statusDisabled')}
                       />
                     </TableCell>
-                    <TableCell className="text-xs max-md:order-5 max-md:col-span-2 max-md:p-1 [overflow-wrap:anywhere]">{user.platformRoles.join(', ')}</TableCell>
+                    <TableCell className="text-xs max-md:order-5 max-md:col-span-2 max-md:p-1 [overflow-wrap:anywhere]">{user.platformRoles.map(role => roleOptions.find(option => option.value === role)?.label ?? t('adminUsers.unknownRole')).join(', ') || '—'}</TableCell>
                     <TableCell className="text-xs tabular-nums text-muted-foreground max-md:order-6 max-md:col-span-2 max-md:p-1">{formatDate(user.createdAt)}</TableCell>
                     <TableCell className="max-md:order-7 max-md:col-span-2 max-md:p-1">
                       <div className="flex flex-wrap gap-1 xl:flex-nowrap">

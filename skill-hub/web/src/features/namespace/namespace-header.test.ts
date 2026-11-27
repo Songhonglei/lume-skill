@@ -1,7 +1,7 @@
-import { createElement } from 'react'
+import { createElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import type { Namespace } from '@/api/types'
+import type { Namespace, NamespaceRole } from '@/api/types'
 import { NamespaceHeader } from './namespace-header'
 import * as mod from './namespace-header'
 
@@ -15,6 +15,8 @@ vi.mock('react-i18next', async () => {
     }),
   }
 })
+
+vi.mock('./edit-namespace-dialog', () => ({ EditNamespaceDialog: ({ children }: { children: ReactNode }) => children }))
 
 describe('namespace-header module exports', () => {
   it('exports the NamespaceHeader component', () => {
@@ -35,8 +37,8 @@ describe('NamespaceHeader', () => {
     createdAt: '2026-03-23T00:00:00.000Z',
   }
 
-  const renderHeader = (namespace: Namespace) =>
-    renderToStaticMarkup(createElement(NamespaceHeader, { namespace }))
+  const renderHeader = (namespace: Namespace, viewerRole?: NamespaceRole) =>
+    renderToStaticMarkup(createElement(NamespaceHeader, { namespace, viewerRole }))
 
   it('renders the GLOBAL namespace header with avatar, description, slug and immutable hint', () => {
     const html = renderHeader(baseNamespace)
@@ -44,7 +46,7 @@ describe('NamespaceHeader', () => {
     expect(html).toContain('SkillHub')
     expect(html).toContain('img')
     expect(html).toContain('src="https://example.com/avatar.png"')
-    expect(html).toContain('alt="SkillHub"')
+    expect(html).toContain('alt=""')
     expect(html).toContain('Shared namespace for all skills')
     expect(html).toContain('@skillhub')
     expect(html).toContain('myNamespaces.typeGlobal')
@@ -53,6 +55,15 @@ describe('NamespaceHeader', () => {
     expect(html).toContain('bg-emerald-500/10 text-emerald-500 border-emerald-500/20')
     expect(html).not.toContain('namespaceStatus.frozenHint')
     expect(html).not.toContain('namespaceStatus.archivedHint')
+  })
+
+  it('offers editing only to owners and admins of active team spaces', () => {
+    const team: Namespace = { ...baseNamespace, type: 'TEAM' }
+    expect(renderHeader(team, 'OWNER')).toContain('namespace.settings.edit')
+    expect(renderHeader(team, 'ADMIN')).toContain('namespace.settings.edit')
+    expect(renderHeader(team, 'MEMBER')).not.toContain('namespace.settings.edit')
+    expect(renderHeader(baseNamespace, 'OWNER')).not.toContain('namespace.settings.edit')
+    expect(renderHeader({ ...team, status: 'ARCHIVED' }, 'OWNER')).not.toContain('namespace.settings.edit')
   })
 
   it('renders the TEAM namespace header with frozen status and hint', () => {

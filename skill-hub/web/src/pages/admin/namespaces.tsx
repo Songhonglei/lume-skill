@@ -1,3 +1,4 @@
+import { namespaceRoleLabel } from '@/shared/lib/namespace-role-label'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -98,10 +99,7 @@ function namespaceTypeLabel(t: (key: string) => string, type: string) {
 }
 
 function displayRole(t: (key: string) => string, role?: string) {
-  if (!role) return t('adminNamespaces.noMembership')
-  if (role === 'OWNER') return t('members.roleOwner')
-  if (role === 'ADMIN') return t('members.roleAdmin')
-  return t('members.roleMember')
+  return role ? namespaceRoleLabel(t, role) : t('adminNamespaces.noMembership')
 }
 
 export function AdminNamespacesPage() {
@@ -631,7 +629,7 @@ export function AdminNamespacesPage() {
                 <SelectContent>
                   {transferCandidates.map((candidate) => (
                     <SelectItem data-analytics-id="admin.namespace.ownership.select" key={candidate.userId} value={candidate.userId}>
-                      {candidate.displayName || candidate.userId} ({candidate.role})
+                      {candidate.displayName || candidate.userId} ({namespaceRoleLabel(t, candidate.role)})
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -34,7 +34,7 @@ export function GovernanceNotifications({ items, isLoading, onMarkRead, isMarkin
           <div className="flex items-center justify-between gap-3">
             <div className="font-medium">{item.title}</div>
             <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.status === 'UNREAD' ? 'bg-primary/10 text-primary' : 'bg-secondary text-secondary-foreground'}`}>
-              {item.status}
+              {t(item.status === 'UNREAD' ? 'notification.unread' : 'notification.read')}
             </span>
           </div>
           {item.createdAt ? (

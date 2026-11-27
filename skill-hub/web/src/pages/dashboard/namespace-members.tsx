@@ -87,7 +87,6 @@ export function NamespaceMembersPage() {
   // elevated roles surfaced through the current user's namespace membership.
   const canManageMembers = !isReadOnly && (currentUserRole === 'OWNER' || currentUserRole === 'ADMIN')
   const canViewInvitations = namespace?.type === 'TEAM' && (currentUserRole === 'OWNER' || currentUserRole === 'ADMIN')
-  const canEditNamespace = canManageMembers
   const canTransferOwnership = !isReadOnly && currentUserRole === 'OWNER'
   // The permission exists only for TEAM namespaces; managers see the grant controls.
   const showAutoPublication = namespace?.type === 'TEAM'
@@ -204,7 +203,7 @@ export function NamespaceMembersPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <NamespaceManagementBack />
-      <NamespaceHeader namespace={namespace} canEdit={canEditNamespace} />
+      <NamespaceHeader namespace={namespace} viewerRole={currentUserRole} />
       <NamespaceManagementNav slug={slug} active="members" />
 
       <div className="space-y-6">

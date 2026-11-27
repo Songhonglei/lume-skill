@@ -30,11 +30,10 @@ export function NamespaceSettingsPage() {
   ] as const
   if (isLoading) return <div className="h-40 animate-shimmer rounded-lg" />
   if (!namespace) return <EmptyState title={t('namespace.notFound')} />
-  const canEdit = namespace.type === 'TEAM' && namespace.status === 'ACTIVE' && (managed?.currentUserRole === 'OWNER' || managed?.currentUserRole === 'ADMIN')
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <NamespaceManagementBack />
-      <NamespaceHeader namespace={namespace} canEdit={canEdit} />
+      <NamespaceHeader namespace={namespace} viewerRole={managed?.currentUserRole} />
       <NamespaceManagementNav slug={slug} active="settings" />
       <Card className="space-y-4 p-5">
         <h2 className="font-semibold">{t('namespaceManagement.lifecycle')}</h2>

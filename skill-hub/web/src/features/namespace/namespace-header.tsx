@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Pencil } from 'lucide-react'
-import type { Namespace } from '@/api/types'
+import type { Namespace, NamespaceRole } from '@/api/types'
 import { NamespaceBadge } from '@/shared/components/namespace-badge'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
@@ -8,14 +8,16 @@ import { EditNamespaceDialog } from './edit-namespace-dialog'
 
 interface NamespaceHeaderProps {
   namespace: Namespace
-  canEdit?: boolean
+  viewerRole?: NamespaceRole | null
 }
 
 /**
  * Header block for namespace pages and namespace-oriented dashboard views.
  */
-export function NamespaceHeader({ namespace, canEdit = false }: NamespaceHeaderProps) {
+export function NamespaceHeader({ namespace, viewerRole }: NamespaceHeaderProps) {
   const { t } = useTranslation()
+  const canEdit = namespace.type === 'TEAM' && namespace.status === 'ACTIVE'
+    && (viewerRole === 'OWNER' || viewerRole === 'ADMIN')
   const statusLabel = namespace.status === 'FROZEN'
     ? t('namespaceStatus.frozen')
     : namespace.status === 'ARCHIVED'
@@ -35,42 +37,38 @@ export function NamespaceHeader({ namespace, canEdit = false }: NamespaceHeaderP
         : null
 
   return (
-    <div className="flex items-start gap-4 p-6 border rounded-lg bg-card">
-      {namespace.avatarUrl && (
-        <img
-          src={namespace.avatarUrl}
-          alt={namespace.displayName}
-          className="w-16 h-16 rounded-lg"
-        />
-      )}
-      <div className="flex-1 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold">{namespace.displayName}</h1>
-          <NamespaceBadge type={namespace.type} name={namespace.type === 'GLOBAL' ? t('myNamespaces.typeGlobal') : t('myNamespaces.typeTeam')} />
-          <span className={cn('inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium', statusClassName)}>
-            {statusLabel}
-          </span>
-        </div>
-        {namespace.description && (
-          <p className="text-muted-foreground">{namespace.description}</p>
+    <div className="rounded-lg border bg-card p-3 sm:px-4">
+      <div className="flex items-center gap-2.5">
+        {namespace.avatarUrl && (
+          <img
+            src={namespace.avatarUrl}
+            alt=""
+            className="size-9 shrink-0 rounded-md object-cover"
+          />
         )}
-        <div className="text-sm text-muted-foreground">
-          @{namespace.slug}
-        </div>
-        {hint ? (
-          <div className="rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
-            {hint}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="min-w-0 text-lg font-semibold leading-tight [overflow-wrap:anywhere]">{namespace.displayName}</h1>
+            <NamespaceBadge type={namespace.type} name={namespace.type === 'GLOBAL' ? t('myNamespaces.typeGlobal') : t('myNamespaces.typeTeam')} />
+            <span className={cn('inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium', statusClassName)}>
+              {statusLabel}
+            </span>
           </div>
+          <span className="min-w-0 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]">@{namespace.slug}</span>
+          {namespace.description && (
+            <p className="min-w-0 text-sm text-muted-foreground [overflow-wrap:anywhere]">{namespace.description}</p>
+          )}
+        </div>
+        {canEdit ? (
+          <EditNamespaceDialog namespace={namespace}>
+            <Button data-analytics-id="namespace.settings.edit" type="button" variant="outline" size="sm" className="shrink-0" aria-label={t('namespaceEdit.editButton')}>
+              <Pencil className="size-4" aria-hidden="true" />
+              {t('namespaceEdit.editButton')}
+            </Button>
+          </EditNamespaceDialog>
         ) : null}
       </div>
-      {canEdit ? (
-        <EditNamespaceDialog namespace={namespace}>
-          <Button data-analytics-id="namespace.settings.edit" type="button" variant="outline" size="sm" aria-label={t('namespaceEdit.editButton')}>
-            <Pencil className="mr-1 h-4 w-4" />
-            {t('namespaceEdit.editButton')}
-          </Button>
-        </EditNamespaceDialog>
-      ) : null}
+      {hint && <p className="mt-2 border-t border-border/50 pt-2 text-sm text-muted-foreground">{hint}</p>}
     </div>
   )
 }

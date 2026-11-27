@@ -46,6 +46,7 @@ export function ReviewProgressPage() {
   })
 
   const page = search.page ?? 0
+  const hasFilters = Boolean(search.q || search.type || search.status)
   const totalPages = progressQuery.data
     ? Math.ceil(progressQuery.data.total / progressQuery.data.size)
     : 0
@@ -81,6 +82,7 @@ export function ReviewProgressPage() {
 
       <Card className="border-border/70">
         <CardContent className="space-y-4 p-3 sm:p-5 md:p-6">
+          <h2 className="text-sm font-semibold">{t('reviewProgress.statusSummary')}</h2>
           <div className="flex flex-wrap items-end gap-2 sm:gap-3">
             <form data-analytics-id="review.progress.search" className="flex w-full min-w-0 gap-2 sm:flex-1" onSubmit={submitSearch}>
               <div className="relative min-w-0 flex-1">
@@ -135,7 +137,7 @@ export function ReviewProgressPage() {
           </div>
 
           {progressQuery.data ? (
-            <div className="grid gap-3 sm:grid-cols-3" aria-label={t('reviewProgress.statusSummary')}>
+            <div className="grid gap-3 sm:grid-cols-3" role="group" aria-label={t('reviewProgress.statusFilter')}>
               {([
                 ['PENDING', progressQuery.data.statusCounts.pending, 'statusPending'],
                 ['APPROVED', progressQuery.data.statusCounts.approved, 'statusApproved'],
@@ -190,7 +192,18 @@ export function ReviewProgressPage() {
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-border/70">
-              <EmptyState title={t('reviewProgress.emptyTitle')} description={t('reviewProgress.emptyDescription')} />
+              <EmptyState
+                title={t(page > 0 ? 'reviewCenter.pageEmpty' : hasFilters ? 'reviewProgress.noMatches' : 'reviewProgress.emptyTitle')}
+                description={page === 0 && !hasFilters ? t('reviewProgress.emptyDescription') : undefined}
+                action={page > 0 ? (
+                  <Button variant="outline" size="sm" onClick={() => updateSearch({ page: 0 })}>{t('reviewCenter.firstPage')}</Button>
+                ) : hasFilters ? (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setQueryInput('')
+                    updateSearch({ q: '', status: null, subjectType: null })
+                  }}>{t('list.clearFilters')}</Button>
+                ) : undefined}
+              />
             </div>
           )}
 

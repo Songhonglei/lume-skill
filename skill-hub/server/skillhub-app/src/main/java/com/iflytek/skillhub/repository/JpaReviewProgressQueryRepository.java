@@ -53,57 +53,63 @@ public class JpaReviewProgressQueryRepository implements ReviewProgressQueryRepo
             )
             """;
 
-    private static final String MY_PROGRESS_SQL = RANKED_CTE + """
-            SELECT latest.id,
-                   latest.skill_id,
-                   namespace.slug,
-                   skill.slug,
-                   latest.subject_version,
-                   latest.status,
-                   latest.review_comment,
-                   latest.submitted_at,
-                   latest.reviewed_at,
-                   latest.attempt_count,
-                   latest.subject_type,
-                   latest.subject_id,
-                   latest.subject_version_id,
-                   COALESCE(skill.slug, suite.slug) AS subject_slug
-            FROM latest
+    private static final String LATEST_FROM = """
+            FROM latest task
             LEFT JOIN skill
-              ON latest.subject_type IN ('SKILL_VERSION', 'SKILL_METADATA') AND skill.id = latest.subject_id
+              ON task.subject_type IN ('SKILL_VERSION', 'SKILL_METADATA') AND skill.id = task.subject_id
             LEFT JOIN skill_suite suite
-              ON latest.subject_type = 'SUITE_VERSION' AND suite.id = latest.subject_id
-            JOIN namespace ON namespace.id = latest.namespace_id
+              ON task.subject_type = 'SUITE_VERSION' AND suite.id = task.subject_id
+            LEFT JOIN skill_suite_version suite_version
+              ON task.subject_type = 'SUITE_VERSION' AND suite_version.id = task.subject_version_id
+            LEFT JOIN skill_version version
+              ON task.subject_type = 'SKILL_VERSION' AND version.id = task.subject_version_id
+            JOIN namespace ON namespace.id = task.namespace_id
+            """;
+
+    private static final String MATCHING_SQL = """
             WHERE (
                     :query = ''
                     OR LOWER(COALESCE(skill.slug, suite.slug)) LIKE :queryPattern
                     OR LOWER(namespace.slug) LIKE :queryPattern
+                    OR LOWER(namespace.display_name) LIKE :queryPattern
+                    OR LOWER(skill.display_name) LIKE :queryPattern
+                    OR LOWER(suite.display_name) LIKE :queryPattern
+                    OR LOWER(%s) LIKE :queryPattern
                   )
-              AND (:status = '' OR latest.status = :status)
-              AND (:subjectType = '' OR latest.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND latest.subject_type = 'SKILL_METADATA')
-            ORDER BY latest.submitted_at DESC, latest.id DESC
+            """.formatted(JpaReviewQueueQueryRepository.NAME);
+
+    private static final String MY_PROGRESS_SQL = RANKED_CTE + """
+            SELECT task.id,
+                   task.skill_id,
+                   namespace.slug,
+                   skill.slug,
+                   task.subject_version,
+                   task.status,
+                   task.review_comment,
+                   task.submitted_at,
+                   task.reviewed_at,
+                   task.attempt_count,
+                   task.subject_type,
+                   task.subject_id,
+                   task.subject_version_id,
+                   COALESCE(skill.slug, suite.slug) AS subject_slug
+            """ + LATEST_FROM + MATCHING_SQL + """
+              AND (:status = '' OR task.status = :status)
+              AND (:subjectType = '' OR task.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND task.subject_type = 'SKILL_METADATA')
+            ORDER BY task.submitted_at DESC, task.id DESC
             OFFSET :offset ROWS FETCH NEXT :size ROWS ONLY
             """;
 
     private static final String MY_PROGRESS_SUMMARY_SQL = RANKED_CTE + """
-            SELECT COUNT(*) FILTER (WHERE (:status = '' OR latest.status = :status)
-                                     AND (:subjectType = '' OR latest.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND latest.subject_type = 'SKILL_METADATA')) AS filtered_total,
-                   COUNT(*) FILTER (WHERE latest.status = 'PENDING'
-                                     AND (:subjectType = '' OR latest.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND latest.subject_type = 'SKILL_METADATA')) AS pending_count,
-                   COUNT(*) FILTER (WHERE latest.status = 'APPROVED'
-                                     AND (:subjectType = '' OR latest.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND latest.subject_type = 'SKILL_METADATA')) AS approved_count,
-                   COUNT(*) FILTER (WHERE latest.status = 'REJECTED'
-                                     AND (:subjectType = '' OR latest.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND latest.subject_type = 'SKILL_METADATA')) AS rejected_count
-            FROM latest
-            LEFT JOIN skill
-              ON latest.subject_type IN ('SKILL_VERSION', 'SKILL_METADATA') AND skill.id = latest.subject_id
-            LEFT JOIN skill_suite suite
-              ON latest.subject_type = 'SUITE_VERSION' AND suite.id = latest.subject_id
-            JOIN namespace ON namespace.id = latest.namespace_id
-            WHERE :query = ''
-               OR LOWER(COALESCE(skill.slug, suite.slug)) LIKE :queryPattern
-               OR LOWER(namespace.slug) LIKE :queryPattern
-            """;
+            SELECT COUNT(*) FILTER (WHERE (:status = '' OR task.status = :status)
+                                     AND (:subjectType = '' OR task.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND task.subject_type = 'SKILL_METADATA')) AS filtered_total,
+                   COUNT(*) FILTER (WHERE task.status = 'PENDING'
+                                     AND (:subjectType = '' OR task.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND task.subject_type = 'SKILL_METADATA')) AS pending_count,
+                   COUNT(*) FILTER (WHERE task.status = 'APPROVED'
+                                     AND (:subjectType = '' OR task.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND task.subject_type = 'SKILL_METADATA')) AS approved_count,
+                   COUNT(*) FILTER (WHERE task.status = 'REJECTED'
+                                     AND (:subjectType = '' OR task.subject_type = :subjectType OR :subjectType = 'SKILL_VERSION' AND task.subject_type = 'SKILL_METADATA')) AS rejected_count
+            """ + LATEST_FROM + MATCHING_SQL;
 
     private final EntityManager entityManager;
 
