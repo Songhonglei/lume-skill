@@ -150,7 +150,7 @@ export function useBatchReview(filterKey: string) {
     </div>
   </div> : null
   const dialogs = <>
-    <Dialog open={clearOpen} onOpenChange={setClearOpen}><DialogContent className="[&>button]:h-11 [&>button]:w-11 sm:[&>button]:h-7 sm:[&>button]:w-7"><DialogHeader><DialogTitle>{t('reviewBatch.changeFilters')}</DialogTitle><DialogDescription>{t('reviewBatch.clearWarning')}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" className="h-11 sm:h-8" onClick={() => setClearOpen(false)}>{t('reviewBatch.cancel')}</Button><Button className="h-11 sm:h-8" onClick={() => { client.setQueryData(['reviews', 'selection', filterKey], []); setSelected([]); setClearOpen(false); pendingFilter.current?.(); pendingFilter.current = null }}>{t('reviewBatch.continue')}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog open={clearOpen} onOpenChange={setClearOpen}><DialogContent className="[&>button]:h-11 [&>button]:w-11 sm:[&>button]:h-7 sm:[&>button]:w-7"><DialogHeader><DialogTitle>{t('reviewBatch.changeFilters')}</DialogTitle><DialogDescription>{t('reviewBatch.clearWarning')}</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" className="h-11 sm:h-8" onClick={() => setClearOpen(false)}>{t('reviewBatch.cancel')}</Button><Button className="h-11 sm:h-8" onClick={() => { client.setQueryData(['reviews', 'selection', filterKey], []); setSelected([]); setClearOpen(false); pendingFilter.current?.(); pendingFilter.current = null }}>{t('dialog.confirm')}</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={open} onOpenChange={next => { if (!decide.isPending && !reconcile.isPending) setOpen(next) }}>
       <DialogContent className="flex max-h-[min(48rem,calc(100dvh-2rem))] w-[min(calc(100vw-2rem),48rem)] flex-col gap-0 overflow-hidden p-0" hideClose
         onCloseAutoFocus={event => {
@@ -159,7 +159,7 @@ export function useBatchReview(filterKey: string) {
           if (document.activeElement !== returnFocus.current) document.getElementById('review-results')?.focus()
         }}>
         {!decide.isPending && !reconcile.isPending && <Button variant="ghost" size="icon" className="absolute right-3 top-3 h-11 w-11 md:h-7 md:w-7" aria-label={t('reviewBatch.close')} onClick={() => setOpen(false)}><X className="h-4 w-4" /></Button>}
-        <DialogHeader className="shrink-0 border-b px-6 py-5 pr-16 text-left md:pr-12">
+        <DialogHeader className="shrink-0 px-6 py-5 pr-16 text-left md:pr-12">
           <DialogTitle className="flex items-center gap-2">{result ? <CheckCheck className="h-5 w-5" /> : action === 'APPROVE' ? <Check className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}{t(result ? 'reviewBatch.resultTitle' : action === 'APPROVE' ? 'reviewBatch.approveTitle' : 'reviewBatch.rejectTitle')}</DialogTitle>
           <DialogDescription>{t('reviewBatch.summary', { selected: items.length, ready: readyIds.length })}</DialogDescription>
         </DialogHeader>
@@ -187,8 +187,8 @@ export function useBatchReview(filterKey: string) {
             <p className="text-xs text-muted-foreground">{t('reviewBatch.independent')}</p>
           </div>}
         </div>
-        <DialogFooter className="shrink-0 flex-row justify-end border-t bg-card px-6 py-4 [&_button]:min-h-11 md:[&_button]:min-h-0">
-          {result || uncertain ? <><Button variant="outline" disabled={reconcile.isPending} onClick={() => reconcile.mutate()}><RefreshCw className="mr-1.5 h-4 w-4" />{t('reviewBatch.refresh')}</Button><Button disabled={reconcile.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.done')}</Button></> : <><Button variant="outline" disabled={decide.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.cancel')}</Button><Button variant={action === 'REJECT' ? 'destructive' : 'default'} disabled={!preview.isSuccess || !ready.size || decide.isPending} onClick={submit}>{decide.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}{t(decide.isPending ? 'reviewBatch.processing' : action === 'APPROVE' ? 'reviewBatch.confirmApprove' : 'reviewBatch.confirmReject', { count: ready.size })}</Button></>}
+        <DialogFooter className="shrink-0 flex-row justify-end bg-card px-6 py-4 [&_button]:min-h-11 md:[&_button]:min-h-0">
+          {result || uncertain ? <><Button variant="outline" disabled={reconcile.isPending} onClick={() => reconcile.mutate()}><RefreshCw className="mr-1.5 h-4 w-4" />{t('reviewBatch.refresh')}</Button><Button disabled={reconcile.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.done')}</Button></> : <><Button variant="outline" disabled={decide.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.cancel')}</Button><Button variant={action === 'REJECT' ? 'destructive' : 'default'} disabled={!preview.isSuccess || !ready.size || decide.isPending} onClick={submit}>{decide.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}{t(decide.isPending ? 'reviewBatch.processing' : 'dialog.confirm')}</Button></>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

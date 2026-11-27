@@ -153,7 +153,6 @@ export function InvitationControls({ slug, compact = false }: { slug: string; co
       <ConfirmDialog confirmAnalyticsId={confirm === 'revoke' ? 'namespace.invitation.revoke.confirm' : confirm === 'replace' ? 'namespace.invitation.replace.confirm' : undefined} cancelAnalyticsId={confirm === 'revoke' ? 'namespace.invitation.revoke.cancel' : confirm === 'replace' ? 'namespace.invitation.replace.cancel' : undefined} open={confirm !== null} onOpenChange={(open) => { if (!open) setConfirm(null) }}
         title={t(confirm === 'revoke' ? 'invitation.revokeTitle' : 'invitation.replaceTitle')}
         description={t(confirm === 'revoke' ? 'invitation.revokeDescription' : 'invitation.replaceDescription')}
-        confirmText={t('dialog.confirm')}
         onConfirm={async () => {
           try {
             if (confirm === 'revoke') await revoke.mutateAsync()

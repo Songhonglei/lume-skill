@@ -24,7 +24,7 @@ describe('business email administration', () => {
     await screen.findByText('notificationEmail.duplicateRisk')
     expect(api.retry).not.toHaveBeenCalled()
     const dialog = screen.getByRole('dialog')
-    const button = Array.from(dialog.querySelectorAll('button')).find((item) => item.textContent === 'notificationEmail.retry')
+    const button = Array.from(dialog.querySelectorAll('button')).find((item) => item.textContent === 'dialog.confirm')
     if (!button) throw new Error('missing retry confirmation')
     fireEvent.click(button)
     await waitFor(() => expect(api.retry).toHaveBeenCalledWith(18, true))
@@ -62,7 +62,7 @@ describe('business email administration', () => {
   it('keeps UNKNOWN retry errors in the dialog and never shows false success', async () => {
     api.retry.mockRejectedValue(new Error('failure')); setup()
     fireEvent.click(await screen.findByRole('button', { name: 'notificationEmail.retry' }))
-    const dialog = screen.getByRole('dialog'); const button = Array.from(dialog.querySelectorAll('button')).find((item) => item.textContent === 'notificationEmail.retry')
+    const dialog = screen.getByRole('dialog'); const button = Array.from(dialog.querySelectorAll('button')).find((item) => item.textContent === 'dialog.confirm')
     if (!button) throw new Error('missing retry confirmation')
     fireEvent.click(button)
     await screen.findByRole('alert')

@@ -40,14 +40,14 @@ vi.mock('@/shared/lib/toast', () => ({ toast: { success: vi.fn(), error: vi.fn()
 function submitPackage() {
   fireEvent.click(screen.getByRole('button', { name: 'publish.nextConfirm' }))
   const confirmation = screen.queryByRole('dialog', { name: 'publish.confirmDetails' })
-  if (confirmation) fireEvent.click(Array.from(confirmation.querySelectorAll('button')).find(button => button.textContent === 'publish.confirm')!)
+  if (confirmation) fireEvent.click(Array.from(confirmation.querySelectorAll('button')).find(button => button.textContent === 'dialog.confirm')!)
 }
 vi.mock('@/features/publish/presentation-editor', () => ({ PresentationEditor: ({ open, value, onApply, onCancel }: { open: boolean; value: string; onApply: (value: string) => void; onCancel: () => void }) => open ? <div><textarea aria-label="overview-draft" defaultValue={value} /><button onClick={() => onApply((document.querySelector('[aria-label="overview-draft"]') as HTMLTextAreaElement).value)}>apply-overview</button><button onClick={onCancel}>cancel-overview</button></div> : null }))
 import { PublishPage } from './publish'
 
 function restoreField(index: number) {
   fireEvent.click(screen.getAllByRole('button', { name: 'publish.form.restore' })[index])
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'publish.form.restore' }))
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
 }
 
 function mount() {

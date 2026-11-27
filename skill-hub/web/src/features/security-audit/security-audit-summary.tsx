@@ -15,9 +15,10 @@ interface SecurityAuditSummaryProps {
   versionId: number
   versionStatus?: string
   canRetry?: boolean
+  retryOnly?: boolean
 }
 
-export function SecurityAuditSummary({ skillId, versionId, versionStatus, canRetry = false }: SecurityAuditSummaryProps) {
+export function SecurityAuditSummary({ skillId, versionId, versionStatus, canRetry = false, retryOnly = false }: SecurityAuditSummaryProps) {
   const { t } = useTranslation()
   const { data: audits } = useSecurityAudits(skillId, versionId)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -26,6 +27,25 @@ export function SecurityAuditSummary({ skillId, versionId, versionStatus, canRet
   if (!audits || audits.length === 0) {
     return null
   }
+
+  const retry = canRetry && versionStatus === 'SCAN_FAILED' && (
+    <Button data-analytics-id="security.scan.retry"
+      size="sm"
+      className="w-full"
+      disabled={retryMutation.isPending}
+      onClick={() => retryMutation.mutate(undefined, {
+        onSuccess: () => toast.success(t('securityAudit.retrySuccess')),
+        onError: (error) => toast.error(
+          t('securityAudit.retryError'),
+          error instanceof Error ? error.message : undefined
+        ),
+      })}
+    >
+      {retryMutation.isPending ? t('securityAudit.retrying') : t('securityAudit.retry')}
+    </Button>
+  )
+
+  if (retryOnly) return retry || null
 
   const totalFindings = audits.reduce((sum, a) => sum + a.findingsCount, 0)
 
@@ -52,22 +72,7 @@ export function SecurityAuditSummary({ skillId, versionId, versionStatus, canRet
         <p className="text-xs text-muted-foreground">
           {t('securityAudit.totalFindings', { count: totalFindings })}
         </p>
-        {canRetry && versionStatus === 'SCAN_FAILED' && (
-          <Button data-analytics-id="security.scan.retry"
-            size="sm"
-            className="w-full"
-            disabled={retryMutation.isPending}
-            onClick={() => retryMutation.mutate(undefined, {
-              onSuccess: () => toast.success(t('securityAudit.retrySuccess')),
-              onError: (error) => toast.error(
-                t('securityAudit.retryError'),
-                error instanceof Error ? error.message : undefined
-              ),
-            })}
-          >
-            {retryMutation.isPending ? t('securityAudit.retrying') : t('securityAudit.retry')}
-          </Button>
-        )}
+        {retry}
         <Button data-analytics-id="security.scan.open" variant="outline" size="sm" className="w-full" onClick={() => setDialogOpen(true)}>
           {t('securityAudit.viewDetails')}
         </Button>

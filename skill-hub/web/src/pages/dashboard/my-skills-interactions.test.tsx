@@ -313,7 +313,7 @@ describe('My Skills interactions with real menu and dialog', () => {
     const trigger = await openMenu()
     fireEvent.click(screen.getByRole('menuitem', { name: 'mySkills.archive' }))
     await screen.findByRole('dialog', { name: 'mySkills.archiveConfirmTitle' })
-    fireEvent.click(screen.getByRole('button', { name: 'mySkills.archive' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await waitFor(() => expect(document.activeElement).toBe(trigger))
     const otherControl = screen.getByRole('button', { name: 'nav.search' })

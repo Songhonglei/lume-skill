@@ -674,7 +674,6 @@ export function SuiteEditor({ namespace: routeNamespace, slug: routeSlug, versio
           from: selected.find((member) => member.skillId === pendingVersionUpdate.skillId)?.version,
           to: pendingVersionUpdate.version,
         }) : undefined}
-        confirmText={t('suite.confirmVersionUpdate')}
         onConfirm={() => {
           if (pendingVersionUpdate) applyCandidateUpdate(pendingVersionUpdate)
         }}

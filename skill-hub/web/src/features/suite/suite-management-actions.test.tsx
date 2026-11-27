@@ -29,11 +29,10 @@ vi.mock('@/shared/hooks/use-suite-queries', () => ({
 }))
 vi.mock('@/shared/lib/toast', () => ({ toast: mocks.toast }))
 vi.mock('@/shared/components/confirm-dialog', () => ({
-  ConfirmDialog: ({ open, confirmText, onConfirm }: {
+  ConfirmDialog: ({ open, onConfirm }: {
     open: boolean
-    confirmText?: string
     onConfirm: () => void | Promise<void>
-  }) => open ? <button onClick={onConfirm}>confirm:{confirmText}</button> : null,
+  }) => open ? <button onClick={onConfirm}>dialog.confirm</button> : null,
 }))
 vi.mock('@/shared/ui/dialog', () => ({
   Dialog: ({ open, children }: { open: boolean; children?: ReactNode }) => open ? <>{children}</> : null,
@@ -134,7 +133,7 @@ describe('SuiteManagementActions', () => {
     render(<SuiteManagementActions suite={suite({ allowedActions: ['YANK'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.yankVersion' }))
-    const confirm = screen.getAllByRole('button', { name: 'suite.yankVersion' })[1]
+    const confirm = screen.getByRole('button', { name: 'dialog.confirm' })
     expect(confirm.hasAttribute('disabled')).toBe(true)
 
     fireEvent.change(screen.getByPlaceholderText('suite.yankReasonPlaceholder'), {
@@ -155,7 +154,7 @@ describe('SuiteManagementActions', () => {
     render(<SuiteManagementActions suite={suite({ allowedActions: ['HIDE'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.hide' }))
-    fireEvent.click(screen.getByRole('button', { name: 'confirm:suite.hide' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
 
     await waitFor(() => expect(mocks.hidden.mutateAsync).toHaveBeenCalledWith({ suiteId: 7, hidden: true }))
     expect(screen.queryByRole('button', { name: 'suite.restore' })).toBeNull()
@@ -166,7 +165,7 @@ describe('SuiteManagementActions', () => {
     render(<SuiteManagementActions suite={suite({ hidden: true, allowedActions: ['RESTORE'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.restore' }))
-    fireEvent.click(screen.getByRole('button', { name: 'confirm:suite.restore' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
 
     await waitFor(() => expect(mocks.hidden.mutateAsync).toHaveBeenCalledWith({ suiteId: 7, hidden: false }))
   })
@@ -176,7 +175,7 @@ describe('SuiteManagementActions', () => {
     const first = render(<SuiteManagementActions suite={suite({ allowedActions: ['ARCHIVE'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.archive' }))
-    fireEvent.click(screen.getByRole('button', { name: 'confirm:suite.archive' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(mocks.archived.mutateAsync).toHaveBeenCalledWith({ suiteId: 7, archived: true }))
 
     first.unmount()
@@ -185,7 +184,7 @@ describe('SuiteManagementActions', () => {
       allowedActions: ['UNARCHIVE'],
     })} />)
     fireEvent.click(screen.getByRole('button', { name: 'suite.unarchive' }))
-    fireEvent.click(screen.getByRole('button', { name: 'confirm:suite.unarchive' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(mocks.archived.mutateAsync).toHaveBeenCalledWith({ suiteId: 7, archived: false }))
   })
 
@@ -194,7 +193,7 @@ describe('SuiteManagementActions', () => {
     render(<SuiteManagementActions suite={suite({ allowedActions: ['DELETE'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.delete' }))
-    fireEvent.click(screen.getByRole('button', { name: 'confirm:suite.delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
 
     await waitFor(() => expect(mocks.remove.mutateAsync).toHaveBeenCalledWith({ suiteId: 7 }))
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/dashboard/suites' })

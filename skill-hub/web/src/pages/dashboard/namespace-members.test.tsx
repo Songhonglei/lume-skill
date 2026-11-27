@@ -27,16 +27,15 @@ vi.mock('@/features/namespace/add-namespace-member-dialog', () => ({ AddNamespac
 vi.mock('@/features/namespace/batch-import-members-dialog', () => ({ BatchImportMembersDialog: ({ children }: { children: ReactNode }) => children }))
 vi.mock('@/features/namespace/transfer-ownership-dialog', () => ({ TransferOwnershipDialog: ({ children }: { children: ReactNode }) => children }))
 vi.mock('@/shared/components/confirm-dialog', () => ({
-  ConfirmDialog: ({ open, title, description, confirmText, onConfirm }: {
+  ConfirmDialog: ({ open, title, description, onConfirm }: {
     open: boolean
     title: string
     description?: ReactNode
-    confirmText?: string
     onConfirm: () => Promise<void>
   }) => (open ? (
     <div role="alertdialog" aria-label={title}>
       <p>{description}</p>
-      <button type="button" onClick={() => void onConfirm().catch(() => undefined)}>{confirmText}</button>
+      <button type="button" onClick={() => void onConfirm().catch(() => undefined)}>dialog.confirm</button>
     </div>
   ) : null),
 }))
@@ -164,7 +163,7 @@ describe('NamespaceMembersPage team-only automatic publication', () => {
     const dialog = await screen.findByRole('alertdialog', { name: 'members.autoPublication.grantConfirmTitle' })
     expect(within(dialog).getByText('members.autoPublication.grantConfirmDescription:member')).toBeTruthy()
     expect(state.autoPublication).not.toHaveBeenCalled()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'members.autoPublication.grant' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(state.autoPublication).toHaveBeenCalledWith({ slug: 'team', userId: 'member', granted: true }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
   })
@@ -177,7 +176,7 @@ describe('NamespaceMembersPage team-only automatic publication', () => {
     fireEvent.click(within(row).getByRole('button', { name: 'members.autoPublication.revoke' }))
     const dialog = await screen.findByRole('alertdialog', { name: 'members.autoPublication.revokeConfirmTitle' })
     expect(within(dialog).getByText('members.autoPublication.revokeConfirmDescription:member')).toBeTruthy()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'members.autoPublication.revoke' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(state.autoPublication).toHaveBeenCalledWith({ slug: 'team', userId: 'member', granted: false }))
   })
 
@@ -187,7 +186,7 @@ describe('NamespaceMembersPage team-only automatic publication', () => {
     const row = screen.getByText('Member').closest('tr')!
     fireEvent.click(within(row).getByRole('button', { name: 'members.autoPublication.grant' }))
     const dialog = await screen.findByRole('alertdialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: 'members.autoPublication.grant' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(state.autoPublication).toHaveBeenCalledTimes(1))
     expect(screen.getByRole('alertdialog')).toBeTruthy()
   })

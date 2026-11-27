@@ -1,16 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/ui/button'
+import { IconAction } from '@/shared/components/icon-action'
 import { useSubscription, useToggleSubscription } from './use-subscription'
 import { Bell } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
 
 interface SubscribeButtonProps {
   skillId: number
-  subscriptionCount: number
   onRequireLogin?: () => void
 }
 
-export function SubscribeButton({ skillId, subscriptionCount, onRequireLogin }: SubscribeButtonProps) {
+export function SubscribeButton({ skillId, onRequireLogin }: SubscribeButtonProps) {
   const { t } = useTranslation()
   const { data: subscriptionStatus } = useSubscription(skillId)
   const toggleMutation = useToggleSubscription(skillId)
@@ -26,20 +25,14 @@ export function SubscribeButton({ skillId, subscriptionCount, onRequireLogin }: 
     }
   }
 
-  if (!subscriptionStatus) {
-    return null
-  }
+  const active = subscriptionStatus?.subscribed ?? false
 
   return (
-    <Button data-analytics-id={subscriptionStatus.subscribed ? 'skill.subscription.remove' : 'skill.subscription.add'}
-      variant={subscriptionStatus.subscribed ? 'default' : 'outline'}
-      size="sm"
-      className="justify-between"
-      onClick={handleToggle}
-      disabled={toggleMutation.isPending}
-    >
-      <Bell className={`w-4 h-4 mr-2 ${subscriptionStatus.subscribed ? 'fill-current' : ''}`} />
-      {subscriptionStatus.subscribed ? t('subscribeButton.subscribed') : t('subscribeButton.subscribe')} ({subscriptionCount})
-    </Button>
+    <IconAction data-analytics-id={active ? 'skill.subscription.remove' : 'skill.subscription.add'}
+      label={t(active ? 'subscribeButton.subscribed' : 'subscribeButton.subscribe')} aria-pressed={active}
+      variant={active ? 'soft' : 'outline'} onClick={handleToggle}
+      disabled={toggleMutation.isPending || (isAuthenticated && !subscriptionStatus)}>
+      <Bell aria-hidden="true" className={`size-4 ${active ? 'fill-current' : ''}`} />
+    </IconAction>
   )
 }

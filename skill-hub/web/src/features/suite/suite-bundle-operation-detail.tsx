@@ -319,7 +319,6 @@ export function SuiteBundleOperationDetail({ operationId }: { operationId: strin
         onOpenChange={setCancelOpen}
         title={t('suite.bundle.cancelConfirmTitle')}
         description={t('suite.bundle.cancelConfirmDescription', { siteName })}
-        confirmText={t('suite.bundle.cancelConfirmAction')}
         variant="destructive"
         onConfirm={() => cancelMutation.mutate(operationId, {
           onSuccess: () => setCancelOpen(false),

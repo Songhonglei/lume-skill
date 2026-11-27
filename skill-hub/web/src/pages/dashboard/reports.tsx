@@ -234,21 +234,10 @@ export function ReportsPage() {
         description={pendingAction?.action === 'resolve'
           ? resolveConfirmDescription(pendingAction?.disposition, t, pendingAction?.skillLabel ?? '')
           : t('reports.dismissConfirmDescription', { skill: pendingAction?.skillLabel ?? '' })}
-        confirmText={pendingAction?.action === 'resolve' ? resolveConfirmText(pendingAction?.disposition, t) : t('reports.dismiss')}
         onConfirm={handleConfirm}
       />
     </div>
   )
-}
-
-/**
- * Resolves the action label used by the confirmation dialog from the selected
- * moderation disposition.
- */
-function resolveConfirmText(disposition: ReportDisposition | undefined, t: (key: string, options?: Record<string, unknown>) => string) {
-  if (disposition === 'RESOLVE_AND_HIDE') return t('reports.resolveAndHide')
-  if (disposition === 'RESOLVE_AND_ARCHIVE') return t('reports.resolveAndArchive')
-  return t('reports.resolve')
 }
 
 /**

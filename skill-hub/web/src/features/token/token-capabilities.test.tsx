@@ -353,7 +353,7 @@ describe('server-backed token listing', () => {
     mount(<TokenList />)
     await screen.findByText('credential-1')
     fireEvent.click(screen.getByText('token.delete'))
-    fireEvent.click(screen.getAllByText('token.delete')[1])
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(api.deleteToken).toHaveBeenCalledWith(1))
     await waitFor(() =>
       expect(screen.getAllByText('credential-1')).toHaveLength(2),
@@ -423,7 +423,7 @@ describe('revocation at a page boundary', () => {
       fireEvent.click(screen.getByText('pagination.next'))
       await screen.findByText('credential-11')
       fireEvent.click(screen.getAllByText('token.delete')[0])
-      fireEvent.click(screen.getAllByText('token.delete')[count])
+      fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
       await waitFor(() => expect(api.deleteToken).toHaveBeenCalledWith(11))
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
       if (count === 1) await screen.findByText('credential-1')

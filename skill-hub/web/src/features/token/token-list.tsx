@@ -634,7 +634,6 @@ export function TokenList() {
             <span className="block text-xs">{t('token.revokeHint')}</span>
           </>
         }
-        confirmText={t('token.delete')}
         variant="destructive"
         onConfirm={confirmDelete}
       />

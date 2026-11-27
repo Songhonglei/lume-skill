@@ -81,8 +81,8 @@ describe('finite business branch markers on real confirmation DOM', () => {
     fireEvent.click(request)
     expect(id(screen.getByRole('button', { name: 'dialog.cancel' }))).toBe(`suite.${action}.cancel`)
     expect(id(screen.getByRole('button', { name: 'Close' }))).toBe(`suite.${action}.cancel`)
-    const confirm = screen.getAllByRole('button', { name: `suite.${action}` }).find(node => id(node) === `suite.${action}.confirm`)!
-    expect(confirm).toBeDefined()
+    const confirm = screen.getByRole('button', { name: 'dialog.confirm' })
+    expect(id(confirm)).toBe(`suite.${action}.confirm`)
     fireEvent.click(confirm)
     if (action === 'hide' || action === 'restore') await waitFor(() => expect(state.hidden).toHaveBeenCalledWith({ suiteId: 7, hidden: action === 'hide' }))
     else if (action === 'archive' || action === 'unarchive') await waitFor(() => expect(state.archived).toHaveBeenCalledWith({ suiteId: 7, archived: action === 'archive' }))

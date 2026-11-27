@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Share2, Check } from 'lucide-react'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
+import { IconAction } from '@/shared/components/icon-action'
 import { getBaseUrl } from './install-command'
 
 interface ShareButtonProps {
@@ -41,18 +42,12 @@ export function ShareButton({ namespace, slug, description }: ShareButtonProps) 
   }
 
   return (
-    <button data-analytics-id="skill.share.request"
-      type="button"
-      data-testid="share-skill-button"
-      onClick={handleShare}
-      className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/50 px-4 py-3 transition-colors hover:bg-muted/70 active:bg-muted/80"
-    >
-      <div className="flex items-center justify-center gap-2">
-        {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-        <span className="text-[13px] leading-relaxed text-foreground sm:text-sm">
-          {copied ? t('skillDetail.share.copied') : t('skillDetail.share.button')}
-        </span>
-      </div>
-    </button>
+    <>
+      <IconAction data-analytics-id="skill.share.request" data-testid="share-skill-button"
+        label={t('skillDetail.share.button')} onClick={handleShare}>
+        {copied ? <Check aria-hidden="true" className="size-4" /> : <Share2 aria-hidden="true" className="size-4" />}
+      </IconAction>
+      <span role="status" className="sr-only">{copied ? t('skillDetail.share.copied') : ''}</span>
+    </>
   )
 }

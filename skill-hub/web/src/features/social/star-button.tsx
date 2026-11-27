@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/ui/button'
+import { IconAction } from '@/shared/components/icon-action'
 import { useStar, useToggleStar } from './use-star'
 import { Bookmark } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
 
 interface StarButtonProps {
   skillId: number
-  starCount: number
   onRequireLogin?: () => void
 }
 
@@ -15,9 +14,9 @@ interface StarButtonProps {
  * prompt to the surrounding page. The read query is kept separate so pages can
  * decide independently whether star controls should be rendered at all.
  */
-export function StarButton({ skillId, starCount, onRequireLogin }: StarButtonProps) {
+export function StarButton({ skillId, onRequireLogin }: StarButtonProps) {
   const { t } = useTranslation()
-  const { data: starStatus, isLoading } = useStar(skillId)
+  const { data: starStatus } = useStar(skillId)
   const toggleMutation = useToggleStar(skillId)
   const { isAuthenticated } = useAuth()
 
@@ -31,20 +30,14 @@ export function StarButton({ skillId, starCount, onRequireLogin }: StarButtonPro
     }
   }
 
-  if (isLoading || !starStatus) {
-    return null
-  }
+  const active = starStatus?.starred ?? false
 
   return (
-    <Button data-analytics-id={starStatus.starred ? 'skill.star.remove' : 'skill.star.add'}
-      variant={starStatus.starred ? 'default' : 'outline'}
-      size="sm"
-      className="justify-between"
-      onClick={handleToggle}
-      disabled={toggleMutation.isPending}
-    >
-      <Bookmark className={`w-4 h-4 mr-2 ${starStatus.starred ? 'fill-current' : ''}`} />
-      {starStatus.starred ? t('starButton.starred') : t('starButton.star')} ({starCount})
-    </Button>
+    <IconAction data-analytics-id={active ? 'skill.star.remove' : 'skill.star.add'}
+      label={t(active ? 'starButton.starred' : 'starButton.star')} aria-pressed={active}
+      variant={active ? 'soft' : 'outline'} onClick={handleToggle}
+      disabled={toggleMutation.isPending || (isAuthenticated && !starStatus)}>
+      <Bookmark aria-hidden="true" className={`size-4 ${active ? 'fill-current' : ''}`} />
+    </IconAction>
   )
 }

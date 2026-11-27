@@ -462,7 +462,6 @@ function ReviewDetailScreen({
         onOpenChange={setApproveDialog}
         title={t('review.approveTitle')}
         description={t('review.approveDescription')}
-        confirmText={t('review.approveConfirm')}
         onConfirm={handleApprove}
       />
 
@@ -471,7 +470,6 @@ function ReviewDetailScreen({
         onOpenChange={setRejectDialog}
         title={t('review.rejectTitle')}
         description={t('review.rejectDescription')}
-        confirmText={t('review.rejectConfirm')}
         variant="destructive"
         onConfirm={handleReject}
       />

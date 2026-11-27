@@ -56,7 +56,7 @@ describe('SuiteBundleOperationDetail', () => {
       expect(screen.queryByRole('button', { name: 'suite.bundle.retryScan' })).toBeNull()
       expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
       fireEvent.click(screen.getByRole('button', { name: 'suite.bundle.cancelOperation' }))
-      fireEvent.click(screen.getByRole('button', { name: 'suite.bundle.cancelConfirmAction' }))
+      fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
       expect(mocks.cancel.mutate).toHaveBeenCalled()
       expect(mocks.retry.mutate).not.toHaveBeenCalled()
     },
@@ -86,7 +86,7 @@ describe('SuiteBundleOperationDetail', () => {
     fireEvent.click(screen.getByRole('button', { name: 'suite.bundle.cancelOperation' }))
 
     expect(screen.getByText('suite.bundle.cancelConfirmDescription')).not.toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'suite.bundle.cancelConfirmAction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     expect(mocks.cancel.mutate).toHaveBeenCalledWith(
       'operation-1',
       expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),

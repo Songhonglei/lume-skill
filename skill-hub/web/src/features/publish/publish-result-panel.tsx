@@ -35,6 +35,9 @@ export function PublishResultPanel({ state, onReturnToForm, onReplacePackage, on
         <div className="min-w-0 flex-1">
           <h2 ref={heading} tabIndex={-1} id="publish-result-heading" className="break-words text-lg font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring">{t(`publish.result.${key}.title`, parameters)}</h2>
           <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{t(`publish.result.${key}.description`, parameters)}</p>
+          {state.kind === 'error' && state.detail && (
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground [overflow-wrap:anywhere]">{state.detail}</p>
+          )}
           {state.kind === 'accepted' && <p className="mt-2 text-xs text-muted-foreground">{t('publish.result.receiptHint')}</p>}
           {state.kind === 'accepted' && <p className="mt-2 break-all text-xs text-muted-foreground">@{state.result.namespace}/{state.result.slug} · {state.result.version}</p>}
           {state.kind === 'accepted' && state.hadPublishedVersion && phase !== 'PUBLISHED' && <p className="mt-2 text-sm text-muted-foreground">{t('publish.result.previousPublished')}</p>}

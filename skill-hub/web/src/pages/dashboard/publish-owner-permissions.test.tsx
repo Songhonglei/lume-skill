@@ -39,7 +39,7 @@ describe.each(['update', 'resubmit'])('%s package rejection refreshes current pe
     const submit = await screen.findByRole('button', { name: 'publish.nextConfirm' })
     await waitFor(() => expect(submit.hasAttribute('disabled')).toBe(false))
     fireEvent.click(submit)
-    fireEvent.click(screen.getByRole('button', { name: 'publish.confirm' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await screen.findByRole('heading', {name:'publish.result.error.invalid.title'})
     fireEvent.click(screen.getByRole('button', {name:'publish.result.returnToForm'}))
     expect(api.detail).toHaveBeenCalledTimes(2)

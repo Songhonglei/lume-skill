@@ -15,6 +15,15 @@ describe('publish submission outcomes', () => {
     expect(classifyPublishFailure(new ApiError('Version already exists', 400), '1.0.0')).toEqual({ kind: 'version-conflict', version: '1.0.0' })
     expect(classifyPublishFailure(new ApiError('Other conflict', 409))).toEqual({ kind: 'error', reason: 'failed' })
   })
+  it('preserves the server’s specific package validation message for the result panel', () => {
+    const detail = '请在 ZIP 根目录添加 SKILL.md。'
+    expect(classifyPublishFailure(new ApiError('Bad request', 400, detail))).toEqual({
+      kind: 'error', reason: 'invalid', detail,
+    })
+    expect(classifyPublishFailure(new ApiError('Bad request', 400, 'error.skill.publish.rejected'))).toEqual({
+      kind: 'error', reason: 'invalid',
+    })
+  })
   it('recognizes the localized version conflict without classifying arbitrary conflicts', () => {
     expect(classifyPublishFailure(new ApiError('Версия уже существует: 1.0.0', 400), '1.0.0')).toEqual({ kind: 'version-conflict', version: '1.0.0' })
   })

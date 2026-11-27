@@ -17,7 +17,6 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string | ReactNode
-  confirmText?: string
   cancelText?: string
   variant?: 'default' | 'destructive'
   onConfirm: () => void | Promise<void>
@@ -32,7 +31,6 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmText,
   cancelText,
   variant = 'default',
   onConfirm,
@@ -48,7 +46,6 @@ export function ConfirmDialog({
   const pendingRef = useRef(false)
   const [pending, setPending] = useState(false)
   openRef.current = open
-  const resolvedConfirmText = confirmText ?? t('dialog.confirm')
   const resolvedCancelText = cancelText ?? t('dialog.cancel')
 
   const handleConfirm = async () => {
@@ -72,12 +69,12 @@ export function ConfirmDialog({
           <DialogTitle className="text-center">{title}</DialogTitle>
           {description && <DialogDescription className="text-center [overflow-wrap:anywhere]">{description}</DialogDescription>}
         </DialogHeader>
-        <DialogFooter className="justify-end border-t pt-3 max-sm:grid max-sm:grid-cols-2 max-sm:items-stretch max-sm:[&>button]:h-auto max-sm:[&>button]:min-h-[var(--control-height)] max-sm:[&>button]:whitespace-normal max-sm:[&>button]:px-2 max-sm:[&>button]:py-1">
+        <DialogFooter className="justify-end max-sm:grid max-sm:grid-cols-2 max-sm:items-stretch max-sm:[&>button]:h-auto max-sm:[&>button]:min-h-[var(--control-height)] max-sm:[&>button]:whitespace-normal max-sm:[&>button]:px-2 max-sm:[&>button]:py-1">
           <Button data-analytics-id={cancelAnalyticsId} variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
             {resolvedCancelText}
           </Button>
           <Button data-analytics-id={confirmAnalyticsId} data-testid={confirmButtonTestId} variant={variant} disabled={pending} onClick={handleConfirm}>
-            {pending ? t('dialog.processing') : resolvedConfirmText}
+            {pending ? t('dialog.processing') : t('dialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

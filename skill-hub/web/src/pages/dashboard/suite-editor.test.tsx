@@ -282,7 +282,7 @@ describe('SuiteEditor', () => {
 
     expect(screen.getByRole('dialog', { name: 'suite.confirmVersionUpdateTitle' })).not.toBeNull()
     expect(screen.getByText('@global/weather@1.0.0')).not.toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: 'suite.confirmVersionUpdate' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
 
     await waitFor(() => expect(screen.getByText('@global/weather@2.0.0')).not.toBeNull())
   })

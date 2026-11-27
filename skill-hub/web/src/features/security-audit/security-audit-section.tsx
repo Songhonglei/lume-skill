@@ -32,9 +32,10 @@ interface SecurityAuditSectionProps {
   /** When true, omits the outer Card wrapper (e.g. when rendered inside a Dialog). */
   bare?: boolean
   compact?: boolean
+  hideHeading?: boolean
 }
 
-export function SecurityAuditSection({ skillId, versionId, versionStatus, showEmptyState = false, bare, compact = false }: SecurityAuditSectionProps) {
+export function SecurityAuditSection({ skillId, versionId, versionStatus, showEmptyState = false, bare, compact = false, hideHeading = false }: SecurityAuditSectionProps) {
   const { t } = useTranslation()
   const { data: audits, isLoading, isError } = useSecurityAudits(skillId, versionId)
 
@@ -42,7 +43,7 @@ export function SecurityAuditSection({ skillId, versionId, versionStatus, showEm
   if (isLoading) {
     if (!showEmptyState) return null
     return <Card className={cn('space-y-3 p-5 md:p-6', compact && 'p-4 md:p-4')}>
-      <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>
+      {!hideHeading && <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>}
       <div className="h-12 animate-shimmer rounded-lg" />
     </Card>
   }
@@ -50,7 +51,7 @@ export function SecurityAuditSection({ skillId, versionId, versionStatus, showEm
   if (isError || !audits || audits.length === 0) {
     if (!showEmptyState) return null
     return <Card className={cn('space-y-3 p-5 md:p-6', compact && 'p-4 md:p-4')}>
-      <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>
+      {!hideHeading && <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>}
       <p className="text-sm text-muted-foreground">
         {t(isError ? 'review.scanLoadFailed'
           : versionStatus === 'SCANNING' ? 'review.scanPending'
@@ -61,10 +62,10 @@ export function SecurityAuditSection({ skillId, versionId, versionStatus, showEm
 
   const content = (
     <>
-      <div className="flex items-center gap-2">
+      {!hideHeading && <div className="flex items-center gap-2">
         <Shield className={cn('w-5 h-5 text-muted-foreground', compact && 'h-4 w-4')} />
-        <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>
-      </div>
+        {!hideHeading && <h2 className={cn('text-lg font-semibold', compact && 'text-base')}>{t('securityAudit.title')}</h2>}
+      </div>}
 
       <div className="space-y-4">
         {audits.map((audit) => (

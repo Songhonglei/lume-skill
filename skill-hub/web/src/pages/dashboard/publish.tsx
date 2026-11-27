@@ -633,7 +633,6 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           onOpenChange={open => { if (!open) setRestoreField(null) }}
           title={t('publish.form.restoreTitle', { field: t(restoreField === 'short' ? 'publish.shortDescription' : 'publish.overview') })}
           description={t('publish.form.restoreDescription')}
-          confirmText={t('publish.form.restore')}
           cancelText={t('dialog.cancel')}
           onConfirm={restorePackageContent}
           onCloseAutoFocus={event => {
@@ -654,7 +653,6 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           onOpenChange={open => { if (!open && blocker.status === 'blocked') blocker.reset() }}
           title={t('publish.form.leaveTitle')}
           description={t('publish.form.leaveDescription')}
-          confirmText={t('publish.form.leave')}
           cancelText={t('publish.backToEdit')}
           closeOnConfirm={false}
           onConfirm={() => { if (blocker.status === 'blocked') blocker.proceed() }}
@@ -675,7 +673,6 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
               <span className="block text-xs">{t('publish.reviewNotice.description')}</span>
             </span>
           }
-          confirmText={t('publish.confirm')}
           cancelText={t('publish.backToEdit')}
           onCloseAutoFocus={event => {
             event.preventDefault()
@@ -693,7 +690,6 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
           onOpenChange={setWarningDialogOpen}
           title={t('publish.warningConfirmTitle')}
           description={<div className="space-y-3 text-left"><p>{t('publish.warningConfirmDescription')}</p>{precheckWarnings.length > 0 && <ul className="list-disc space-y-1 pl-5">{precheckWarnings.map(warning => <li key={warning}>{warning}</li>)}</ul>}</div>}
-          confirmText={t('publish.warningConfirmContinue')}
           cancelText={t('publish.warningConfirmCancel')}
           onConfirm={() => publishSkill(true)}
         />
