@@ -139,7 +139,7 @@ export function TransferOwnershipDialog({ namespace, members, children }: Transf
             onClick={handleTransfer}
             disabled={!canConfirm || transferMutation.isPending}
           >
-            {transferMutation.isPending ? t('members.transferring') : t('members.transferConfirmAction')}
+            {transferMutation.isPending ? t('members.transferring') : t('dialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

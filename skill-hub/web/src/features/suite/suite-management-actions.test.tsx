@@ -133,7 +133,7 @@ describe('SuiteManagementActions', () => {
     render(<SuiteManagementActions suite={suite({ allowedActions: ['YANK'] })} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'suite.yankVersion' }))
-    const confirm = screen.getAllByRole('button', { name: 'suite.yankVersion' })[1]
+    const confirm = screen.getByRole('button', { name: 'dialog.confirm' })
     expect(confirm.hasAttribute('disabled')).toBe(true)
 
     fireEvent.change(screen.getByPlaceholderText('suite.yankReasonPlaceholder'), {

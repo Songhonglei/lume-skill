@@ -652,7 +652,7 @@ export function AdminNamespacesPage() {
               disabled={!transferDialog.selectedUserId || transferDialog.confirmSlug !== transferDialog.slug || transferMutation.isPending}
               onClick={transferOwnership}
             >
-              {t('members.transferConfirmAction')}
+              {t(transferMutation.isPending ? 'members.transferring' : 'dialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

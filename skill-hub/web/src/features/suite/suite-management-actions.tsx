@@ -185,7 +185,7 @@ export function SuiteManagementActions({ suite, compact = false }: { suite: Skil
               variant="destructive"
               disabled={!yankReason.trim() || yankMutation.isPending}
               onClick={yank}
-            >{t('suite.yankVersion')}</Button>
+            >{t('dialog.confirm')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

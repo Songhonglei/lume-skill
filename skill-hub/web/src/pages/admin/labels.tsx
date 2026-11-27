@@ -468,7 +468,7 @@ export function AdminLabelsPage() {
               {t('adminLabels.cancelAction')}
             </Button>
             <Button data-analytics-id="admin.label.delete.confirm" type="button" onClick={handleDelete} disabled={deleteMutation.isPending}>
-              {t('adminLabels.deleteAction')}
+              {t('dialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
