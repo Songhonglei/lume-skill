@@ -947,7 +947,7 @@ export function SkillDetailPage() {
           {t('skillDetail.back')}
         </Button>
         <span aria-hidden="true" className="text-muted-foreground/60">/</span>
-        <NamespaceBadge type="GLOBAL" name={namespace} />
+        <NamespaceBadge type="GLOBAL" name={namespace} className="min-w-0 max-w-full break-all" />
       </div>
 
       {skill.ownerReadOnly && <p role="status" className="rounded-lg border bg-muted/20 p-3 text-sm text-muted-foreground">{t('mySkills.ownerReadOnly')}</p>}
@@ -1000,7 +1000,7 @@ export function SkillDetailPage() {
               </span>
             )}
             {selectedVersionEntry && (
-              <span className="rounded-md border border-primary/20 bg-primary/5 px-2 py-1 font-mono text-primary">
+              <span className="max-w-full break-all rounded-md border border-primary/20 bg-primary/5 px-2 py-1 font-mono text-primary">
                 {selectedVersionEntry.syncRevision != null ? t('review.githubRevisionValue', { count: selectedVersionEntry.syncRevision }) : `v${selectedVersionEntry.version}`}
               </span>
             )}
@@ -1225,7 +1225,7 @@ export function SkillDetailPage() {
                       <div key={version.id} className="py-5 first:pt-0 last:pb-0">
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
                           <span className="font-semibold font-heading text-foreground flex items-center gap-2 flex-wrap min-w-0">
-                            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-sm font-mono">
+                            <span className="max-w-full break-all px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-sm font-mono">
                               {version.syncRevision ? t('review.githubRevisionValue', { count: version.syncRevision }) : `v${version.version}`}
                             </span>
                             {version.syncRevision && <span className="max-w-full break-all text-xs font-normal text-muted-foreground">{version.version}</span>}

@@ -204,7 +204,7 @@ export function LandingPage() {
 
       {settings.sections.footer?.enabled !== false && <footer role="contentinfo" className="mt-auto border-t border-border py-5 text-sm text-muted-foreground">
         <div className={`${APP_FRAME_CLASS_NAME} flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3`}>
-          <p>© {new Date().getFullYear()} {settings.siteName ?? PRODUCT_NAME}</p>
+          <p className="min-w-0 max-w-full [overflow-wrap:anywhere]">© {new Date().getFullYear()} {settings.siteName ?? PRODUCT_NAME}</p>
           {settings.sections.cta.enabled && commonLinks.length > 0 && (
             <ul aria-label={t('sitePresentation.commonLinksTitle')} className="flex min-w-0 flex-wrap gap-x-5 gap-y-2">
               {commonLinks.map(({ title, href }, index) => (
