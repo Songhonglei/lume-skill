@@ -4068,7 +4068,7 @@
     "scanPENDING": "Security scan in progress. Approval is unavailable until it passes.",
     "scanPASSED": "Security scan passed.",
     "scanFAILED": "Security scan did not pass. Current visibility is unchanged. Withdraw and retry or upload a fixed version.",
-    "pending": "Pending visibility request: {{visibility}}. Complete or withdraw it in My Requests."
+    "pending": "Pending visibility request: {{visibility}}. Track or withdraw it in My Requests."
   },
   "relativeTime": {
     "justNow": "just now",
