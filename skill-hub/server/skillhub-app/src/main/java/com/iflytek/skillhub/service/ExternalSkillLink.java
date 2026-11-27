@@ -73,6 +73,27 @@ record ExternalSkillLink(URI page, URI download, boolean githubArchive, String d
                 true, directory, skillName);
     }
 
+    URI githubRefLookup(String type) {
+        if (!"github.com".equals(page.getHost()) || directory == null) return null;
+        String[] parts = page.getPath().split("/");
+        return URI.create("https://api.github.com/repos/" + parts[1] + "/" + parts[2]
+                + "/git/matching-refs/" + type + "/" + parts[4]);
+    }
+
+    ExternalSkillLink withGithubRef(String qualifiedRef) {
+        String ref;
+        if (qualifiedRef.startsWith("refs/heads/")) ref = qualifiedRef.substring("refs/heads/".length());
+        else if (qualifiedRef.startsWith("refs/tags/")) ref = qualifiedRef.substring("refs/tags/".length());
+        else return null;
+        String[] parts = page.getPath().split("/");
+        String requested = parts[4] + "/" + directory;
+        if (!ref.startsWith(parts[4] + "/") || !(requested.equals(ref) || requested.startsWith(ref + "/"))) return null;
+
+        String selected = requested.equals(ref) ? "" : requested.substring(ref.length() + 1);
+        URI archive = URI.create("https://codeload.github.com/" + parts[1] + "/" + parts[2] + "/zip/" + qualifiedRef);
+        return new ExternalSkillLink(page, archive, true, selected, skillName);
+    }
+
     private static ExternalSkillLink clawHub(List<String> parts, URI uri) {
         String owner = null;
         if (parts.size() == 2 && !parts.getFirst().equals("skills")) owner = parts.getFirst();

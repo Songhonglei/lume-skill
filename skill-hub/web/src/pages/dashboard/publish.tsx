@@ -32,7 +32,7 @@ import { classifyPublishFailure, type PublishSubmissionState } from '@/features/
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { readPackageOverview } from '@/features/publish/package-overview'
 import { PresentationEditor } from '@/features/publish/presentation-editor'
-import { presentationPayload, publishedOverrides, type PresentationSource } from '@/features/publish/presentation-source'
+import { packageSummary, presentationPayload, publishedOverrides, SHORT_DESCRIPTION_LIMIT, type PresentationSource } from '@/features/publish/presentation-source'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
 import { Pencil, RotateCcw } from 'lucide-react'
 import { SkillAvatarEditor, KEEP_AVATAR, type AvatarEdit } from '@/features/skill/skill-avatar-editor'
@@ -130,13 +130,15 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     gcTime: 0,
   })
   const packageShort = packagePreview.data?.shortDescription ?? packagePreview.data?.description ?? ''
+  const summary = packageSummary(packageShort)
+  const shortenedPackageSummary = summary !== packageShort && shortSource === 'package'
   const packageBody = packagePreview.data?.overview || packageOverview.data?.content || ''
   const readingPackageOverview = selectedFile !== null && packagePreview.isSuccess && !packagePreview.data?.overview && packageOverview.isPending
   const readingOverview = overviewSource === 'package' && readingPackageOverview
   const overviewPreviewFailed = overviewSource === 'package' && (packageOverview.isError || !!packageOverview.data?.error)
   const previewOverview = resourceReady ? (overviewSource === 'custom' ? overview : packageBody) : ''
-  const previewShortDescription = resourceReady ? (shortSource === 'custom' ? shortDescription : packageShort) : ''
-  const shortInvalid = !previewShortDescription.trim() || previewShortDescription.length > 200
+  const previewShortDescription = resourceReady ? (shortSource === 'custom' ? shortDescription : summary) : ''
+  const shortInvalid = !previewShortDescription.trim() || previewShortDescription.length > SHORT_DESCRIPTION_LIMIT
   const overviewInvalid = !stripMarkdownFrontmatter(previewOverview).trim() || previewOverview.length > 20000
   const { data: publishedDetail, isLoading: readingPublished, isError: publishedFailed, refetch: retryPublished } = useSkillVersionDetail(namespaceSlug, updateSlug ?? '', updateTarget?.publishedVersion?.version, resourceReady && !!updateSlug && !!updateTarget?.publishedVersion?.version)
   useEffect(() => {
@@ -285,7 +287,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
         avatarUploadId: avatarEdit.uploadId,
         expectedSlug: updateSlug || undefined,
         displayName,
-        ...presentationPayload(shortSource, overviewSource, shortDescription, overview),
+        ...presentationPayload(shortenedPackageSummary ? 'custom' : shortSource, overviewSource, previewShortDescription, overview),
       })
       setPrecheckWarnings([])
       setWarningDialogOpen(false)
@@ -550,7 +552,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                 id="skill-short-description"
                 rows={3}
                 className="min-h-20 resize-y"
-                maxLength={200}
+                maxLength={SHORT_DESCRIPTION_LIMIT}
                 value={previewShortDescription}
                 disabled={ownerReadOnly || isBusy}
                 aria-invalid={attempted && shortInvalid}
@@ -565,10 +567,10 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
               />
               <div id="skill-short-description-help" className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span>{t(shortSource === 'custom' ? 'publish.form.customized' : 'publish.form.packageContent')}</span>
+                  <span>{t(shortSource === 'custom' ? 'publish.form.customized' : shortenedPackageSummary ? 'publish.form.shortenedPackageSummary' : 'publish.form.packageContent')}</span>
                   {shortSource === 'custom' && <button type="button" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline focus-visible:underline disabled:opacity-50" disabled={ownerReadOnly || isBusy || !selectedFile || !packagePreview.isSuccess} onClick={event => { restoreOpener.current = event.currentTarget; setRestoreField('short') }}><RotateCcw aria-hidden className="h-3 w-3" />{t('publish.form.restore')}</button>}
                 </div>
-                <span className="tabular-nums">{previewShortDescription.length} / 200</span>
+                <span className="tabular-nums">{previewShortDescription.length} / {SHORT_DESCRIPTION_LIMIT}</span>
               </div>
               {shortInvalid && selectedFile && <p id="skill-short-description-error" role={attempted ? 'alert' : 'status'} className={attempted ? 'text-sm text-destructive' : 'text-sm text-amber-700 dark:text-amber-400'}>{t('publish.source.shortRequired')}</p>}
             </div>

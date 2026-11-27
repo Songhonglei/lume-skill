@@ -29,7 +29,22 @@ docker compose --env-file .env.release -f compose.release.yml -f compose.luma.ym
 docker compose --env-file .env.release -f compose.release.yml -f compose.luma.yml up -d --wait
 ```
 
-入口为 [http://127.0.0.1:18080](http://127.0.0.1:18080)。升级正在运行的 v0.2.28 实例时沿用原 Compose 项目名和配置。本版的账号内置头像需要同时更新 Server 和 Web。数据库、数据卷及已留存的 Skill 包沿用原实例。回退时只用原 `compose.release.yml` 更新 Server 和 Web。
+入口为 [http://127.0.0.1:18080](http://127.0.0.1:18080)。升级时沿用原 Compose 项目名、配置和数据卷，同时更新 Server 和 Web。升级前按[备份与恢复](#备份与恢复)保存数据库、技能文件和配置，并记录当前镜像。应用镜像和数据库迁移分别验证后再决定回退方案。
+
+## 发布技能
+
+「发布技能」支持 ZIP、技能文件夹和公开外部链接。链接支持 GitHub、ClawHub、腾讯 SkillHub 和 Skills.sh。GitHub 优先使用目标文件夹或 `SKILL.md` 页面地址。包内长描述会预填为可编辑的页面简述，包内原文随技能包保留。已发布的外部版本可在详情中打开原始来源。
+
+GitHub 仓库归档下载上限为 20 MiB，技能包还受解压大小及文件数量限制。归档过大时，可单独下载目标文件夹，保留根目录的 `SKILL.md`，再走「本地上传」。
+
+## 备份与恢复
+
+自带 PostgreSQL 和本地文件存储的部署需成套备份。启用 S3 时，将文件存储步骤换为相同时间窗口的桶快照或备份，并保留对象键和前缀。
+
+1. 在维护窗口暂停发布、审核及其他写入，等待正在处理的任务进入终态。保存受限的 `.env.release` 和 Server、Web 镜像标识。
+2. 从同一实例用 `pg_dump -Fc` 导出 PostgreSQL，再将 Server 的 `/var/lib/skillhub/storage` 数据卷归档，保留文件路径和权限。用 `docker inspect` 核对实际挂载和卷名，将数据库备份及文件归档保存到同一批次。
+3. 用独立的 Compose 项目名、端口和新数据卷启动恢复实例。先启动 PostgreSQL，用 `pg_restore --exit-on-error --no-owner --no-privileges` 恢复到空库，再恢复技能文件至目标卷。先把该实例的邮件指向测试收件环境，再启动 Server 和 Web。
+4. 登录恢复实例，核对版本清单、批准和审计记录，下载历史 ZIP 比对内容，并用有权账号和无权账号分别验证访问。会话和临时缓存由新实例重新建立，用户重新登录。
 
 ## CLI
 

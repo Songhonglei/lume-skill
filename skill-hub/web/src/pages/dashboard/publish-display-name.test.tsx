@@ -92,10 +92,24 @@ describe('web presentation publishing', () => {
     expect(publish).not.toHaveBeenCalled()
   })
 
-  it('blocks over-limit presentation data returned by package preview', async () => {
+  it('submits a shortened summary as a presentation override only', async () => {
+    const description = 'x'.repeat(198) + '🦊 details'
+    preview.mockResolvedValue({ ...metadata('Title'), shortDescription: description, overview: '# Original overview' })
+    mount(); select('long-summary.zip')
+    await screen.findByText('publish.form.shortenedPackageSummary')
+    const expected = 'x'.repeat(198) + '…'
+    expect((screen.getByLabelText('publish.shortDescription') as HTMLTextAreaElement).value).toBe(expected)
+    submitPackage()
+    await waitFor(() => expect(publish).toHaveBeenCalledWith(expect.objectContaining({
+      file: expect.objectContaining({ name: 'long-summary.zip' }),
+      shortDescription: expected, overview: undefined, resetPresentation: false,
+    })))
+  })
+
+  it('blocks an over-limit overview even after shortening the package summary', async () => {
     preview.mockResolvedValue({ ...metadata('Title'), shortDescription: 'x'.repeat(201), overview: 'x'.repeat(20001) })
     mount(); select('long.zip')
-    await waitFor(() => expect((screen.getByLabelText('publish.shortDescription') as HTMLTextAreaElement).value.length).toBe(201))
+    await waitFor(() => expect((screen.getByLabelText('publish.shortDescription') as HTMLTextAreaElement).value.length).toBe(200))
     fireEvent.click(screen.getByRole('button', { name: 'publish.nextConfirm' })); expect(publish).not.toHaveBeenCalled()
     expect(publish).not.toHaveBeenCalled()
   })
