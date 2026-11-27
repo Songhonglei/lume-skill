@@ -15,6 +15,7 @@ import type { ReviewTask } from '@/api/types'
 import { useAuth } from '@/features/auth/use-auth'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { Pagination } from '@/shared/components/pagination'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button, buttonVariants } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { ReviewResultsPanel } from '@/features/review/review-results-panel'
@@ -146,7 +147,10 @@ export function ReviewsPage() {
         {!scopes.isLoading && !scopes.isError && applied.namespace !== 'ALL' && !scope ? <Card className="space-y-3 p-6" role="alert"><p>{t('reviewCenter.scopeFailed')}</p><Button type="button" variant="outline" onClick={() => void scopes.refetch()}>{t('reviewCenter.retry')}</Button></Card>
           : scopes.isError ? null : query.isError ? <Card className="space-y-3 p-6" role="alert"><p>{t('reviewCenter.loadFailed')}</p><Button type="button" variant="outline" onClick={() => void query.refetch()}>{t('reviewCenter.retry')}</Button></Card>
             : query.isLoading || scopePending ? <div className="space-y-3" aria-label={t('reviewCenter.loading')}>{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-20 animate-shimmer rounded-lg" />)}</div>
-              : !query.data?.items.length ? <Card className="space-y-3 p-8 text-center"><p className="font-medium">{t(query.data?.totalElements && page > 0 ? 'reviewCenter.pageEmpty' : 'reviewCenter.empty')}</p><p className="text-sm text-muted-foreground">{t('reviewCenter.emptyDescription')}</p><Button type="button" variant="outline" onClick={() => query.data?.totalElements && page > 0 ? apply(applied, 0) : apply({ ...DEFAULT_REVIEW_FILTERS })}>{t(query.data?.totalElements && page > 0 ? 'reviewCenter.firstPage' : 'reviewCenter.filters.reset')}</Button></Card>
+              : !query.data?.items.length ? <EmptyState
+                  title={t(query.data?.totalElements && page > 0 ? 'reviewCenter.pageEmpty' : 'reviewCenter.empty')}
+                  action={<Button type="button" size="sm" variant="outline" onClick={() => query.data?.totalElements && page > 0 ? apply(applied, 0) : apply({ ...DEFAULT_REVIEW_FILTERS })}>{t(query.data?.totalElements && page > 0 ? 'reviewCenter.firstPage' : 'reviewCenter.filters.reset')}</Button>}
+                />
                 : <>
                   <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[700px] table-fixed text-left">

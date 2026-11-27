@@ -1,7 +1,7 @@
 import { reviewResubmitSearch } from '@/features/review/review-progress-actions'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { ChevronDown, ChevronUp, Clock3, RotateCcw, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, RotateCcw, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { ReviewProgress } from '@/api/types'
 import { ReviewAttemptTimeline } from '@/features/review/review-attempt-timeline'
@@ -10,6 +10,7 @@ import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { Pagination } from '@/shared/components/pagination'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { cn } from '@/shared/lib/utils'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button, buttonVariants } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
@@ -188,10 +189,8 @@ export function ReviewProgressPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-border/70 px-6 py-14 text-center">
-              <Clock3 className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-4 font-medium text-foreground">{t('reviewProgress.emptyTitle')}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t('reviewProgress.emptyDescription')}</p>
+            <div className="rounded-xl border border-dashed border-border/70">
+              <EmptyState title={t('reviewProgress.emptyTitle')} description={t('reviewProgress.emptyDescription')} />
             </div>
           )}
 

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button } from '@/shared/ui/button'
 import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import {
@@ -211,8 +212,15 @@ export function AdminUsersPage() {
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">{t('adminUsers.empty')}</p>
+        <Card>
+          <EmptyState title={t('adminUsers.empty')} action={(search || statusFilter) && (
+            <Button variant="outline" size="sm" onClick={() => {
+              setSearchInput('')
+              setSearch('')
+              setStatusFilter('')
+              setPage(0)
+            }}>{t('list.clearFilters')}</Button>
+          )} />
         </Card>
       ) : (
         <>

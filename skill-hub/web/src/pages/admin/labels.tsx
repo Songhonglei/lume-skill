@@ -5,6 +5,7 @@ import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { toast } from '@/shared/lib/toast'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import {
@@ -279,9 +280,7 @@ export function AdminLabelsPage() {
           ))}
         </div>
       ) : sortedDefinitions.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">{t('adminLabels.empty')}</p>
-        </Card>
+        <Card><EmptyState title={t('adminLabels.empty')} /></Card>
       ) : (
         <Card>
           <Table>

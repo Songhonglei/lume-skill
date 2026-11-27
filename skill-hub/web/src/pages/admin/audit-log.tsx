@@ -8,6 +8,7 @@ import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { AUDIT_ACTION_OPTIONS, auditActionLabelKey, formatAuditDetails } from '@/shared/lib/audit-log-presentation'
 import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button } from '@/shared/ui/button'
 import {
   Select,
@@ -195,9 +196,7 @@ export function AuditLogPage() {
           ))}
         </div>
       ) : !data || data.items.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">{t('auditLog.empty')}</p>
-        </Card>
+        <Card><EmptyState title={t('auditLog.empty')} /></Card>
       ) : (
         <>
           <Card>

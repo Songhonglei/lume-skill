@@ -51,8 +51,8 @@ export function MySuitesPage() {
     else viewSuite(item)
   }
 
-  const createAction = <Button data-analytics-id="suite.create.open" onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>
   const unfilteredEmpty = !workspace.isLoading && !workspace.isError && !filters.query && filters.state === 'ALL' && data?.total === 0
+  const createAction = <Button data-analytics-id="suite.create.open" variant={unfilteredEmpty ? 'outline' : 'default'} size={unfilteredEmpty ? 'sm' : 'default'} onClick={() => navigate({ to: '/dashboard/suites/new' })}>{t('suite.create')}</Button>
   return (
     <div className="space-y-4 animate-fade-up">
       <SuiteWorkspaceHeader title={t('suite.myTitle')}
@@ -129,7 +129,7 @@ export function MySuitesPage() {
             <Pagination analyticsId="suite.owned.paginate" page={filters.page} totalPages={Math.max(1, Math.ceil(data.total / PAGE_SIZE))} onPageChange={page => update({ page })} />
           </div>
         </> : <EmptyState title={t(unfilteredEmpty ? 'suite.myEmpty' : 'suite.workspace.noMatches')}
-          action={unfilteredEmpty ? createAction : <Button variant="outline" onClick={() => { setQueryInput(''); update({ query: '', state: 'ALL' }) }}>{t('list.clearFilters')}</Button>} />}
+          action={unfilteredEmpty ? createAction : <Button variant="outline" size="sm" onClick={() => { setQueryInput(''); update({ query: '', state: 'ALL' }) }}>{t('list.clearFilters')}</Button>} />}
     </div>
   )
 }

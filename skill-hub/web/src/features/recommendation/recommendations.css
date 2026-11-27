@@ -81,7 +81,6 @@
 .recommendation-search input { padding-left:32px; }
 .recommendation-labels { display:flex; flex-wrap:wrap; gap:8px; }
 .recommendation-labels button { border-radius:999px; max-width:100%; white-space:normal; height:auto; min-height:28px; padding-block:4px; }
-.recommendation-empty { display:flex; flex-direction:column; gap:12px; align-items:center; padding:32px 16px; border:1px dashed hsl(var(--border)); border-radius:12px; color:hsl(var(--muted-foreground)); font-size:14px; }
 .recommendation-topic-hero { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr); overflow:hidden; border:1px solid hsl(var(--border)/.6); border-radius:12px; }
 .recommendation-topic-hero>.recommendation-cover { height:100%; min-height:224px; padding:28px; justify-content:center; }
 .recommendation-topic-hero .recommendation-art-row { max-height:110px; flex:none; }

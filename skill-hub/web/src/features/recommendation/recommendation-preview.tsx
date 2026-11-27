@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ArrowRight, ChevronLeft, ChevronRight, Pencil, Search, X } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Pencil, Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { recommendationApi, recommendationDisplay, RECOMMENDATION_KEY, type RecommendationDisplay } from '@/api/recommendations'
 import { RecommendationSkillCard } from './recommendation-skill-card'
 import { RecommendationTopicPanel } from './recommendation-topic-panel'
 import { recommendationEntryKey, useRecommendationEntry, type RecommendationEntry } from './recommendation-entry-state'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { APP_FRAME_CLASS_NAME } from '@/shared/lib/layout-frame'
@@ -146,7 +147,9 @@ function RecommendationPreviewContent({ content, onTopic, onManageTopics, onMana
         {labels.map(label => <Button key={label.slug} type="button" size="sm" variant={activeLabel === label.slug ? 'default' : 'secondary'} aria-pressed={activeLabel === label.slug} onClick={() => setLabelSlug(label.slug)}>{label.displayName}</Button>)}
       </div>}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span role="status">{t('recommendations.resultCount', { count: filtered.length })}</span>{!compact && <Link to="/featured" className="inline-flex items-center gap-1 text-sm font-medium hover:underline">{t('recommendations.viewAll')}<ArrowRight className="h-4 w-4" /></Link>}</div>
-      {filtered.length ? <div className="recommendation-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{filtered.map(skill => <RecommendationSkillCard key={skill.id} skill={skill} onClick={() => openSkill(skill.namespace, skill.slug)} />)}</div> : <div className="recommendation-empty"><p>{t('recommendations.noFeaturedResults')}</p>{(keyword || activeLabel) && <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(''); setLabelSlug('') }}><X aria-hidden className="h-4 w-4" />{t('recommendations.clearFilters')}</Button>}</div>}
+      {filtered.length ? <div className="recommendation-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{filtered.map(skill => <RecommendationSkillCard key={skill.id} skill={skill} onClick={() => openSkill(skill.namespace, skill.slug)} />)}</div> : <EmptyState title={t('recommendations.noFeaturedResults')} action={(keyword || activeLabel) && (
+        <Button type="button" variant="outline" size="sm" onClick={() => { setSearch(''); setLabelSlug('') }}>{t('recommendations.clearFilters')}</Button>
+      )} />}
     </section>}
     {!topics.length && !featured.length && <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">{t('recommendations.empty')}</p>}
   </div>

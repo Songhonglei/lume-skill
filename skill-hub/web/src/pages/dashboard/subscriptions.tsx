@@ -36,11 +36,11 @@ export function MySubscriptionsPage() {
       <DashboardPageHeader title={t('subscriptions.title')} />
 
       {isError ? (
-        <div role="alert"><EmptyState title={t('list.loadFailed')} action={<Button variant="outline" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>} /></div>
+        <div role="alert"><EmptyState title={t('list.loadFailed')} action={<Button variant="outline" size="sm" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>} /></div>
       ) : skills.length === 0 ? (
         <EmptyState title={t('subscriptions.empty')} action={page > 0 && totalPages > 0
-          ? <Button variant="outline" onClick={() => void navigate({ to: '/dashboard/subscriptions', search: { page: undefined } })}>{t('reviewCenter.firstPage')}</Button>
-          : <Link to="/search" search={getSkillSquareSearch()} className={buttonVariants({ variant: 'outline' })}>{t('home.browseSkills')}</Link>} />
+          ? <Button variant="outline" size="sm" onClick={() => void navigate({ to: '/dashboard/subscriptions', search: { page: undefined } })}>{t('reviewCenter.firstPage')}</Button>
+          : <Link to="/search" search={getSkillSquareSearch()} className={buttonVariants({ variant: 'outline', size: 'sm' })}>{t('home.browseSkills')}</Link>} />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -35,11 +35,6 @@ export function MyNamespacesPage() {
     navigate({ to: `/dashboard/namespaces/${encodeURIComponent(slug)}` })
   }
 
-  const handleGithubSourcesClick = (slug: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate({ to: `/dashboard/namespaces/${encodeURIComponent(slug)}/github-sources` })
-  }
-
   const resolveStatusLabel = (status: string) => {
     if (status === 'FROZEN') {
       return t('namespaceStatus.frozen')
@@ -60,7 +55,7 @@ export function MyNamespacesPage() {
     if (status === 'ARCHIVED') {
       return t('myNamespaces.archivedHint')
     }
-    return t('myNamespaces.activeHint')
+    return undefined
   }
 
   if (isLoading) {
@@ -84,68 +79,48 @@ export function MyNamespacesPage() {
         ) : undefined}
       />
 
-      {namespaces && namespaces.length > 0 ? (
+      {namespaces.length > 0 ? (
         <>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {namespaces.map((namespace, idx) => (
-            <Card
-              key={namespace.id}
-              data-testid={`namespace-card-${namespace.slug}`}
-              className={`flex h-full flex-col p-5 group animate-fade-up delay-${Math.min(idx + 1, 6)}`}
-            >
-              <div className="flex h-full flex-col gap-5">
-                <div className="flex flex-1 items-start">
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold font-heading text-lg leading-tight group-hover:text-primary transition-colors">
-                        {namespace.displayName}
-                      </h3>
-                      <NamespaceBadge
-                        type={namespace.type}
-                        name={namespace.type === 'GLOBAL' ? t('myNamespaces.typeGlobal') : t('myNamespaces.typeTeam')}
-                      />
-                      <ListStatusIcon
-                        kind={namespace.status === 'FROZEN' ? 'frozen' : namespace.status === 'ARCHIVED' ? 'archived' : 'active'}
-                        label={resolveStatusLabel(namespace.status)}
-                      />
-                    </div>
-                    <p className="mb-3 min-h-10 text-sm leading-relaxed text-muted-foreground">
-                      {namespace.description ?? ''}
-                    </p>
-                    <div className="text-sm font-mono text-muted-foreground">@{namespace.slug}</div>
-                    <div className="mt-4 rounded-lg border border-border/50 bg-secondary/40 px-3 py-2.5 text-sm leading-relaxed text-muted-foreground">
-                      {resolveHint(namespace.status, namespace.type)}
-                    </div>
-                    <div className="mt-3 border-t border-border/50 pt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground/80">
-                      {t('myNamespaces.roleLabel')}: {namespace.currentUserRole === 'OWNER' ? t('members.roleOwner') : namespace.currentUserRole === 'ADMIN' ? t('members.roleAdmin') : namespace.currentUserRole === 'MEMBER' ? t('members.roleMember') : t('myNamespaces.roleUnknown')}
-                    </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {namespaces.map(namespace => (
+              <Card key={namespace.id} data-testid={`namespace-card-${namespace.slug}`} className="flex min-w-0 flex-col gap-2.5 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <h3 className="min-w-0 text-base font-semibold leading-tight [overflow-wrap:anywhere]">{namespace.displayName}</h3>
+                    <NamespaceBadge type={namespace.type}
+                      name={namespace.type === 'GLOBAL' ? t('myNamespaces.typeGlobal') : t('myNamespaces.typeTeam')} />
                   </div>
+                  <ListStatusIcon
+                    kind={namespace.status === 'FROZEN' ? 'frozen' : namespace.status === 'ARCHIVED' ? 'archived' : 'active'}
+                    label={resolveStatusLabel(namespace.status)}
+                    hint={resolveHint(namespace.status, namespace.type)}
+                  />
                 </div>
-                <div className="flex flex-wrap gap-2 border-t border-border/50 pt-4">
-                  <Button data-analytics-id="namespace.management.open" variant="outline" size="sm" onClick={() => handleNamespaceClick(namespace.slug)}>
+                {namespace.description && (
+                  <p className="line-clamp-2 text-sm text-muted-foreground [overflow-wrap:anywhere]" title={namespace.description}>{namespace.description}</p>
+                )}
+                <div className="mt-auto flex items-end justify-between gap-2 border-t border-border/50 pt-2">
+                  <div className="min-w-0 space-y-0.5 text-xs text-muted-foreground">
+                    <div className="truncate font-mono" title={`@${namespace.slug}`}>@{namespace.slug}</div>
+                    <div>{t('myNamespaces.roleLabel')}: {namespace.currentUserRole === 'OWNER' ? t('members.roleOwner') : namespace.currentUserRole === 'ADMIN' ? t('members.roleAdmin') : namespace.currentUserRole === 'MEMBER' ? t('members.roleMember') : t('myNamespaces.roleUnknown')}</div>
+                  </div>
+                  <Button data-analytics-id="namespace.management.open" variant="outline" size="sm" className="shrink-0" onClick={() => handleNamespaceClick(namespace.slug)}>
                     {t('namespaceManagement.enter')}
                   </Button>
-                  {namespace.type === 'TEAM' && (namespace.currentUserRole === 'OWNER' || namespace.currentUserRole === 'ADMIN') && (
-                    <Button data-analytics-id="github.namespace.open" variant="outline" size="sm" onClick={(e) => handleGithubSourcesClick(namespace.slug, e)}>
-                      {t('githubSync.teamLink')}
-                    </Button>
-                  )}
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-        {totalPages > 1 ? (
-          <Pagination analyticsId="namespace.list.paginate" page={page} totalPages={totalPages} onPageChange={setPage} />
-        ) : null}
+              </Card>
+            ))}
+          </div>
+          {totalPages > 1 ? (
+            <Pagination analyticsId="namespace.list.paginate" page={page} totalPages={totalPages} onPageChange={setPage} />
+          ) : null}
         </>
       ) : (
         <EmptyState
           title={t('myNamespaces.emptyTitle')}
-          description={t('myNamespaces.emptyDescription')}
           action={canCreateNamespace ? (
             <CreateNamespaceDialog>
-              <Button data-analytics-id="namespace.create.open">{t('myNamespaces.create')}</Button>
+              <Button data-analytics-id="namespace.create.open" variant="outline" size="sm">{t('myNamespaces.create')}</Button>
             </CreateNamespaceDialog>
           ) : undefined}
         />
