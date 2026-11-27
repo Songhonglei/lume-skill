@@ -602,7 +602,7 @@ export function MySkillsPage() {
           description={hasActiveSearch ? t('mySkills.emptySearchDescription') : t(emptyStateKey.description)}
           action={
             hasActiveSearch ? (
-              <Button data-analytics-id="skill.owned.clear" size="lg" variant="outline" onClick={handleClearFilters}>
+              <Button data-analytics-id="skill.owned.clear" size="sm" variant="outline" onClick={handleClearFilters}>
                 {t('mySkills.clearSearch')}
               </Button>
             ) : undefined

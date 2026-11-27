@@ -61,7 +61,7 @@ function LandingSkillSection({ section }: { section: 'popular' | 'latest' }) {
 }
 
 const heroActionClass = buttonVariants({ variant: 'outline', size: 'icon', className: 'h-10 w-10' })
-const heroTooltipClass = 'invisible pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-max max-w-44 -translate-x-1/2 rounded-md bg-foreground px-2.5 py-1.5 text-center text-xs text-background shadow-sm group-hover:visible group-focus-within:visible'
+const heroTooltipClass = 'invisible pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-max max-w-44 -translate-x-1/2 rounded-md bg-foreground px-2.5 py-1.5 text-center text-xs text-background shadow-sm group-hover:visible group-focus-within:visible max-sm:left-auto max-sm:right-0 max-sm:translate-x-0'
 
 export function LandingPage() {
   const { t, i18n } = useTranslation()
@@ -128,46 +128,51 @@ export function LandingPage() {
             <h1 id="hub-title" className="max-w-3xl text-balance text-2xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-3xl">
               {text('hero', 'title')}
             </h1>
-            {presentationItemVisible(settings, 'hero', 'preview') && (
-              <form
-                aria-label={t('nav.marketplace')}
-                className="flex w-full max-w-2xl items-center gap-2 rounded-xl border border-border bg-background p-1.5 text-left shadow-sm transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/15 sm:gap-3"
-                onSubmit={event => {
-                  event.preventDefault()
-                  navigate({ to: '/search', search: { q: normalizeSearchQuery(searchQuery), sort: 'relevance', page: 0, starredOnly: false } })
-                }}
-              >
-                <SearchIcon aria-hidden="true" className="ml-2 size-[18px] shrink-0 text-muted-foreground" />
-                <input
-                  data-analytics-id="discovery.query.enter"
-                  type="search"
-                  value={searchQuery}
-                  onChange={event => setSearchQuery(event.target.value)}
-                  placeholder={text('hero', 'searchPlaceholder')}
-                  aria-label={text('hero', 'searchPlaceholder')}
-                  className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                />
-                <Button className="shrink-0" size="lg" type="submit">{t('nav.search')}</Button>
-              </form>
-            )}
-            <div className="flex gap-2 empty:hidden">
-              {presentationItemVisible(settings, 'hero', 'secondaryAction') && (
-                <span className="group relative">
-                  <Link data-analytics-id="navigation.skills.open" aria-label={browseLabel}
-                    to="/search" search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }} className={heroActionClass}>
-                    <LayoutGrid aria-hidden="true" className="size-[18px]" />
-                  </Link>
-                  <span aria-hidden="true" className={heroTooltipClass}>{browseLabel}</span>
-                </span>
+            <div className="flex w-full max-w-[48rem] items-center justify-center gap-2 empty:hidden sm:gap-3">
+              {presentationItemVisible(settings, 'hero', 'preview') && (
+                <form
+                  aria-label={t('nav.marketplace')}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-background p-1.5 text-left shadow-sm transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/15 sm:gap-3"
+                  onSubmit={event => {
+                    event.preventDefault()
+                    navigate({ to: '/search', search: { q: normalizeSearchQuery(searchQuery), sort: 'relevance', page: 0, starredOnly: false } })
+                  }}
+                >
+                  <SearchIcon aria-hidden="true" className="ml-2 size-[18px] shrink-0 text-muted-foreground max-[359px]:hidden" />
+                  <input
+                    data-analytics-id="discovery.query.enter"
+                    type="search"
+                    value={searchQuery}
+                    onChange={event => setSearchQuery(event.target.value)}
+                    placeholder={text('hero', 'searchPlaceholder')}
+                    aria-label={text('hero', 'searchPlaceholder')}
+                    className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground max-[359px]:pl-2"
+                  />
+                  <Button className="shrink-0" size="lg" type="submit" aria-label={t('nav.search')}>
+                    <SearchIcon aria-hidden="true" className="size-4 min-[360px]:hidden" />
+                    <span className="max-[359px]:hidden">{t('nav.search')}</span>
+                  </Button>
+                </form>
               )}
-              {presentationItemVisible(settings, 'hero', 'primaryAction') && (
-                <span className="group relative">
-                  <Link data-analytics-id="skill.publish.open" aria-label={publishLabel} to="/dashboard/publish" className={heroActionClass}>
-                    <Upload aria-hidden="true" className="size-[18px]" />
-                  </Link>
-                  <span aria-hidden="true" className={heroTooltipClass}>{publishLabel}</span>
-                </span>
-              )}
+              <div className="flex shrink-0 gap-1.5 empty:hidden sm:gap-2">
+                {presentationItemVisible(settings, 'hero', 'secondaryAction') && (
+                  <span className="group relative">
+                    <Link data-analytics-id="navigation.skills.open" aria-label={browseLabel}
+                      to="/search" search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }} className={heroActionClass}>
+                      <LayoutGrid aria-hidden="true" className="size-[18px]" />
+                    </Link>
+                    <span aria-hidden="true" className={heroTooltipClass}>{browseLabel}</span>
+                  </span>
+                )}
+                {presentationItemVisible(settings, 'hero', 'primaryAction') && (
+                  <span className="group relative">
+                    <Link data-analytics-id="skill.publish.open" aria-label={publishLabel} to="/dashboard/publish" className={heroActionClass}>
+                      <Upload aria-hidden="true" className="size-[18px]" />
+                    </Link>
+                    <span aria-hidden="true" className={heroTooltipClass}>{publishLabel}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </section>

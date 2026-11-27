@@ -138,7 +138,7 @@ export function SearchPage() {
         namespace={namespace} onNamespaceClear={() => applyFilters({ ...current, namespace: '' })}
         resultCount={resultCount} isUpdating={isUpdatingResults} />
       {isPageLoading ? <div role="status" aria-label={t('common.loading')}><SkeletonList count={PAGE_SIZE} /></div> : loadFailed && displayItems.length === 0 ? (
-        <div className="text-center" role="alert"><EmptyState title={t('search.source.loadFailed')} /><Button data-analytics-id="search.source.retry" variant="outline" onClick={retry}>{t('search.source.retry')}</Button></div>
+        <div className="text-center" role="alert"><EmptyState title={t('search.source.loadFailed')} action={<Button data-analytics-id="search.source.retry" variant="outline" size="sm" onClick={retry}>{t('search.source.retry')}</Button>} /></div>
       ) : displayItems.length > 0 ? (
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy={isFetchingMore}>
@@ -156,7 +156,7 @@ export function SearchPage() {
         </>
       ) : <EmptyState title={starredOnly ? t('search.noStarredResults') : t('search.noResults')}
         description={starredOnly ? (q ? t('search.noStarredResultsFor', { q }) : t('search.noStarredSkills')) : q ? t('search.noResultsFor', { q }) : undefined}
-        action={q || namespace || selectedLabel ? <Button onClick={() => { setQueryInput(''); applyFilters({ ...current, q: '', namespace: '', label: '' }) }}>{t('search.market.reset')}</Button> : undefined} />}
+        action={q || namespace || selectedLabel ? <Button variant="outline" size="sm" onClick={() => { setQueryInput(''); applyFilters({ ...current, q: '', namespace: '', label: '' }) }}>{t('search.market.reset')}</Button> : undefined} />}
     </div>
   )
 }

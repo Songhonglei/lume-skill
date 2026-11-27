@@ -39,14 +39,14 @@ export function SuitesPage() {
     setInput({ applied: q, text: '' })
     update({ q: undefined, label: undefined })
   }
-  const createLink = (
-    <Link data-analytics-id="suite.create.open" to="/dashboard/suites/new" className={buttonVariants()}>{t('suite.create')}</Link>
+  const createLink = (inEmptyState = false) => (
+    <Link data-analytics-id="suite.create.open" to="/dashboard/suites/new" className={buttonVariants(inEmptyState ? { variant: 'outline', size: 'sm' } : {})}>{t('suite.create')}</Link>
   )
 
   return (
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
       <DashboardPageHeader title={t('suite.listTitle')}
-        actions={(isLoading || isError || q || label || page > 0 || !!data?.total) ? createLink : undefined} />
+        actions={(isLoading || isError || q || label || page > 0 || !!data?.total) ? createLink() : undefined} />
 
       <form data-analytics-id="suite.query.submit" className="flex max-w-xl gap-2" onSubmit={event => {
         event.preventDefault()
@@ -94,7 +94,7 @@ export function SuitesPage() {
 
       <div aria-busy={isFetching}>
         {isError ? (
-          <div role="alert"><EmptyState title={t('suite.catalogLoadFailed')} action={<Button variant="outline" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>} /></div>
+          <div role="alert"><EmptyState title={t('suite.catalogLoadFailed')} action={<Button variant="outline" size="sm" onClick={() => void refetch()}>{t('reviewCenter.retry')}</Button>} /></div>
         ) : isLoading || isPlaceholderData ? (
           <SkeletonList count={PAGE_SIZE} />
         ) : data?.items.length ? (
@@ -119,11 +119,11 @@ export function SuitesPage() {
           </>
         ) : (
           page > 0 && totalPages > 0 ? (
-            <EmptyState title={t('reviewCenter.pageEmpty')} action={<Button variant="outline" onClick={() => update({})}>{t('reviewCenter.firstPage')}</Button>} />
+            <EmptyState title={t('reviewCenter.pageEmpty')} action={<Button variant="outline" size="sm" onClick={() => update({})}>{t('reviewCenter.firstPage')}</Button>} />
           ) : q || label ? (
-            <EmptyState title={t('suite.workspace.noMatches')} action={<Button variant="outline" onClick={clear}>{t('list.clearFilters')}</Button>} />
+            <EmptyState title={t('suite.workspace.noMatches')} action={<Button variant="outline" size="sm" onClick={clear}>{t('list.clearFilters')}</Button>} />
           ) : (
-            <EmptyState title={t('suite.emptyTitle')} action={createLink} />
+            <EmptyState title={t('suite.emptyTitle')} action={createLink(true)} />
           )
         )}
       </div>

@@ -14,6 +14,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { tokenApi } from '@/api/client'
+import { EmptyState } from '@/shared/components/empty-state'
 import { Button } from '@/shared/ui/button'
 import { ListStatusIcon } from '@/shared/components/list-status-icon'
 import {
@@ -408,23 +409,12 @@ export function TokenList() {
             ))}
           </div>
         ) : tokenPage && tokenPage.total === 0 ? (
-          <div className="px-5 py-12 text-center">
-            <KeyRound
-              className="mx-auto mb-3 h-7 w-7 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <p className="text-sm font-medium">
-              {t(query || status !== 'ALL' ? 'token.noResults' : 'token.empty')}
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t('token.emptyHint')}
-            </p>
-            {(query || status !== 'ALL') && (
-              <Button variant="outline" onClick={clearFilters} className="mt-4">
-                {t('token.clearFilters')}
-              </Button>
+          <EmptyState title={t(query || status !== 'ALL' ? 'token.noResults' : 'token.empty')}
+            description={query || status !== 'ALL' ? undefined : t('token.emptyHint')}
+            action={(query || status !== 'ALL') && (
+              <Button variant="outline" size="sm" onClick={clearFilters}>{t('token.clearFilters')}</Button>
             )}
-          </div>
+          />
         ) : tokenPage ? (
           <div aria-busy={isFetching}>
             <Table className="min-w-[840px]">
