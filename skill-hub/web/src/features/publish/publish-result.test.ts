@@ -13,7 +13,7 @@ describe('publish submission outcomes', () => {
   it('keeps unexpected thrown errors unknown', () => expect(classifyPublishFailure(new TypeError('network'))).toEqual({ kind: 'unknown' }))
   it('identifies version conflicts by the existing message contract', () => {
     expect(classifyPublishFailure(new ApiError('Version already exists', 400), '1.0.0')).toEqual({ kind: 'version-conflict', version: '1.0.0' })
-    expect(classifyPublishFailure(new ApiError('Other conflict', 409))).toEqual({ kind: 'error', reason: 'failed' })
+    expect(classifyPublishFailure(new ApiError('Other conflict', 409))).toEqual({ kind: 'error', reason: 'failed', diagnostic: { status: 409 } })
   })
   it('preserves the server’s specific package validation message for the result panel', () => {
     const detail = '请在 ZIP 根目录添加 SKILL.md。'
@@ -21,7 +21,7 @@ describe('publish submission outcomes', () => {
       kind: 'error', reason: 'invalid', detail,
     })
     expect(classifyPublishFailure(new ApiError('Bad request', 400, 'error.skill.publish.rejected'))).toEqual({
-      kind: 'error', reason: 'invalid',
+      kind: 'error', reason: 'invalid', diagnostic: { status: 400, code: 'error.skill.publish.rejected' },
     })
   })
   it('recognizes the localized version conflict without classifying arbitrary conflicts', () => {
@@ -31,9 +31,9 @@ describe('publish submission outcomes', () => {
     expect(classifyPublishFailure(new ApiError('预发布发现以下风险提醒，确认后仍可继续发布', 400))).toBeNull()
   })
   it.each([401, 403])('identifies access rejection %s without retry', status => {
-    expect(classifyPublishFailure(new ApiError('denied', status))).toEqual({ kind: 'error', reason: 'forbidden' })
+    expect(classifyPublishFailure(new ApiError('denied', status))).toEqual({ kind: 'error', reason: 'forbidden', diagnostic: { status } })
   })
   it.each([400, 413, 422])('identifies an invalid request %s without discarding its draft', status => {
-    expect(classifyPublishFailure(new ApiError('invalid', status))).toEqual({ kind: 'error', reason: 'invalid' })
+    expect(classifyPublishFailure(new ApiError('invalid', status))).toEqual({ kind: 'error', reason: 'invalid', diagnostic: { status } })
   })
 })

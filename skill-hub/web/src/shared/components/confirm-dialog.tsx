@@ -69,7 +69,7 @@ export function ConfirmDialog({
           <DialogTitle className="text-center">{title}</DialogTitle>
           {description && <DialogDescription className="text-center [overflow-wrap:anywhere]">{description}</DialogDescription>}
         </DialogHeader>
-        <DialogFooter className="justify-end max-sm:grid max-sm:grid-cols-2 max-sm:items-stretch max-sm:[&>button]:h-auto max-sm:[&>button]:min-h-[var(--control-height)] max-sm:[&>button]:whitespace-normal max-sm:[&>button]:px-2 max-sm:[&>button]:py-1">
+        <DialogFooter className="max-sm:[&>button]:h-auto max-sm:[&>button]:min-h-[var(--control-height)] max-sm:[&>button]:whitespace-normal max-sm:[&>button]:py-1">
           <Button data-analytics-id={cancelAnalyticsId} variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
             {resolvedCancelText}
           </Button>

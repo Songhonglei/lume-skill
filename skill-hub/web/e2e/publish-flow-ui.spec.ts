@@ -50,7 +50,7 @@ test.describe('Publish Flow UI (Real API)', () => {
       await page.locator('input[type="file"][accept*=".zip"]').setInputFiles(packagePath)
       await expect(page.getByText(path.basename(packagePath))).toBeVisible()
       // Publishing is a two-step flow: review the form, then confirm in the dialog.
-      const nextButton = page.getByRole('button', { name: 'Next: confirm' })
+      const nextButton = page.getByRole('button', { name: 'Submit', exact: true })
       await expect(nextButton).toBeEnabled()
       await nextButton.click()
       const confirmDialog = page.getByRole('dialog')

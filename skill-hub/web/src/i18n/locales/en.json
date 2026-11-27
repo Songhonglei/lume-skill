@@ -1880,6 +1880,16 @@
     "link": "View original source"
   },
   "skillDetail": {
+    "backToVersions": "Back to versions",
+    "manage": "Manage",
+    "moreActions": "More",
+    "promotionCurrentSource": "Source v{{version}}",
+    "moreSettings": "More settings",
+    "archiveAction": "Archive",
+    "unarchiveAction": "Restore",
+    "deleteAction": "Delete",
+    "hideAction": "Hide",
+    "unhideAction": "Unhide",
     "quickActions": "Quick actions",
     "activityTotals": "Skill totals",
     "starTotal": "Stars",
@@ -2072,12 +2082,12 @@
     "pendingReviewVersionLabel": "Pending version",
     "pendingReviewStatusLabel": "Review status",
     "pendingReviewStatusValue": "In review",
-    "lifecyclePublicVersionLabel": "Current public version",
+    "lifecyclePublicVersionLabel": "Current release",
     "lifecycleNoPublishedVersion": "No published version",
-    "lifecyclePendingVersionLabel": "Pending review version",
+    "lifecyclePendingVersionLabel": "In review",
     "lifecyclePendingVersionValue": "v{{version}} is in review",
-    "lifecycleNoPendingVersion": "No pending review version",
-    "lifecycleContainerStateLabel": "Skill container state",
+    "lifecycleNoPendingVersion": "None",
+    "lifecycleContainerStateLabel": "Status",
     "compareVersions": "Compare",
     "compareDialogTitle": "Version comparison",
     "compareDialogDescription": "Compare v{{source}} with v{{target}}.",
@@ -2114,7 +2124,7 @@
     "rereleaseWarningDescription": "We found the following risk reminders. If you understand them and still want to proceed, you can continue re-releasing.",
     "rereleaseWarningConfirm": "Continue re-releasing",
     "yankVersion": "Yank Current Version",
-    "promoteToGlobal": "Promote to Global",
+    "promoteToGlobal": "Promote to global",
     "promotionSectionTitle": "Promote to Global",
     "promotionSectionDescription": "Submit the currently published version v{{version}} for review into the global namespace.",
     "promotionSourceVersion": "Choose a published team version",
@@ -2124,7 +2134,7 @@
     "promotionNoGlobalVersion": "None",
     "promotionGlobalCurrent": "Current latest global version: v{{version}}",
     "promotionPending": "A request is awaiting platform review. You can submit again after it is resolved.",
-    "submitGlobalUpdate": "Submit this version for global review",
+    "submitGlobalUpdate": "Update global",
     "globalUpdateConfirmTitle": "Confirm global skill update",
     "globalUpdateConfirmDescription": "Submit team v{{source}} of “{{skill}}” for global review. The current latest global version is v{{target}} and may change during review. If approved without a version conflict, this version becomes the latest published version even if its number is lower.",
     "promotionVersionConflictTitle": "Global version already exists",
@@ -2814,6 +2824,12 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "chooseFolderShort": "Choose",
+    "removeSelectedFileHint": "Remove selected file",
+    "spaceArchivedStatus": "Archived",
+    "spaceFrozenStatus": "Frozen",
+    "spaceArchived": "This space is archived. Choose another space or ask an administrator to restore it.",
+    "spaceFrozen": "This space is frozen. Choose another space or ask an administrator to unfreeze it.",
     "external": {
       "source": "Skill source",
       "local": "Upload files",
@@ -2887,7 +2903,7 @@
       "private": "Private"
     },
     "file": "Skill Package File",
-    "removeSelectedFile": "Remove selected file",
+    "removeSelectedFile": "Remove",
     "publishing": "Publishing...",
     "confirm": "Confirm Publish",
     "success": "Published Successfully",
@@ -2930,7 +2946,7 @@
     "stepUpload": "Upload package",
     "stepPresentation": "Presentation",
     "stepConfirm": "Confirm submission",
-    "nextConfirm": "Review publication",
+    "nextConfirm": "Submit",
     "packageParsed": "Package ready",
     "replacePackage": "Replace",
     "editor": {
@@ -3043,7 +3059,9 @@
       "mySkills": "My skills",
       "replacePackage": "Replace package",
       "checkMySkills": "Check My skills",
-      "returnToForm": "Return to editing",
+      "rejectedDetailsUnavailable": "The server rejected the submission (HTTP {{status}}) without giving a reason. Check the space and skill package, or share the error code with an administrator.",
+      "errorCode": "Error code {{code}}",
+      "returnToForm": "Back to editing",
       "receiptHint": "This is the submission receipt. Open this version to check its latest progress."
     }
   },
@@ -3325,6 +3343,10 @@
     }
   },
   "error": {
+    "namespace": {
+      "archived": "This space is archived. Choose another space or ask an administrator to restore it.",
+      "frozen": "This space is frozen. Choose another space or ask an administrator to unfreeze it."
+    },
     "auth": {
       "local": {
         "invalidCredentials": "Incorrect username or password",

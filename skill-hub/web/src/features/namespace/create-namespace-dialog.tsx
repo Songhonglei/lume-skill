@@ -234,7 +234,7 @@ export function CreateNamespaceDialog({ children }: CreateNamespaceDialogProps) 
           <p className="text-sm text-red-600">{createMutation.error.message}</p>
         ) : null}
 
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter>
           <Button data-analytics-id="namespace.create.cancel" variant="outline" onClick={() => handleOpenChange(false)}>
             {t('dialog.cancel')}
           </Button>

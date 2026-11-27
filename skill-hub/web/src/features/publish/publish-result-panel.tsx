@@ -34,10 +34,16 @@ export function PublishResultPanel({ state, onReturnToForm, onReplacePackage, on
         {submitting ? <Loader2 aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 animate-spin motion-reduce:animate-none" /> : error || state.kind === 'unknown' ? <AlertCircle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" /> : <CheckCircle2 aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />}
         <div className="min-w-0 flex-1">
           <h2 ref={heading} tabIndex={-1} id="publish-result-heading" className="break-words text-lg font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring">{t(`publish.result.${key}.title`, parameters)}</h2>
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{t(`publish.result.${key}.description`, parameters)}</p>
           {state.kind === 'error' && state.detail && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground [overflow-wrap:anywhere]">{state.detail}</p>
           )}
+          {state.kind === 'error' && state.diagnostic && (
+            <div className="mt-2 space-y-1 text-sm leading-6">
+              <p>{t('publish.result.rejectedDetailsUnavailable', { status: state.diagnostic.status })}</p>
+              {state.diagnostic.code && <p className="break-all text-xs text-muted-foreground">{t('publish.result.errorCode', { code: state.diagnostic.code })}</p>}
+            </div>
+          )}
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">{t(`publish.result.${key}.description`, parameters)}</p>
           {state.kind === 'accepted' && <p className="mt-2 text-xs text-muted-foreground">{t('publish.result.receiptHint')}</p>}
           {state.kind === 'accepted' && <p className="mt-2 break-all text-xs text-muted-foreground">@{state.result.namespace}/{state.result.slug} · {state.result.version}</p>}
           {state.kind === 'accepted' && state.hadPublishedVersion && phase !== 'PUBLISHED' && <p className="mt-2 text-sm text-muted-foreground">{t('publish.result.previousPublished')}</p>}

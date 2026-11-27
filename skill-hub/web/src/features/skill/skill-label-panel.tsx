@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Tag } from 'lucide-react'
+import { Check, Lock, Tag } from 'lucide-react'
 import type { LabelDefinition, LabelItem, LabelTranslation } from '@/api/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
@@ -141,6 +141,45 @@ function ResourceLabelPanel({
     })
   }
 
+  if (translationPrefix === 'skillDetail') {
+    const labels = [...currentLabels, ...availableLabels].sort(sortByPresentation)
+    return (
+      <Card className="space-y-2.5 rounded-lg p-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Tag aria-hidden="true" className="size-4 text-muted-foreground" />
+          {t('skillDetail.labelsSectionTitle')}
+        </h3>
+        <div role="group" aria-label={t('skillDetail.labelsSectionTitle')} aria-busy={isCatalogLoading || isMutating}
+          className="flex flex-wrap gap-1.5">
+          {labels.map(label => {
+            const selected = currentLabelSlugs.has(label.slug)
+            const privileged = label.type === 'PRIVILEGED'
+            const readOnly = !canManageLabelType(label.type, isSuperAdmin)
+            return (
+              <Button key={label.slug} type="button" size="sm" variant="outline" aria-pressed={selected}
+                data-analytics-id={selected
+                  ? privileged ? 'skill.label.privileged.detach' : 'skill.label.recommended.detach'
+                  : privileged ? 'skill.label.privileged.attach' : 'skill.label.recommended.attach'}
+                disabled={isMutating || readOnly}
+                title={readOnly ? t('skillDetail.labelRestrictedHint') : undefined}
+                className={cn(
+                  'h-8 rounded-full px-2.5 text-xs',
+                  selected && 'border-primary/30 bg-primary/10 text-primary',
+                  privileged && selected && 'border-warning/30 bg-warning/10 text-foreground',
+                )}
+                onClick={() => selected ? handleDetach(label) : handleAttach(label.slug)}>
+                {readOnly ? <Lock aria-hidden="true" className="size-3" /> : selected ? <Check aria-hidden="true" className="size-3" /> : null}
+                {label.displayName}
+              </Button>
+            )
+          })}
+          {isCatalogLoading && <p role="status" className="text-xs text-muted-foreground">{t('skillDetail.loadingAvailableLabels')}</p>}
+          {!isCatalogLoading && labels.length === 0 && <p className="text-xs text-muted-foreground">{t('skillDetail.noAvailableLabels')}</p>}
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className={compact ? 'space-y-2.5 rounded-lg p-3' : 'space-y-4 p-5'}>
       <div className="space-y-1">
@@ -178,7 +217,7 @@ function ResourceLabelPanel({
                     <div className="mt-1 text-xs text-muted-foreground">{label.slug}</div>
                   </div>
                   {removable ? (
-                    <Button data-analytics-id={translationPrefix === 'suite' ? label.type === 'PRIVILEGED' ? 'suite.label.privileged.detach' : 'suite.label.recommended.detach' : label.type === 'PRIVILEGED' ? 'skill.label.privileged.detach' : 'skill.label.recommended.detach'}
+                    <Button data-analytics-id={label.type === 'PRIVILEGED' ? 'suite.label.privileged.detach' : 'suite.label.recommended.detach'}
                       variant="outline"
                       size="sm"
                       onClick={() => handleDetach(label)}
@@ -209,7 +248,7 @@ function ResourceLabelPanel({
         ) : availableLabels.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {availableLabels.map((label) => (
-              <Button data-analytics-id={translationPrefix === 'suite' ? label.type === 'PRIVILEGED' ? 'suite.label.privileged.attach' : 'suite.label.recommended.attach' : label.type === 'PRIVILEGED' ? 'skill.label.privileged.attach' : 'skill.label.recommended.attach'}
+              <Button data-analytics-id={label.type === 'PRIVILEGED' ? 'suite.label.privileged.attach' : 'suite.label.recommended.attach'}
                 key={label.slug}
                 variant="outline"
                 size="sm"

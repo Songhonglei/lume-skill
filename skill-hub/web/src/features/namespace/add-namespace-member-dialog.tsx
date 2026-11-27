@@ -240,7 +240,7 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
           <p className="text-sm text-red-600">{addMemberMutation.error.message}</p>
         ) : null}
 
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter>
           <Button data-analytics-id="namespace.member.cancel" type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             {t('dialog.cancel')}
           </Button>

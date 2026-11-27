@@ -276,7 +276,7 @@ export function BatchImportMembersDialog({ slug, children }: BatchImportMembersD
           </div>
         )}
 
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter>
           {step === 'upload' && (
             <Button data-analytics-id="namespace.import.cancel" type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               {t('dialog.cancel')}

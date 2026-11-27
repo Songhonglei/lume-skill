@@ -129,7 +129,7 @@ export function TransferOwnershipDialog({ namespace, members, children }: Transf
           <p className="text-sm text-red-600">{transferMutation.error.message}</p>
         ) : null}
 
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter>
           <Button data-analytics-id="namespace.ownership.cancel" type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             {t('dialog.cancel')}
           </Button>
