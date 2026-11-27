@@ -1,7 +1,7 @@
 import { PRODUCT_NAME } from '@/shared/lib/product-brand'
 import { createContext, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { PRESENTATION_CONTENT, type PresentationSection } from '@/shared/lib/presentation-content'
+import { PRESENTATION_CONTENT, PRESENTATION_LINKS, presentationItemVisible, type PresentationSection } from '@/shared/lib/presentation-content'
 import { sitePresentationApi, type SitePresentationSettings } from '@/api/site-presentation'
 
 export const SitePresentationPreviewContext = createContext<SitePresentationSettings | null>(null)
@@ -37,4 +37,15 @@ export function presentationText(settings: SitePresentationSettings, section: Pr
   if (!fallback) return ''
   if (section === 'enterprise' && slot === 'registryLabel') return `${settings.siteName || PRODUCT_NAME}\n${fallback.slice(1)}`
   return fallback.startsWith('=') ? fallback.slice(1) : translate(fallback, { siteName: settings.siteName || PRODUCT_NAME })
+}
+
+export function presentationCommonLinks(settings: SitePresentationSettings, language: string | undefined, translate: Parameters<typeof presentationText>[4]) {
+  if (settings.commonLinks != null) return settings.commonLinks
+  // Preserve customized legacy links while leaving the default footer free of promotional links.
+  return ([['repository', 'primaryAction'], ['documentation', 'secondaryAction']] as const).flatMap(([slot, action]) => {
+    const url = settings.links[slot]
+    return url && url !== PRESENTATION_LINKS[slot] && presentationItemVisible(settings, 'cta', action)
+      ? [{ title: presentationText(settings, 'cta', `${action}Label`, language, translate), url }]
+      : []
+  })
 }

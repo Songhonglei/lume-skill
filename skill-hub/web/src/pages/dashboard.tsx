@@ -162,7 +162,7 @@ export function DashboardSidebar({
 
   return (
     <aside className="w-full lg:w-56 flex-shrink-0">
-      <div className="overflow-hidden rounded-lg border bg-background lg:sticky lg:top-[68px] lg:rounded-none lg:border-0">
+      <div className="overflow-hidden rounded-lg border bg-background lg:sticky lg:top-[calc(var(--app-header-height)+4px)] lg:rounded-none lg:border-0">
         <button data-analytics-id="navigation.dashboard.toggle"
           type="button"
           className="flex h-10 w-full items-center justify-between gap-3 px-3 text-sm font-medium lg:hidden"

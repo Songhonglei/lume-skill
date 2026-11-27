@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Eye, Plus, Upload } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { presentationAssetUrl, sitePresentationApi, type SitePresentationLink, type SitePresentationResponse, type SitePresentationSettings } from '@/api/site-presentation'
-import { defaultSitePresentation, presentationText, SITE_PRESENTATION_QUERY_KEY } from '@/shared/hooks/use-site-presentation'
+import { defaultSitePresentation, presentationCommonLinks, presentationText, SITE_PRESENTATION_QUERY_KEY } from '@/shared/hooks/use-site-presentation'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/shared/ui/dialog'
 import { Switch } from '@/shared/ui/switch'
@@ -16,7 +16,7 @@ import { Label } from '@/shared/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { withBasePath } from '@/shared/lib/base-path'
-import { PRESENTATION_CONTENT, PRESENTATION_LINKS, presentationItemVisible, presentationNavigationUrl, type PresentationSection } from '@/shared/lib/presentation-content'
+import { PRESENTATION_CONTENT, presentationNavigationUrl, type PresentationSection } from '@/shared/lib/presentation-content'
 
 const ADMIN_QUERY_KEY = ['system-config', 'presentation'] as const
 const LOCALES = ['zh', 'en'] as const
@@ -123,9 +123,7 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
   const rawValue = draft?.settings ?? query.data?.settings
   const value = rawValue ? normalizeSettings(rawValue) : undefined
   const incompleteLinks = draft?.settings.commonLinks?.some(link => !link.title?.trim() || !presentationNavigationUrl(link.url)) ?? false
-  const commonLinks = value?.commonLinks ?? (value ? ([['repository', 'primaryAction'], ['documentation', 'secondaryAction']] as const)
-    .filter(([, action]) => presentationItemVisible(value, 'cta', action))
-    .map(([slot, action]) => ({ title: presentationText(value, 'cta', `${action}Label`, i18n.resolvedLanguage, t), url: value.links[slot] ?? PRESENTATION_LINKS[slot] })) : [])
+  const commonLinks = value ? presentationCommonLinks(value, i18n.resolvedLanguage, t) : []
   const dirty = draft !== null && !sameSettings(draft.settings, draft.original)
   const blocker = useBlocker({ shouldBlockFn: () => dirty || uploading, enableBeforeUnload: dirty || uploading, withResolver: true })
   const save = useMutation({
@@ -142,7 +140,8 @@ export function SitePresentationSettingsPanel({ onDirtyChange, onBusyChange }: {
     setDraft((current) => ({ settings: { ...(current?.settings ?? query.data!.settings), ...patch }, version: current?.version ?? query.data!.version, original: current?.original ?? query.data!.settings }))
     setSaved(false)
   }
-  const sectionIds = Object.keys(PRESENTATION_CONTENT) as PresentationSection[]
+  const sectionIds = (Object.keys(PRESENTATION_CONTENT) as PresentationSection[])
+    .filter(section => section !== 'enterprise' && section !== 'quickStart')
   const reset = () => {
     if (!value) return
     const defaults = defaultSitePresentation()

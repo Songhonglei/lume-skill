@@ -1,7 +1,7 @@
 vi.mock('@/features/recommendation/recommendation-preview', () => ({ HomepageRecommendations: () => <div>published-curated-content</div> }))
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import type { SitePresentationSettings } from '@/api/site-presentation'
 import { defaultSitePresentation } from '@/shared/hooks/use-site-presentation'
 import { PRESENTATION_CONTENT, PRESENTATION_ITEMS } from '@/shared/lib/presentation-content'
@@ -9,7 +9,7 @@ import { LandingPage } from './landing'
 import { HomePage } from './home'
 
 const state = vi.hoisted((): { settings: SitePresentationSettings | null; hasSkills: boolean; search: (params: unknown, enabled: boolean) => void } => ({ settings: null, hasSkills: false, search: vi.fn() }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a> }))
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), Link: ({ to, search: _search, ...props }: React.ComponentProps<'a'> & { to: string; search?: unknown }) => <a href={to} {...props} /> }))
 vi.mock('react-i18next', async (original) => ({ ...await original<typeof import('react-i18next')>(), useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: 'zh' } }) }))
 vi.mock('@/shared/hooks/use-site-presentation', async (original) => ({ ...await original<typeof import('@/shared/hooks/use-site-presentation')>(), useSitePresentation: () => ({ settings: state.settings ?? defaultSitePresentation() }) }))
 vi.mock('@/shared/hooks/use-skill-queries', () => ({ useSearchSkills: (params: unknown, enabled = true) => { state.search(params, enabled); return { data: { items: state.hasSkills ? [{ id: 1, namespace: 'team', slug: 'example' }] : [] }, isLoading: false } } }))
@@ -26,7 +26,10 @@ describe('configurable original homepage and market boundary', () => {
     state.hasSkills = true
     render(<LandingPage />)
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('landing.experience.heroTitle')
-    expect(screen.getByText('landing-quick-start')).toBeTruthy()
+    expect(screen.queryByText('landing-quick-start')).toBeNull()
+    const footer = screen.getByRole('contentinfo')
+    expect(footer.textContent).toContain(`© ${new Date().getFullYear()}`)
+    expect(within(footer).queryByRole('link')).toBeNull()
     expect(screen.getByText('home.popularTitle')).toBeTruthy()
     expect(screen.getByText('home.latestTitle')).toBeTruthy()
     expect(state.search).toHaveBeenCalledWith({ sort: 'downloads', size: 6, source: 'all' }, true)
@@ -103,35 +106,42 @@ describe('configurable original homepage and market boundary', () => {
     expect(screen.getByText('market-quick-start')).toBeTruthy()
     expect(state.search).toHaveBeenLastCalledWith({ sort: 'newest', size: 6, source: 'all' }, true)
   })
-  it('binds visible landing text slots, item switches and shared external links', () => {
+  it('honors visible copy, icon actions, and customized footer links', () => {
     state.hasSkills = true
     const settings = defaultSitePresentation()
+    const visibleSlots = {
+      hero: ['title', 'searchPlaceholder', 'primaryActionLabel', 'secondaryActionLabel'],
+      capabilities: ['title', 'secureTitle'],
+      popular: ['title', 'viewAllLabel'],
+      latest: ['title', 'viewAllLabel'],
+    } as const
     for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
       for (const slot of Object.keys(PRESENTATION_CONTENT[section])) settings.sections[section].texts[slot] = { zh: `${section}-${slot}` }
     }
     settings.links = { repository: 'https://team.example/source', documentation: 'https://team.example/docs' }
     state.settings = settings
     const { container } = render(<LandingPage />)
-    for (const section of ['hero', 'capabilities', 'popular', 'latest', 'enterprise', 'cta'] as const) {
-      for (const slot of Object.keys(PRESENTATION_CONTENT[section])) {
-        if (['badge', 'eyebrow', 'previewTitle', 'previewCaption', 'previewPublishTitle', 'previewPublishDescription'].includes(slot) || slot.startsWith('highlight')) continue
-        if (section === 'hero' && slot === 'description') continue
-        if (slot === 'searchPlaceholder') expect(screen.getByPlaceholderText(`${section}-${slot}`)).toBeTruthy()
-        else expect(container.textContent).toContain(`${section}-${slot}`)
+    expect(screen.getByRole('searchbox').getAttribute('placeholder')).toBe('hero-searchPlaceholder')
+    expect(screen.getByRole('link', { name: 'hero-primaryActionLabel' }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'hero-secondaryActionLabel' }).querySelector('svg')).toBeTruthy()
+    for (const [section, slots] of Object.entries(visibleSlots)) {
+      for (const slot of slots) {
+        if (slot !== 'searchPlaceholder') expect(container.textContent).toContain(`${section}-${slot}`)
       }
     }
-    expect(container.querySelector('a[href="https://team.example/source"]')).toBeTruthy()
-    expect(container.querySelector('a[href="https://team.example/docs"]')).toBeTruthy()
-    cleanup()
-    for (const section of ['hero', 'capabilities', 'enterprise', 'cta'] as const) {
-      settings.sections[section].items = Object.fromEntries(PRESENTATION_ITEMS[section].map(item => [item, false]))
+    for (const copy of ['capabilities-description', 'enterprise-title', 'cta-title']) {
+      expect(screen.queryByText(copy)).toBeNull()
     }
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByRole('link', { name: 'cta-primaryActionLabel' }).getAttribute('href')).toBe('https://team.example/source')
+    expect(within(footer).getByRole('link', { name: 'cta-secondaryActionLabel' }).getAttribute('href')).toBe('https://team.example/docs')
+
+    cleanup()
+    settings.commonLinks = [{ title: 'Team handbook', url: '/guide' }]
+    settings.sections.hero.items = { preview: false, primaryAction: false, secondaryAction: false }
     render(<LandingPage />)
-    expect(screen.queryByText('hero-previewTitle')).toBeNull()
-    expect(screen.queryByText('hero-primaryActionLabel')).toBeNull()
-    expect(screen.queryByText('hero-highlightSelfHosted')).toBeNull()
-    expect(screen.queryByText('capabilities-secureTitle')).toBeNull()
-    expect(screen.queryByText('enterprise-deploymentTitle')).toBeNull()
-    expect(screen.queryByText('cta-primaryActionLabel')).toBeNull()
+    expect(screen.queryByRole('searchbox')).toBeNull()
+    expect(screen.queryByRole('link', { name: 'hero-primaryActionLabel' })).toBeNull()
+    expect(within(screen.getByRole('contentinfo')).getByRole('link', { name: 'Team handbook' }).getAttribute('href')).toBe('/guide')
   })
 })

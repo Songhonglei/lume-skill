@@ -262,7 +262,7 @@
       },
       "capabilities": {
         "eyebrow": "Capabilities",
-        "title": "Manage the complete skill lifecycle, from registration to distribution",
+        "title": "Platform capabilities",
         "description": "More than a package repository: one platform for publishing, review, distribution, and governance."
       },
       "enterprise": {
@@ -1917,6 +1917,15 @@
     "viewThisVersion": "View this version",
     "tabFiles": "Files",
     "tabVersions": "Versions",
+    "contentNavigation": "Skill content",
+    "installWays": "Installation options",
+    "additionalInformation": "Skill information",
+    "management": "Manage skill",
+    "community": "Reviews",
+    "author": "Author",
+    "filesLoading": "Loading files…",
+    "filesUnavailable": "Could not load the file list.",
+    "retry": "Retry",
     "noReadme": "No README",
     "readmeUnavailable": "README is temporarily unavailable. Please try again later or re-upload this skill version.",
     "documentationSource": "Source: {{path}}",
@@ -2471,6 +2480,7 @@
     "switchToEnglish": "Switch to English",
     "switchToChinese": "Switch to Chinese",
     "openNavigation": "Open navigation menu",
+    "mainNavigation": "Main navigation",
     "closeNavigation": "Close navigation menu",
     "footerDescription": "Skill registry, providing efficient skill management and distribution for developers."
   },
@@ -4427,7 +4437,7 @@
       "popular": "Popular skills",
       "latest": "Latest skills",
       "enterprise": "Teams and enterprise",
-      "cta": "Closing introduction",
+      "cta": "Footer links",
       "footer": "Footer",
       "curated": "Platform picks"
     },

@@ -11,7 +11,7 @@ import { formatRelativeTime } from '@/shared/lib/format-relative-time'
 import { GitBranch, LayoutGrid, Bookmark, Boxes, ShieldCheck, User, Clock } from 'lucide-react'
 
 interface SkillCardProps {
-  variant?: 'default' | 'market'
+  variant?: 'default' | 'market' | 'compact'
   labels?: { slug: string; displayName: string }[]
   analyticsId?: string
   skill: SkillSummary
@@ -25,9 +25,10 @@ interface SkillCardProps {
 export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId, labels, variant = 'default' }: SkillCardProps) {
   const { t, i18n } = useTranslation()
   const isMarket = variant === 'market'
+  const isCompact = variant === 'compact'
   const { isAuthenticated } = useAuth()
   // Batch highlight via shared ['skills','stars'] — never N× useStar per grid row.
-  const { starredIds } = useStarredIdSet(highlightStarred && isAuthenticated)
+  const { starredIds } = useStarredIdSet(highlightStarred && isAuthenticated && !isCompact)
   const showStarredHighlight = highlightStarred && isAuthenticated && starredIds.has(skill.id)
   const headlineVersion = getHeadlineVersion(skill)
   const isInteractive = typeof onClick === 'function'
@@ -39,7 +40,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
   return (
     <Card
       data-analytics-id={isInteractive ? analyticsId : undefined}
-      className="group relative h-full min-w-0 cursor-pointer overflow-hidden rounded-md border border-border/60 bg-card p-4 text-card-foreground transition-[transform,box-shadow,border-color] duration-150 ease-out card-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15"
+      className={`group relative h-full min-w-0 cursor-pointer overflow-hidden rounded-md border border-border/60 bg-card text-card-foreground transition-[transform,box-shadow,border-color] duration-150 ease-out card-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15 ${isCompact ? 'p-3' : 'p-4'}`}
       style={{ borderColor: 'hsl(var(--border-card))', boxShadow: 'var(--shadow-card)' }}
       onClick={onClick}
       onKeyDown={(event) => {
@@ -56,7 +57,15 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
       tabIndex={isInteractive ? 0 : undefined}
     >
       <div className="flex h-full flex-col">
-        {isMarket ? (
+        {isCompact ? (
+          <div className="mb-2 flex min-w-0 items-start gap-2">
+            <SkillAvatar name={skill.displayName} url={skill.avatarUrl} seed={`${skill.namespace}/${skill.slug}`} size="size-7 text-xs" />
+            <div className="min-w-0 flex-1">
+              <h3 className="line-clamp-2 text-sm font-semibold leading-5 [overflow-wrap:anywhere]" title={skill.displayName}>{skill.displayName}</h3>
+              <div className="truncate text-xs text-muted-foreground" title={`@${skill.namespace}`}>@{skill.namespace}</div>
+            </div>
+          </div>
+        ) : isMarket ? (
           <div className="mb-4 flex min-w-0 items-start gap-3">
             <h3 className="min-w-0 flex-1 line-clamp-2 text-base font-semibold [overflow-wrap:anywhere]" title={skill.displayName}>
               {skill.displayName}
@@ -103,7 +112,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
 
         {skill.summary && (
           <p
-            className={`skill-card-summary mb-3 leading-5 text-muted-foreground [overflow-wrap:anywhere] ${isMarket ? 'text-sm' : 'text-xs'}`}
+            className={`mb-3 leading-5 text-muted-foreground [overflow-wrap:anywhere] ${isCompact ? 'line-clamp-2 text-xs' : isMarket ? 'skill-card-summary text-sm' : 'skill-card-summary text-xs'}`}
             title={skill.summary}
           >
             {skill.summary}
@@ -119,7 +128,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
           </span>
         )}
 
-        {complianceItems.length > 0 ? (
+        {!isCompact && complianceItems.length > 0 ? (
           <div className="mb-4 flex flex-wrap gap-1.5">
             {complianceItems.slice(0, 2).map((item, index) => (
               <span
@@ -151,15 +160,21 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
             </svg>
             {formatCompactCount(skill.downloadCount)}
           </span>
-          <span
+          {isCompact && skill.updatedAt && (
+            <span className="flex min-w-0 max-w-full items-center gap-1" title={new Date(skill.updatedAt).toLocaleString(i18n.language)}>
+              <Clock aria-hidden="true" className="size-3.5 shrink-0" />
+              <span className="truncate">{formatRelativeTime(skill.updatedAt, i18n.language)}</span>
+            </span>
+          )}
+          {!isCompact && <span
             className={`flex items-center gap-1 ${showStarredHighlight ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}
             title={starLabel}
             aria-label={starLabel}
           >
             <Bookmark className={`w-3.5 h-3.5 ${showStarredHighlight ? 'fill-current' : ''}`} />
             {skill.starCount}
-          </span>
-          {skill.ratingAvg !== undefined && skill.ratingCount > 0 && (
+          </span>}
+          {!isCompact && skill.ratingAvg !== undefined && skill.ratingCount > 0 && (
             <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400" title={ratingLabel} aria-label={ratingLabel}>
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -183,7 +198,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true, analyticsId
               </span>
             ) : null}
           </div>
-        ) : (skill.ownerDisplayName || skill.updatedAt) && (
+        ) : !isCompact && (skill.ownerDisplayName || skill.updatedAt) && (
           <div className="mt-2 pt-2 border-t border-border/50 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
             {skill.ownerDisplayName && (
               <span className="flex min-w-0 flex-1 items-center gap-1" title={skill.ownerDisplayName}>

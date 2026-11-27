@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Outlet, Link, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Menu, X } from 'lucide-react'
+import { Boxes, Home, LayoutDashboard, LayoutGrid, Menu, Upload, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
 import { useSitePresentation } from '@/shared/hooks/use-site-presentation'
 import { BrandMark } from '@/shared/components/brand-mark'
@@ -79,74 +79,48 @@ export function Layout() {
       return
     }
     previousPathnameRef.current = pathname
+    setMobileMenuOpen(false)
     dismissOpenOverlays()
   }, [pathname])
 
-  const navItems: Array<{
-    label: string
-    to: string
-    analyticsId?: string
-    exact?: boolean
-    auth?: boolean
-  }> = [
-    { label: t('nav.landing'), to: '/', analyticsId: 'navigation.home.open', exact: true },
-    { label: t('nav.marketplace'), to: '/search', analyticsId: 'navigation.skills.open' },
-    { label: t('nav.publish'), to: '/dashboard/publish', analyticsId: 'skill.publish.open', auth: true },
-    { label: t('nav.suites'), to: '/suites', analyticsId: 'navigation.suites.open' },
-    { label: t('dashboard.title'), to: '/dashboard', analyticsId: 'navigation.dashboard.open', auth: true },
+  const navItems = [
+    { label: t('nav.landing'), to: '/', icon: Home, analyticsId: 'navigation.home.open' },
+    { label: t('nav.marketplace'), to: '/search', icon: LayoutGrid, analyticsId: 'navigation.skills.open' },
+    { label: t('nav.publish'), to: '/dashboard/publish', icon: Upload, analyticsId: 'skill.publish.open', auth: true },
+    { label: t('nav.suites'), to: '/suites', icon: Boxes, analyticsId: 'navigation.suites.open' },
+    { label: t('dashboard.title'), to: '/dashboard', icon: LayoutDashboard, analyticsId: 'navigation.dashboard.open', auth: true },
   ]
 
-  const isActive = (to: string, exact?: boolean) => {
-    if (exact) return pathname === to
-    if (to === '/dashboard') return showSidebar && area === 'workspace'
-    // Keep matching strict so parent dashboard paths do not highlight unrelated child links.
+  const isActive = (to: string) => {
+    if (to === '/dashboard') return showSidebar && area === 'workspace' && pathname !== '/dashboard/publish'
+    if (to === '/search' && pathname.startsWith('/space/')) return true
+    if (to === '/suites' && pathname.startsWith('/suite/')) return true
     return pathname === to
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background [--app-header-height:65px] lg:[--app-header-height:110px]">
       {/* Header */}
       <header
         className={isSplitAuthRoute ? 'absolute right-4 top-4 z-50 flex items-center sm:right-10' : getAppHeaderClassName(isHeaderElevated)}
       >
         <div className={isSplitAuthRoute ? 'flex items-center' : APP_HEADER_CONTENT_CLASS_NAME}>
         {!isSplitAuthRoute ? (
-          <Link data-analytics-id="navigation.home.open" to="/" aria-label={presentation.siteName ?? PRODUCT_NAME} className="luma-wordmark flex min-w-0 max-w-[min(44vw,18rem)] items-center gap-2 rounded-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
+          <Link data-analytics-id="navigation.home.open" to="/" aria-label={presentation.siteName ?? PRODUCT_NAME} className="luma-wordmark flex min-w-0 max-w-full items-center gap-2.5 rounded-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">
             <BrandMark className="h-8 w-8 shrink-0" alt="" />
             <span className="truncate" title={presentation.siteName ?? PRODUCT_NAME}>{presentation.siteName ?? PRODUCT_NAME}</span>
           </Link>
         ) : null}
 
-        {/* Desktop nav — xl+ leaves room for localized labels and account controls. */}
-        {!isAuthEntryRoute ? (
-          <nav className="hidden min-h-[63px] items-stretch gap-4 xl:flex 2xl:gap-6" style={{ color: 'hsl(var(--text-secondary))' }}>
-            {navItems.map((item) => {
-              if (item.auth && !user) return null
-              const active = isActive(item.to, item.exact)
-
-              return (
-                <Link data-analytics-id={item.analyticsId}
-                  key={item.to}
-                  to={item.to}
-                  activeOptions={{ exact: true }}
-                  aria-current={active ? 'page' : undefined}
-                  className="luma-nav-link"
-                >
-                  {item.label}
-                </Link>
-              )
-            })}
-          </nav>
-        ) : null}
-
         <div className="flex shrink-0 items-center gap-1" style={{ color: 'hsl(var(--text-secondary))' }}>
-          {/* Hamburger — visible below xl */}
+          {/* Hamburger for narrow screens. */}
           {!isAuthEntryRoute ? (
             <button data-analytics-id="navigation.menu.toggle"
               type="button"
-              className="luma-header-icon inline-grid xl:hidden"
+              className="luma-header-icon inline-grid lg:hidden"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-expanded={mobileMenuOpen}
+              aria-controls={mobileMenuOpen ? 'mobile-main-navigation' : undefined}
               aria-label={t(mobileMenuOpen ? 'layout.closeNavigation' : 'layout.openNavigation')}
             >
               {mobileMenuOpen ? <X className="size-[18px]" /> : <Menu className="size-[18px]" />}
@@ -167,26 +141,44 @@ export function Layout() {
           ) : null}
         </div>
         </div>
+        {!isAuthEntryRoute && (
+          <div className="hidden border-t border-border lg:block">
+            <nav aria-label={t('layout.mainNavigation')} className={`${APP_FRAME_CLASS_NAME} flex min-h-11 items-stretch gap-5`}>
+              {navItems.filter(item => !item.auth || user).map(({ icon: Icon, ...item }) => (
+                <Link data-analytics-id={item.analyticsId}
+                  key={item.to}
+                  to={item.to}
+                  activeOptions={{ exact: true }}
+                  aria-current={isActive(item.to) ? 'page' : undefined}
+                  className="luma-nav-link gap-2"
+                >
+                  <Icon aria-hidden="true" className="size-4 shrink-0" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Mobile nav dropdown */}
       {mobileMenuOpen && !isAuthEntryRoute ? (
-        <div className="xl:hidden sticky top-16 z-40 border-b border-border bg-card">
-          <nav className={`${APP_FRAME_CLASS_NAME} flex flex-col gap-1 py-3`}>
-            {navItems.map((item) => {
-              if (item.auth && !user) return null
-              const active = isActive(item.to, item.exact)
+        <div className="sticky top-[var(--app-header-height)] z-40 border-b border-border bg-card lg:hidden">
+          <nav id="mobile-main-navigation" aria-label={t('layout.mainNavigation')} className={`${APP_FRAME_CLASS_NAME} flex flex-col gap-1 py-3`}>
+            {navItems.filter(item => !item.auth || user).map(({ icon: Icon, ...item }) => {
+              const active = isActive(item.to)
               return (
                 <Link data-analytics-id={item.analyticsId}
                   key={item.to}
                   to={item.to}
                   activeOptions={{ exact: true }}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                     active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                   aria-current={active ? 'page' : undefined}
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  <Icon aria-hidden="true" className="size-4 shrink-0" />
                   {item.label}
                 </Link>
               )
