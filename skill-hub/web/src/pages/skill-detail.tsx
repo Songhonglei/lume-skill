@@ -1207,7 +1207,9 @@ export function SkillDetailPage() {
                   <Button variant="outline" size="sm" onClick={() => void retryFiles()}>{t('skillDetail.retry')}</Button>
                 </Card>
               ) : files && files.length > 0 ? (
-                <FileTree analyticsId="skill.file.open" files={files} onFileClick={handleFileClick} />
+                <Card className="overflow-hidden p-1.5">
+                  <FileTree analyticsId="skill.file.open" files={files} onFileClick={handleFileClick} bare compact />
+                </Card>
               ) : (
                 <Card className="p-8 text-muted-foreground text-center">
                   {t('skillDetail.noFiles')}
@@ -1327,7 +1329,7 @@ export function SkillDetailPage() {
 
         <aside aria-label={t('skillDetail.additionalInformation')} className="min-w-0 space-y-3 lg:pt-1">
           {canInteract && !isFetchingSkill && (
-            <Card className="space-y-3 p-4">
+            <Card className="flex flex-wrap items-center gap-2 p-4">
               <StarButton skillId={skill.id} starCount={skill.starCount} onRequireLogin={requireLogin} />
               <SubscribeButton skillId={skill.id} subscriptionCount={(skill as { subscriptionCount?: number }).subscriptionCount ?? 0} onRequireLogin={requireLogin} />
             </Card>
