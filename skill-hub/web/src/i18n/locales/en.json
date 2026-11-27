@@ -2834,6 +2834,7 @@
       "presentationHelp": "Explain the purpose, inputs, outputs and limitations for users.",
       "customized": "Customized for this version",
       "packageContent": "From the current package",
+      "shortenedPackageSummary": "Shortened for display. You can edit this summary. The package keeps the original.",
       "restore": "Restore package content",
       "restoreTitle": "Restore package {{field}}?",
       "restoreDescription": "This replaces the manually edited content with content from the current package. The package file itself will not change.",

@@ -33,7 +33,7 @@ public class ExternalSkillPackageService {
     private static final int MAX_EXPANDED = 32 * 1024 * 1024;
     private static final int TIMEOUT_MS = 10_000;
     private static final Set<String> DOWNLOAD_HOSTS = Set.of(
-            "codeload.github.com", "clawhub.ai", "api.skillhub.cn",
+            "codeload.github.com", "api.github.com", "clawhub.ai", "api.skillhub.cn",
             "skillhub-1388575217.cos.accelerate.myqcloud.com",
             "skillhub-1388575217.cos.ap-guangzhou.myqcloud.com");
     private static final Pattern COMMIT = Pattern.compile("[0-9a-fA-F]{40}");
@@ -56,13 +56,12 @@ public class ExternalSkillPackageService {
     public Resolved resolve(String url) {
         ExternalSkillLink link = ExternalSkillLink.parse(url);
         try {
-            byte[] bytes = download(link.download());
+            byte[] zip = link.githubArchive() ? githubPackage(link) : download(link.download());
             if (!link.githubArchive() && "clawhub.ai".equals(link.download().getHost())
-                    && !(bytes.length >= 4 && bytes[0] == 'P' && bytes[1] == 'K')) {
-                link = resolveClawHubHandoff(link, bytes);
-                bytes = download(link.download());
+                    && !(zip.length >= 4 && zip[0] == 'P' && zip[1] == 'K')) {
+                link = resolveClawHubHandoff(link, zip);
+                zip = githubPackage(link);
             }
-            byte[] zip = link.githubArchive() ? selectGithubDirectory(bytes, link) : bytes;
             var extracted = extractor.extractWithWarnings(zip, MAX_EXPANDED);
             if (!extracted.warnings().isEmpty()) {
                 throw new DomainBadRequestException("error.skill.external.directory");
@@ -77,6 +76,40 @@ public class ExternalSkillPackageService {
         } catch (IOException ex) {
             throw new DomainBadRequestException("error.skill.external.download");
         }
+    }
+
+    private byte[] githubPackage(ExternalSkillLink link) throws IOException {
+        try {
+            return selectGithubDirectory(download(link.download()), link);
+        } catch (DownloadNotFoundException | DomainBadRequestException failure) {
+            if (failure instanceof DomainBadRequestException badRequest
+                    && !"error.skill.external.directory".equals(badRequest.messageCode())) throw failure;
+            ExternalSkillLink resolved = resolveSlashRef(link);
+            if (resolved == null) throw failure;
+            return selectGithubDirectory(download(resolved.download()), resolved);
+        }
+    }
+
+    private ExternalSkillLink resolveSlashRef(ExternalSkillLink link) {
+        for (String type : List.of("heads", "tags")) {
+            URI lookup = link.githubRefLookup(type);
+            if (lookup == null) return null;
+            try {
+                var refs = json.readTree(download(lookup));
+                if (refs == null || !refs.isArray()) continue;
+                ExternalSkillLink resolved = null;
+                for (var entry : refs) {
+                    var candidate = link.withGithubRef(entry.path("ref").asText());
+                    if (candidate != null && (resolved == null || candidate.directory().length() < resolved.directory().length())) {
+                        resolved = candidate;
+                    }
+                }
+                if (resolved != null) return resolved;
+            } catch (IOException ignored) {
+                // Preserve the original download or directory error when GitHub's API is unavailable.
+            }
+        }
+        return null;
     }
 
     public String verify(String url, List<PackageEntry> submitted) {
@@ -135,6 +168,7 @@ public class ExternalSkillPackageService {
                     address = address.resolve(target);
                     continue;
                 }
+                if (status == 404) throw new DownloadNotFoundException();
                 if (status != 200) throw new IOException("External download failed");
                 if (connection.getContentLengthLong() > MAX_DOWNLOAD) throw tooLarge();
                 try (InputStream input = connection.getInputStream(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -218,4 +252,6 @@ public class ExternalSkillPackageService {
     private static DomainBadRequestException tooLarge() {
         return new DomainBadRequestException("error.skill.external.tooLarge");
     }
+
+    private static final class DownloadNotFoundException extends IOException {}
 }

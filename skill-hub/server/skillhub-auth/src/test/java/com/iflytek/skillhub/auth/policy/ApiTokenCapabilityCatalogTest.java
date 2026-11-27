@@ -19,9 +19,11 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ApiTokenCapabilityCatalogTest {
+    private static final String FAVICON_ASSET = "GET /api/v1/site-presentation/assets/*/favicon";
 
     private final RouteSecurityPolicyRegistry registry = new RouteSecurityPolicyRegistry();
     private final ApiTokenScopeService scopes = new ApiTokenScopeService(new ObjectMapper(), registry);
@@ -49,7 +51,11 @@ class ApiTokenCapabilityCatalogTest {
             String key = RouteSecurityPolicyRegistry.routeKey(policy.method(), policy.pattern());
             assertTrue(seen.add(key), "Duplicate policy: " + key);
             Policy original = baseline.get(key);
-            if (original == null) {
+            if (FAVICON_ASSET.equals(key)) {
+                assertNull(policy.requiredScope(), key);
+                assertEquals(RouteSecurityPolicyRegistry.AccessLevel.PERMIT_ALL,
+                        registry.accessLevel("GET", "/api/v1/site-presentation/assets/sample/favicon"));
+            } else if (original == null) {
                 assertTrue(additions.contains(key), "Unclassified new policy: " + key);
                 assertEquals("skill:read", policy.requiredScope(), key);
             } else {
@@ -60,6 +66,7 @@ class ApiTokenCapabilityCatalogTest {
         }
         Set<String> expected = new HashSet<>(baseline.keySet());
         expected.addAll(additions);
+        expected.add(FAVICON_ASSET);
         assertEquals(expected, seen, "No original route may disappear or unclassified route be added");
     }
 
@@ -78,10 +85,11 @@ class ApiTokenCapabilityCatalogTest {
     }
 
     @Test
-    void allLegacyScopeCombinationsPreserveTheAllowSetExceptTheEightD2Additions() throws Exception {
+    void allLegacyScopeCombinationsPreserveTheAllowSetWithExplicitAdditions() throws Exception {
         List<Policy> baseline = baseline();
         List<String> oldScopes = List.of("skill:read", "skill:publish", "skill:delete", "token:manage");
         Set<String> requests = new HashSet<>(additions());
+        requests.add(FAVICON_ASSET);
         for (Policy policy : baseline) {
             for (String method : List.of("GET", "POST", "PUT", "DELETE", "PATCH")) {
                 requests.add(method + " " + sample(policy.path()));
@@ -101,7 +109,9 @@ class ApiTokenCapabilityCatalogTest {
                 String path = sample(parts[1]);
                 boolean before = oldAllowed(baseline, parts[0], path, stored);
                 boolean after = scopes.authorize(parts[0], path, stored).allowed();
-                if (additions().stream().anyMatch(key -> matchesRequest(key, parts[0], path))) {
+                if (matchesRequest(FAVICON_ASSET, parts[0], path)) {
+                    assertTrue(after, request);
+                } else if (additions().stream().anyMatch(key -> matchesRequest(key, parts[0], path))) {
                     assertEquals(stored.contains("skill:read"), after, request + " " + stored);
                 } else {
                     assertEquals(before, after, request + " " + stored);

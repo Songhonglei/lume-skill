@@ -18,12 +18,22 @@ python3 "$BUILDER" --output "$second"
 
 cmp "$first/artifacts.json" "$second/artifacts.json"
 
-# The anonymous Agent bootstrap route and the installable helper Skill share
-# one reviewed instruction body. The web copy exists only because its Docker
-# build context is intentionally limited to web/.
-cmp \
+# The web guide has enterprise registry discovery and shares the reviewed
+# instruction body with the installable helper.
+python3 - \
   "$REPO_ROOT/builtin-skills/skills/skillhub-cli/SKILL.md" \
-  "$REPO_ROOT/web/src/docs/skill.md.template"
+  "$REPO_ROOT/web/src/docs/skill.md.template" <<'PY'
+from pathlib import Path
+import sys
+
+builtin, web = (Path(path).read_text(encoding="utf-8") for path in sys.argv[1:])
+start = "Use only an absolute HTTP(S) URL."
+assert builtin[builtin.index(start):] == web[web.index(start):]
+for field in ("name: skillhub-cli", "version: 2.0.2", "license: Apache-2.0"):
+    assert field in web.split("---", 2)[1].splitlines(), field
+assert "Ask for the registry URL" in web[:web.index(start)]
+assert "https://skill.xfyun.cn" not in web
+PY
 test -f "$REPO_ROOT/builtin-skills/skills/skillhub-cli/references/cli-operations.md"
 grep -F 'npm install --global @astron-team/skillhub' \
   "$REPO_ROOT/builtin-skills/skills/skillhub-cli/SKILL.md" >/dev/null

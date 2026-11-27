@@ -1,0 +1,76 @@
+name: Skill Hub checks
+
+on:
+  push:
+    branches: [main]
+    paths: ['skill-hub/**', '.github/workflows/skill-hub-checks.yml']
+  pull_request:
+    paths: ['skill-hub/**', '.github/workflows/skill-hub-checks.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-hub-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: skill-hub
+
+jobs:
+  web:
+    name: Skill Hub Web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          package_json_file: skill-hub/web/package.json
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: skill-hub/.nvmrc
+          cache: pnpm
+          cache-dependency-path: skill-hub/web/pnpm-lock.yaml
+      - run: pnpm -C web install --frozen-lockfile
+      - run: pnpm -C web lint
+      - run: pnpm -C web test
+      - run: pnpm -C web build
+      - run: node web/scripts/analytics-manifest.mjs
+
+  server:
+    name: Skill Hub Server
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: skill-hub/server/**/pom.xml
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version-file: skill-hub/github-sync-go/go.mod
+          cache-dependency-path: skill-hub/github-sync-go/go.mod
+      - run: go test ./internal/worker -run '^$'
+        working-directory: skill-hub/github-sync-go
+      - run: make test-builtin-skills
+      - run: make test-backend
+
+  compose:
+    name: Skill Hub Compose
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - run: docker compose --env-file .env.release.example -f compose.release.yml -f compose.luma.yml config --quiet

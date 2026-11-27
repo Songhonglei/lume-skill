@@ -90,6 +90,27 @@ class ExternalSkillPackageServiceTest {
     }
 
     @Test
+    void resolvesSlashRefsWhenTheInitialDirectoryDoesNotMatch() throws IOException {
+        String link = "https://github.com/example/repo/blob/release/2026/q4/skills/demo/SKILL.md";
+        doReturn(zip(Map.of("repo-release/other/SKILL.md", SKILL_MD)))
+                .when(service).download(URI.create("https://codeload.github.com/example/repo/zip/release"));
+        doReturn("""
+                [{"ref":"refs/heads/release/2026"},{"ref":"refs/heads/release/2026/q4"},
+                 {"ref":"refs/heads/release/2026/q4/skills-extra"},{"ref":"refs/heads/other/branch"}]
+                """.getBytes(StandardCharsets.UTF_8))
+                .when(service).download(URI.create("https://api.github.com/repos/example/repo/git/matching-refs/heads/release"));
+        doReturn(zip(Map.of("repo-q4/skills/demo/SKILL.md", SKILL_MD,
+                "repo-q4/skills/demo/references/guide.md", "guide",
+                "repo-q4/other/SKILL.md", SKILL_MD)))
+                .when(service).download(URI.create("https://codeload.github.com/example/repo/zip/refs/heads/release/2026/q4"));
+
+        var resolved = service.resolve(link);
+        assertThat(resolved.sourceUrl()).isEqualTo(link);
+        assertThat(resolved.entries()).extracting(PackageEntry::path).containsExactlyInAnyOrder("SKILL.md", "references/guide.md");
+        assertThat(service.verify(link, resolved.entries())).isEqualTo(link);
+    }
+
+    @Test
     void rejectsAmbiguousFoldersAndMalformedAgentSkills() throws IOException {
         doReturn(zip(Map.of("repo-head/a/SKILL.md", SKILL_MD, "repo-head/b/SKILL.md", SKILL_MD)))
                 .when(service).download(any());

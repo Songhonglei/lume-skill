@@ -2832,6 +2832,7 @@
       "presentationHelp": "面向使用者说明用途、输入、输出和适用限制。",
       "customized": "本次版本已修改",
       "packageContent": "来自当前技能包",
+      "shortenedPackageSummary": "已缩短简述，可编辑。包内原文保留。",
       "restore": "恢复包内内容",
       "restoreTitle": "恢复包内{{field}}？",
       "restoreDescription": "将使用当前技能包的内容，替换本次手动编辑的内容。技能包文件本身不会改变。",
