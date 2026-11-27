@@ -20,7 +20,7 @@ Sources: [creation service](https://github.com/iflytek/skillhub/blob/main/server
 1. An authorized creator opens the creation entry and supplies a display name, stable slug and purpose. The creator becomes the namespace Owner; this action does not add a platform role.
 2. Open Members in the namespace detail page and add an existing account or create an invitation. Select `MEMBER` or `ADMIN` when adding members. Use the separate ownership transfer entry for the namespace Owner; the ordinary role selector does not assign `OWNER`.
 3. Members select this namespace when publishing. Select namespace-member visibility (`NAMESPACE_ONLY`) for member sharing. Private (`PRIVATE`) content is not available to all members; public (`PUBLIC`) content does not require namespace membership for reading.
-4. An authorized reviewer handles the submission from the namespace review entry. The author follows My Review Progress. Membership does not prove publication or review completion.
+4. An authorized reviewer handles the submission from the namespace review entry. The author follows My Requests. Membership does not prove publication or review completion.
 
 ![Responsibilities from namespace creation and member acceptance to publishing and review](/diagrams/namespace-membership-flow-en.svg)
 

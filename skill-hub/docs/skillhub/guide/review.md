@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 团队命名空间审核 | 该命名空间所有者（Owner）或空间管理员（Admin） | 命名空间详情的“审核”入口，跳转统一审核中心并预选当前范围 |
 | 跨命名空间审核 | 平台技能管理员（SKILL_ADMIN）或超级管理员（SUPER_ADMIN） | `/dashboard/reviews` |
-| 跟踪本人申请 | 提交者 | “我的审核进度”；申请可读不代表可以批准 |
+| 跟踪本人申请 | 提交者 | “我的申请”；申请可读不代表可以批准 |
 | 全局提升与撤销 | 提交者及有权平台审核人 | `/dashboard/promotions`，与普通版本审核分别处理 |
 
 团队命名空间的所有者及空间管理员可审核本人提交；超级管理员可自审。其他本人提交不能仅凭平台技能管理员身份自审；全局提升的本人申请仅超级管理员可审核。普通审核决定还要求命名空间为 `ACTIVE`。规则见[审核权限策略](https://github.com/iflytek/skillhub/blob/main/server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewPermissionChecker.java)。

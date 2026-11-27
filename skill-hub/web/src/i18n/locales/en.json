@@ -651,7 +651,7 @@
     "stars": "My Stars",
     "subscriptions": "Subscriptions",
     "tokens": "Token management",
-    "reviewProgress": "Review Progress",
+    "reviewProgress": "My Requests",
     "admin": "Admin",
     "governance": "Governance center",
     "reports": "Reports",
@@ -1450,7 +1450,7 @@
   },
   "reviewProgress": {
     "systemAutomaticDecision": "Approved automatically by the system after a safe scan",
-    "title": "My Reviews",
+    "title": "My Requests",
     "subtitle": "Track the current decision, reviewer feedback, and every resubmission of your skills and suites",
     "searchLabel": "Search skills, suites, or namespaces",
     "searchPlaceholder": "Search skill, suite, or namespace",
@@ -2775,7 +2775,7 @@
       "governance": "Governance Center",
       "stars": "Starred",
       "subscriptions": "My Subscriptions",
-      "reviewProgress": "My Reviews",
+      "reviewProgress": "My Requests",
       "reviews": "Review center",
       "promotions": "Promotion Management",
       "reports": "Report Management",
@@ -4059,7 +4059,7 @@
     "PUBLIC": "Public",
     "NAMESPACE_ONLY": "Namespace members",
     "PRIVATE": "Private (owner and authorized administrators)",
-    "expanding": "Wider access requires review. Current access stays in effect until approval. Track or withdraw the request in My review progress.",
+    "expanding": "Wider access requires review. Current access stays in effect until approval. Track or withdraw the request in My Requests.",
     "narrowing": "Narrower access takes effect immediately. Previous viewers may lose access to details and downloads.",
     "submit": "Submit for review",
     "submitted": "Visibility change submitted for review",
@@ -4068,7 +4068,7 @@
     "scanPENDING": "Security scan in progress. Approval is unavailable until it passes.",
     "scanPASSED": "Security scan passed.",
     "scanFAILED": "Security scan did not pass. Current visibility is unchanged. Withdraw and retry or upload a fixed version.",
-    "pending": "Pending visibility request: {{visibility}}. Complete or withdraw it in My review progress."
+    "pending": "Pending visibility request: {{visibility}}. Complete or withdraw it in My Requests."
   },
   "relativeTime": {
     "justNow": "just now",
