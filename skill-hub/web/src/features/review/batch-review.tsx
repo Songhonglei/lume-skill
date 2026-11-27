@@ -187,7 +187,7 @@ export function useBatchReview(filterKey: string) {
             <p className="text-xs text-muted-foreground">{t('reviewBatch.independent')}</p>
           </div>}
         </div>
-        <DialogFooter className="shrink-0 flex-row justify-end border-t bg-card px-6 py-4 [&_button]:min-h-11 md:[&_button]:min-h-0">
+        <DialogFooter className="shrink-0 flex-row justify-end bg-card px-6 py-4 [&_button]:min-h-11 md:[&_button]:min-h-0">
           {result || uncertain ? <><Button variant="outline" disabled={reconcile.isPending} onClick={() => reconcile.mutate()}><RefreshCw className="mr-1.5 h-4 w-4" />{t('reviewBatch.refresh')}</Button><Button disabled={reconcile.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.done')}</Button></> : <><Button variant="outline" disabled={decide.isPending} onClick={() => setOpen(false)}>{t('reviewBatch.cancel')}</Button><Button variant={action === 'REJECT' ? 'destructive' : 'default'} disabled={!preview.isSuccess || !ready.size || decide.isPending} onClick={submit}>{decide.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}{t(decide.isPending ? 'reviewBatch.processing' : action === 'APPROVE' ? 'reviewBatch.confirmApprove' : 'reviewBatch.confirmReject', { count: ready.size })}</Button></>}
         </DialogFooter>
       </DialogContent>

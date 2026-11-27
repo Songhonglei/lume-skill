@@ -1,3 +1,4 @@
+import { IconAction } from '@/shared/components/icon-action'
 import { useSiteName } from '@/shared/lib/product-brand'
 import { Bot, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -56,19 +57,9 @@ export function InstallForAgentButton({ namespace, slug, version, disabled = fal
     : t('skillDetail.installForAgent.button')
 
   return (
-    <button
-      data-analytics-id={analyticsId}
-      type="button"
-      data-testid="install-for-agent-button"
-      onClick={handleCopy}
-      disabled={disabled || !isPortableSkillVersion(version)}
-      aria-label={label}
-      className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/50 px-4 py-3 transition-colors hover:bg-muted/70 active:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <div className="flex items-center justify-center gap-2">
-        {copied ? <Check className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-        <span className="text-[13px] leading-relaxed text-foreground sm:text-sm">{label}</span>
-      </div>
-    </button>
+    <IconAction data-analytics-id={analyticsId} data-testid="install-for-agent-button"
+      label={label} onClick={handleCopy} disabled={disabled || !isPortableSkillVersion(version)}>
+      {copied ? <Check aria-hidden="true" className="size-4" /> : <Bot aria-hidden="true" className="size-4" />}
+    </IconAction>
   )
 }

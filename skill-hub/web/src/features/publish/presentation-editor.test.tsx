@@ -60,7 +60,7 @@ describe('PresentationEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'publish.editor.keepEditing' }))
     expect((screen.getByRole('textbox', { name: 'publish.editor.markdownLabel' }) as HTMLTextAreaElement).value).toBe('修改后')
     fireEvent.click(screen.getAllByRole('button', { name: 'publish.editor.cancel' })[0])
-    fireEvent.click(screen.getByRole('button', { name: 'publish.editor.discard' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     expect(cancel).toHaveBeenCalledOnce()
   })
 
@@ -117,7 +117,7 @@ describe('PresentationEditor', () => {
     render(<PresentationEditor {...defaults} onCancel={cancel} />)
     fireEvent.click(await screen.findByRole('button', { name: 'delayed-engine-input' }))
     fireEvent.click(screen.getAllByRole('button', { name: 'publish.editor.cancel' })[0])
-    expect(screen.getByRole('button', { name: 'publish.editor.discard' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'dialog.confirm' })).toBeTruthy()
     expect(cancel).not.toHaveBeenCalled()
   })
 
@@ -141,7 +141,7 @@ describe('PresentationEditor', () => {
     fireEvent.click(trigger)
     fireEvent.change(source(), { target: { value: 'changed' } })
     fireEvent.click(screen.getAllByRole('button', { name: 'publish.editor.cancel' })[0])
-    fireEvent.click(screen.getByRole('button', { name: 'publish.editor.discard' }))
+    fireEvent.click(screen.getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(document.activeElement).toBe(trigger))
   })
 

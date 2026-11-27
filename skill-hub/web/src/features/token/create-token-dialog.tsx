@@ -280,7 +280,7 @@ export function CreateTokenDialog({
                 </dd>
               </dl>
             </div>
-            <DialogFooter className="shrink-0 border-t px-5 py-4 sm:justify-end sm:px-7">
+            <DialogFooter className="shrink-0 px-5 py-4 sm:justify-end sm:px-7">
               <Button
                 data-analytics-id="account.token.created.close"
                 onClick={() => handleOpenChange(false)}
@@ -437,7 +437,7 @@ export function CreateTokenDialog({
                 </p>
               )}
             </div>
-            <DialogFooter className="shrink-0 flex-row justify-between border-t px-5 py-4 sm:px-7">
+            <DialogFooter className="shrink-0 flex-row justify-between px-5 py-4 sm:px-7">
               <p className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
                 <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {t('createToken.oneTimeHint')}

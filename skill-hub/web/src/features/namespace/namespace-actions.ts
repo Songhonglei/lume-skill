@@ -8,7 +8,6 @@ export type PendingNamespaceAction =
 type NamespaceActionCopy = {
   title: string
   description: string
-  confirmText: string
   successTitle: string
   successDescription: string
   errorTitle: string
@@ -41,7 +40,6 @@ export function resolveNamespaceActionCopy(
     return {
       title: t('myNamespaces.freezeConfirmTitle'),
       description: t('myNamespaces.freezeConfirmDescription', { name }),
-      confirmText: t('myNamespaces.freeze'),
       successTitle: t('myNamespaces.freezeSuccessTitle'),
       successDescription: t('myNamespaces.freezeSuccessDescription', { name }),
       errorTitle: t('myNamespaces.freezeErrorTitle'),
@@ -52,7 +50,6 @@ export function resolveNamespaceActionCopy(
     return {
       title: t('myNamespaces.unfreezeConfirmTitle'),
       description: t('myNamespaces.unfreezeConfirmDescription', { name }),
-      confirmText: t('myNamespaces.unfreeze'),
       successTitle: t('myNamespaces.unfreezeSuccessTitle'),
       successDescription: t('myNamespaces.unfreezeSuccessDescription', { name }),
       errorTitle: t('myNamespaces.unfreezeErrorTitle'),
@@ -63,7 +60,6 @@ export function resolveNamespaceActionCopy(
     return {
       title: t('myNamespaces.archiveConfirmTitle'),
       description: t('myNamespaces.archiveConfirmDescription', { name }),
-      confirmText: t('myNamespaces.archive'),
       successTitle: t('myNamespaces.archiveSuccessTitle'),
       successDescription: t('myNamespaces.archiveSuccessDescription', { name }),
       errorTitle: t('myNamespaces.archiveErrorTitle'),
@@ -74,7 +70,6 @@ export function resolveNamespaceActionCopy(
     return {
       title: t('myNamespaces.deleteConfirmTitle'),
       description: t('myNamespaces.deleteConfirmDescription', { name }),
-      confirmText: t('myNamespaces.delete'),
       successTitle: t('myNamespaces.deleteSuccessTitle'),
       successDescription: t('myNamespaces.deleteSuccessDescription', { name }),
       errorTitle: t('myNamespaces.deleteErrorTitle'),
@@ -84,7 +79,6 @@ export function resolveNamespaceActionCopy(
   return {
     title: t('myNamespaces.restoreConfirmTitle'),
     description: t('myNamespaces.restoreConfirmDescription', { name }),
-    confirmText: t('myNamespaces.restore'),
     successTitle: t('myNamespaces.restoreSuccessTitle'),
     successDescription: t('myNamespaces.restoreSuccessDescription', { name }),
     errorTitle: t('myNamespaces.restoreErrorTitle'),

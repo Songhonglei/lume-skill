@@ -633,7 +633,6 @@ export function MySkillsPage() {
         }}
         title={t('mySkills.restoreHiddenConfirmTitle')}
         description={restoreHiddenTarget ? t('mySkills.restoreHiddenConfirmDescription', { skill: restoreHiddenTarget.name }) : ''}
-        confirmText={t('mySkills.restoreHidden')}
         onConfirm={handleRestoreHiddenSkill}
       />
 
@@ -649,7 +648,6 @@ export function MySkillsPage() {
         }}
         title={t('mySkills.promotionConfirmTitle')}
         description={promotionTarget ? t('mySkills.promotionConfirmDescription', { skill: promotionTarget.name, version: promotionTarget.version }) : ''}
-        confirmText={t('mySkills.submitVersionToGlobal')}
         onConfirm={handleSubmitPromotion}
       />
 
@@ -662,7 +660,6 @@ export function MySkillsPage() {
         }}
         title={t('mySkills.archiveConfirmTitle')}
         description={archiveTarget ? t('mySkills.archiveConfirmDescription', { skill: archiveTarget.name }) : ''}
-        confirmText={t('mySkills.archive')}
         onConfirm={handleArchiveSkill}
       />
 
@@ -675,7 +672,6 @@ export function MySkillsPage() {
         }}
         title={t('mySkills.unarchiveConfirmTitle')}
         description={unarchiveTarget ? t('mySkills.unarchiveConfirmDescription', { skill: unarchiveTarget.name }) : ''}
-        confirmText={t('mySkills.unarchive')}
         onConfirm={handleUnarchiveSkill}
       />
 
@@ -688,7 +684,6 @@ export function MySkillsPage() {
         }}
         title={t('mySkills.withdrawConfirmTitle')}
         description={withdrawTarget ? t('mySkills.withdrawConfirmDescription', { skill: withdrawTarget.name }) : ''}
-        confirmText={t('mySkills.withdrawReview')}
         onConfirm={handleWithdrawSkill}
       />
     </div>

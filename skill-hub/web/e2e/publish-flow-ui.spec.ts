@@ -55,7 +55,7 @@ test.describe('Publish Flow UI (Real API)', () => {
       await nextButton.click()
       const confirmDialog = page.getByRole('dialog')
       await expect(confirmDialog).toContainText(`@${namespace.slug}/${skillName}`)
-      const confirmButton = confirmDialog.getByRole('button', { name: 'Confirm Publish' })
+      const confirmButton = confirmDialog.getByRole('button', { name: 'Confirm' })
       await expect(confirmButton).toBeEnabled()
       const publishResponsePromise = page.waitForResponse(
         (response) =>

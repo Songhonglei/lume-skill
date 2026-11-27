@@ -261,7 +261,7 @@ describe('PromotionsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Approve revocation' }))
     expect(mocks.approveRevocation).not.toHaveBeenCalled()
     const dialog = screen.getByRole('dialog', { name: 'Confirm revocation approval' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Approve revocation' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(mocks.approveRevocation).toHaveBeenCalledWith({ id: 7, comment: '' }))
   })
 

@@ -164,7 +164,6 @@ export function SuiteManagementActions({ suite, compact = false }: { suite: Skil
         onOpenChange={(open) => { if (!open) setConfirmAction(null) }}
         title={confirmTitle}
         description={confirmDescription}
-        confirmText={confirmAction ? t(`suite.${confirmAction}`) : undefined}
         variant={confirmAction === 'delete' || confirmAction === 'archive' ? 'destructive' : 'default'}
         onConfirm={confirmLifecycleAction}
       />

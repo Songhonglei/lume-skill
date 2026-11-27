@@ -379,20 +379,21 @@ describe('SkillDetailPage', () => {
     expect(screen.getByRole('button', { name: 'skillDetail.download' }).hasAttribute('disabled')).toBe(false)
     expect(screen.queryByRole('button', { name: 'skillDetail.deleteSkill' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'skillDetail.rereleaseVersion' })).toBeNull()
-    expect(screen.getByRole('button', { name: 'skillDetail.withdrawReview' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.queryByRole('button', { name: 'skillDetail.withdrawReview' })).toBeNull()
     expect(screen.queryByText('skillDetail.lifecycle')).toBeNull()
   })
 
   it('consumes protected deletion failures at the actual button boundary and allows retry', async () => {
     deleteSkillMock.mockRejectedValue(new Error('revoke global publication first'))
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.deleteSkill' }))
     fireEvent.click(within(screen.getByRole('dialog', { name: 'skillDetail.deleteSkillConfirmTitle' }))
-      .getByRole('button', { name: 'skillDetail.deleteSkillContinue' }))
+      .getByRole('button', { name: 'dialog.confirm' }))
     const dialog = await screen.findByRole('dialog', { name: 'skillDetail.deleteSkillInputTitle' })
     fireEvent.change(within(dialog).getByPlaceholderText('skillDetail.deleteSkillInputPlaceholder'), { target: { value: 'demo-skill' } })
     for (let attempt = 1; attempt <= 2; attempt++) {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'skillDetail.deleteSkillFinal' }))
+      fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
       await waitFor(() => expect(deleteSkillMock).toHaveBeenCalledTimes(attempt))
       expect(within(dialog).getByDisplayValue('demo-skill')).toBeTruthy()
     }
@@ -428,12 +429,13 @@ describe('SkillDetailPage', () => {
     submitPromotionMock.mockResolvedValue(undefined)
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     expect(usePromotionSourceStateMock).toHaveBeenCalledWith(1, true)
     expect(screen.getByText('skillDetail.promotionGlobalCurrent')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.submitGlobalUpdate' }))
     const dialog = screen.getByRole('dialog', { name: 'skillDetail.globalUpdateConfirmTitle' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'skillDetail.submitGlobalUpdate' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(submitPromotionMock).toHaveBeenCalledWith({ sourceSkillId: 1, sourceVersionId: 10 }))
   })
 
@@ -452,6 +454,7 @@ describe('SkillDetailPage', () => {
     })
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     expect(screen.getByText('skillDetail.promotionPending')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'skillDetail.submitGlobalUpdate' })).toBeNull()
@@ -473,11 +476,12 @@ describe('SkillDetailPage', () => {
     submitRevocationMock.mockResolvedValue(undefined)
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.requestRevocation' }))
     const dialog = screen.getByRole('dialog', { name: 'skillDetail.revocationConfirmTitle' })
     fireEvent.change(within(dialog).getByRole('textbox', { name: 'skillDetail.revocationReasonLabel' }), { target: { value: 'No longer safe' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'skillDetail.requestRevocation' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(submitRevocationMock).toHaveBeenCalledWith({ sourceSkillId: 1, reason: 'No longer safe' }))
   })
 
@@ -501,6 +505,7 @@ describe('SkillDetailPage', () => {
     })
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     expect(screen.getByText('skillDetail.revocationPending')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'skillDetail.requestRevocation' })).toBeNull()
@@ -523,6 +528,7 @@ describe('SkillDetailPage', () => {
     })
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     expect(screen.getByRole('button', { name: 'skillDetail.requestRevocation' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'skillDetail.submitGlobalUpdate' })).toBeNull()
@@ -545,11 +551,12 @@ describe('SkillDetailPage', () => {
     directRevocationMock.mockResolvedValue(undefined)
 
     render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
 
     expect(usePromotionSourceStateMock).toHaveBeenCalledWith(1, true)
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.directRevocation' }))
     const dialog = screen.getByRole('dialog', { name: 'skillDetail.revocationConfirmTitle' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'skillDetail.directRevocation' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(directRevocationMock).toHaveBeenCalledWith({ sourceSkillId: 1, reason: '' }))
   })
 
@@ -586,10 +593,11 @@ describe('SkillDetailPage', () => {
     expect(useSkillReadmeMock).toHaveBeenCalledWith('global', 'demo-skill', '0.9.0', null, true)
   })
 
-  it('shows hard delete action for the skill owner', () => {
-    const html = renderToStaticMarkup(<SkillDetailPage />)
-
-    expect(html).toContain('skillDetail.deleteSkill')
+  it('shows hard delete in the skill owner’s management dialog', () => {
+    render(<SkillDetailPage />)
+    expect(screen.queryByRole('button', { name: 'skillDetail.deleteSkill' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'skillDetail.deleteSkill' })).toBeTruthy()
   })
 
   it('hides hard delete action when the viewer is not the owner or super admin', () => {
@@ -822,11 +830,11 @@ describe('SkillDetailPage', () => {
       error: null,
     })
 
-    const html = renderToStaticMarkup(<SkillDetailPage />)
-
-    expect(html).toContain('skillDetail.labelsSectionTitle')
-    expect(html).toContain('skillDetail.removeLabel')
-    expect(html).toContain('skillDetail.addLabel')
+    render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
+    expect(screen.getByText('skillDetail.labelsSectionTitle')).toBeTruthy()
+    expect(screen.getByText('skillDetail.removeLabel')).toBeTruthy()
+    expect(screen.getByText('skillDetail.addLabel')).toBeTruthy()
   })
 
   it('links skill label chips to the search page filtered by that label', () => {
@@ -970,10 +978,10 @@ describe('SkillDetailPage', () => {
       ],
     })
 
-    const html = renderToStaticMarkup(<SkillDetailPage />)
-
-    expect(html).toContain('audit:12:SCAN_FAILED')
-    expect(html).not.toContain('audit:10:PUBLISHED')
+    render(<SkillDetailPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
+    expect(screen.getByText('audit:12:SCAN_FAILED')).toBeTruthy()
+    expect(screen.queryByText('audit:10:PUBLISHED')).toBeNull()
   })
 
   it('allows long pending review versions to wrap inside the review card', () => {

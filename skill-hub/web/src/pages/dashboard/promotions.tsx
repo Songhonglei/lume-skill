@@ -261,7 +261,6 @@ function PendingRevocationList() {
         onOpenChange={(open) => { if (!open) setApproveId(null) }}
         title={t('promotions.revocationConfirmTitle')}
         description={t('promotions.revocationConfirmDescription', { slug: target?.skillSlug ?? '' })}
-        confirmText={t('promotions.approveRevocation')}
         variant="destructive"
         onConfirm={handleApprove}
       />

@@ -29,7 +29,7 @@ vi.mock('@/api/client', async () => ({ ...await vi.importActual<typeof import('@
 function submitPackage() {
   fireEvent.click(screen.getByRole('button', { name: 'publish.nextConfirm' }))
   const confirmation = screen.queryByRole('dialog', { name: 'publish.confirmDetails' })
-  if (confirmation) fireEvent.click(Array.from(confirmation.querySelectorAll('button')).find(button => button.textContent === 'publish.confirm')!)
+  if (confirmation) fireEvent.click(Array.from(confirmation.querySelectorAll('button')).find(button => button.textContent === 'dialog.confirm')!)
 }
 import { PublishPage } from './publish'
 import { ApiError } from '@/api/client'
@@ -52,7 +52,7 @@ describe('Publish avatar submission', () => {
     expect(document.querySelector('[data-analytics-id="skill.avatar.save"]')).toBeNull()
     submitPackage()
     await waitFor(() => expect(mocks.publish).toHaveBeenCalledTimes(1))
-    const confirm = await screen.findByRole('button', { name: 'publish.warningConfirmContinue' })
+    const confirm = await screen.findByRole('button', { name: 'dialog.confirm' })
     expect(confirm.getAttribute('data-analytics-id')).toBe('skill.publish.confirm')
     expect(screen.getByRole('button', { name: 'publish.warningConfirmCancel' }).getAttribute('data-analytics-id')).toBe('skill.publish.cancel')
     fireEvent.click(confirm)
@@ -82,7 +82,7 @@ describe('Publish avatar submission', () => {
     expect(cancel.getAttribute('data-analytics-id')).toBe('skill.publish.cancel')
     expect(screen.getByRole('button', { name: 'Close' }).getAttribute('data-analytics-id')).toBe('skill.publish.cancel')
     fireEvent.click(cancel)
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'publish.warningConfirmContinue' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'dialog.confirm' })).toBeNull())
     expect(mocks.publish).toHaveBeenCalledTimes(1)
     expect(mocks.navigate).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()

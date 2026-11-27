@@ -52,7 +52,7 @@ export function NamespaceSettingsPage() {
         confirmAnalyticsId={pending?.action === 'freeze' ? 'namespace.freeze.confirm' : pending?.action === 'unfreeze' ? 'namespace.unfreeze.confirm' : pending?.action === 'archive' ? 'namespace.archive.confirm' : pending?.action === 'restore' ? 'namespace.restore.confirm' : pending?.action === 'delete' ? 'namespace.delete.confirm' : undefined}
         cancelAnalyticsId={pending?.action === 'freeze' ? 'namespace.freeze.cancel' : pending?.action === 'unfreeze' ? 'namespace.unfreeze.cancel' : pending?.action === 'archive' ? 'namespace.archive.cancel' : pending?.action === 'restore' ? 'namespace.restore.cancel' : pending?.action === 'delete' ? 'namespace.delete.cancel' : undefined}
         open={!!pending} onOpenChange={(open) => { if (!open) setPending(null) }}
-        title={copy?.title ?? ''} description={copy?.description ?? ''} confirmText={copy?.confirmText} variant={copy?.variant}
+        title={copy?.title ?? ''} description={copy?.description ?? ''} variant={copy?.variant}
         contentTestId={pending ? `namespace-action-dialog-${pending.action}` : undefined}
         confirmButtonTestId={pending ? `namespace-action-confirm-${pending.action}` : undefined}
         onConfirm={async () => {

@@ -1879,6 +1879,10 @@
     "link": "查看原始来源"
   },
   "skillDetail": {
+    "quickActions": "常用操作",
+    "activityTotals": "技能累计数据",
+    "starTotal": "收藏",
+    "subscriptionTotal": "订阅",
     "installCopyFailed": "复制失败。可在安装说明中手动复制命令。",
     "copyInstallCommand": "复制安装命令",
     "copyCoordinate": "复制完整技能标识",
@@ -1964,7 +1968,7 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "{{siteName}} CLI",
     "installCommandUnsafeVersion": "该版本号无法安全地生成跨平台命令，请联系发布者修正版本号。",
-    "download": "下载 ZIP",
+    "download": "下载 ZIP 包",
     "labelsSectionTitle": "标签管理",
     "labelsSectionDescription": "为这个技能挂载或移除推荐标签，帮助用户筛选和发现。",
     "labelsSectionDescriptionSuperAdmin": "管理这个技能上的全部标签，包括不会出现在公开筛选里的特权标签。",
@@ -2983,15 +2987,15 @@
       "error": {
         "forbidden": {
           "title": "无权限提交",
-          "description": "已保留本次介绍，请核对权限或技能包后再处理。"
+          "description": "已保留填写的内容。返回编辑后可修正并重新提交。"
         },
         "invalid": {
           "title": "技能包校验失败",
-          "description": "已保留本次介绍，请核对权限或技能包后再处理。"
+          "description": "已保留填写的内容。返回编辑后可修正并重新提交。"
         },
         "failed": {
           "title": "提交失败",
-          "description": "已保留本次介绍，请核对权限或技能包后再处理。"
+          "description": "已保留填写的内容。返回编辑后可修正并重新提交。"
         }
       },
       "accepted": {
@@ -3048,7 +3052,7 @@
     "info": "信息"
   },
   "dialog": {
-    "confirm": "确认",
+    "confirm": "确定",
     "processing": "处理中…",
     "cancel": "取消",
     "delete": "删除",

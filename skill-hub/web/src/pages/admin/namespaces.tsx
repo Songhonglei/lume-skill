@@ -665,7 +665,6 @@ export function AdminNamespacesPage() {
         }}
         title={t('members.removeConfirmTitle')}
         description={pendingRemoval ? t('members.removeConfirmDescription', { userId: pendingRemoval.userId }) : ''}
-        confirmText={t('members.remove')}
         variant="destructive"
         onConfirm={removeMember}
       />
@@ -704,7 +703,7 @@ export function AdminNamespacesPage() {
               disabled={lifecycleMutation.isPending}
               onClick={runLifecycleAction}
             >
-              {pendingLifecycleAction ? t(`adminNamespaces.${pendingLifecycleAction.action}Action`) : t('dialog.confirm')}
+              {t('dialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

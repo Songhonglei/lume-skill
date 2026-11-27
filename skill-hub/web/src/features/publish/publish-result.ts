@@ -7,7 +7,7 @@ export type PublishSubmissionState =
   | { kind: 'accepted'; result: PublishResult; hadPublishedVersion?: boolean }
   | { kind: 'version-conflict'; version?: string }
   | { kind: 'unknown' }
-  | { kind: 'error'; reason: 'forbidden' | 'invalid' | 'failed' }
+  | { kind: 'error'; reason: 'forbidden' | 'invalid' | 'failed'; detail?: string }
 
 /** Warning confirmation stays with the existing precheck flow. Never retry here. */
 export function classifyPublishFailure(error: unknown, version?: string): PublishSubmissionState | null {
@@ -18,9 +18,11 @@ export function classifyPublishFailure(error: unknown, version?: string): Publis
   if (error.status === 0 || error.status === 408 || error.status >= 500 || (error.status >= 200 && error.status < 300)) {
     return { kind: 'unknown' }
   }
-  if (error.status === 401 || error.status === 403) return { kind: 'error', reason: 'forbidden' }
-  if (error.status === 400 || error.status === 413 || error.status === 422) return { kind: 'error', reason: 'invalid' }
-  return { kind: 'error', reason: 'failed' }
+  const reason = error.status === 401 || error.status === 403 ? 'forbidden'
+    : [400, 413, 422].includes(error.status) ? 'invalid' : 'failed'
+  const detail = error.serverMessage?.trim()
+  if (!detail || /^HTTP \d+$|^[\w]+(?:\.[\w]+)+$/i.test(detail)) return { kind: 'error', reason }
+  return { kind: 'error', reason, detail }
 }
 
 const versionStates = ['SCANNING', 'PENDING_REVIEW', 'UPLOADED', 'PUBLISHED', 'SCAN_FAILED', 'REJECTED', 'YANKED', 'DRAFT'] as const

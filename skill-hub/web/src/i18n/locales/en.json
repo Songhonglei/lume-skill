@@ -1880,6 +1880,10 @@
     "link": "View original source"
   },
   "skillDetail": {
+    "quickActions": "Quick actions",
+    "activityTotals": "Skill totals",
+    "starTotal": "Stars",
+    "subscriptionTotal": "Subscriptions",
     "installCopyFailed": "Copy failed. Copy the command manually from the installation instructions.",
     "copyInstallCommand": "Copy install command",
     "copyCoordinate": "Copy full skill identifier",
@@ -1965,7 +1969,7 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "{{siteName}} CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
-    "download": "Download ZIP",
+    "download": "Download ZIP package",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
     "labelsSectionDescriptionSuperAdmin": "Manage all labels on this skill, including privileged labels that stay hidden from public filters.",

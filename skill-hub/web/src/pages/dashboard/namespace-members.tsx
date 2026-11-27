@@ -416,7 +416,6 @@ export function NamespaceMembersPage() {
         }}
         title={t('members.removeConfirmTitle')}
         description={pendingRemoval ? t('members.removeConfirmDescription', { userId: pendingRemoval.userId }) : ''}
-        confirmText={t('members.remove')}
         variant="destructive"
         onConfirm={handleRemoveMember}
       />
@@ -441,9 +440,6 @@ export function NamespaceMembersPage() {
             { userId: pendingAutoPublication.userId },
           )
           : ''}
-        confirmText={t(pendingAutoPublication?.granted
-          ? 'members.autoPublication.grant'
-          : 'members.autoPublication.revoke')}
         variant={pendingAutoPublication?.granted ? 'default' : 'destructive'}
         onConfirm={handleAutoPublicationChange}
       />

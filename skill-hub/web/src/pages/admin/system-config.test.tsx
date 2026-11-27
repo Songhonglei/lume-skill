@@ -67,7 +67,7 @@ describe('SystemConfigPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.cancel' }))
     expect(checkbox.getAttribute('aria-checked')).toBe('false')
     fireEvent.click(screen.getByRole('button', { name: 'systemConfig.saveChanges' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(api.updateLocalAuth.mock.calls[0]?.[0]).toEqual({
       passwordLoginEnabled: false,
       selfRegistrationEnabled: true,
@@ -87,10 +87,10 @@ describe('SystemConfigPage', () => {
     const checkbox = await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' })
     fireEvent.click(checkbox)
     fireEvent.click(screen.getByRole('button', { name: 'systemConfig.saveChanges' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
     expect((await within(screen.getByRole('dialog')).findByRole('alert')).textContent).toBe('Version conflict')
     expect(screen.getByRole('dialog')).not.toBeNull()
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(api.updateLocalAuth).toHaveBeenCalledTimes(2))
   })
 
@@ -101,7 +101,7 @@ describe('SystemConfigPage', () => {
     setup()
     fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' }))
     fireEvent.click(screen.getByRole('button', { name: 'systemConfig.saveChanges' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect((await screen.findByRole('alert')).textContent).toBe('systemConfig.changedElsewhere')
     expect(screen.getByRole('switch', { name: 'systemConfig.passwordLogin' }).getAttribute('aria-checked')).toBe('true')
@@ -128,7 +128,7 @@ describe('SystemConfigPage', () => {
     fireEvent.click(await screen.findByRole('switch', { name: 'systemConfig.passwordLogin' }))
     fireEvent.click(screen.getByRole('button', { name: 'systemConfig.saveChanges' }))
     const dialog = await screen.findByRole('dialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: 'systemConfig.confirmDisableLogin' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     const processing = within(dialog).getByRole('button', { name: 'dialog.processing' })
     expect((processing as HTMLButtonElement).disabled).toBe(true)
     expect((within(dialog).getByRole('button', { name: 'dialog.cancel' }) as HTMLButtonElement).disabled).toBe(true)
@@ -158,7 +158,7 @@ describe('SystemConfigPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.cancel' }))
     expect(api.disableRoleGrant).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'systemConfig.disable' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'systemConfig.disable' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(api.disableRoleGrant).toHaveBeenCalledWith(1, 2))
   })
   it('confirms section departure, preserves edits on cancel and discards them on leave', async () => {
@@ -170,7 +170,7 @@ describe('SystemConfigPage', () => {
     expect(screen.getByRole('switch', { name: 'systemConfig.selfRegistration' }).getAttribute('aria-checked')).toBe('false')
     fireEvent.click(screen.getByRole('button', { name: 'recommendations.navigation.operations' }))
     dialog = await screen.findByRole('dialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: 'sitePresentation.leaveConfirm' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     fireEvent.click(screen.getByRole('button', { name: 'recommendations.navigation.access' }))
     expect(screen.getByRole('switch', { name: 'systemConfig.selfRegistration' }).getAttribute('aria-checked')).toBe('true')
     expect(api.updateLocalAuth).not.toHaveBeenCalled()

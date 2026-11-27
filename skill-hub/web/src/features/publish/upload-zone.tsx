@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDropzone, type FileRejection } from 'react-dropzone'
-import { AlertCircle, CheckCircle2, FileArchive, Loader2, Upload } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FileArchive, FolderOpen, Loader2, Replace, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
 
@@ -131,11 +131,11 @@ export function UploadZone({
     <Button
       data-analytics-id={unavailable ? undefined : pickerAnalyticsId}
       type="button"
-      variant={selectedFile ? 'ghost' : 'outline'}
+      variant="outline"
       size="sm"
       disabled={unavailable}
       onClick={() => folderInputRef.current?.click()}
-    >{t('upload.folderHint')}</Button>
+    ><FolderOpen className="size-4 shrink-0" aria-hidden="true" />{t('upload.folderHint')}</Button>
   ) : null
 
   return (
@@ -173,9 +173,9 @@ export function UploadZone({
                   {visibleStatus}
                 </p>
                 <div className="pointer-events-auto relative z-10 flex flex-wrap items-center gap-2">
-                  <Button id={replaceActionId} aria-describedby={showError ? errorId : undefined} type="button" variant="ghost" size="sm" disabled={unavailable} onClick={open}>{t('publish.replacePackage')}</Button>
+                  <Button id={replaceActionId} aria-describedby={showError ? errorId : undefined} type="button" variant="outline" size="sm" disabled={unavailable} onClick={open}><Replace className="size-4 shrink-0" aria-hidden="true" />{t('publish.replacePackage')}</Button>
                   {folderAction}
-                  {onRemove && <Button data-analytics-id="skill.package.remove" type="button" variant="ghost" size="sm" disabled={unavailable} onClick={() => { setSelectionError(null); onRemove() }}>{t('publish.removeSelectedFile')}</Button>}
+                  {onRemove && <Button data-analytics-id="skill.package.remove" type="button" variant="outline" size="sm" disabled={unavailable} onClick={() => { setSelectionError(null); onRemove() }}><Trash2 className="size-4 shrink-0" aria-hidden="true" />{t('publish.removeSelectedFile')}</Button>}
                 </div>
               </div>
             </div>
@@ -190,7 +190,7 @@ export function UploadZone({
               </div>
             </div>
             <div className="pointer-events-auto relative z-10 flex flex-wrap items-center gap-2">
-              <Button type="button" variant="outline" size="sm" disabled={unavailable} onClick={open}>{t('upload.selectZip')}</Button>
+              <Button type="button" variant="outline" size="sm" disabled={unavailable} onClick={open}><Upload className="size-4 shrink-0" aria-hidden="true" />{t('upload.selectZip')}</Button>
               {folderAction}
             </div>
           </div>

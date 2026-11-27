@@ -45,7 +45,7 @@ describe('SearchIndexMaintenance', () => {
 
   it('calls rebuilding once after confirmation and closes on success', async () => {
     render(<SearchIndexMaintenance />)
-    fireEvent.click(within(openConfirmation()).getByRole('button', { name: action }))
+    fireEvent.click(within(openConfirmation()).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(state.mutateAsync).toHaveBeenCalledTimes(1)
     expect(state.success).toHaveBeenCalledWith('governance.searchRebuildSuccessTitle', 'governance.searchRebuildSuccessDescription')
@@ -55,12 +55,12 @@ describe('SearchIndexMaintenance', () => {
   it('retains the confirmation after failure and allows an explicit retry', async () => {
     state.mutateAsync.mockRejectedValueOnce(new Error('Search service unavailable'))
     render(<SearchIndexMaintenance />)
-    fireEvent.click(within(openConfirmation()).getByRole('button', { name: action }))
+    fireEvent.click(within(openConfirmation()).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(state.error).toHaveBeenCalledWith('governance.searchRebuildErrorTitle', 'Search service unavailable'))
     const dialog = screen.getByRole('dialog')
-    await waitFor(() => expect(within(dialog).getByRole('button', { name: action }).hasAttribute('disabled')).toBe(false))
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'dialog.confirm' }).hasAttribute('disabled')).toBe(false))
     expect(state.success).not.toHaveBeenCalled()
-    fireEvent.click(within(dialog).getByRole('button', { name: action }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'dialog.confirm' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(state.mutateAsync).toHaveBeenCalledTimes(2)
   })
@@ -70,7 +70,7 @@ describe('SearchIndexMaintenance', () => {
     state.mutateAsync.mockImplementationOnce(() => new Promise<void>((resolve) => { finish = resolve }))
     render(<SearchIndexMaintenance />)
     const dialog = openConfirmation()
-    const confirm = within(dialog).getByRole('button', { name: action })
+    const confirm = within(dialog).getByRole('button', { name: 'dialog.confirm' })
     fireEvent.click(confirm)
     fireEvent.click(confirm)
     expect(state.mutateAsync).toHaveBeenCalledTimes(1)

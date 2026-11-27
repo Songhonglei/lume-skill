@@ -166,7 +166,7 @@ function EditorSession({ value, onApply, onCancel, maxLength = 20000 }: Omit<Pre
           </div>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog onCloseAutoFocus={(event) => { if (closingRef.current) event.preventDefault() }} open={discardOpen || blocker.status === 'blocked'} onOpenChange={(next) => { if (!next) { setDiscardOpen(false); if (blocker.status === 'blocked') blocker.reset() } }} title={t('publish.editor.discardTitle')} description={t('publish.editor.discardDescription')} confirmText={t('publish.editor.discard')} cancelText={t('publish.editor.keepEditing')} onConfirm={() => { const proceed = blocker.status === 'blocked' ? blocker.proceed : undefined; setDiscardOpen(false); closeEditor(onCancel); proceed?.() }} />
+      <ConfirmDialog onCloseAutoFocus={(event) => { if (closingRef.current) event.preventDefault() }} open={discardOpen || blocker.status === 'blocked'} onOpenChange={(next) => { if (!next) { setDiscardOpen(false); if (blocker.status === 'blocked') blocker.reset() } }} title={t('publish.editor.discardTitle')} description={t('publish.editor.discardDescription')} cancelText={t('publish.editor.keepEditing')} onConfirm={() => { const proceed = blocker.status === 'blocked' ? blocker.proceed : undefined; setDiscardOpen(false); closeEditor(onCancel); proceed?.() }} />
       <Dialog open={imageOpen} onOpenChange={setImageOpen}>
         <DialogContent>
           <DialogTitle>{t('publish.editor.insertImage')}</DialogTitle>
