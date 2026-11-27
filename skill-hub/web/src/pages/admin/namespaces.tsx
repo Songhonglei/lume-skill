@@ -837,7 +837,7 @@ function MembersTable({
                     </Button>
                   </div>
                 ) : (
-                  <span className="inline-flex rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+                  <span className="inline-flex whitespace-nowrap rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
                     {displayRole(t, member.role)}
                   </span>
                 )}
