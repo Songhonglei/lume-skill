@@ -377,7 +377,7 @@ describe('SkillDetailPage', () => {
     render(<SkillDetailPage />)
     expect(screen.getByText('mySkills.ownerReadOnly')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'skillDetail.download' }).hasAttribute('disabled')).toBe(false)
-    expect(screen.queryByRole('button', { name: 'skillDetail.deleteSkill' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'skillDetail.deleteAction' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'skillDetail.rereleaseVersion' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'skillDetail.withdrawReview' })).toBeNull()
     expect(screen.queryByText('skillDetail.lifecycle')).toBeNull()
@@ -387,7 +387,7 @@ describe('SkillDetailPage', () => {
     deleteSkillMock.mockRejectedValue(new Error('revoke global publication first'))
     render(<SkillDetailPage />)
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
-    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.deleteSkill' }))
+    fireEvent.click(screen.getByRole('button', { name: 'skillDetail.deleteAction' }))
     fireEvent.click(within(screen.getByRole('dialog', { name: 'skillDetail.deleteSkillConfirmTitle' }))
       .getByRole('button', { name: 'dialog.confirm' }))
     const dialog = await screen.findByRole('dialog', { name: 'skillDetail.deleteSkillInputTitle' })
@@ -413,8 +413,15 @@ describe('SkillDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'skillAvatar.manage' })).toBeNull()
   })
 
-  it('offers a published team version for review against the current global version', async () => {
+  it('uses the current published team version even while browsing an older version', async () => {
     routeParams.namespace = 'team-ai'
+    searchMock.value.version = '0.9.0'
+    useSkillVersionsMock.mockReturnValue({
+      data: [
+        { id: 10, version: '1.0.0', status: 'PUBLISHED' },
+        { id: 9, version: '0.9.0', status: 'PUBLISHED' },
+      ],
+    })
     useSkillDetailMock.mockReturnValue({
       data: createSkill({ namespace: 'team-ai', canSubmitPromotion: true }),
       isLoading: false,
@@ -595,9 +602,9 @@ describe('SkillDetailPage', () => {
 
   it('shows hard delete in the skill owner’s management dialog', () => {
     render(<SkillDetailPage />)
-    expect(screen.queryByRole('button', { name: 'skillDetail.deleteSkill' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'skillDetail.deleteAction' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'skillDetail.deleteSkill' })).toBeTruthy()
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'skillDetail.deleteAction' })).toBeTruthy()
   })
 
   it('hides hard delete action when the viewer is not the owner or super admin', () => {
@@ -609,7 +616,7 @@ describe('SkillDetailPage', () => {
 
     const html = renderToStaticMarkup(<SkillDetailPage />)
 
-    expect(html).not.toContain('skillDetail.deleteSkill')
+    expect(html).not.toContain('skillDetail.deleteAction')
   })
 
   it('renders public skill details for an anonymous viewer', () => {
@@ -634,7 +641,7 @@ describe('SkillDetailPage', () => {
     expect(html).toContain('Demo Skill')
     expect(html).toContain('install')
     expect(html).not.toContain('skillDetail.loginRequired')
-    expect(html).not.toContain('skillDetail.deleteSkill')
+    expect(html).not.toContain('skillDetail.deleteAction')
   })
 
   it('shows a visible suite that uses this skill as its entry', () => {
@@ -833,8 +840,9 @@ describe('SkillDetailPage', () => {
     render(<SkillDetailPage />)
     fireEvent.click(screen.getByRole('button', { name: 'skillDetail.management' }))
     expect(screen.getByText('skillDetail.labelsSectionTitle')).toBeTruthy()
-    expect(screen.getByText('skillDetail.removeLabel')).toBeTruthy()
-    expect(screen.getByText('skillDetail.addLabel')).toBeTruthy()
+    const labels = screen.getByRole('group', { name: 'skillDetail.labelsSectionTitle' })
+    expect(within(labels).getByRole('button', { name: 'Official', pressed: true })).toBeTruthy()
+    expect(within(labels).getByRole('button', { name: 'Code Generation', pressed: false })).toBeTruthy()
   })
 
   it('links skill label chips to the search page filtered by that label', () => {

@@ -73,9 +73,10 @@ export function useAdminLabelDefinitions(enabled = true) {
 }
 
 function invalidateSkillLabelQueries(queryClient: ReturnType<typeof useQueryClient>, namespace: string, slug: string) {
-  queryClient.invalidateQueries({ queryKey: ['skills', namespace, slug] })
-  queryClient.invalidateQueries({ queryKey: ['labels', 'skill', namespace, slug] })
-  queryClient.invalidateQueries({ queryKey: ['skills'] })
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['labels', 'skill', namespace, slug] }),
+    queryClient.invalidateQueries({ queryKey: ['skills'] }),
+  ])
 }
 
 export function useAttachSkillLabel() {
@@ -83,9 +84,8 @@ export function useAttachSkillLabel() {
 
   return useMutation({
     mutationFn: attachSkillLabel,
-    onSuccess: (_data, variables) => {
-      invalidateSkillLabelQueries(queryClient, variables.namespace, variables.slug)
-    },
+    onSuccess: (_data, variables) =>
+      invalidateSkillLabelQueries(queryClient, variables.namespace, variables.slug),
   })
 }
 
@@ -94,9 +94,8 @@ export function useDetachSkillLabel() {
 
   return useMutation({
     mutationFn: detachSkillLabel,
-    onSuccess: (_data, variables) => {
-      invalidateSkillLabelQueries(queryClient, variables.namespace, variables.slug)
-    },
+    onSuccess: (_data, variables) =>
+      invalidateSkillLabelQueries(queryClient, variables.namespace, variables.slug),
   })
 }
 

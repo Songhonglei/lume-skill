@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { Share2, Check } from 'lucide-react'
-import { useCopyToClipboard } from '@/shared/lib/clipboard'
-import { IconAction } from '@/shared/components/icon-action'
+import { Share2 } from 'lucide-react'
+import { copyToClipboard } from '@/shared/lib/clipboard'
+import { toast } from '@/shared/lib/toast'
+import { DropdownMenuItem } from '@/shared/ui/dropdown-menu'
 import { getBaseUrl } from './install-command'
 
 interface ShareButtonProps {
@@ -27,27 +28,23 @@ export function buildShareText(
   return `${displayName}\n${fullDesc}\n${skillUrl}`
 }
 
-export function ShareButton({ namespace, slug, description }: ShareButtonProps) {
+export function ShareMenuItem({ namespace, slug, description }: ShareButtonProps) {
   const { t } = useTranslation()
-  const [copied, copy] = useCopyToClipboard()
 
   const handleShare = async () => {
     try {
       const baseUrl = getBaseUrl()
       const shareText = buildShareText(namespace, slug, description, baseUrl, t)
-      await copy(shareText)
-    } catch (err) {
-      console.error('Failed to copy share text:', err)
+      await copyToClipboard(shareText)
+      toast.success(t('skillDetail.share.copied'))
+    } catch {
+      toast.error(t('copyButton.failed'))
     }
   }
 
   return (
-    <>
-      <IconAction data-analytics-id="skill.share.request" data-testid="share-skill-button"
-        label={t('skillDetail.share.button')} onClick={handleShare}>
-        {copied ? <Check aria-hidden="true" className="size-4" /> : <Share2 aria-hidden="true" className="size-4" />}
-      </IconAction>
-      <span role="status" className="sr-only">{copied ? t('skillDetail.share.copied') : ''}</span>
-    </>
+    <DropdownMenuItem data-analytics-id="skill.share.request" data-testid="share-skill-button" className="gap-2" onSelect={handleShare}>
+      <Share2 aria-hidden="true" className="size-4" />{t('skillDetail.share.button')}
+    </DropdownMenuItem>
   )
 }

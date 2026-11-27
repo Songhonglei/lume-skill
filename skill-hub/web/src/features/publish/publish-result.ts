@@ -7,7 +7,7 @@ export type PublishSubmissionState =
   | { kind: 'accepted'; result: PublishResult; hadPublishedVersion?: boolean }
   | { kind: 'version-conflict'; version?: string }
   | { kind: 'unknown' }
-  | { kind: 'error'; reason: 'forbidden' | 'invalid' | 'failed'; detail?: string }
+  | { kind: 'error'; reason: 'forbidden' | 'invalid' | 'failed'; detail?: string; diagnostic?: { status: number; code?: string } }
 
 /** Warning confirmation stays with the existing precheck flow. Never retry here. */
 export function classifyPublishFailure(error: unknown, version?: string): PublishSubmissionState | null {
@@ -21,7 +21,10 @@ export function classifyPublishFailure(error: unknown, version?: string): Publis
   const reason = error.status === 401 || error.status === 403 ? 'forbidden'
     : [400, 413, 422].includes(error.status) ? 'invalid' : 'failed'
   const detail = error.serverMessage?.trim()
-  if (!detail || /^HTTP \d+$|^[\w]+(?:\.[\w]+)+$/i.test(detail)) return { kind: 'error', reason }
+  const code = detail && /^[\w]+(?:\.[\w]+)+$/.test(detail) ? detail : undefined
+  if (!detail || /^HTTP \d+$/i.test(detail) || code) {
+    return { kind: 'error', reason, diagnostic: { status: error.status, code } }
+  }
   return { kind: 'error', reason, detail }
 }
 

@@ -134,8 +134,9 @@ export function UploadZone({
       variant="outline"
       size="sm"
       disabled={unavailable}
+      title={t('upload.folderHint')}
       onClick={() => folderInputRef.current?.click()}
-    ><FolderOpen className="size-4 shrink-0" aria-hidden="true" />{t('upload.folderHint')}</Button>
+    ><FolderOpen className="size-4 shrink-0" aria-hidden="true" />{t(selectedFile ? 'publish.chooseFolderShort' : 'upload.folderHint')}</Button>
   ) : null
 
   return (
@@ -175,7 +176,7 @@ export function UploadZone({
                 <div className="pointer-events-auto relative z-10 flex flex-wrap items-center gap-2">
                   <Button id={replaceActionId} aria-describedby={showError ? errorId : undefined} type="button" variant="outline" size="sm" disabled={unavailable} onClick={open}><Replace className="size-4 shrink-0" aria-hidden="true" />{t('publish.replacePackage')}</Button>
                   {folderAction}
-                  {onRemove && <Button data-analytics-id="skill.package.remove" type="button" variant="outline" size="sm" disabled={unavailable} onClick={() => { setSelectionError(null); onRemove() }}><Trash2 className="size-4 shrink-0" aria-hidden="true" />{t('publish.removeSelectedFile')}</Button>}
+                  {onRemove && <Button data-analytics-id="skill.package.remove" type="button" variant="outline" size="sm" disabled={unavailable} title={t('publish.removeSelectedFileHint')} onClick={() => { setSelectionError(null); onRemove() }}><Trash2 className="size-4 shrink-0" aria-hidden="true" />{t('publish.removeSelectedFile')}</Button>}
                 </div>
               </div>
             </div>

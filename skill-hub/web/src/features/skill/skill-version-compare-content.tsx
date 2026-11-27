@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSkillVersionCompare, useSkillVersions } from '@/shared/hooks/use-skill-queries'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -19,11 +20,12 @@ function getChangeTypeLabel(t: (key: string) => string, changeType: string) {
   return t('skillCompare.changeTypeModified')
 }
 
-export function SkillVersionCompareContent({ namespace, slug, from = '', to = '', onVersionsChange }: {
+export function SkillVersionCompareContent({ namespace, slug, from = '', to = '', onVersionsChange, embedded = false }: {
   namespace: string
   slug: string
   from?: string
   to?: string
+  embedded?: boolean
   onVersionsChange: (versions: { from: string; to: string }, replace?: boolean) => void
 }) {
   const { t } = useTranslation()
@@ -128,11 +130,13 @@ export function SkillVersionCompareContent({ namespace, slug, from = '', to = ''
     </div>
   }
 
+  const Heading = embedded ? 'h2' : 'h1'
+
   return (
-    <div className="flex min-w-0 flex-col gap-6 py-6 lg:flex-row">
-      <aside className="w-full shrink-0 space-y-4 rounded-xl border border-border/60 p-4 lg:w-80">
+    <div className={cn('flex min-w-0 flex-col gap-4', embedded ? '2xl:flex-row' : 'py-6 lg:flex-row')}>
+      <aside className={cn("w-full shrink-0 space-y-4 rounded-xl border border-border/60 p-4", embedded ? "2xl:w-56" : "lg:w-80")}>
         <div>
-          <h1 className="text-lg font-semibold text-foreground">{t('skillCompare.pageTitle')}</h1>
+          <Heading className="text-lg font-semibold text-foreground">{t('skillCompare.pageTitle')}</Heading>
           <p className="mt-1 text-sm text-muted-foreground">v{data.from} → v{data.to}</p>
         </div>
 

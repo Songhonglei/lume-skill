@@ -160,6 +160,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   const isBusy = publishMutation.isPending || isSavingAvatar
   const avatarOnly = isUpdate && !selectedFile && !mustReselectPackage && sourceMode === 'local'
   const selectedNamespace = namespaces?.find((ns) => ns.slug === namespaceSlug)
+  const blockedNamespace = selectedNamespace?.status === 'ARCHIVED' || selectedNamespace?.status === 'FROZEN'
   const useTeamDefault = !updateSlug && !search.visibility && !visibilityEdited && selectedNamespace?.type === 'TEAM'
   const effectiveVisibility = useTeamDefault ? 'NAMESPACE_ONLY' : visibility
   const namespaceOnlyLabel = selectedNamespace?.type === 'GLOBAL'
@@ -194,7 +195,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
     })
   }, [draftKey, accepted, draftChanged, displayName, namespaceSlug, visibility, visibilityEdited, selectedFile,
     mustReselectPackage, shortDescription, overview, shortSource, overviewSource, externalSourceUrl, sourceMode, restoredDraft?.externalSourceUrl])
-  const canSubmit = resourceReady && !ownerReadOnly && !isPackaging && !importing && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (avatarOnly && avatarEdit.action !== 'KEEP'))
+  const canSubmit = resourceReady && (avatarOnly || !blockedNamespace) && !ownerReadOnly && !isPackaging && !importing && (!selectedFile || packagePreview.isSuccess) && displayName.trim().length <= 200 && (avatarOnly || (!shortInvalid && !overviewInvalid && !readingOverview && !readingPublished && !publishedFailed)) && !!namespaceSlug && avatarEdit.ready && !avatarUnavailable && !isBusy && (selectedFile !== null || (avatarOnly && avatarEdit.action !== 'KEEP'))
 
   const handleRemoveSelectedFile = () => {
     selectionGeneration.current += 1
@@ -378,7 +379,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
   const showPublicationFields = isUpdate || (selectedFile !== null && packagePreview.isSuccess)
   const missingFields = [
     { id: 'publish-package-section', invalid: !selectedFile, label: 'publish.file' },
-    { id: 'namespace', invalid: !namespaceSlug, label: 'publish.namespace' },
+    { id: 'namespace', invalid: !namespaceSlug || blockedNamespace, label: 'publish.namespace' },
     { id: 'skill-short-description', invalid: shortInvalid, label: 'publish.shortDescription' },
     { id: 'skill-overview-label', invalid: overviewInvalid, label: 'publish.overview' },
   ].filter(field => field.invalid)
@@ -511,12 +512,19 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                   value={normalizeSelectValue(namespaceSlug) ?? EMPTY_NAMESPACE_VALUE}
                   onValueChange={value => { setNamespaceSlug(value === EMPTY_NAMESPACE_VALUE ? '' : value); setAvatarEdit(KEEP_AVATAR) }}
                 >
-                  <SelectTrigger data-analytics-id="skill.publish.namespace.interact" id="namespace" aria-invalid={attempted && !namespaceSlug}><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-analytics-id="skill.publish.namespace.interact" id="namespace" aria-invalid={blockedNamespace || (attempted && !namespaceSlug)} aria-describedby={blockedNamespace && !avatarOnly ? "publish-namespace-blocked" : undefined}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem data-analytics-id="skill.publish.namespace.clear" value={EMPTY_NAMESPACE_VALUE}>{t('publish.selectNamespace')}</SelectItem>
-                    {namespaces?.map(ns => <SelectItem data-analytics-id="skill.publish.namespace.select" key={ns.slug} value={ns.slug}>{ns.displayName} (@{ns.slug})</SelectItem>)}
+                    {namespaces?.map(ns => <SelectItem data-analytics-id="skill.publish.namespace.select" key={ns.slug} value={ns.slug} disabled={ns.status === 'ARCHIVED' || ns.status === 'FROZEN'}>
+                      {ns.displayName} (@{ns.slug}){(ns.status === 'ARCHIVED' || ns.status === 'FROZEN') && ` · ${t(ns.status === 'ARCHIVED' ? 'publish.spaceArchivedStatus' : 'publish.spaceFrozenStatus')}`}
+                    </SelectItem>)}
                   </SelectContent>
                 </Select>}
+                {blockedNamespace && !avatarOnly && (
+                  <p id="publish-namespace-blocked" role="alert" className="text-sm text-destructive">
+                    {t(selectedNamespace.status === 'ARCHIVED' ? 'publish.spaceArchived' : 'publish.spaceFrozen')}
+                  </p>
+                )}
               </div>
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="visibility">{t('publish.visibility')} <span className="text-destructive">*</span></Label>
@@ -609,7 +617,7 @@ function PublishForm({ search, draftKey }: { search: PublishSearch; draftKey: st
                   if (canSubmit) { if (avatarOnly) void handlePublish(); else setConfirmOpen(true) }
                   else focusField(missingFields[0]?.id ?? 'publish-form-heading')
                 }}
-                disabled={ownerReadOnly || isBusy || isPackaging || importing || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && !packagePreview.isSuccess)}
+                disabled={ownerReadOnly || (!avatarOnly && blockedNamespace) || isBusy || isPackaging || importing || !avatarEdit.ready || avatarUnavailable || (avatarOnly && !canSubmit) || readingOverview || readingPublished || (!!selectedFile && !packagePreview.isSuccess)}
               >{isBusy ? t('publish.publishing') : t(avatarOnly ? 'publish.saveAvatar' : 'publish.nextConfirm')}</Button>
             </footer>
           </section>

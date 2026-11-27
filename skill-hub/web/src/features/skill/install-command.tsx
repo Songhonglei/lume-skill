@@ -113,13 +113,15 @@ export function InstallCommand({ namespace, slug, version, analyticsId, skillhub
     [baseUrl, namespace, slug, version],
   )
 
+  const platformCliLabel = t('skillDetail.installMethodSkillhub', { siteName })
+
   return (
     <Tabs defaultValue="skillhub" className="space-y-3">
-      <TabsList className="w-full gap-6 border-border/70 bg-transparent p-0 text-xs">
-        <TabsTrigger data-analytics-id={skillhubAnalyticsId} value="skillhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodSkillhub', { siteName })}
+      <TabsList className="w-full min-w-0 gap-2 border-border/70 bg-transparent p-0 text-xs">
+        <TabsTrigger data-analytics-id={skillhubAnalyticsId} value="skillhub" title={platformCliLabel} className={`${installMethodTabTriggerClass} min-w-0 flex-1`}>
+          <span className="min-w-0 truncate">{platformCliLabel}</span>
         </TabsTrigger>
-        <TabsTrigger data-analytics-id={clawhubAnalyticsId} value="clawhub" className={installMethodTabTriggerClass}>
+        <TabsTrigger data-analytics-id={clawhubAnalyticsId} value="clawhub" className={`${installMethodTabTriggerClass} shrink-0`}>
           {t('skillDetail.installMethodClawhub')}
         </TabsTrigger>
       </TabsList>

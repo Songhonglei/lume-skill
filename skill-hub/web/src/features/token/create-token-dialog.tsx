@@ -437,19 +437,18 @@ export function CreateTokenDialog({
                 </p>
               )}
             </div>
-            <DialogFooter className="shrink-0 flex-row justify-between px-5 py-4 sm:px-7">
-              <p className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+            <DialogFooter className="shrink-0 flex-row px-5 py-4 sm:px-7">
+              <p className="mr-auto hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
                 <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {t('createToken.oneTimeHint')}
               </p>
-              <div className="flex w-full gap-3 sm:w-auto">
+              <div className="ml-auto flex flex-wrap justify-end gap-2">
                 <Button
                   data-analytics-id="account.token.create.cancel"
                   type="button"
                   variant="outline"
                   disabled={busy}
                   onClick={() => handleOpenChange(false)}
-                  className="flex-1 sm:flex-none"
                 >
                   {t('dialog.cancel')}
                 </Button>
@@ -462,7 +461,6 @@ export function CreateTokenDialog({
                     busy ||
                     scopes.length === 0
                   }
-                  className="flex-1 sm:flex-none"
                 >
                   {t(busy ? 'createToken.creating' : 'createToken.create')}
                 </Button>

@@ -103,7 +103,7 @@ export function EditNamespaceDialog({ namespace, children }: EditNamespaceDialog
           <p className="text-sm text-red-600">{updateMutation.error.message}</p>
         ) : null}
 
-        <DialogFooter className="sm:justify-center sm:space-x-3">
+        <DialogFooter>
           <Button data-analytics-id="namespace.settings.cancel" type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             {t('dialog.cancel')}
           </Button>

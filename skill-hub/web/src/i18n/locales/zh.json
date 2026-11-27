@@ -1879,6 +1879,16 @@
     "link": "查看原始来源"
   },
   "skillDetail": {
+    "backToVersions": "返回版本",
+    "manage": "管理",
+    "moreActions": "更多",
+    "promotionCurrentSource": "来源 v{{version}}",
+    "moreSettings": "更多设置",
+    "archiveAction": "归档",
+    "unarchiveAction": "恢复",
+    "deleteAction": "删除",
+    "hideAction": "隐藏",
+    "unhideAction": "取消隐藏",
     "quickActions": "常用操作",
     "activityTotals": "技能累计数据",
     "starTotal": "收藏",
@@ -2071,12 +2081,12 @@
     "pendingReviewVersionLabel": "待审核版本",
     "pendingReviewStatusLabel": "审核状态",
     "pendingReviewStatusValue": "审核中",
-    "lifecyclePublicVersionLabel": "当前公开版本",
+    "lifecyclePublicVersionLabel": "当前版本",
     "lifecycleNoPublishedVersion": "暂无已发布版本",
-    "lifecyclePendingVersionLabel": "待审核版本",
+    "lifecyclePendingVersionLabel": "待审核",
     "lifecyclePendingVersionValue": "v{{version}} 正在审核中",
-    "lifecycleNoPendingVersion": "暂无待审核版本",
-    "lifecycleContainerStateLabel": "技能容器状态",
+    "lifecycleNoPendingVersion": "暂无",
+    "lifecycleContainerStateLabel": "状态",
     "compareVersions": "对比版本",
     "compareDialogTitle": "版本对比",
     "compareDialogDescription": "对比 v{{source}} 与 v{{target}}。",
@@ -2113,7 +2123,7 @@
     "rereleaseWarningDescription": "检测到以下风险项。若你确认这些内容可以接受，仍可继续重新发布。",
     "rereleaseWarningConfirm": "继续重新发布",
     "yankVersion": "撤回当前版本",
-    "promoteToGlobal": "申请提升到全局",
+    "promoteToGlobal": "提升到全局",
     "promotionSectionTitle": "提升到全局",
     "promotionSectionDescription": "将当前已发布版本 v{{version}} 提交到全局空间审核。",
     "promotionSourceVersion": "选择团队已发布版本",
@@ -2123,7 +2133,7 @@
     "promotionNoGlobalVersion": "暂无",
     "promotionGlobalCurrent": "当前全局最新版本：v{{version}}",
     "promotionPending": "已有申请等待平台审核，完成后可再次提交。",
-    "submitGlobalUpdate": "提交此版本到全局审核",
+    "submitGlobalUpdate": "更新全局",
     "globalUpdateConfirmTitle": "确认更新全局技能",
     "globalUpdateConfirmDescription": "将“{{skill}}”的团队 v{{source}} 提交全局审核。当前全局最新版本为 v{{target}}；审核期间全局版仍可能独立更新。如审核通过且版本号未冲突，此版本将成为最新发布版，即使版本号较小。",
     "promotionVersionConflictTitle": "全局版本号已存在",
@@ -2812,6 +2822,12 @@
     "copyright": "© 2026 {{siteName}}. Apache-2.0."
   },
   "publish": {
+    "chooseFolderShort": "选择",
+    "removeSelectedFileHint": "删除已选文件",
+    "spaceArchivedStatus": "已归档",
+    "spaceFrozenStatus": "已冻结",
+    "spaceArchived": "该空间已归档。请选择其他空间，或请管理员恢复此空间。",
+    "spaceFrozen": "该空间已冻结。请选择其他空间，或请管理员解除冻结。",
     "external": {
       "source": "技能来源",
       "local": "本地上传",
@@ -2885,7 +2901,7 @@
       "private": "私有"
     },
     "file": "技能包文件",
-    "removeSelectedFile": "删除已选文件",
+    "removeSelectedFile": "删除",
     "publishing": "发布中...",
     "confirm": "确认发布",
     "success": "发布成功",
@@ -2928,7 +2944,7 @@
     "stepUpload": "上传技能包",
     "stepPresentation": "完善展示信息",
     "stepConfirm": "确认提交",
-    "nextConfirm": "核对发布信息",
+    "nextConfirm": "提交",
     "packageParsed": "技能包已就绪",
     "replacePackage": "替换",
     "editor": {
@@ -2990,7 +3006,7 @@
           "description": "已保留填写的内容。返回编辑后可修正并重新提交。"
         },
         "invalid": {
-          "title": "技能包校验失败",
+          "title": "提交失败",
           "description": "已保留填写的内容。返回编辑后可修正并重新提交。"
         },
         "failed": {
@@ -3041,7 +3057,9 @@
       "mySkills": "返回我的技能",
       "replacePackage": "返回更换版本包",
       "checkMySkills": "查看我的技能核对",
-      "returnToForm": "返回继续编辑",
+      "rejectedDetailsUnavailable": "服务端拒绝了提交（HTTP {{status}}），未返回具体原因。请检查空间状态和技能包，也可将错误编号交给管理员。",
+      "errorCode": "错误编号 {{code}}",
+      "returnToForm": "返回编辑",
       "receiptHint": "这是本次提交的返回结果，最新进度请进入本次版本查看。"
     }
   },
@@ -3323,6 +3341,10 @@
     }
   },
   "error": {
+    "namespace": {
+      "archived": "该空间已归档。请选择其他空间，或请管理员恢复此空间。",
+      "frozen": "该空间已冻结。请选择其他空间，或请管理员解除冻结。"
+    },
     "auth": {
       "local": {
         "invalidCredentials": "用户名或密码错误",
