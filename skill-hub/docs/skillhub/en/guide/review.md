@@ -8,7 +8,7 @@ This page covers pending-content inspection, decision submission and result veri
 | --- | --- | --- |
 | Review within a team namespace | Namespace Owner or Admin | Review entry in namespace details; opens the shared center with this scope selected |
 | Review across namespaces | Platform Skill administrator (`SKILL_ADMIN`) or super administrator (`SUPER_ADMIN`) | `/dashboard/reviews` |
-| Track an own submission | Submitter | My Review Progress; read access does not grant approval |
+| Track an own submission | Submitter | My Requests; read access does not grant approval |
 | Global promotion and revocation | Submitter and authorized platform reviewer | `/dashboard/promotions`, separate from ordinary version reviews |
 
 Owners and Admins of a team namespace can review their own submissions; super administrators can self-review. Other own submissions cannot be self-reviewed solely through the platform Skill administrator role. Only a super administrator can review their own global promotion request. Ordinary review decisions also require an `ACTIVE` namespace. Source: [review permission policy](https://github.com/iflytek/skillhub/blob/main/server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewPermissionChecker.java).

@@ -651,7 +651,7 @@
     "stars": "我的收藏",
     "subscriptions": "我的订阅",
     "tokens": "Token 管理",
-    "reviewProgress": "我的审核",
+    "reviewProgress": "我的申请",
     "admin": "管理员",
     "governance": "治理中心",
     "reports": "举报管理",
@@ -1449,7 +1449,7 @@
   },
   "reviewProgress": {
     "systemAutomaticDecision": "安全扫描通过后由系统自动批准",
-    "title": "我的审核",
+    "title": "我的申请",
     "subtitle": "查看技能和套件提交的当前状态、审核意见和每次重提记录",
     "searchLabel": "搜索技能、套件或空间",
     "searchPlaceholder": "搜索技能、套件或空间",
@@ -2773,7 +2773,7 @@
       "governance": "治理中心",
       "stars": "我的收藏",
       "subscriptions": "我的订阅",
-      "reviewProgress": "我的审核",
+      "reviewProgress": "我的申请",
       "reviews": "审核中心",
       "promotions": "推广管理",
       "reports": "举报管理",
@@ -4057,7 +4057,7 @@
     "PUBLIC": "公开",
     "NAMESPACE_ONLY": "空间成员可见",
     "PRIVATE": "私有（所有者和有权管理员）",
-    "expanding": "扩大范围需要审核，通过前保持当前范围。可在“我的审核”查看或撤回申请。",
+    "expanding": "扩大范围需要审核，通过前保持当前范围。可在“我的申请”查看或撤回申请。",
     "narrowing": "缩小范围立即生效，原先可访问的用户可能无法继续查看或下载。",
     "submit": "提交审核",
     "submitted": "已提交可见范围审核",
@@ -4066,7 +4066,7 @@
     "scanPENDING": "安全扫描中，完成前不能通过审核。",
     "scanPASSED": "安全扫描已通过。",
     "scanFAILED": "安全扫描未通过，当前范围保持不变。请撤回后重试或上传修复版本。",
-    "pending": "已有待审核范围申请：{{visibility}}。请到“我的审核”完成或撤回。"
+    "pending": "已有待审核范围申请：{{visibility}}。可在“我的申请”查看进度或撤回。"
   },
   "relativeTime": {
     "justNow": "刚刚",

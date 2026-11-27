@@ -79,7 +79,7 @@ test.describe('Rejected version replacement (Real API)', () => {
       )
 
       await page.goto('/dashboard/review-progress')
-      await expect(page.getByRole('heading', { name: 'My Review Progress' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'My Requests' })).toBeVisible()
       const rejectedCard = page.locator('article').filter({ hasText: firstPublish.slug })
       await expect(rejectedCard).toContainText('Rejected')
       await expect(rejectedCard).toContainText('1 submission')
@@ -200,7 +200,7 @@ test.describe('Rejected version replacement (Real API)', () => {
       expect(replacedReviewResponse.status()).toBe(200)
 
       await page.goto('/dashboard/review-progress')
-      await expect(page.getByRole('heading', { name: 'My Review Progress' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'My Requests' })).toBeVisible()
       await expect(page.getByRole('button', { name: /In review/ })).toContainText('1')
       const progressCard = page.locator('article').filter({ hasText: replacement.slug })
       await expect(progressCard).toContainText('In review')

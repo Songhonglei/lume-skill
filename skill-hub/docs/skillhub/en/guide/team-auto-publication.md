@@ -51,7 +51,7 @@ Disabled scanning, execution failure, unsafe or suspicious verdicts, timeouts, u
 
 ## Recognize System Approval in Review Pages
 
-The review list, the Review History of review details and My Review Progress show the decision method:
+The review list, the Review History of review details and My Requests show the decision method:
 
 - System automatic approval: shows the scan task it relied on and no reviewer.
 - Human review: shows the actual reviewer.
