@@ -77,18 +77,19 @@ describe('shared console layout composition', () => {
     expect(screen.getByRole('banner').classList.contains('max-w-[1600px]')).toBe(false)
   })
 
-  it('keeps global navigation collapsible on intermediate screens without changing the console breakpoint', () => {
+  it('puts SVG navigation on its own row and keeps a menu on narrow screens', () => {
     render(<Layout />)
     const header = screen.getByRole('banner')
     const desktopNavigation = within(header).getByRole('navigation')
     const toggle = within(header).getByRole('button', { name: 'layout.openNavigation' })
-    expect(desktopNavigation.classList.contains('xl:flex')).toBe(true)
-    expect(desktopNavigation.classList.contains('lg:flex')).toBe(false)
-    expect(toggle.classList.contains('xl:hidden')).toBe(true)
+    expect(desktopNavigation.parentElement?.classList.contains('lg:block')).toBe(true)
+    expect(desktopNavigation.parentElement).toBe(header.lastElementChild)
+    expect(within(desktopNavigation).getAllByRole('link').every(link => link.querySelector('svg'))).toBe(true)
+    expect(toggle.classList.contains('lg:hidden')).toBe(true)
     fireEvent.click(toggle)
     const expandedNavigation = screen.getAllByRole('navigation')
       .find(navigation => navigation.parentElement?.classList.contains('sticky'))
-    expect(expandedNavigation?.parentElement?.classList.contains('xl:hidden')).toBe(true)
+    expect(expandedNavigation?.parentElement?.classList.contains('lg:hidden')).toBe(true)
     expect(screen.getByRole('complementary').classList.contains('lg:w-56')).toBe(true)
   })
 

@@ -262,7 +262,7 @@
       },
       "capabilities": {
         "eyebrow": "核心能力",
-        "title": "从注册到分发，管理完整的技能生命周期",
+        "title": "平台能力",
         "description": "不只是技能仓库，而是一套覆盖发布、审核、分发和治理的平台。"
       },
       "enterprise": {
@@ -1916,6 +1916,15 @@
     "viewThisVersion": "查看此版本",
     "tabFiles": "文件",
     "tabVersions": "版本",
+    "contentNavigation": "技能内容",
+    "installWays": "安装方式",
+    "additionalInformation": "技能信息",
+    "management": "技能管理",
+    "community": "评价",
+    "author": "作者",
+    "filesLoading": "正在加载文件…",
+    "filesUnavailable": "文件列表加载失败。",
+    "retry": "重试",
     "noReadme": "暂无 README",
     "readmeUnavailable": "README 暂时不可用，请稍后重试或重新上传该技能版本。",
     "documentationSource": "来源：{{path}}",
@@ -2470,6 +2479,7 @@
     "switchToEnglish": "切换到英文",
     "switchToChinese": "切换到中文",
     "openNavigation": "打开导航菜单",
+    "mainNavigation": "主导航",
     "closeNavigation": "关闭导航菜单",
     "footerDescription": "技能注册中心，为开发者提供高效的技能管理和分发平台。"
   },
@@ -4425,7 +4435,7 @@
       "popular": "热门技能",
       "latest": "最新技能",
       "enterprise": "团队与企业介绍",
-      "cta": "底部引导",
+      "cta": "页脚链接",
       "footer": "页脚",
       "curated": "平台精选"
     },

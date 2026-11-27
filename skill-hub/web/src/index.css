@@ -687,7 +687,7 @@
 }
 
 .luma-wordmark {
-  color: hsl(var(--primary));
+  color: hsl(var(--foreground));
   font-family: var(--font-brand);
   font-size: 1.0625rem;
   letter-spacing: -0.02em;

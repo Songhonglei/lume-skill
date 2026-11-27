@@ -41,14 +41,16 @@ function preservedSettings(): SitePresentationSettings {
 describe('site presentation settings', () => {
   it('uses compact identity and homepage groups, with no permanent preview column', async () => {
     await setup()
-    expect(screen.getAllByRole('textbox')).toHaveLength(5)
+    expect(screen.getAllByRole('textbox')).toHaveLength(1)
     expect(screen.queryByRole('switch')).toBeNull()
     expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
     expect(screen.getByLabelText('sitePresentation.logoUrl')).toBeTruthy()
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.queryByTestId('live-homepage-preview')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'sitePresentation.tabs.home' }))
-    expect(screen.getAllByRole('switch')).toHaveLength(9)
+    expect(screen.getAllByRole('switch')).toHaveLength(7)
+    expect(screen.queryByRole('switch', { name: 'sitePresentation.regions.enterprise' })).toBeNull()
+    expect(screen.queryByRole('switch', { name: 'sitePresentation.regions.quickStart' })).toBeNull()
     expect(screen.getAllByRole('combobox')).toHaveLength(1)
     expect(screen.getByRole('switch', { name: 'sitePresentation.regions.curated' }).getAttribute('aria-checked')).toBe('true')
     expect(state.blocker.mock.lastCall?.[0].shouldBlockFn()).toBe(false)
